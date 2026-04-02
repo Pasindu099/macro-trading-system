@@ -1,6 +1,0 @@
-country,currency,central_bank,policy_rate,last_move,bias
-United States,USD,Federal Reserve,4.50,Hold,Neutral
-United Kingdom,GBP,Bank of England,4.25,Hold,Neutral
-Australia,AUD,Reserve Bank of Australia,4.10,Hold,Neutral
-Canada,CAD,Bank of Canada,3.75,Cut,Soft
-Switzerland,CHF,Swiss National Bank,1.00,Cut,Soft

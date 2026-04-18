@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: macro_dashboard_dev
       POSTGRES_USER: macro_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me_in_real_env}
+      POSTGRES_PASSWORD: MyMacro2026Pass
     ports:
       - "5432:5432"
     volumes:

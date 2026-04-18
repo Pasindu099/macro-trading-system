@@ -1,0 +1,915 @@
+# Indicator canonicalization rules.
+#
+# Each entry defines how to interpret one kind of EODHD event.
+# The canonicalizer matches incoming events using (eodhd_type, eodhd_comparison, country).
+# Multiple raw EODHD types can map to the same canonical_name (useful for aliases
+# like "CPI" and "Inflation Rate" both being headline CPI).
+#
+# FIELDS PER ENTRY:
+#   eodhd_type          (required) EXACT string as it appears in EODHD's `type` field.
+#                                  Matching is case-sensitive.
+#   eodhd_comparison    (optional) "mom", "qoq", "yoy", or null. If null, matches events
+#                                  where EODHD's comparison field is null.
+#   country             (required) EODHD country code: US, EU, UK, JP, AU, NZ, CA, CH.
+#   canonical_name      (required) Stable snake_case identifier. Do NOT rename once used.
+#   display_name        (required) Human-readable name shown in UI.
+#   primary_category    (required) One of: Inflation, Growth, Labor, Monetary Policy,
+#                                  Trade, Sentiment, Housing, Other
+#   secondary_categories (optional) List of additional categories (defaults to []).
+#   frequency           (required) daily, weekly, monthly, quarterly, irregular
+#   unit                (optional) "%", "index", "USD", "count", "thousands", etc.
+#   is_higher_better_for_currency (optional, default true) — affects default color coding
+#                                  in UI. Example: unemployment LOW is good → false.
+#   importance          (optional, default 2) — 1 = top-tier (CPI, NFP), 2 = notable,
+#                                  3 = minor. Used for "biggest surprises" ranking.
+#   notes               (optional) — freeform comments, aliases, warnings.
+#
+# HOW TO ADD A NEW MAPPING:
+#   1. Find the unmapped event in the admin dashboard (Step 3) or in the logs.
+#   2. Add a new entry below, following the same structure.
+#   3. No code change, no migration — just restart the app.
+#
+# HOW TO HANDLE ALIAS EVENTS:
+#   EODHD sometimes sends 2+ event types for the same economic release:
+#     - "CPI" (yoy) value=3.3
+#     - "Inflation Rate" (yoy) value=3.3   ← same number
+#   Map both to the same canonical_name. The canonicalizer will prefer
+#   the first entry (precedence by YAML order) when both arrive in one fetch.
+
+mappings:
+
+  # ════════════════════════════════════════════════════════════════════════
+  #  UNITED STATES (US)
+  # ════════════════════════════════════════════════════════════════════════
+
+  # ── US / Inflation ──────────────────────────────────────────────────────
+  - eodhd_type: Core Inflation Rate
+    eodhd_comparison: yoy
+    country: US
+    canonical_name: core_cpi_yoy
+    display_name: Core CPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+    notes: "Fed's preferred inflation measure along with PCE. Key print."
+
+  - eodhd_type: Core Inflation Rate
+    eodhd_comparison: mom
+    country: US
+    canonical_name: core_cpi_mom
+    display_name: Core CPI (MoM)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Inflation Rate
+    eodhd_comparison: yoy
+    country: US
+    canonical_name: cpi_headline_yoy
+    display_name: Headline CPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+    notes: "Also appears as 'CPI' in EODHD — same indicator, aliased."
+
+  # Alias: EODHD also publishes "CPI" (yoy) with same value as Inflation Rate.
+  - eodhd_type: CPI
+    eodhd_comparison: yoy
+    country: US
+    canonical_name: cpi_headline_yoy
+    display_name: Headline CPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Inflation Rate
+    eodhd_comparison: mom
+    country: US
+    canonical_name: cpi_headline_mom
+    display_name: Headline CPI (MoM)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Producer Price Index
+    eodhd_comparison: yoy
+    country: US
+    canonical_name: ppi_yoy
+    display_name: PPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Core PPI
+    eodhd_comparison: yoy
+    country: US
+    canonical_name: core_ppi_yoy
+    display_name: Core PPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Michigan 1 Year Inflation Expectations
+    eodhd_comparison: null
+    country: US
+    canonical_name: umich_inflation_exp_1y
+    display_name: UMich 1Y Inflation Expectations
+    primary_category: Inflation
+    secondary_categories: [Sentiment]
+    frequency: monthly
+    unit: "%"
+    importance: 2
+    notes: "Fed watches this as forward-looking inflation signal."
+
+  - eodhd_type: Michigan 5 Year Inflation Expectations
+    eodhd_comparison: null
+    country: US
+    canonical_name: umich_inflation_exp_5y
+    display_name: UMich 5Y Inflation Expectations
+    primary_category: Inflation
+    secondary_categories: [Sentiment]
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Import Prices
+    eodhd_comparison: yoy
+    country: US
+    canonical_name: import_prices_yoy
+    display_name: Import Prices (YoY)
+    primary_category: Inflation
+    secondary_categories: [Trade]
+    frequency: monthly
+    unit: "%"
+    importance: 3
+
+  # ── US / Labor ──────────────────────────────────────────────────────────
+  - eodhd_type: Non Farm Payrolls
+    eodhd_comparison: null
+    country: US
+    canonical_name: nfp
+    display_name: Non-Farm Payrolls
+    primary_category: Labor
+    frequency: monthly
+    unit: thousands
+    importance: 1
+    notes: "The big one — first Friday of each month."
+
+  - eodhd_type: Unemployment Rate
+    eodhd_comparison: null
+    country: US
+    canonical_name: unemployment_rate
+    display_name: Unemployment Rate
+    primary_category: Labor
+    frequency: monthly
+    unit: "%"
+    is_higher_better_for_currency: false
+    importance: 1
+
+  - eodhd_type: Average Hourly Earnings
+    eodhd_comparison: yoy
+    country: US
+    canonical_name: avg_hourly_earnings_yoy
+    display_name: Average Hourly Earnings (YoY)
+    primary_category: Labor
+    secondary_categories: [Inflation]
+    frequency: monthly
+    unit: "%"
+    importance: 1
+    notes: "Wage inflation — leading indicator for sticky CPI."
+
+  - eodhd_type: Average Hourly Earnings
+    eodhd_comparison: mom
+    country: US
+    canonical_name: avg_hourly_earnings_mom
+    display_name: Average Hourly Earnings (MoM)
+    primary_category: Labor
+    secondary_categories: [Inflation]
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Participation Rate
+    eodhd_comparison: null
+    country: US
+    canonical_name: participation_rate
+    display_name: Labor Force Participation Rate
+    primary_category: Labor
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: U-6 Unemployment Rate
+    eodhd_comparison: null
+    country: US
+    canonical_name: u6_unemployment_rate
+    display_name: U-6 Underemployment Rate
+    primary_category: Labor
+    frequency: monthly
+    unit: "%"
+    is_higher_better_for_currency: false
+    importance: 2
+
+  - eodhd_type: ADP Employment Change
+    eodhd_comparison: null
+    country: US
+    canonical_name: adp_employment_change
+    display_name: ADP Employment Change
+    primary_category: Labor
+    frequency: monthly
+    unit: thousands
+    importance: 2
+    notes: "Leading indicator for NFP, released 2 days before."
+
+  - eodhd_type: Initial Jobless Claims
+    eodhd_comparison: null
+    country: US
+    canonical_name: initial_jobless_claims
+    display_name: Initial Jobless Claims
+    primary_category: Labor
+    frequency: weekly
+    unit: thousands
+    is_higher_better_for_currency: false
+    importance: 2
+
+  # ── US / Growth ─────────────────────────────────────────────────────────
+  - eodhd_type: ISM Manufacturing PMI
+    eodhd_comparison: null
+    country: US
+    canonical_name: ism_manufacturing_pmi
+    display_name: ISM Manufacturing PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 1
+    notes: ">50 expansion, <50 contraction."
+
+  - eodhd_type: ISM Manufacturing Prices
+    eodhd_comparison: null
+    country: US
+    canonical_name: ism_manufacturing_prices
+    display_name: ISM Manufacturing Prices Paid
+    primary_category: Growth
+    secondary_categories: [Inflation]
+    frequency: monthly
+    unit: index
+    importance: 2
+    notes: "Leading indicator for PPI/CPI."
+
+  - eodhd_type: ISM Manufacturing Employment
+    eodhd_comparison: null
+    country: US
+    canonical_name: ism_manufacturing_employment
+    display_name: ISM Manufacturing Employment
+    primary_category: Growth
+    secondary_categories: [Labor]
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: ISM Manufacturing New Orders
+    eodhd_comparison: null
+    country: US
+    canonical_name: ism_manufacturing_new_orders
+    display_name: ISM Manufacturing New Orders
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: S&P Global Manufacturing PMI
+    eodhd_comparison: null
+    country: US
+    canonical_name: sp_global_manufacturing_pmi
+    display_name: S&P Global Manufacturing PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: S&P Global Services PMI
+    eodhd_comparison: null
+    country: US
+    canonical_name: sp_global_services_pmi
+    display_name: S&P Global Services PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: S&P Global Composite PMI
+    eodhd_comparison: null
+    country: US
+    canonical_name: sp_global_composite_pmi
+    display_name: S&P Global Composite PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: Retail Sales
+    eodhd_comparison: mom
+    country: US
+    canonical_name: retail_sales_mom
+    display_name: Retail Sales (MoM)
+    primary_category: Growth
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Retail Sales
+    eodhd_comparison: yoy
+    country: US
+    canonical_name: retail_sales_yoy
+    display_name: Retail Sales (YoY)
+    primary_category: Growth
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: NY Empire State Manufacturing Index
+    eodhd_comparison: null
+    country: US
+    canonical_name: ny_empire_state_mfg
+    display_name: NY Empire State Manufacturing Index
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: Philadelphia Fed Manufacturing Index
+    eodhd_comparison: null
+    country: US
+    canonical_name: philly_fed_mfg
+    display_name: Philadelphia Fed Manufacturing Index
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  # ── US / Sentiment ──────────────────────────────────────────────────────
+  - eodhd_type: Michigan Consumer Sentiment
+    eodhd_comparison: null
+    country: US
+    canonical_name: umich_consumer_sentiment
+    display_name: UMich Consumer Sentiment
+    primary_category: Sentiment
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: NFIB Business Optimism Index
+    eodhd_comparison: null
+    country: US
+    canonical_name: nfib_business_optimism
+    display_name: NFIB Business Optimism Index
+    primary_category: Sentiment
+    frequency: monthly
+    unit: index
+    importance: 3
+
+  # ── US / Monetary Policy ────────────────────────────────────────────────
+  - eodhd_type: Fed Balance Sheet
+    eodhd_comparison: null
+    country: US
+    canonical_name: fed_balance_sheet
+    display_name: Fed Balance Sheet
+    primary_category: Monetary Policy
+    frequency: weekly
+    unit: trillions_usd
+    importance: 3
+
+  # ════════════════════════════════════════════════════════════════════════
+  #  UNITED KINGDOM (UK)
+  # ════════════════════════════════════════════════════════════════════════
+
+  # ── UK / Inflation ──────────────────────────────────────────────────────
+  - eodhd_type: Core Inflation Rate
+    eodhd_comparison: yoy
+    country: UK
+    canonical_name: core_cpi_yoy
+    display_name: Core CPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Inflation Rate
+    eodhd_comparison: yoy
+    country: UK
+    canonical_name: cpi_headline_yoy
+    display_name: Headline CPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: CPI
+    eodhd_comparison: yoy
+    country: UK
+    canonical_name: cpi_headline_yoy
+    display_name: Headline CPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Inflation Rate
+    eodhd_comparison: mom
+    country: UK
+    canonical_name: cpi_headline_mom
+    display_name: Headline CPI (MoM)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: PPI Output
+    eodhd_comparison: yoy
+    country: UK
+    canonical_name: ppi_output_yoy
+    display_name: PPI Output (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 3
+
+  - eodhd_type: PPI Input
+    eodhd_comparison: yoy
+    country: UK
+    canonical_name: ppi_input_yoy
+    display_name: PPI Input (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 3
+
+  # ── UK / Labor ──────────────────────────────────────────────────────────
+  - eodhd_type: Unemployment Rate
+    eodhd_comparison: null
+    country: UK
+    canonical_name: unemployment_rate
+    display_name: Unemployment Rate
+    primary_category: Labor
+    frequency: monthly
+    unit: "%"
+    is_higher_better_for_currency: false
+    importance: 1
+
+  - eodhd_type: Claimant Count Change
+    eodhd_comparison: null
+    country: UK
+    canonical_name: claimant_count_change
+    display_name: Claimant Count Change
+    primary_category: Labor
+    frequency: monthly
+    unit: thousands
+    is_higher_better_for_currency: false
+    importance: 2
+
+  - eodhd_type: Employment Change
+    eodhd_comparison: null
+    country: UK
+    canonical_name: employment_change
+    display_name: Employment Change
+    primary_category: Labor
+    frequency: monthly
+    unit: thousands
+    importance: 2
+
+  - eodhd_type: Average Earnings incl. Bonus
+    eodhd_comparison: null
+    country: UK
+    canonical_name: avg_earnings_incl_bonus
+    display_name: Average Earnings (incl. Bonus)
+    primary_category: Labor
+    secondary_categories: [Inflation]
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Average Earnings excl. Bonus
+    eodhd_comparison: null
+    country: UK
+    canonical_name: avg_earnings_excl_bonus
+    display_name: Average Earnings (excl. Bonus)
+    primary_category: Labor
+    secondary_categories: [Inflation]
+    frequency: monthly
+    unit: "%"
+    importance: 1
+    notes: "BoE watches this closely. Core wage growth."
+
+  # ── UK / Growth ─────────────────────────────────────────────────────────
+  - eodhd_type: Gross Domestic Product
+    eodhd_comparison: mom
+    country: UK
+    canonical_name: gdp_mom
+    display_name: GDP (MoM)
+    primary_category: Growth
+    frequency: monthly
+    unit: "%"
+    importance: 1
+    notes: "UK publishes GDP monthly — advantage over other G10."
+
+  - eodhd_type: Gross Domestic Product
+    eodhd_comparison: yoy
+    country: UK
+    canonical_name: gdp_yoy
+    display_name: GDP (YoY)
+    primary_category: Growth
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: GDP Growth Rate
+    eodhd_comparison: qoq
+    country: UK
+    canonical_name: gdp_qoq
+    display_name: GDP (QoQ)
+    primary_category: Growth
+    frequency: quarterly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: S&P Global Manufacturing PMI
+    eodhd_comparison: null
+    country: UK
+    canonical_name: manufacturing_pmi
+    display_name: Manufacturing PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: S&P Global Services PMI
+    eodhd_comparison: null
+    country: UK
+    canonical_name: services_pmi
+    display_name: Services PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 1
+    notes: "UK is services-heavy economy — key indicator."
+
+  - eodhd_type: S&P Global Composite PMI
+    eodhd_comparison: null
+    country: UK
+    canonical_name: composite_pmi
+    display_name: Composite PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: Retail Sales
+    eodhd_comparison: mom
+    country: UK
+    canonical_name: retail_sales_mom
+    display_name: Retail Sales (MoM)
+    primary_category: Growth
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Industrial Production
+    eodhd_comparison: yoy
+    country: UK
+    canonical_name: industrial_production_yoy
+    display_name: Industrial Production (YoY)
+    primary_category: Growth
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  # ── UK / Monetary Policy ────────────────────────────────────────────────
+  - eodhd_type: BoE Interest Rate Decision
+    eodhd_comparison: null
+    country: UK
+    canonical_name: bank_rate
+    display_name: Bank Rate
+    primary_category: Monetary Policy
+    frequency: irregular
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Interest Rate Decision
+    eodhd_comparison: null
+    country: UK
+    canonical_name: bank_rate
+    display_name: Bank Rate
+    primary_category: Monetary Policy
+    frequency: irregular
+    unit: "%"
+    importance: 1
+
+  # ── UK / Housing ────────────────────────────────────────────────────────
+  - eodhd_type: Halifax House Price Index
+    eodhd_comparison: yoy
+    country: UK
+    canonical_name: halifax_hpi_yoy
+    display_name: Halifax House Price Index (YoY)
+    primary_category: Housing
+    frequency: monthly
+    unit: "%"
+    importance: 3
+
+  - eodhd_type: Nationwide Housing Prices
+    eodhd_comparison: yoy
+    country: UK
+    canonical_name: nationwide_hpi_yoy
+    display_name: Nationwide House Prices (YoY)
+    primary_category: Housing
+    frequency: monthly
+    unit: "%"
+    importance: 3
+
+  # ════════════════════════════════════════════════════════════════════════
+  #  EUROZONE (EU) — starter mappings, expand during backfill
+  # ════════════════════════════════════════════════════════════════════════
+
+  - eodhd_type: Inflation Rate
+    eodhd_comparison: yoy
+    country: EU
+    canonical_name: cpi_headline_yoy
+    display_name: Headline HICP (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Core Inflation Rate
+    eodhd_comparison: yoy
+    country: EU
+    canonical_name: core_cpi_yoy
+    display_name: Core HICP (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Unemployment Rate
+    eodhd_comparison: null
+    country: EU
+    canonical_name: unemployment_rate
+    display_name: Unemployment Rate
+    primary_category: Labor
+    frequency: monthly
+    unit: "%"
+    is_higher_better_for_currency: false
+    importance: 1
+
+  - eodhd_type: GDP Growth Rate
+    eodhd_comparison: qoq
+    country: EU
+    canonical_name: gdp_qoq
+    display_name: GDP (QoQ)
+    primary_category: Growth
+    frequency: quarterly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: ECB Interest Rate Decision
+    eodhd_comparison: null
+    country: EU
+    canonical_name: ecb_deposit_rate
+    display_name: ECB Deposit Rate
+    primary_category: Monetary Policy
+    frequency: irregular
+    unit: "%"
+    importance: 1
+
+  # ════════════════════════════════════════════════════════════════════════
+  #  JAPAN (JP) — starter mappings
+  # ════════════════════════════════════════════════════════════════════════
+
+  - eodhd_type: Inflation Rate
+    eodhd_comparison: yoy
+    country: JP
+    canonical_name: cpi_headline_yoy
+    display_name: Headline CPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Core Inflation Rate
+    eodhd_comparison: yoy
+    country: JP
+    canonical_name: core_cpi_yoy
+    display_name: Core CPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Unemployment Rate
+    eodhd_comparison: null
+    country: JP
+    canonical_name: unemployment_rate
+    display_name: Unemployment Rate
+    primary_category: Labor
+    frequency: monthly
+    unit: "%"
+    is_higher_better_for_currency: false
+    importance: 2
+
+  - eodhd_type: GDP Growth Rate
+    eodhd_comparison: qoq
+    country: JP
+    canonical_name: gdp_qoq
+    display_name: GDP (QoQ)
+    primary_category: Growth
+    frequency: quarterly
+    unit: "%"
+    importance: 1
+
+  # ════════════════════════════════════════════════════════════════════════
+  #  AUSTRALIA (AU) — starter mappings
+  # ════════════════════════════════════════════════════════════════════════
+
+  - eodhd_type: Inflation Rate
+    eodhd_comparison: yoy
+    country: AU
+    canonical_name: cpi_headline_yoy
+    display_name: Headline CPI (YoY)
+    primary_category: Inflation
+    frequency: quarterly
+    unit: "%"
+    importance: 1
+    notes: "AU publishes CPI quarterly (most others are monthly)."
+
+  - eodhd_type: Unemployment Rate
+    eodhd_comparison: null
+    country: AU
+    canonical_name: unemployment_rate
+    display_name: Unemployment Rate
+    primary_category: Labor
+    frequency: monthly
+    unit: "%"
+    is_higher_better_for_currency: false
+    importance: 1
+
+  - eodhd_type: Employment Change
+    eodhd_comparison: null
+    country: AU
+    canonical_name: employment_change
+    display_name: Employment Change
+    primary_category: Labor
+    frequency: monthly
+    unit: thousands
+    importance: 1
+
+  - eodhd_type: RBA Interest Rate Decision
+    eodhd_comparison: null
+    country: AU
+    canonical_name: cash_rate
+    display_name: Cash Rate
+    primary_category: Monetary Policy
+    frequency: irregular
+    unit: "%"
+    importance: 1
+
+  # ════════════════════════════════════════════════════════════════════════
+  #  NEW ZEALAND (NZ) — starter mappings
+  # ════════════════════════════════════════════════════════════════════════
+
+  - eodhd_type: Inflation Rate
+    eodhd_comparison: yoy
+    country: NZ
+    canonical_name: cpi_headline_yoy
+    display_name: Headline CPI (YoY)
+    primary_category: Inflation
+    frequency: quarterly
+    unit: "%"
+    importance: 1
+    notes: "NZ publishes CPI quarterly."
+
+  - eodhd_type: Unemployment Rate
+    eodhd_comparison: null
+    country: NZ
+    canonical_name: unemployment_rate
+    display_name: Unemployment Rate
+    primary_category: Labor
+    frequency: quarterly
+    unit: "%"
+    is_higher_better_for_currency: false
+    importance: 1
+
+  - eodhd_type: RBNZ Interest Rate Decision
+    eodhd_comparison: null
+    country: NZ
+    canonical_name: official_cash_rate
+    display_name: Official Cash Rate
+    primary_category: Monetary Policy
+    frequency: irregular
+    unit: "%"
+    importance: 1
+
+  # ════════════════════════════════════════════════════════════════════════
+  #  CANADA (CA) — starter mappings
+  # ════════════════════════════════════════════════════════════════════════
+
+  - eodhd_type: Inflation Rate
+    eodhd_comparison: yoy
+    country: CA
+    canonical_name: cpi_headline_yoy
+    display_name: Headline CPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Core Inflation Rate
+    eodhd_comparison: yoy
+    country: CA
+    canonical_name: core_cpi_yoy
+    display_name: Core CPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Unemployment Rate
+    eodhd_comparison: null
+    country: CA
+    canonical_name: unemployment_rate
+    display_name: Unemployment Rate
+    primary_category: Labor
+    frequency: monthly
+    unit: "%"
+    is_higher_better_for_currency: false
+    importance: 1
+
+  - eodhd_type: Employment Change
+    eodhd_comparison: null
+    country: CA
+    canonical_name: employment_change
+    display_name: Employment Change
+    primary_category: Labor
+    frequency: monthly
+    unit: thousands
+    importance: 1
+
+  - eodhd_type: BoC Interest Rate Decision
+    eodhd_comparison: null
+    country: CA
+    canonical_name: overnight_rate
+    display_name: Overnight Rate
+    primary_category: Monetary Policy
+    frequency: irregular
+    unit: "%"
+    importance: 1
+
+  # ════════════════════════════════════════════════════════════════════════
+  #  SWITZERLAND (CH) — starter mappings (data is thinner for CH)
+  # ════════════════════════════════════════════════════════════════════════
+
+  - eodhd_type: Inflation Rate
+    eodhd_comparison: yoy
+    country: CH
+    canonical_name: cpi_headline_yoy
+    display_name: Headline CPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Unemployment Rate
+    eodhd_comparison: null
+    country: CH
+    canonical_name: unemployment_rate
+    display_name: Unemployment Rate
+    primary_category: Labor
+    frequency: monthly
+    unit: "%"
+    is_higher_better_for_currency: false
+    importance: 2
+
+  - eodhd_type: GDP Growth Rate
+    eodhd_comparison: qoq
+    country: CH
+    canonical_name: gdp_qoq
+    display_name: GDP (QoQ)
+    primary_category: Growth
+    frequency: quarterly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: SNB Interest Rate Decision
+    eodhd_comparison: null
+    country: CH
+    canonical_name: policy_rate
+    display_name: SNB Policy Rate
+    primary_category: Monetary Policy
+    frequency: irregular
+    unit: "%"
+    importance: 1

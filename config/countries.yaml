@@ -1,0 +1,73 @@
+# Static reference data for the 8 tracked countries.
+# This file is loaded once into the `countries` table by scripts/seed_countries.py.
+# Changes here only take effect after re-running the seed script.
+#
+# EODHD uses non-ISO codes in some cases:
+#   - `UK` not `GB` for United Kingdom
+#   - `EU` not `EA`/`EMU` for Eurozone
+# These are verified via the EODHD data audit (see spec v1.2 §4.2).
+
+countries:
+  - code: US
+    currency_code: USD
+    name: United States
+    central_bank: Federal Reserve
+    cb_inflation_target: 2.00
+    cb_mandate_type: dual  # inflation + employment
+    timezone: America/New_York
+
+  - code: EU
+    currency_code: EUR
+    name: Eurozone
+    central_bank: European Central Bank
+    cb_inflation_target: 2.00
+    cb_mandate_type: single  # price stability primarily
+    timezone: Europe/Frankfurt
+
+  - code: UK
+    currency_code: GBP
+    name: United Kingdom
+    central_bank: Bank of England
+    cb_inflation_target: 2.00
+    cb_mandate_type: single
+    timezone: Europe/London
+
+  - code: JP
+    currency_code: JPY
+    name: Japan
+    central_bank: Bank of Japan
+    cb_inflation_target: 2.00
+    cb_mandate_type: single
+    timezone: Asia/Tokyo
+
+  - code: AU
+    currency_code: AUD
+    name: Australia
+    central_bank: Reserve Bank of Australia
+    cb_inflation_target: 2.50  # midpoint of 2-3% band
+    cb_mandate_type: dual
+    timezone: Australia/Sydney
+
+  - code: NZ
+    currency_code: NZD
+    name: New Zealand
+    central_bank: Reserve Bank of New Zealand
+    cb_inflation_target: 2.00  # midpoint of 1-3% band
+    cb_mandate_type: dual
+    timezone: Pacific/Auckland
+
+  - code: CA
+    currency_code: CAD
+    name: Canada
+    central_bank: Bank of Canada
+    cb_inflation_target: 2.00
+    cb_mandate_type: single
+    timezone: America/Toronto
+
+  - code: CH
+    currency_code: CHF
+    name: Switzerland
+    central_bank: Swiss National Bank
+    cb_inflation_target: 1.00  # SNB targets "below 2%"; using 1% as center
+    cb_mandate_type: single
+    timezone: Europe/Zurich

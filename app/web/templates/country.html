@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="shell shell--country">
+
+    <!-- Country header -->
+    <div class="country-hdr">
+        <div class="country-hdr__flag-cell">{{ country_flag }}</div>
+        <div class="country-hdr__info">
+            <div class="country-hdr__code">
+                <a href="/" style="color:var(--text-dim);text-decoration:none">HOME</a>
+                <span style="color:var(--text-dim)"> / </span>
+                {{ country.code }} &mdash; {{ country.currency_code }}
+            </div>
+            <div class="country-hdr__name">{{ country.name }}</div>
+        </div>
+    </div>
+
+    <div class="country-hdr__stats">
+        <div class="stat-cell">
+            <div class="stat-cell__label">Central Bank</div>
+            <div class="stat-cell__value">{{ country.central_bank }}</div>
+        </div>
+        <div class="stat-cell">
+            <div class="stat-cell__label">Mandate</div>
+            <div class="stat-cell__value">{{ country.cb_mandate_type or "—" }}</div>
+        </div>
+        <div class="stat-cell">
+            <div class="stat-cell__label">Inflation Target</div>
+            <div class="stat-cell__value">
+                {% if country.cb_inflation_target is not none %}
+                    {{ "%.2f"|format(country.cb_inflation_target) }}%
+                {% else %}
+                    —
+                {% endif %}
+            </div>
+        </div>
+        <div class="stat-cell">
+            <div class="stat-cell__label">Last Updated</div>
+            <div class="stat-cell__value">
+                {% if country.latest_release_at %}
+                    {{ country.latest_release_at.strftime("%d-%b-%Y %H:%M UTC") }}
+                {% else %}
+                    —
+                {% endif %}
+            </div>
+        </div>
+        <div class="stat-cell">
+            <div class="stat-cell__label">Calendar</div>
+            <div class="stat-cell__value">
+                <a href="/calendar" style="color:var(--link)">View Calendar →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category tabs -->
+    <div class="tab-bar">
+        {% for category in category_tabs %}
+            <button
+                class="tab-btn {% if category == active_category %}is-active{% endif %}"
+                hx-get="/country/{{ country.code|lower }}/tab/{{ category.lower() }}"
+                hx-target="#tab-content"
+                hx-swap="innerHTML"
+                hx-on::after-request="document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('is-active')); this.classList.add('is-active');"
+                type="button"
+            >{{ category }}</button>
+        {% endfor %}
+    </div>
+
+    <section id="tab-content" aria-live="polite">
+        {% include "_country_tab.html" %}
+    </section>
+
+</div>
+{% endblock %}

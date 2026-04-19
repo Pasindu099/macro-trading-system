@@ -10,7 +10,8 @@ Three kinds of jobs run:
 
 2. POST-RELEASE TRIGGERS
    - Fire ~15 minutes after major releases (NFP, CPI, etc.)
-   - Fetch only the affected country with a 7-day lookback
+   - Fetch only the affected country with a configurable lookback
+     (default 7 days)
    - Driven by config/release_schedule.yaml
 
 3. HOURLY BACKLOG CATCH-UP (optional — disabled by default)
@@ -154,8 +155,9 @@ class Scheduler:
         """A single post-release trigger — one country, short lookback."""
         country = trigger_config["country"]
         trigger_name = trigger_config["name"]
+        lookback_days = _resolve_post_release_lookback_days(trigger_config)
         to_date = date.today()
-        from_date = to_date - timedelta(days=POST_RELEASE_LOOKBACK_DAYS)
+        from_date = to_date - timedelta(days=lookback_days)
 
         async with run_logger("post_release", countries=[country]) as run:
             assert self._ingest_service is not None
@@ -200,6 +202,7 @@ class Scheduler:
         for entry in entries:
             try:
                 trigger = _build_cron_trigger(entry)
+                _resolve_post_release_lookback_days(entry)
             except ValueError as exc:
                 logger.warning(
                     "Skipping invalid release_schedule entry %r: %s",
@@ -239,7 +242,9 @@ def _build_cron_trigger(entry: dict[str, Any]) -> CronTrigger:
     try:
         hour, minute = (int(p) for p in scheduled_str.split(":"))
     except ValueError as exc:
-        raise ValueError(f"scheduled_at_utc must be HH:MM (got {scheduled_str!r})") from exc
+        raise ValueError(
+            f"scheduled_at_utc must be HH:MM (got {scheduled_str!r})"
+        ) from exc
 
     delay = int(entry.get("trigger_delay_minutes", 15))
     fire_dt = _add_minutes(hour, minute, delay)
@@ -264,6 +269,21 @@ def _build_cron_trigger(entry: dict[str, Any]) -> CronTrigger:
         cron_kwargs["day"] = dom_range
 
     return CronTrigger(**cron_kwargs)
+
+
+def _resolve_post_release_lookback_days(entry: dict[str, Any]) -> int:
+    """Return a validated lookback window for a post-release trigger."""
+    raw_value = entry.get("lookback_days", POST_RELEASE_LOOKBACK_DAYS)
+    try:
+        lookback_days = int(raw_value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"lookback_days must be a positive integer (got {raw_value!r})"
+        ) from exc
+
+    if lookback_days <= 0:
+        raise ValueError(f"lookback_days must be >= 1 (got {lookback_days})")
+    return lookback_days
 
 
 def _add_minutes(hour: int, minute: int, delta: int) -> tuple[int, int]:

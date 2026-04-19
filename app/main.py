@@ -19,8 +19,9 @@ from typing import AsyncIterator
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import admin
+from app.api.routes import admin, pages, public
 from app.db.session import dispose_engine
 from app.ingestion.scheduler import Scheduler
 from app.logging_config import configure_logging
@@ -83,8 +84,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Mount API routers
+# Mount routers and static assets
+app.mount("/static", StaticFiles(directory="app/web/static"), name="static")
+app.include_router(pages.router)
 app.include_router(admin.router)
+app.include_router(public.router)
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -95,17 +99,6 @@ app.include_router(admin.router)
 async def health() -> dict[str, str]:
     """Liveness probe. Returns 200 OK if the process is up."""
     return {"status": "ok"}
-
-
-@app.get("/")
-async def root() -> dict[str, str]:
-    """Root page — redirect suggestion. Real UI comes in Step 5."""
-    return {
-        "name": "Macro Dashboard API",
-        "version": "0.1.0",
-        "docs": "/docs",
-        "health": "/health",
-    }
 
 
 # ══════════════════════════════════════════════════════════════════════

@@ -1,0 +1,49 @@
+{% if rows %}
+    <div class="sec-bar">
+        <span class="sec-bar__title">{{ rows|length }} INDICATOR(S)</span>
+        {% if show_footnote %}
+            <span class="sec-bar__meta">* APPEARS IN MULTIPLE CATEGORIES</span>
+        {% endif %}
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width:260px">Indicator</th>
+                <th>Latest</th>
+                <th>Sparkline (12M)</th>
+                <th>Trend</th>
+                <th>Detail</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+                <tr>
+                    <td class="data-table__name" title="{{ row.display_label }}">{{ row.display_label }}</td>
+                    <td class="data-table__val num">{{ row.latest_value }}</td>
+                    <td class="data-table__spark">
+                        <div
+                            class="sparkline"
+                            id="spark-{{ row.id }}"
+                            data-values='{{ row.sparkline_values|tojson }}'
+                        ></div>
+                    </td>
+                    <td class="data-table__trend {% if row.trend_symbol == '▲' %}is-positive{% elif row.trend_symbol == '▼' %}is-negative{% endif %}">
+                        {{ row.trend_symbol }}
+                    </td>
+                    <td>
+                        <a class="data-table__link" href="{{ row.detail_href }}">OPEN →</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        if (window.MacroCharts) { window.MacroCharts.bootSparklines(document); }
+    </script>
+{% else %}
+    <div style="padding:24px 14px;font-size:11px;color:var(--muted)">
+        NO INDICATORS MAPPED FOR THIS CATEGORY YET.
+    </div>
+{% endif %}

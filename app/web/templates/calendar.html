@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="shell shell--calendar">
+
+    <div class="sec-bar">
+        <span class="sec-bar__title">ECONOMIC CALENDAR &mdash; EODHD FEED</span>
+        <span class="sec-bar__meta">INGESTED RELEASES ONLY</span>
+    </div>
+
+    <div class="calendar-stage">
+
+        <!-- Sidebar filters -->
+        <aside class="calendar-sidebar">
+
+            <div class="sidebar-section">
+                <span class="sidebar-label">FORWARD WINDOW</span>
+                {% for days in calendar_windows %}
+                    <button
+                        class="sidebar-btn {% if days == 7 %}is-active{% endif %}"
+                        data-window="{{ days }}"
+                        id="cal-win-{{ days }}"
+                        type="button"
+                    >{{ days }}D FORWARD</button>
+                {% endfor %}
+            </div>
+
+            <div class="sidebar-section">
+                <span class="sidebar-label">COUNTRY</span>
+                <select class="sidebar-select" id="calendar-country">
+                    <option value="">ALL TRACKED</option>
+                    {% for country in countries %}
+                        <option value="{{ country.code }}">{{ country.code }} / {{ country.currency_code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="sidebar-section">
+                <span class="sidebar-label">CATEGORY</span>
+                <select class="sidebar-select" id="calendar-category">
+                    <option value="">ALL CATEGORIES</option>
+                    {% for category in category_tabs %}
+                        <option value="{{ category }}">{{ category|upper }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="sidebar-section">
+                <span class="sidebar-label">IMPORTANCE</span>
+                <select class="sidebar-select" id="calendar-importance">
+                    <option value="">ALL TIERS</option>
+                    <option value="1">TIER 1 (HIGH)</option>
+                    <option value="2">TIER 2 (MED)</option>
+                    <option value="3">TIER 3 (LOW)</option>
+                </select>
+            </div>
+
+        </aside>
+
+        <!-- Calendar content -->
+        <div class="calendar-content">
+            <div class="sec-bar" style="position:sticky;top:28px;z-index:10">
+                <span class="sec-bar__title" id="calendar-title">LOADING...</span>
+                <span class="sec-bar__meta" id="calendar-meta"></span>
+            </div>
+
+            <div id="calendar-groups" aria-live="polite">
+                <div style="padding:24px 14px;font-size:11px;color:var(--muted)">LOADING CALENDAR EVENTS...</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="{{ url_for('static', path='js/calendar.js') }}" defer></script>
+{% endblock %}

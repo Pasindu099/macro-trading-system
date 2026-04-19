@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="shell">
+
+    <!-- Surprise ticker -->
+    <div class="sec-bar">
+        <span class="sec-bar__title">WEEKLY PULSE &mdash; BIGGEST SURPRISES (7D)</span>
+        <span class="sec-bar__meta">Δ ACTUAL vs CONSENSUS</span>
+    </div>
+
+    <div class="ticker-strip">
+        {% if surprises %}
+            {% for item in surprises %}
+                <div class="ticker-item">
+                    <div class="ticker-item__top">
+                        <span>{{ item.country_code }}/{{ item.currency_code }}</span>
+                        <span>{{ item.released_at.strftime("%d-%b %H:%M") }}</span>
+                    </div>
+                    <div class="ticker-item__name" title="{{ item.display_name }}">{{ item.display_name }}</div>
+                    <div class="ticker-item__vals">
+                        <span class="ticker-item__surprise {% if item.surprise >= 0 %}is-positive{% else %}is-negative{% endif %}">
+                            {{ "%+.2f"|format(item.surprise) }}
+                        </span>
+                        <span style="color:var(--muted);font-size:10px">
+                            ACT {{ "%.2f"|format(item.actual) if item.actual is not none else "N/A" }}
+                            &nbsp;EST {{ "%.2f"|format(item.estimate) if item.estimate is not none else "N/A" }}
+                        </span>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <span class="ticker-empty">No mapped surprises for the last 7 days.</span>
+        {% endif %}
+    </div>
+
+    <!-- Country matrix -->
+    <div class="sec-bar">
+        <span class="sec-bar__title">COUNTRY MONITOR &mdash; 8 TRACKED CURRENCIES</span>
+        <span class="sec-bar__meta">SELECT COUNTRY TO DRILL DOWN</span>
+    </div>
+
+    <div class="country-matrix">
+        {% for country in country_cards %}
+            <a class="cmatrix-cell" href="/country/{{ country.code|lower }}">
+                <div class="cmatrix-cell__flag">{{ country.flag }}</div>
+                <div class="cmatrix-cell__code">{{ country.code }}</div>
+                <div class="cmatrix-cell__name">{{ country.name }}</div>
+                <div class="cmatrix-cell__ccy">{{ country.currency_code }}</div>
+                <div class="cmatrix-cell__ts">
+                    {% if country.latest_release_at %}
+                        {{ country.latest_release_at.strftime("%d-%b %H:%M") }}
+                    {% else %}
+                        --
+                    {% endif %}
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

@@ -42,6 +42,19 @@ def _meta(cache_hint: str | None = None) -> ResponseMeta:
     return ResponseMeta(generated_at=_now(), cache_hint=cache_hint)
 
 
+def _build_unmapped_where(country: str | None) -> tuple[str, dict[str, str]]:
+    """Build a shared WHERE clause for unmapped-event admin queries."""
+    where_clauses = ["indicator_id IS NULL"]
+    params: dict[str, str] = {}
+
+    normalized_country = country.upper() if country else None
+    if normalized_country:
+        where_clauses.append("raw_payload->>'country' = :country")
+        params["country"] = normalized_country
+
+    return " AND ".join(where_clauses), params
+
+
 # ══════════════════════════════════════════════════════════════════════
 #  GET /api/admin/health
 # ══════════════════════════════════════════════════════════════════════
@@ -236,15 +249,19 @@ async def admin_unmapped_events(
     Use this to drive YAML mapping work. Events with high release_count
     appearing in your feed often are the most valuable to map.
     """
-    # Total unmapped releases
+    where_sql, params = _build_unmapped_where(country)
+
+    # Total unmapped releases (respecting optional country filter)
     total_rel_q = await session.execute(
-        select(func.count(IndicatorRelease.id)).where(
-            IndicatorRelease.indicator_id.is_(None)
-        )
+        text(f"""
+            SELECT COUNT(*)
+            FROM indicator_releases
+            WHERE {where_sql}
+        """).bindparams(**params)
     )
     total_unmapped = total_rel_q.scalar_one()
 
-    # Total distinct unmapped event types
+    # Total distinct unmapped event types (respecting optional country filter)
     distinct_q_sql = """
         SELECT COUNT(*) FROM (
             SELECT DISTINCT
@@ -252,19 +269,12 @@ async def admin_unmapped_events(
                 raw_payload->>'type' AS event_type,
                 raw_payload->>'comparison' AS comparison
             FROM indicator_releases
-            WHERE indicator_id IS NULL
+            WHERE {where_sql}
         ) t
-    """
-    total_distinct = (await session.execute(text(distinct_q_sql))).scalar_one()
-
-    # Grouped query
-    where_clauses = ["indicator_id IS NULL"]
-    params: dict = {}
-    if country:
-        where_clauses.append("raw_payload->>'country' = :country")
-        params["country"] = country
-
-    where_sql = " AND ".join(where_clauses)
+    """.format(where_sql=where_sql)
+    total_distinct = (
+        await session.execute(text(distinct_q_sql).bindparams(**params))
+    ).scalar_one()
 
     groups_sql = f"""
         SELECT
@@ -283,10 +293,13 @@ async def admin_unmapped_events(
         ORDER BY COUNT(*) DESC
         LIMIT :limit
     """
-    params["min_count"] = min_count
-    params["limit"] = limit
+    query_params: dict[str, object] = {
+        **params,
+        "min_count": min_count,
+        "limit": limit,
+    }
 
-    groups_rows = await session.execute(text(groups_sql).bindparams(**params))
+    groups_rows = await session.execute(text(groups_sql).bindparams(**query_params))
 
     groups: list[UnmappedEventGroup] = []
     for row in groups_rows:

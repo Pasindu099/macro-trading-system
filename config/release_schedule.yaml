@@ -1,0 +1,163 @@
+# Release schedule for major economic events.
+#
+# Used by the post-release trigger system in app/ingestion/scheduler.py.
+# For each entry, the scheduler fires an ingest job ~15 minutes after the
+# expected release time to catch the new data quickly.
+#
+# WHY THIS EXISTS:
+#   The regular 3x/day scheduled runs cover everything, but critical
+#   releases like NFP or CPI move markets within seconds. Waiting up to
+#   5 hours for the next scheduled run is too long. Post-release triggers
+#   give us roughly 15-minute latency for the events that matter most.
+#
+# FORMAT:
+#   Each entry is a recurring event described by cron-like fields.
+#   The scheduler computes the "just after release" time by adding
+#   trigger_delay_minutes to the scheduled_at_utc time.
+#
+# FIELDS:
+#   name                (required) Human-readable name.
+#   country             (required) EODHD country code.
+#   day_of_week         (optional) 0=Mon..6=Sun. Omit for day-of-month releases.
+#   day_of_month        (optional) e.g. 15. Omit for day-of-week releases.
+#   day_of_month_range  (optional) e.g. "10-15". Fires on any day in range.
+#   scheduled_at_utc    (required) "HH:MM" — typical release time.
+#   trigger_delay_minutes (optional, default 15) — how long after the release to fetch.
+#   lookback_days       (optional, default 7) — how far back to fetch when the trigger fires.
+#   importance          (optional) 1-3, higher = more critical. Informational only.
+#
+# NOTES:
+#   - Times are UTC. NFP is 12:30 UTC (8:30 ET in winter).
+#   - Some releases (e.g., Fed decisions) don't fit a simple schedule because
+#     they're scheduled per-meeting. We accept this limitation — the 3x/day
+#     scheduled run will catch them within a few hours regardless.
+#   - Add/edit this file and restart the app to apply changes.
+
+release_schedule:
+
+  # ── US ──────────────────────────────────────────────────────────────
+  - name: US Non-Farm Payrolls
+    country: US
+    day_of_week: 4  # Friday
+    day_of_month_range: "1-7"  # First Friday of month
+    scheduled_at_utc: "12:30"
+    importance: 1
+
+  - name: US CPI
+    country: US
+    day_of_month_range: "10-15"
+    scheduled_at_utc: "12:30"
+    importance: 1
+
+  - name: US ISM Manufacturing PMI
+    country: US
+    day_of_month_range: "1-3"
+    scheduled_at_utc: "14:00"
+    importance: 1
+
+  - name: US ISM Services PMI
+    country: US
+    day_of_month_range: "3-5"
+    scheduled_at_utc: "14:00"
+    importance: 1
+
+  - name: US Retail Sales
+    country: US
+    day_of_month_range: "13-16"
+    scheduled_at_utc: "12:30"
+    importance: 2
+
+  - name: US Initial Jobless Claims
+    country: US
+    day_of_week: 3  # Thursday
+    scheduled_at_utc: "12:30"
+    importance: 2
+
+  # ── UK ──────────────────────────────────────────────────────────────
+  - name: UK CPI
+    country: UK
+    day_of_month_range: "14-20"
+    scheduled_at_utc: "06:00"
+    importance: 1
+
+  - name: UK Labor Market
+    country: UK
+    day_of_month_range: "10-20"
+    scheduled_at_utc: "06:00"
+    importance: 1
+
+  - name: UK GDP
+    country: UK
+    day_of_month_range: "10-15"
+    scheduled_at_utc: "06:00"
+    importance: 1
+
+  - name: UK Retail Sales
+    country: UK
+    day_of_month_range: "17-22"
+    scheduled_at_utc: "06:00"
+    importance: 2
+
+  # ── EU ──────────────────────────────────────────────────────────────
+  - name: EU CPI Flash
+    country: EU
+    day_of_month_range: "28-31"
+    scheduled_at_utc: "09:00"
+    importance: 1
+
+  - name: EU GDP
+    country: EU
+    day_of_month_range: "28-31"
+    scheduled_at_utc: "09:00"
+    importance: 1
+
+  # ── JP ──────────────────────────────────────────────────────────────
+  - name: JP CPI
+    country: JP
+    day_of_month_range: "18-25"
+    scheduled_at_utc: "23:30"
+    importance: 1
+
+  # ── AU ──────────────────────────────────────────────────────────────
+  - name: AU CPI (quarterly)
+    country: AU
+    day_of_month_range: "23-31"
+    scheduled_at_utc: "00:30"
+    importance: 1
+    # AU CPI is quarterly (Jan, Apr, Jul, Oct). The scheduler will still
+    # run this monthly — it just won't find new data most months, which
+    # is cheap and harmless.
+
+  - name: AU Employment
+    country: AU
+    day_of_month_range: "10-20"
+    scheduled_at_utc: "00:30"
+    importance: 1
+
+  # ── NZ ──────────────────────────────────────────────────────────────
+  - name: NZ CPI (quarterly)
+    country: NZ
+    day_of_month_range: "13-20"
+    scheduled_at_utc: "21:45"
+    importance: 1
+
+  # ── CA ──────────────────────────────────────────────────────────────
+  - name: CA CPI
+    country: CA
+    day_of_month_range: "15-22"
+    scheduled_at_utc: "12:30"
+    importance: 1
+
+  - name: CA Employment
+    country: CA
+    day_of_week: 4  # Friday
+    day_of_month_range: "1-10"
+    scheduled_at_utc: "12:30"
+    importance: 1
+
+  # ── CH ──────────────────────────────────────────────────────────────
+  - name: CH CPI
+    country: CH
+    day_of_month_range: "1-7"
+    scheduled_at_utc: "06:30"
+    importance: 1

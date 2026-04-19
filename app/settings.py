@@ -56,6 +56,13 @@ class Settings(BaseSettings):
         description="Python logging level",
     )
 
+    # Scheduler
+    enable_scheduler: bool = Field(
+        default=True,
+        alias="ENABLE_SCHEDULER",
+        description="Run background ingestion jobs. Disable for tests/scripts.",
+    )
+    
     # HTTP client behavior
     http_timeout_seconds: float = Field(
         default=30.0,

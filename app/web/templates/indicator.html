@@ -1,150 +1,165 @@
 {% extends "base.html" %}
 
 {% block body %}
-<div
+<main
     class="shell shell--indicator"
     data-country-code="{{ country.code|lower }}"
     data-canonical-name="{{ indicator.canonical_name }}"
 >
-
-    <!-- Header -->
-    <div class="indicator-hdr">
-        <div class="indicator-hdr__breadcrumb">
-            <a href="/">HOME</a>
-            <span style="color:var(--text-dim)"> / </span>
-            <a href="/country/{{ country.code|lower }}">{{ country.code }}</a>
-            <span style="color:var(--text-dim)"> / </span>
-            {{ indicator.canonical_name }}
-        </div>
-        <div class="indicator-hdr__title">{{ indicator.display_name }}</div>
-        <div class="indicator-hdr__chips">
-            <span class="chip">TIER {{ indicator.importance }}</span>
-            <span class="chip">{{ indicator.primary_category|upper }}</span>
-            <span class="chip">{{ indicator.frequency|upper }}</span>
+    <header class="indicator-hero">
+        <a class="back-link" href="/country/{{ country.code|lower }}">Back to {{ country.name }}</a>
+        <div class="indicator-hero__meta">{{ country.code }} / {{ country.currency_code }}</div>
+        <h1>{{ indicator.display_name }}</h1>
+        <p class="indicator-hero__copy">
+            Chart the series, inspect revisions, and compare prints against consensus, prior values,
+            and the central-bank target without leaving the workstation.
+        </p>
+        <div class="indicator-hero__chips">
+            <span class="info-chip">Tier {{ indicator.importance }}</span>
+            <span class="info-chip">{{ indicator.primary_category }}</span>
+            <span class="info-chip">{{ indicator.frequency }}</span>
             {% if indicator.unit %}
-                <span class="chip">{{ indicator.unit|upper }}</span>
+                <span class="info-chip">{{ indicator.unit }}</span>
             {% endif %}
-            <span class="chip">{{ country.code }} / {{ country.currency_code }}</span>
         </div>
-    </div>
+    </header>
 
-    <!-- Controls -->
-    <div class="ctrl-bar">
-        <div class="ctrl-group" id="chart-type-control">
-            <span class="ctrl-group__label">TYPE</span>
-            <button class="ctrl-btn is-active" data-chart-type="line" type="button">LINE</button>
-            <button class="ctrl-btn" data-chart-type="bar" type="button">BAR</button>
-            <button class="ctrl-btn" data-chart-type="histogram" type="button">HIST</button>
-            <button class="ctrl-btn" data-chart-type="deviation" type="button">SURP</button>
-            <button class="ctrl-btn" data-chart-type="heatmap" type="button">HEAT</button>
+    <section class="indicator-controls">
+        <div class="control-group">
+            <span class="control-group__label">Chart type</span>
+            <div class="segmented-control" id="chart-type-control">
+                <button class="control-button is-active" data-chart-type="line" type="button">Line</button>
+                <button class="control-button" data-chart-type="bar" type="button">Bar</button>
+                <button class="control-button" data-chart-type="histogram" type="button">Histogram</button>
+                <button class="control-button" data-chart-type="deviation" type="button">Deviation</button>
+                <button class="control-button" data-chart-type="heatmap" type="button">Heatmap</button>
+            </div>
         </div>
-        <div class="ctrl-group" id="range-control">
-            <span class="ctrl-group__label">RANGE</span>
-            <button class="ctrl-btn" data-range-key="1y" type="button">1Y</button>
-            <button class="ctrl-btn" data-range-key="3y" type="button">3Y</button>
-            <button class="ctrl-btn" data-range-key="5y" type="button">5Y</button>
-            <button class="ctrl-btn is-active" data-range-key="all" type="button">ALL</button>
-        </div>
-        <div class="ctrl-group" id="revision-control">
-            <span class="ctrl-group__label">REVISION</span>
-            <button class="ctrl-btn is-active" data-revision-mode="latest" type="button">LATEST</button>
-            <button class="ctrl-btn" data-revision-mode="as_reported" type="button">AS-RPTD</button>
-        </div>
-        <div class="ctrl-group">
-            <span class="ctrl-group__label">OVERLAY</span>
-            <label class="ctrl-check">
-                <input id="overlay-estimate" type="checkbox" checked>
-                CONSENSUS
-            </label>
-            <label class="ctrl-check">
-                <input id="overlay-target" type="checkbox" checked>
-                CB TARGET
-            </label>
-            <label class="ctrl-check">
-                <input id="overlay-previous" type="checkbox">
-                PREVIOUS
-            </label>
-        </div>
-    </div>
 
-    <!-- Chart + side panel -->
-    <div class="indicator-stage">
-        <div class="chart-pane">
-            <div class="chart-pane__header">
-                <span class="chart-pane__title" id="chart-title">{{ indicator.display_name|upper }}</span>
-                <span class="chart-pane__meta" id="chart-meta">LOADING...</span>
+        <div class="control-row">
+            <div class="control-group">
+                <span class="control-group__label">Time range</span>
+                <div class="segmented-control" id="range-control">
+                    <button class="control-button" data-range-key="1y" type="button">1Y</button>
+                    <button class="control-button" data-range-key="3y" type="button">3Y</button>
+                    <button class="control-button" data-range-key="5y" type="button">5Y</button>
+                    <button class="control-button is-active" data-range-key="all" type="button">All</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="control-group__label">Revision mode</span>
+                <div class="segmented-control" id="revision-control">
+                    <button class="control-button is-active" data-revision-mode="latest" type="button">Latest</button>
+                    <button class="control-button" data-revision-mode="as_reported" type="button">As-reported</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <span class="control-group__label">Overlays</span>
+            <div class="checkbox-row">
+                <label class="checkbox-pill">
+                    <input id="overlay-estimate" type="checkbox" checked>
+                    <span>Consensus line</span>
+                </label>
+                <label class="checkbox-pill">
+                    <input id="overlay-target" type="checkbox" checked>
+                    <span>CB target line</span>
+                </label>
+                <label class="checkbox-pill">
+                    <input id="overlay-previous" type="checkbox">
+                    <span>Previous</span>
+                </label>
+            </div>
+        </div>
+    </section>
+
+    <section class="indicator-stage">
+        <div class="chart-shell">
+            <div class="chart-shell__header">
+                <div>
+                    <p class="eyebrow">Indicator detail</p>
+                    <h2 id="chart-title">{{ indicator.display_name }}</h2>
+                </div>
+                <div class="chart-shell__meta" id="chart-meta">Loading series…</div>
             </div>
             <div id="indicator-chart" class="indicator-chart" aria-live="polite"></div>
         </div>
 
-        <div class="side-pane">
-            <div class="side-pane__row">
-                <div class="side-pane__label">Country</div>
-                <div class="side-pane__value">{{ country.name }}</div>
+        <aside class="side-panel">
+            <div class="side-panel__block">
+                <span class="side-panel__label">Country</span>
+                <strong>{{ country.name }}</strong>
             </div>
-            <div class="side-pane__row">
-                <div class="side-pane__label">Central Bank</div>
-                <div class="side-pane__value">{{ country.central_bank }}</div>
+            <div class="side-panel__block">
+                <span class="side-panel__label">Central bank</span>
+                <strong>{{ country.central_bank }}</strong>
             </div>
-            <div class="side-pane__row">
-                <div class="side-pane__label">CB Target</div>
-                <div class="side-pane__value">
+            <div class="side-panel__block">
+                <span class="side-panel__label">Inflation target</span>
+                <strong>
                     {% if country.cb_inflation_target is not none %}
                         {{ "%.2f"|format(country.cb_inflation_target) }}%
                     {% else %}
-                        —
+                        Not set
                     {% endif %}
-                </div>
+                </strong>
             </div>
-            <div class="side-pane__row">
-                <div class="side-pane__label">Category</div>
-                <div class="side-pane__value">{{ indicator.primary_category }}</div>
+            <div class="side-panel__block">
+                <span class="side-panel__label">Category</span>
+                <strong>{{ indicator.primary_category }}</strong>
             </div>
-            <div class="side-pane__row">
-                <div class="side-pane__label">Comparison</div>
-                <div class="side-pane__value">{{ indicator.comparison or "—" }}</div>
+            <div class="side-panel__block">
+                <span class="side-panel__label">Comparison</span>
+                <strong>{{ indicator.comparison or "Not set" }}</strong>
             </div>
-            <div class="side-pane__row">
-                <div class="side-pane__label">Frequency</div>
-                <div class="side-pane__value">{{ indicator.frequency or "—" }}</div>
+            <div class="side-panel__block">
+                <span class="side-panel__label">Frequency</span>
+                <strong>{{ indicator.frequency or "Not set" }}</strong>
             </div>
             {% if indicator.is_higher_better_for_currency is not none %}
-            <div class="side-pane__row">
-                <div class="side-pane__label">Higher = CCY</div>
-                <div class="side-pane__value {% if indicator.is_higher_better_for_currency %}is-positive{% else %}is-negative{% endif %}">
-                    {% if indicator.is_higher_better_for_currency %}BULLISH{% else %}BEARISH{% endif %}
+                <div class="side-panel__block">
+                    <span class="side-panel__label">Higher for FX</span>
+                    <strong class="{% if indicator.is_higher_better_for_currency %}is-positive{% else %}is-negative{% endif %}">
+                        {% if indicator.is_higher_better_for_currency %}Bullish{% else %}Bearish{% endif %}
+                    </strong>
                 </div>
-            </div>
             {% endif %}
+        </aside>
+    </section>
+
+    <section class="prints-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Recent Prints</p>
+                <h2>Latest 12 observations</h2>
+            </div>
+            <p class="panel-copy" id="prints-meta">Updating with selected range and revision mode.</p>
         </div>
-    </div>
 
-    <!-- Recent prints table -->
-    <div class="sec-bar">
-        <span class="sec-bar__title">RECENT PRINTS &mdash; LATEST 12</span>
-        <span class="sec-bar__meta" id="prints-meta">LOADING...</span>
-    </div>
-
-    <div style="overflow-x:auto">
-        <table class="prints-tbl">
-            <thead>
-                <tr>
-                    <th>Period</th>
-                    <th>Released</th>
-                    <th>Actual</th>
-                    <th>Consensus</th>
-                    <th>Previous</th>
-                    <th>Surprise</th>
-                    <th>Δ%</th>
-                </tr>
-            </thead>
-            <tbody id="recent-prints-body">
-                <tr class="loading-row"><td colspan="7">LOADING PRINTS...</td></tr>
-            </tbody>
-        </table>
-    </div>
-
-</div>
+        <div class="prints-table-wrap">
+            <table class="prints-table">
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Released</th>
+                        <th>Actual</th>
+                        <th>Estimate</th>
+                        <th>Previous</th>
+                        <th>Surprise</th>
+                        <th>Delta %</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-prints-body">
+                    <tr>
+                        <td colspan="7" class="prints-table__loading">Loading recent prints…</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
 
 <script src="{{ url_for('static', path='js/indicator.js') }}" defer></script>
 {% endblock %}

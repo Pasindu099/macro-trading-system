@@ -1,0 +1,33 @@
+INSERT INTO indicators (canonical_name, display_name, country_code, primary_category, frequency, unit, is_higher_better_for_currency, importance) VALUES
+('US_CPI', 'Consumer Price Index', 'US', 'Inflation', 'monthly', 'YoY %', true, 3),
+('US_UNEMPLOYMENT', 'Unemployment Rate', 'US', 'Labor', 'monthly', '%', false, 3),
+('US_NONFARM_PAYROLL', 'Non-Farm Payroll', 'US', 'Labor', 'monthly', 'k', true, 3),
+('US_GDP', 'GDP Growth', 'US', 'Growth', 'quarterly', 'QoQ %', true, 3),
+('US_PPI', 'Producer Price Index', 'US', 'Inflation', 'monthly', 'YoY %', true, 2),
+('EU_CPI', 'Consumer Price Index', 'EU', 'Inflation', 'monthly', 'YoY %', true, 3),
+('EU_UNEMPLOYMENT', 'Unemployment Rate', 'EU', 'Labor', 'monthly', '%', false, 2),
+('EU_GDP', 'GDP Growth', 'EU', 'Growth', 'quarterly', 'QoQ %', true, 3),
+('UK_CPI', 'Consumer Price Index', 'UK', 'Inflation', 'monthly', 'YoY %', true, 3),
+('UK_UNEMPLOYMENT', 'Unemployment Rate', 'UK', 'Labor', 'monthly', '%', false, 2),
+('JP_CPI', 'Consumer Price Index', 'JP', 'Inflation', 'monthly', 'YoY %', true, 2),
+('JP_UNEMPLOYMENT', 'Unemployment Rate', 'JP', 'Labor', 'monthly', '%', false, 2),
+('AU_CPI', 'Consumer Price Index', 'AU', 'Inflation', 'quarterly', 'QoQ %', true, 3),
+('AU_UNEMPLOYMENT', 'Unemployment Rate', 'AU', 'Labor', 'monthly', '%', false, 2),
+('CA_CPI', 'Consumer Price Index', 'CA', 'Inflation', 'monthly', 'YoY %', true, 2),
+('CA_UNEMPLOYMENT', 'Unemployment Rate', 'CA', 'Labor', 'monthly', '%', false, 2);
+
+INSERT INTO indicator_releases (indicator_id, period, period_start_date, released_at, actual, estimate, previous, change) VALUES
+(1, '2026-03', '2026-03-01', '2026-04-10T13:30:00Z', 3.5, 3.4, 3.2, 0.3),
+(2, '2026-03', '2026-03-01', '2026-04-05T12:30:00Z', 3.8, 3.9, 3.7, 0.1),
+(3, '2026-03', '2026-03-01', '2026-04-03T12:30:00Z', 275000, 280000, 290000, -15000),
+(5, '2026-03', '2026-03-01', '2026-04-12T13:00:00Z', 2.8, 2.7, 2.5, 0.3),
+(6, '2026-03', '2026-03-01', '2026-04-10T10:00:00Z', 2.4, 2.3, 2.1, 0.3),
+(7, '2026-03', '2026-03-01', '2026-04-01T10:00:00Z', 6.2, 6.1, 6.0, 0.2),
+(9, '2026-03', '2026-03-01', '2026-04-08T09:30:00Z', 3.2, 3.1, 2.9, 0.3),
+(10, '2026-03', '2026-03-01', '2026-04-09T09:30:00Z', 3.9, 4.0, 3.8, 0.1),
+(11, '2026-03', '2026-03-01', '2026-04-08T08:00:00Z', 2.7, 2.8, 2.5, 0.2),
+(12, '2026-03', '2026-03-01', '2026-04-07T08:00:00Z', 2.3, 2.4, 2.2, 0.1),
+(13, '2025-12-31', '2025-12-01', '2026-04-02T02:30:00Z', 3.1, 3.0, 2.8, 0.3),
+(14, '2026-03', '2026-03-01', '2026-04-10T01:30:00Z', 3.6, 3.7, 3.5, 0.1),
+(15, '2026-02', '2026-02-01', '2026-04-17T13:00:00Z', 2.5, 2.4, 2.3, 0.2),
+(16, '2026-03', '2026-03-01', '2026-04-05T12:00:00Z', 4.1, 4.0, 3.9, 0.2);

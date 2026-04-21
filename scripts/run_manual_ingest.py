@@ -37,6 +37,7 @@ from app.ingestion.run_logger import run_logger
 from app.logging_config import configure_logging
 
 logger = logging.getLogger(__name__)
+CALENDAR_FORWARD_DAYS = 14
 
 
 def parse_args() -> argparse.Namespace:
@@ -74,11 +75,12 @@ def parse_date(s: str | None, default: date) -> date:
 
 
 async def main_async(args: argparse.Namespace) -> int:
-    to_date = parse_date(args.to_date, date.today())
+    today = date.today()
+    to_date = parse_date(args.to_date, today + timedelta(days=CALENDAR_FORWARD_DAYS))
     if args.from_date:
         from_date = parse_date(args.from_date, to_date)
     else:
-        from_date = to_date - timedelta(days=args.days)
+        from_date = today - timedelta(days=args.days)
 
     if args.country:
         country = args.country.upper()

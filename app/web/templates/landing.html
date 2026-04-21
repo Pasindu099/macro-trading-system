@@ -1,62 +1,192 @@
 {% extends "base.html" %}
 
 {% block body %}
-<div class="shell">
+<main class="shell">
+    <header class="topbar">
+        <div>
+            <p class="eyebrow">Macro Dashboard</p>
+            <h1 class="headline">G10 macro monitor for fast FX context.</h1>
+        </div>
+        <div class="topbar__meta">
+            <span class="topbar__pill">8 countries tracked</span>
+            <a class="topbar__link" href="#news-feed">News feed</a>
+            <a class="topbar__link" href="/calendar">Economic calendar</a>
+            <a class="topbar__link" href="/docs">API docs</a>
+        </div>
+    </header>
 
-    <!-- Surprise ticker -->
-    <div class="sec-bar">
-        <span class="sec-bar__title">WEEKLY PULSE &mdash; BIGGEST SURPRISES (7D)</span>
-        <span class="sec-bar__meta">Δ ACTUAL vs CONSENSUS</span>
-    </div>
+    <section class="surprises-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Weekly Pulse</p>
+                <h2>This Week's Biggest Surprises</h2>
+            </div>
+            <p class="panel-copy">Largest absolute deviations between actual and estimate across the last 7 days.</p>
+        </div>
 
-    <div class="ticker-strip">
-        {% if surprises %}
-            {% for item in surprises %}
-                <div class="ticker-item">
-                    <div class="ticker-item__top">
-                        <span>{{ item.country_code }}/{{ item.currency_code }}</span>
-                        <span>{{ item.released_at.strftime("%d-%b %H:%M") }}</span>
-                    </div>
-                    <div class="ticker-item__name" title="{{ item.display_name }}">{{ item.display_name }}</div>
-                    <div class="ticker-item__vals">
-                        <span class="ticker-item__surprise {% if item.surprise >= 0 %}is-positive{% else %}is-negative{% endif %}">
+        <div class="surprises-strip">
+            {% if surprises %}
+                {% for item in surprises %}
+                    <a class="surprise-card" href="/country/{{ item.country_code|lower }}/indicator/{{ item.canonical_name }}">
+                        <div class="surprise-card__meta">
+                            <span>{{ item.country_code }} / {{ item.currency_code }}</span>
+                            <span>{{ item.released_at.strftime("%b %d %H:%M UTC") }}</span>
+                        </div>
+                        <h3>{{ item.display_name }}</h3>
+                        <div class="surprise-card__value {% if item.surprise >= 0 %}is-positive{% else %}is-negative{% endif %}">
                             {{ "%+.2f"|format(item.surprise) }}
-                        </span>
-                        <span style="color:var(--muted);font-size:10px">
-                            ACT {{ "%.2f"|format(item.actual) if item.actual is not none else "N/A" }}
-                            &nbsp;EST {{ "%.2f"|format(item.estimate) if item.estimate is not none else "N/A" }}
-                        </span>
-                    </div>
-                </div>
-            {% endfor %}
+                        </div>
+                        <div class="surprise-card__footer">
+                            <span>Actual {{ "%.2f"|format(item.actual) if item.actual is not none else "N/A" }}</span>
+                            <span>Est. {{ "%.2f"|format(item.estimate) if item.estimate is not none else "N/A" }}</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            {% else %}
+                <div class="empty-panel">No mapped surprises were available for the last 7 days.</div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="currency-stance-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Currency Stance</p>
+                <h2>Fundamental Currency Meters</h2>
+            </div>
+            <p class="panel-copy">Rolling macro stance from inflation, labor, and growth pressure. Green is supportive, orange is neutral, red is negative.</p>
+        </div>
+
+        {% if currency_stance %}
+            <div class="stance-window-grid">
+                {% for window, rows in currency_stance.items() %}
+                    <section class="stance-window">
+                        <div class="stance-window__header">
+                            <h3>{{ window }}M</h3>
+                            <span>
+                                {% if rows and rows[0].date %}
+                                    {{ rows[0].date.strftime("%b %d, %Y") }}
+                                {% else %}
+                                    Latest
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="stance-list">
+                            {% for row in rows %}
+                                <a class="stance-row" href="/country/{{ row.country_code|lower }}">
+                                    <div class="stance-row__rank">{{ row.rank }}</div>
+                                    <div class="stance-row__main">
+                                        <div class="stance-row__topline">
+                                            <strong>{{ row.currency }}</strong>
+                                            <span>{{ row.label }}</span>
+                                        </div>
+                                        <div class="stance-row__meta">
+                                            <span>{{ row.score }}</span>
+                                            <span>{{ row.trend }}</span>
+                                            <span>{{ row.confidence }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="stance-row__overall">
+                                        <div
+                                            class="stance-meter {{ row.color_class }}"
+                                            style="--meter-value: {{ row.score_percent }}%;"
+                                            aria-label="{{ row.currency }} overall stance {{ row.score }}"
+                                        >
+                                            <span>{{ row.score }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="category-meter-strip" aria-label="{{ row.currency }} category scores">
+                                        {% for meter in row.category_meters %}
+                                            <div class="category-meter-wrap">
+                                                <div
+                                                    class="category-meter {{ meter.color_class }}"
+                                                    style="--meter-value: {{ meter.percent }}%;"
+                                                    title="{{ meter.label }} {{ meter.score }}"
+                                                    aria-label="{{ meter.label }} {{ meter.score }}"
+                                                >
+                                                    <span>{{ meter.short_label }}</span>
+                                                </div>
+                                                <span>{{ meter.score }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endfor %}
+            </div>
         {% else %}
-            <span class="ticker-empty">No mapped surprises for the last 7 days.</span>
+            <div class="empty-panel">Currency stance data has not been built yet.</div>
         {% endif %}
-    </div>
+    </section>
 
-    <!-- Country matrix -->
-    <div class="sec-bar">
-        <span class="sec-bar__title">COUNTRY MONITOR &mdash; 8 TRACKED CURRENCIES</span>
-        <span class="sec-bar__meta">SELECT COUNTRY TO DRILL DOWN</span>
-    </div>
+    <section id="news-feed" class="news-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">News Feed</p>
+                <h2>Latest Macro Headlines</h2>
+            </div>
+            <p class="panel-copy">Live EODHD news headlines for a quick macro scan from the landing page.</p>
+        </div>
 
-    <div class="country-matrix">
-        {% for country in country_cards %}
-            <a class="cmatrix-cell" href="/country/{{ country.code|lower }}">
-                <div class="cmatrix-cell__flag">{{ country.flag }}</div>
-                <div class="cmatrix-cell__code">{{ country.code }}</div>
-                <div class="cmatrix-cell__name">{{ country.name }}</div>
-                <div class="cmatrix-cell__ccy">{{ country.currency_code }}</div>
-                <div class="cmatrix-cell__ts">
-                    {% if country.latest_release_at %}
-                        {{ country.latest_release_at.strftime("%d-%b %H:%M") }}
-                    {% else %}
-                        --
-                    {% endif %}
-                </div>
-            </a>
-        {% endfor %}
-    </div>
+        <div class="news-list">
+            {% if news_items %}
+                {% for item in news_items %}
+                    <a class="news-card" href="{{ item.link }}" target="_blank" rel="noreferrer">
+                        <div class="news-card__meta">
+                            <span>{{ item.source }}</span>
+                            <span>{{ item.published_at or "Recent" }}</span>
+                        </div>
+                        <h3>{{ item.title }}</h3>
+                        <p>{{ item.summary or "Open the article for full details." }}</p>
+                        <div class="news-card__footer">
+                            <div class="news-card__tags">
+                                {% for tag in item.tags %}
+                                    <span class="news-tag">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                            <span class="news-card__cta">Open</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            {% else %}
+                <div class="empty-panel">No EODHD news items were available right now.</div>
+            {% endif %}
+        </div>
+    </section>
 
-</div>
+    <section class="countries-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Country Matrix</p>
+                <h2>Tracked Countries</h2>
+            </div>
+            <p class="panel-copy">Choose a country to inspect inflation, growth, and labor indicators without leaving the dashboard flow.</p>
+        </div>
+
+        <div class="country-grid">
+            {% for country in country_cards %}
+                <a class="country-card" href="/country/{{ country.code|lower }}">
+                    <div class="country-card__meta">
+                        <span class="country-card__flag">{{ country.flag }}</span>
+                        <span>{{ country.currency_code }}</span>
+                    </div>
+                    <h3>{{ country.name }}</h3>
+                    <p>{{ country.code }}</p>
+                    <div class="country-card__footer">
+                        <span>Last updated</span>
+                        <strong>
+                            {% if country.latest_release_at %}
+                                {{ country.latest_release_at.strftime("%b %d %H:%M") }}
+                            {% else %}
+                                No releases
+                            {% endif %}
+                        </strong>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    </section>
+</main>
 {% endblock %}

@@ -373,7 +373,10 @@ def _parse_period(period: str | None, released_at: datetime) -> date | None:
     if m:
         quarter = int(m[1])
         month = (quarter - 1) * 3 + 1
-        return date(year_hint, month, 1)
+        year = year_hint
+        if month > released_at.month + 1:
+            year -= 1
+        return date(year, month, 1)
 
     # 5. Try "Mar 2026" or "Mar-2026" (space/dash separator, NOT slash)
     m = _PATTERN_MONTH_YEAR.match(period)

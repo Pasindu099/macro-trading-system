@@ -1,0 +1,726 @@
+{
+  "confidence_performance": [
+    {
+      "avg_signal_aligned_return": -0.00020516676970633695,
+      "confidence": "high",
+      "directional_accuracy": 0.4992272024729521,
+      "horizon_days": 5,
+      "samples": 647
+    },
+    {
+      "avg_signal_aligned_return": -0.0001340228173374613,
+      "confidence": "high",
+      "directional_accuracy": 0.5263157894736842,
+      "horizon_days": 10,
+      "samples": 646
+    },
+    {
+      "avg_signal_aligned_return": -0.0005477865474339036,
+      "confidence": "high",
+      "directional_accuracy": 0.4976671850699845,
+      "horizon_days": 21,
+      "samples": 643
+    },
+    {
+      "avg_signal_aligned_return": -0.00021573163043478262,
+      "confidence": "low",
+      "directional_accuracy": 0.47391304347826085,
+      "horizon_days": 5,
+      "samples": 920
+    },
+    {
+      "avg_signal_aligned_return": 1.1795978260869565e-05,
+      "confidence": "low",
+      "directional_accuracy": 0.5108695652173914,
+      "horizon_days": 10,
+      "samples": 920
+    },
+    {
+      "avg_signal_aligned_return": -0.00016014327133479213,
+      "confidence": "low",
+      "directional_accuracy": 0.4803063457330416,
+      "horizon_days": 21,
+      "samples": 914
+    },
+    {
+      "avg_signal_aligned_return": -9.409884810126582e-05,
+      "confidence": "medium",
+      "directional_accuracy": 0.49651898734177213,
+      "horizon_days": 5,
+      "samples": 3160
+    },
+    {
+      "avg_signal_aligned_return": 8.981923637515844e-05,
+      "confidence": "medium",
+      "directional_accuracy": 0.5015842839036755,
+      "horizon_days": 10,
+      "samples": 3156
+    },
+    {
+      "avg_signal_aligned_return": 0.0001887759227330779,
+      "confidence": "medium",
+      "directional_accuracy": 0.5073435504469987,
+      "horizon_days": 21,
+      "samples": 3132
+    }
+  ],
+  "country_validation_metrics": [
+    {
+      "avg_signal_aligned_return": -0.00010107,
+      "correlation": 0.023547,
+      "country_code": "CH",
+      "currency_code": "CHF",
+      "directional_accuracy": 0.535519,
+      "horizon_days": 10,
+      "pair_code": "USDCHF",
+      "sample_count": 366,
+      "sharpe_like": -0.007022,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00023459,
+      "correlation": 0.001807,
+      "country_code": "JP",
+      "currency_code": "JPY",
+      "directional_accuracy": 0.534932,
+      "horizon_days": 21,
+      "pair_code": "USDJPY",
+      "sample_count": 959,
+      "sharpe_like": -0.010054,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -7.975e-05,
+      "correlation": -0.024355,
+      "country_code": "CA",
+      "currency_code": "CAD",
+      "directional_accuracy": 0.528331,
+      "horizon_days": 10,
+      "pair_code": "USDCAD",
+      "sample_count": 653,
+      "sharpe_like": -0.007752,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.00036586,
+      "correlation": 0.018263,
+      "country_code": "UK",
+      "currency_code": "GBP",
+      "directional_accuracy": 0.521672,
+      "horizon_days": 5,
+      "pair_code": "GBPUSD",
+      "sample_count": 646,
+      "sharpe_like": 0.035542,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.00221886,
+      "correlation": 0.080085,
+      "country_code": "US",
+      "currency_code": "USD",
+      "directional_accuracy": 0.520761,
+      "horizon_days": 21,
+      "pair_code": "USD_BASKET",
+      "sample_count": 578,
+      "sharpe_like": 0.13272,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.00024276,
+      "correlation": -0.017289,
+      "country_code": "UK",
+      "currency_code": "GBP",
+      "directional_accuracy": 0.513932,
+      "horizon_days": 10,
+      "pair_code": "GBPUSD",
+      "sample_count": 646,
+      "sharpe_like": 0.01727,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -4.369e-05,
+      "correlation": 0.021612,
+      "country_code": "JP",
+      "currency_code": "JPY",
+      "directional_accuracy": 0.513485,
+      "horizon_days": 10,
+      "pair_code": "USDJPY",
+      "sample_count": 964,
+      "sharpe_like": -0.002647,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.00112131,
+      "correlation": 0.035379,
+      "country_code": "UK",
+      "currency_code": "GBP",
+      "directional_accuracy": 0.510903,
+      "horizon_days": 21,
+      "pair_code": "GBPUSD",
+      "sample_count": 642,
+      "sharpe_like": 0.058559,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.00112656,
+      "correlation": 0.071269,
+      "country_code": "US",
+      "currency_code": "USD",
+      "directional_accuracy": 0.508532,
+      "horizon_days": 10,
+      "pair_code": "USD_BASKET",
+      "sample_count": 586,
+      "sharpe_like": 0.093814,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00027917,
+      "correlation": -0.063418,
+      "country_code": "CA",
+      "currency_code": "CAD",
+      "directional_accuracy": 0.503077,
+      "horizon_days": 21,
+      "pair_code": "USDCAD",
+      "sample_count": 650,
+      "sharpe_like": -0.018593,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00018179,
+      "correlation": -0.066658,
+      "country_code": "CA",
+      "currency_code": "CAD",
+      "directional_accuracy": 0.503058,
+      "horizon_days": 5,
+      "pair_code": "USDCAD",
+      "sample_count": 654,
+      "sharpe_like": -0.025109,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -9.814e-05,
+      "correlation": 0.052613,
+      "country_code": "CH",
+      "currency_code": "CHF",
+      "directional_accuracy": 0.501377,
+      "horizon_days": 21,
+      "pair_code": "USDCHF",
+      "sample_count": 363,
+      "sharpe_like": -0.005332,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.00033744,
+      "correlation": 0.065321,
+      "country_code": "US",
+      "currency_code": "USD",
+      "directional_accuracy": 0.494898,
+      "horizon_days": 5,
+      "pair_code": "USD_BASKET",
+      "sample_count": 588,
+      "sharpe_like": 0.039368,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00041315,
+      "correlation": 0.001925,
+      "country_code": "JP",
+      "currency_code": "JPY",
+      "directional_accuracy": 0.490683,
+      "horizon_days": 5,
+      "pair_code": "USDJPY",
+      "sample_count": 966,
+      "sharpe_like": -0.034678,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00117127,
+      "correlation": 0.0282,
+      "country_code": "EU",
+      "currency_code": "EUR",
+      "directional_accuracy": 0.48532,
+      "horizon_days": 21,
+      "pair_code": "EURUSD",
+      "sample_count": 579,
+      "sharpe_like": -0.063538,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00058311,
+      "correlation": 0.011776,
+      "country_code": "EU",
+      "currency_code": "EUR",
+      "directional_accuracy": 0.482818,
+      "horizon_days": 10,
+      "pair_code": "EURUSD",
+      "sample_count": 582,
+      "sharpe_like": -0.044664,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00014175,
+      "correlation": -0.035362,
+      "country_code": "NZ",
+      "currency_code": "NZD",
+      "directional_accuracy": 0.482428,
+      "horizon_days": 10,
+      "pair_code": "NZDUSD",
+      "sample_count": 313,
+      "sharpe_like": -0.008255,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00015411,
+      "correlation": 0.03637,
+      "country_code": "AU",
+      "currency_code": "AUD",
+      "directional_accuracy": 0.482026,
+      "horizon_days": 10,
+      "pair_code": "AUDUSD",
+      "sample_count": 612,
+      "sharpe_like": -0.008344,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00033171,
+      "correlation": -0.014707,
+      "country_code": "EU",
+      "currency_code": "EUR",
+      "directional_accuracy": 0.4811,
+      "horizon_days": 5,
+      "pair_code": "EURUSD",
+      "sample_count": 582,
+      "sharpe_like": -0.036262,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00028454,
+      "correlation": 0.015722,
+      "country_code": "CH",
+      "currency_code": "CHF",
+      "directional_accuracy": 0.480874,
+      "horizon_days": 5,
+      "pair_code": "USDCHF",
+      "sample_count": 366,
+      "sharpe_like": -0.029345,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -7.381e-05,
+      "correlation": -0.017501,
+      "country_code": "NZ",
+      "currency_code": "NZD",
+      "directional_accuracy": 0.479233,
+      "horizon_days": 5,
+      "pair_code": "NZDUSD",
+      "sample_count": 313,
+      "sharpe_like": -0.006133,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.0003677,
+      "correlation": -0.078482,
+      "country_code": "AU",
+      "currency_code": "AUD",
+      "directional_accuracy": 0.47549,
+      "horizon_days": 5,
+      "pair_code": "AUDUSD",
+      "sample_count": 612,
+      "sharpe_like": -0.029012,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00057243,
+      "correlation": -0.052358,
+      "country_code": "NZ",
+      "currency_code": "NZD",
+      "directional_accuracy": 0.454839,
+      "horizon_days": 21,
+      "pair_code": "NZDUSD",
+      "sample_count": 310,
+      "sharpe_like": -0.024403,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00100667,
+      "correlation": 0.085453,
+      "country_code": "AU",
+      "currency_code": "AUD",
+      "directional_accuracy": 0.452303,
+      "horizon_days": 21,
+      "pair_code": "AUDUSD",
+      "sample_count": 608,
+      "sharpe_like": -0.03948,
+      "validation_status": "weak"
+    }
+  ],
+  "fetch_report": [
+    {
+      "error": "Client error '429 Too Many Requests' for url 'https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB?period1=1577923200&period2=1777593599&interval=1d&events=history'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+      "pair_code": "USD_BASKET",
+      "status": "failed",
+      "symbol": "DX-Y.NYB"
+    },
+    {
+      "error": "Client error '429 Too Many Requests' for url 'https://query1.finance.yahoo.com/v8/finance/chart/EURUSD%3DX?period1=1577923200&period2=1777593599&interval=1d&events=history'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+      "pair_code": "EURUSD",
+      "status": "failed",
+      "symbol": "EURUSD=X"
+    },
+    {
+      "error": "Client error '429 Too Many Requests' for url 'https://query1.finance.yahoo.com/v8/finance/chart/GBPUSD%3DX?period1=1577923200&period2=1777593599&interval=1d&events=history'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+      "pair_code": "GBPUSD",
+      "status": "failed",
+      "symbol": "GBPUSD=X"
+    },
+    {
+      "error": "Client error '429 Too Many Requests' for url 'https://query1.finance.yahoo.com/v8/finance/chart/JPY%3DX?period1=1577923200&period2=1777593599&interval=1d&events=history'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+      "pair_code": "USDJPY",
+      "status": "failed",
+      "symbol": "JPY=X"
+    },
+    {
+      "error": "Client error '429 Too Many Requests' for url 'https://query1.finance.yahoo.com/v8/finance/chart/CAD%3DX?period1=1577923200&period2=1777593599&interval=1d&events=history'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+      "pair_code": "USDCAD",
+      "status": "failed",
+      "symbol": "CAD=X"
+    },
+    {
+      "error": "Client error '429 Too Many Requests' for url 'https://query1.finance.yahoo.com/v8/finance/chart/AUDUSD%3DX?period1=1577923200&period2=1777593599&interval=1d&events=history'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+      "pair_code": "AUDUSD",
+      "status": "failed",
+      "symbol": "AUDUSD=X"
+    },
+    {
+      "error": "Client error '429 Too Many Requests' for url 'https://query1.finance.yahoo.com/v8/finance/chart/NZDUSD%3DX?period1=1577923200&period2=1777593599&interval=1d&events=history'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+      "pair_code": "NZDUSD",
+      "status": "failed",
+      "symbol": "NZDUSD=X"
+    },
+    {
+      "error": "Client error '429 Too Many Requests' for url 'https://query1.finance.yahoo.com/v8/finance/chart/CHF%3DX?period1=1577923200&period2=1777593599&interval=1d&events=history'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+      "pair_code": "USDCHF",
+      "status": "failed",
+      "symbol": "CHF=X"
+    },
+    {
+      "pair_code": "EURUSD",
+      "rows": 1613,
+      "status": "fetched_ecb_fallback",
+      "symbol": "ECB_EUR_REFERENCE_RATES"
+    },
+    {
+      "pair_code": "GBPUSD",
+      "rows": 1613,
+      "status": "fetched_ecb_fallback",
+      "symbol": "ECB_EUR_REFERENCE_RATES"
+    },
+    {
+      "pair_code": "USDJPY",
+      "rows": 1613,
+      "status": "fetched_ecb_fallback",
+      "symbol": "ECB_EUR_REFERENCE_RATES"
+    },
+    {
+      "pair_code": "USDCAD",
+      "rows": 1613,
+      "status": "fetched_ecb_fallback",
+      "symbol": "ECB_EUR_REFERENCE_RATES"
+    },
+    {
+      "pair_code": "AUDUSD",
+      "rows": 1613,
+      "status": "fetched_ecb_fallback",
+      "symbol": "ECB_EUR_REFERENCE_RATES"
+    },
+    {
+      "pair_code": "NZDUSD",
+      "rows": 1613,
+      "status": "fetched_ecb_fallback",
+      "symbol": "ECB_EUR_REFERENCE_RATES"
+    },
+    {
+      "pair_code": "USDCHF",
+      "rows": 1613,
+      "status": "fetched_ecb_fallback",
+      "symbol": "ECB_EUR_REFERENCE_RATES"
+    },
+    {
+      "pair_code": "USD_BASKET",
+      "rows": 1613,
+      "status": "fetched_ecb_fallback",
+      "symbol": "ECB_EUR_REFERENCE_RATES"
+    }
+  ],
+  "generated_at": "2026-04-21T08:40:32.820892Z",
+  "pair_divergence_metrics": [
+    {
+      "avg_signal_aligned_return": 0.00176646,
+      "base_country": "AU",
+      "correlation": 0.222182,
+      "directional_accuracy": 0.526087,
+      "horizon_days": 21,
+      "pair_code": "AUDUSD",
+      "quote_country": "US",
+      "sample_count": 230,
+      "sharpe_like": 0.070372,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.00027328,
+      "base_country": "UK",
+      "correlation": 0.149966,
+      "directional_accuracy": 0.52,
+      "horizon_days": 5,
+      "pair_code": "GBPUSD",
+      "quote_country": "US",
+      "sample_count": 250,
+      "sharpe_like": 0.027381,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.0001042,
+      "base_country": "UK",
+      "correlation": 0.047645,
+      "directional_accuracy": 0.516,
+      "horizon_days": 10,
+      "pair_code": "GBPUSD",
+      "quote_country": "US",
+      "sample_count": 250,
+      "sharpe_like": 0.008702,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00069768,
+      "base_country": "US",
+      "correlation": -0.003534,
+      "directional_accuracy": 0.516,
+      "horizon_days": 21,
+      "pair_code": "USDCAD",
+      "quote_country": "CA",
+      "sample_count": 250,
+      "sharpe_like": -0.047097,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.00101428,
+      "base_country": "EU",
+      "correlation": 0.076664,
+      "directional_accuracy": 0.513158,
+      "horizon_days": 21,
+      "pair_code": "EURUSD",
+      "quote_country": "US",
+      "sample_count": 228,
+      "sharpe_like": 0.056162,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.00210455,
+      "base_country": "US",
+      "correlation": 0.016496,
+      "directional_accuracy": 0.51049,
+      "horizon_days": 21,
+      "pair_code": "USDCHF",
+      "quote_country": "CH",
+      "sample_count": 143,
+      "sharpe_like": 0.115165,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.00081342,
+      "base_country": "US",
+      "correlation": 0.089483,
+      "directional_accuracy": 0.49697,
+      "horizon_days": 5,
+      "pair_code": "USDJPY",
+      "quote_country": "JP",
+      "sample_count": 330,
+      "sharpe_like": 0.079365,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.00184021,
+      "base_country": "AU",
+      "correlation": 0.260721,
+      "directional_accuracy": 0.487179,
+      "horizon_days": 10,
+      "pair_code": "AUDUSD",
+      "quote_country": "US",
+      "sample_count": 234,
+      "sharpe_like": 0.087749,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.00019903,
+      "base_country": "EU",
+      "correlation": -0.013487,
+      "directional_accuracy": 0.486957,
+      "horizon_days": 5,
+      "pair_code": "EURUSD",
+      "quote_country": "US",
+      "sample_count": 230,
+      "sharpe_like": 0.023838,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00051887,
+      "base_country": "AU",
+      "correlation": 0.035632,
+      "directional_accuracy": 0.478632,
+      "horizon_days": 5,
+      "pair_code": "AUDUSD",
+      "quote_country": "US",
+      "sample_count": 234,
+      "sharpe_like": -0.038878,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00050486,
+      "base_country": "US",
+      "correlation": 0.031489,
+      "directional_accuracy": 0.475862,
+      "horizon_days": 10,
+      "pair_code": "USDCHF",
+      "quote_country": "CH",
+      "sample_count": 145,
+      "sharpe_like": -0.038357,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00051539,
+      "base_country": "US",
+      "correlation": 0.059362,
+      "directional_accuracy": 0.474308,
+      "horizon_days": 10,
+      "pair_code": "USDCAD",
+      "quote_country": "CA",
+      "sample_count": 253,
+      "sharpe_like": -0.046467,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00017434,
+      "base_country": "UK",
+      "correlation": -0.015308,
+      "directional_accuracy": 0.473684,
+      "horizon_days": 21,
+      "pair_code": "GBPUSD",
+      "quote_country": "US",
+      "sample_count": 247,
+      "sharpe_like": -0.009554,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00079538,
+      "base_country": "US",
+      "correlation": 0.009518,
+      "directional_accuracy": 0.468966,
+      "horizon_days": 5,
+      "pair_code": "USDCHF",
+      "quote_country": "CH",
+      "sample_count": 145,
+      "sharpe_like": -0.099524,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00063987,
+      "base_country": "US",
+      "correlation": -0.033699,
+      "directional_accuracy": 0.444882,
+      "horizon_days": 5,
+      "pair_code": "USDCAD",
+      "quote_country": "CA",
+      "sample_count": 254,
+      "sharpe_like": -0.081868,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": -0.00013818,
+      "base_country": "NZ",
+      "correlation": -0.056385,
+      "directional_accuracy": 0.438596,
+      "horizon_days": 5,
+      "pair_code": "NZDUSD",
+      "quote_country": "US",
+      "sample_count": 114,
+      "sharpe_like": -0.011985,
+      "validation_status": "weak"
+    },
+    {
+      "avg_signal_aligned_return": 0.0045882,
+      "base_country": "US",
+      "correlation": 0.115952,
+      "directional_accuracy": 0.614198,
+      "horizon_days": 21,
+      "pair_code": "USDJPY",
+      "quote_country": "JP",
+      "sample_count": 324,
+      "sharpe_like": 0.220211,
+      "validation_status": "promising"
+    },
+    {
+      "avg_signal_aligned_return": 0.00190776,
+      "base_country": "NZ",
+      "correlation": -0.031985,
+      "directional_accuracy": 0.561404,
+      "horizon_days": 10,
+      "pair_code": "NZDUSD",
+      "quote_country": "US",
+      "sample_count": 114,
+      "sharpe_like": 0.118826,
+      "validation_status": "promising"
+    },
+    {
+      "avg_signal_aligned_return": 0.00181982,
+      "base_country": "US",
+      "correlation": 0.096672,
+      "directional_accuracy": 0.54878,
+      "horizon_days": 10,
+      "pair_code": "USDJPY",
+      "quote_country": "JP",
+      "sample_count": 328,
+      "sharpe_like": 0.126348,
+      "validation_status": "promising"
+    },
+    {
+      "avg_signal_aligned_return": 0.00134393,
+      "base_country": "EU",
+      "correlation": 0.109727,
+      "directional_accuracy": 0.545455,
+      "horizon_days": 10,
+      "pair_code": "EURUSD",
+      "quote_country": "US",
+      "sample_count": 231,
+      "sharpe_like": 0.106471,
+      "validation_status": "promising"
+    },
+    {
+      "avg_signal_aligned_return": 0.00212796,
+      "base_country": "NZ",
+      "correlation": 0.069621,
+      "directional_accuracy": 0.544643,
+      "horizon_days": 21,
+      "pair_code": "NZDUSD",
+      "quote_country": "US",
+      "sample_count": 112,
+      "sharpe_like": 0.096138,
+      "validation_status": "promising"
+    }
+  ],
+  "recommendation": {
+    "country_metrics": 24,
+    "price_rows": 12904,
+    "promising_country_metrics": 0,
+    "promising_pair_metrics": 5,
+    "ready_for_trading_layer": true,
+    "reason": "FX validation found several promising signal/return relationships.",
+    "status": "ready_for_trading_research"
+  },
+  "summary": {
+    "pair_divergence_metric_rows": 21,
+    "price_rows": 12904,
+    "return_rows": 12904,
+    "validation_metric_rows": 24,
+    "validation_samples": 14138
+  }
+}

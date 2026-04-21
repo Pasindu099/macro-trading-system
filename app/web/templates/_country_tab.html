@@ -1,49 +1,42 @@
 {% if rows %}
-    <div class="sec-bar">
-        <span class="sec-bar__title">{{ rows|length }} INDICATOR(S)</span>
-        {% if show_footnote %}
-            <span class="sec-bar__meta">* APPEARS IN MULTIPLE CATEGORIES</span>
-        {% endif %}
+    <div class="indicator-table">
+        <div class="indicator-table__header">
+            <span>Indicator</span>
+            <span>Latest</span>
+            <span>Sparkline</span>
+            <span>Trend</span>
+            <span>Detail</span>
+        </div>
+        {% for row in rows %}
+            <article class="indicator-row">
+                <div class="indicator-row__name">
+                    <span>{{ row.display_label }}</span>
+                </div>
+                <div class="indicator-row__value">{{ row.latest_value }}</div>
+                <div class="indicator-row__spark">
+                    <div
+                        class="sparkline"
+                        id="spark-{{ row.id }}"
+                        data-values='{{ row.sparkline_values|tojson }}'
+                    ></div>
+                </div>
+                <div class="indicator-row__trend">{{ row.trend_symbol }}</div>
+                <div class="indicator-row__detail">
+                    <a href="{{ row.detail_href }}">Open</a>
+                </div>
+            </article>
+        {% endfor %}
     </div>
 
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th style="width:260px">Indicator</th>
-                <th>Latest</th>
-                <th>Sparkline (12M)</th>
-                <th>Trend</th>
-                <th>Detail</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in rows %}
-                <tr>
-                    <td class="data-table__name" title="{{ row.display_label }}">{{ row.display_label }}</td>
-                    <td class="data-table__val num">{{ row.latest_value }}</td>
-                    <td class="data-table__spark">
-                        <div
-                            class="sparkline"
-                            id="spark-{{ row.id }}"
-                            data-values='{{ row.sparkline_values|tojson }}'
-                        ></div>
-                    </td>
-                    <td class="data-table__trend {% if row.trend_symbol == '▲' %}is-positive{% elif row.trend_symbol == '▼' %}is-negative{% endif %}">
-                        {{ row.trend_symbol }}
-                    </td>
-                    <td>
-                        <a class="data-table__link" href="{{ row.detail_href }}">OPEN →</a>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    {% if show_footnote %}
+        <p class="footnote">* Multi-category indicator also appears in another macro bucket.</p>
+    {% endif %}
 
     <script>
-        if (window.MacroCharts) { window.MacroCharts.bootSparklines(document); }
+        if (window.MacroCharts) {
+            window.MacroCharts.bootSparklines(document);
+        }
     </script>
 {% else %}
-    <div style="padding:24px 14px;font-size:11px;color:var(--muted)">
-        NO INDICATORS MAPPED FOR THIS CATEGORY YET.
-    </div>
+    <div class="empty-panel">No indicators were available for this category yet.</div>
 {% endif %}

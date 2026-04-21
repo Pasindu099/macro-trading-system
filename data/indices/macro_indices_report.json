@@ -1,0 +1,933 @@
+{
+  "confidence_distribution": [
+    {
+      "confidence": "high",
+      "theme_days": 1868
+    },
+    {
+      "confidence": "low",
+      "theme_days": 6858
+    },
+    {
+      "confidence": "medium",
+      "theme_days": 5650
+    }
+  ],
+  "config": {
+    "high_confidence_min_indicators": 5,
+    "medium_confidence_min_indicators": 3,
+    "min_abs_correlation": 0.4,
+    "min_sample_size": 24
+  },
+  "coverage_gaps": [
+    {
+      "country_code": "AU",
+      "theme": "Growth"
+    },
+    {
+      "country_code": "CH",
+      "theme": "Growth"
+    },
+    {
+      "country_code": "CH",
+      "theme": "Labor"
+    },
+    {
+      "country_code": "EU",
+      "theme": "Labor"
+    },
+    {
+      "country_code": "JP",
+      "theme": "Labor"
+    },
+    {
+      "country_code": "NZ",
+      "theme": "Growth"
+    },
+    {
+      "country_code": "NZ",
+      "theme": "Labor"
+    },
+    {
+      "country_code": "US",
+      "theme": "Growth"
+    }
+  ],
+  "generated_at": "2026-04-21T08:13:17.422077Z",
+  "low_confidence_reasons": [
+    {
+      "rejection_reason": "low_correlation",
+      "relationships": 2302
+    },
+    {
+      "rejection_reason": "low_sample_and_low_correlation",
+      "relationships": 544
+    },
+    {
+      "rejection_reason": "low_sample",
+      "relationships": 245
+    },
+    {
+      "rejection_reason": "not_best_lag",
+      "relationships": 133
+    }
+  ],
+  "summary": {
+    "index_components": 56828,
+    "low_confidence_relationships": 3224,
+    "selected_relationships": 89,
+    "theme_index_rows": 4792
+  },
+  "top_contributors": [
+    {
+      "assigned_weight": 0.170953,
+      "candidate_indicator_key": "retail_sales_ex_autos_mom",
+      "candidate_indicator_name": "Retail Sales Ex Autos (MoM)",
+      "confidence_bucket": "high",
+      "correlation": 0.747905,
+      "country_code": "CA",
+      "headline_target_type": "GDP",
+      "lag_months": 0,
+      "macro_theme": "Growth",
+      "observation_pairs": 58
+    },
+    {
+      "assigned_weight": 0.163386,
+      "candidate_indicator_key": "imports",
+      "candidate_indicator_name": "Imports",
+      "confidence_bucket": "high",
+      "correlation": 0.714797,
+      "country_code": "CA",
+      "headline_target_type": "GDP",
+      "lag_months": 0,
+      "macro_theme": "Growth",
+      "observation_pairs": 58
+    },
+    {
+      "assigned_weight": 0.159195,
+      "candidate_indicator_key": "retail_sales_mom",
+      "candidate_indicator_name": "Retail Sales (MoM)",
+      "confidence_bucket": "high",
+      "correlation": -0.696465,
+      "country_code": "CA",
+      "headline_target_type": "GDP",
+      "lag_months": 3,
+      "macro_theme": "Growth",
+      "observation_pairs": 106
+    },
+    {
+      "assigned_weight": 0.13959,
+      "candidate_indicator_key": "exports",
+      "candidate_indicator_name": "Exports",
+      "confidence_bucket": "high",
+      "correlation": 0.610694,
+      "country_code": "CA",
+      "headline_target_type": "GDP",
+      "lag_months": 0,
+      "macro_theme": "Growth",
+      "observation_pairs": 58
+    },
+    {
+      "assigned_weight": 0.129988,
+      "candidate_indicator_key": "manufacturing_sales_mom",
+      "candidate_indicator_name": "Manufacturing Sales (MoM)",
+      "confidence_bucket": "high",
+      "correlation": 0.568683,
+      "country_code": "CA",
+      "headline_target_type": "GDP",
+      "lag_months": 0,
+      "macro_theme": "Growth",
+      "observation_pairs": 122
+    },
+    {
+      "assigned_weight": 0.123198,
+      "candidate_indicator_key": "retail_sales_yoy",
+      "candidate_indicator_name": "Retail Sales (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": 0.53898,
+      "country_code": "CA",
+      "headline_target_type": "GDP",
+      "lag_months": 0,
+      "macro_theme": "Growth",
+      "observation_pairs": 59
+    },
+    {
+      "assigned_weight": 0.11369,
+      "candidate_indicator_key": "wholesale_sales_mom",
+      "candidate_indicator_name": "Wholesale Sales (MoM)",
+      "confidence_bucket": "medium",
+      "correlation": 0.497381,
+      "country_code": "CA",
+      "headline_target_type": "GDP",
+      "lag_months": 0,
+      "macro_theme": "Growth",
+      "observation_pairs": 133
+    },
+    {
+      "assigned_weight": 0.254933,
+      "candidate_indicator_key": "economic_sentiment",
+      "candidate_indicator_name": "Economic Sentiment",
+      "confidence_bucket": "high",
+      "correlation": -0.650649,
+      "country_code": "EU",
+      "headline_target_type": "GDP",
+      "lag_months": 3,
+      "macro_theme": "Growth",
+      "observation_pairs": 64
+    },
+    {
+      "assigned_weight": 0.229268,
+      "candidate_indicator_key": "zew_economic_sentiment",
+      "candidate_indicator_name": "ZEW Economic Sentiment Index",
+      "confidence_bucket": "high",
+      "correlation": -0.585147,
+      "country_code": "EU",
+      "headline_target_type": "GDP",
+      "lag_months": 4,
+      "macro_theme": "Growth",
+      "observation_pairs": 52
+    },
+    {
+      "assigned_weight": 0.18466,
+      "candidate_indicator_key": "construction_output_yoy",
+      "candidate_indicator_name": "Construction Output (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": -0.471297,
+      "country_code": "EU",
+      "headline_target_type": "GDP",
+      "lag_months": 3,
+      "macro_theme": "Growth",
+      "observation_pairs": 52
+    },
+    {
+      "assigned_weight": 0.171621,
+      "candidate_indicator_key": "manufacturing_pmi",
+      "candidate_indicator_name": "Manufacturing PMI",
+      "confidence_bucket": "medium",
+      "correlation": 0.438019,
+      "country_code": "EU",
+      "headline_target_type": "GDP",
+      "lag_months": 0,
+      "macro_theme": "Growth",
+      "observation_pairs": 90
+    },
+    {
+      "assigned_weight": 0.159518,
+      "candidate_indicator_key": "consumer_confidence",
+      "candidate_indicator_name": "Consumer Confidence",
+      "confidence_bucket": "medium",
+      "correlation": -0.407127,
+      "country_code": "EU",
+      "headline_target_type": "GDP",
+      "lag_months": 3,
+      "macro_theme": "Growth",
+      "observation_pairs": 98
+    },
+    {
+      "assigned_weight": 0.152056,
+      "candidate_indicator_key": "imports_yoy",
+      "candidate_indicator_name": "Imports (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": -0.674541,
+      "country_code": "JP",
+      "headline_target_type": "GDP",
+      "lag_months": 5,
+      "macro_theme": "Growth",
+      "observation_pairs": 41
+    },
+    {
+      "assigned_weight": 0.139008,
+      "candidate_indicator_key": "tertiary_industry_index_mom",
+      "candidate_indicator_name": "Tertiary Industry Index (MoM)",
+      "confidence_bucket": "medium",
+      "correlation": 0.616658,
+      "country_code": "JP",
+      "headline_target_type": "GDP",
+      "lag_months": 1,
+      "macro_theme": "Growth",
+      "observation_pairs": 43
+    },
+    {
+      "assigned_weight": 0.129534,
+      "candidate_indicator_key": "leading_economic_index",
+      "candidate_indicator_name": "Leading Economic Index",
+      "confidence_bucket": "high",
+      "correlation": -0.57463,
+      "country_code": "JP",
+      "headline_target_type": "GDP",
+      "lag_months": 4,
+      "macro_theme": "Growth",
+      "observation_pairs": 86
+    },
+    {
+      "assigned_weight": 0.122472,
+      "candidate_indicator_key": "industrial_production_mom",
+      "candidate_indicator_name": "Industrial Production (MoM)",
+      "confidence_bucket": "medium",
+      "correlation": 0.543302,
+      "country_code": "JP",
+      "headline_target_type": "GDP",
+      "lag_months": 1,
+      "macro_theme": "Growth",
+      "observation_pairs": 107
+    },
+    {
+      "assigned_weight": 0.115039,
+      "candidate_indicator_key": "industrial_production_yoy",
+      "candidate_indicator_name": "Industrial Production (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": 0.510327,
+      "country_code": "JP",
+      "headline_target_type": "GDP",
+      "lag_months": 0,
+      "macro_theme": "Growth",
+      "observation_pairs": 90
+    },
+    {
+      "assigned_weight": 0.105051,
+      "candidate_indicator_key": "exports_yoy",
+      "candidate_indicator_name": "Exports (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": -0.466019,
+      "country_code": "JP",
+      "headline_target_type": "GDP",
+      "lag_months": 3,
+      "macro_theme": "Growth",
+      "observation_pairs": 41
+    },
+    {
+      "assigned_weight": 0.097419,
+      "candidate_indicator_key": "machine_tool_orders_yoy",
+      "candidate_indicator_name": "Machine Tool Orders (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": 0.432163,
+      "country_code": "JP",
+      "headline_target_type": "GDP",
+      "lag_months": 0,
+      "macro_theme": "Growth",
+      "observation_pairs": 43
+    },
+    {
+      "assigned_weight": 0.074204,
+      "candidate_indicator_key": "composite_pmi",
+      "candidate_indicator_name": "Composite PMI",
+      "confidence_bucket": "medium",
+      "correlation": 0.506425,
+      "country_code": "JP",
+      "headline_target_type": "GDP",
+      "lag_months": 1,
+      "macro_theme": "Growth",
+      "observation_pairs": 85
+    },
+    {
+      "assigned_weight": 0.065217,
+      "candidate_indicator_key": "services_pmi",
+      "candidate_indicator_name": "Services PMI",
+      "confidence_bucket": "medium",
+      "correlation": 0.445091,
+      "country_code": "JP",
+      "headline_target_type": "GDP",
+      "lag_months": 1,
+      "macro_theme": "Growth",
+      "observation_pairs": 86
+    },
+    {
+      "assigned_weight": 0.108616,
+      "candidate_indicator_key": "retail_sales_yoy",
+      "candidate_indicator_name": "Retail Sales (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": -0.938885,
+      "country_code": "UK",
+      "headline_target_type": "GDP",
+      "lag_months": 4,
+      "macro_theme": "Growth",
+      "observation_pairs": 40
+    },
+    {
+      "assigned_weight": 0.103828,
+      "candidate_indicator_key": "gdp_mom",
+      "candidate_indicator_name": "GDP (MoM)",
+      "confidence_bucket": "medium",
+      "correlation": -0.897497,
+      "country_code": "UK",
+      "headline_target_type": "GDP",
+      "lag_months": 4,
+      "macro_theme": "Growth",
+      "observation_pairs": 38
+    },
+    {
+      "assigned_weight": 0.103458,
+      "candidate_indicator_key": "retail_sales_ex_fuel_yoy",
+      "candidate_indicator_name": "Retail Sales Ex Fuel (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": -0.894301,
+      "country_code": "UK",
+      "headline_target_type": "GDP",
+      "lag_months": 4,
+      "macro_theme": "Growth",
+      "observation_pairs": 40
+    },
+    {
+      "assigned_weight": 0.095402,
+      "candidate_indicator_key": "house_price_index_yoy",
+      "candidate_indicator_name": "House Price Index (YoY)",
+      "confidence_bucket": "high",
+      "correlation": -0.824663,
+      "country_code": "UK",
+      "headline_target_type": "GDP",
+      "lag_months": 5,
+      "macro_theme": "Growth",
+      "observation_pairs": 49
+    },
+    {
+      "assigned_weight": 0.088593,
+      "candidate_indicator_key": "gdp_yoy",
+      "candidate_indicator_name": "GDP (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": -0.765807,
+      "country_code": "UK",
+      "headline_target_type": "GDP",
+      "lag_months": 4,
+      "macro_theme": "Growth",
+      "observation_pairs": 38
+    },
+    {
+      "assigned_weight": 0.075269,
+      "candidate_indicator_key": "consumer_confidence",
+      "candidate_indicator_name": "Consumer Confidence",
+      "confidence_bucket": "medium",
+      "correlation": -0.650631,
+      "country_code": "UK",
+      "headline_target_type": "GDP",
+      "lag_months": 4,
+      "macro_theme": "Growth",
+      "observation_pairs": 42
+    },
+    {
+      "assigned_weight": 0.06808,
+      "candidate_indicator_key": "industrial_production_yoy",
+      "candidate_indicator_name": "Industrial Production (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": 0.58849,
+      "country_code": "UK",
+      "headline_target_type": "GDP",
+      "lag_months": 0,
+      "macro_theme": "Growth",
+      "observation_pairs": 44
+    },
+    {
+      "assigned_weight": 0.065728,
+      "candidate_indicator_key": "public_sector_net_borrowing",
+      "candidate_indicator_name": "Public Sector Net Borrowing",
+      "confidence_bucket": "medium",
+      "correlation": -0.568163,
+      "country_code": "UK",
+      "headline_target_type": "GDP",
+      "lag_months": 3,
+      "macro_theme": "Growth",
+      "observation_pairs": 39
+    },
+    {
+      "assigned_weight": 0.06531,
+      "candidate_indicator_key": "house_price_index_mom",
+      "candidate_indicator_name": "House Price Index (MoM)",
+      "confidence_bucket": "medium",
+      "correlation": 0.564546,
+      "country_code": "UK",
+      "headline_target_type": "GDP",
+      "lag_months": 0,
+      "macro_theme": "Growth",
+      "observation_pairs": 47
+    },
+    {
+      "assigned_weight": 0.061061,
+      "candidate_indicator_key": "retail_sales_mom",
+      "candidate_indicator_name": "Retail Sales (MoM)",
+      "confidence_bucket": "medium",
+      "correlation": 0.812022,
+      "country_code": "UK",
+      "headline_target_type": "GDP",
+      "lag_months": 1,
+      "macro_theme": "Growth",
+      "observation_pairs": 40
+    },
+    {
+      "assigned_weight": 0.056858,
+      "candidate_indicator_key": "niesr_monthly_gdp_tracker",
+      "candidate_indicator_name": "NIESR Monthly GDP Tracker",
+      "confidence_bucket": "medium",
+      "correlation": 0.49149,
+      "country_code": "UK",
+      "headline_target_type": "GDP",
+      "lag_months": 0,
+      "macro_theme": "Growth",
+      "observation_pairs": 59
+    },
+    {
+      "assigned_weight": 0.056576,
+      "candidate_indicator_key": "retail_sales_ex_fuel_mom",
+      "candidate_indicator_name": "Retail Sales Ex Fuel (MoM)",
+      "confidence_bucket": "medium",
+      "correlation": -0.752389,
+      "country_code": "UK",
+      "headline_target_type": "GDP",
+      "lag_months": 3,
+      "macro_theme": "Growth",
+      "observation_pairs": 40
+    },
+    {
+      "assigned_weight": 0.051221,
+      "candidate_indicator_key": "cbi_industrial_trends_orders",
+      "candidate_indicator_name": "CBI Industrial Trends Orders",
+      "confidence_bucket": "medium",
+      "correlation": 0.442761,
+      "country_code": "UK",
+      "headline_target_type": "GDP",
+      "lag_months": 0,
+      "macro_theme": "Growth",
+      "observation_pairs": 42
+    },
+    {
+      "assigned_weight": 0.190298,
+      "candidate_indicator_key": "retail_sales_mom",
+      "candidate_indicator_name": "Retail Sales (MoM)",
+      "confidence_bucket": "medium",
+      "correlation": -0.524058,
+      "country_code": "AU",
+      "headline_target_type": "CPI",
+      "lag_months": 1,
+      "macro_theme": "Inflation",
+      "observation_pairs": 36
+    },
+    {
+      "assigned_weight": 0.172911,
+      "candidate_indicator_key": "td_mi_inflation_gauge_mom",
+      "candidate_indicator_name": "TD-MI Inflation Gauge (MoM)",
+      "confidence_bucket": "medium",
+      "correlation": 0.476178,
+      "country_code": "AU",
+      "headline_target_type": "CPI",
+      "lag_months": 5,
+      "macro_theme": "Inflation",
+      "observation_pairs": 28
+    },
+    {
+      "assigned_weight": 0.165307,
+      "candidate_indicator_key": "private_sector_credit_mom",
+      "candidate_indicator_name": "Private Sector Credit (MoM)",
+      "confidence_bucket": "medium",
+      "correlation": -0.455235,
+      "country_code": "AU",
+      "headline_target_type": "CPI",
+      "lag_months": 1,
+      "macro_theme": "Inflation",
+      "observation_pairs": 31
+    },
+    {
+      "assigned_weight": 0.162317,
+      "candidate_indicator_key": "leading_index_mom",
+      "candidate_indicator_name": "Leading Index (MoM)",
+      "confidence_bucket": "medium",
+      "correlation": 0.447002,
+      "country_code": "AU",
+      "headline_target_type": "CPI",
+      "lag_months": 1,
+      "macro_theme": "Inflation",
+      "observation_pairs": 29
+    },
+    {
+      "assigned_weight": 0.158347,
+      "candidate_indicator_key": "unemployment_rate",
+      "candidate_indicator_name": "Unemployment Rate",
+      "confidence_bucket": "medium",
+      "correlation": -0.43607,
+      "country_code": "AU",
+      "headline_target_type": "CPI",
+      "lag_months": 6,
+      "macro_theme": "Inflation",
+      "observation_pairs": 29
+    },
+    {
+      "assigned_weight": 0.15082,
+      "candidate_indicator_key": "part_time_employment_change",
+      "candidate_indicator_name": "Part-Time Employment Change",
+      "confidence_bucket": "medium",
+      "correlation": 0.415341,
+      "country_code": "AU",
+      "headline_target_type": "CPI",
+      "lag_months": 0,
+      "macro_theme": "Inflation",
+      "observation_pairs": 31
+    },
+    {
+      "assigned_weight": 0.292715,
+      "candidate_indicator_key": "core_cpi_mom",
+      "candidate_indicator_name": "Core CPI (MoM)",
+      "confidence_bucket": "medium",
+      "correlation": 0.514777,
+      "country_code": "CA",
+      "headline_target_type": "CPI",
+      "lag_months": 0,
+      "macro_theme": "Inflation",
+      "observation_pairs": 41
+    },
+    {
+      "assigned_weight": 0.244225,
+      "candidate_indicator_key": "cpi_headline_yoy",
+      "candidate_indicator_name": "Headline CPI (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": 0.429502,
+      "country_code": "CA",
+      "headline_target_type": "CPI",
+      "lag_months": 0,
+      "macro_theme": "Inflation",
+      "observation_pairs": 76
+    },
+    {
+      "assigned_weight": 0.237314,
+      "candidate_indicator_key": "core_cpi_yoy",
+      "candidate_indicator_name": "Core CPI (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": 0.417347,
+      "country_code": "CA",
+      "headline_target_type": "CPI",
+      "lag_months": 6,
+      "macro_theme": "Inflation",
+      "observation_pairs": 72
+    },
+    {
+      "assigned_weight": 0.225747,
+      "candidate_indicator_key": "ppi_yoy",
+      "candidate_indicator_name": "PPI (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": -0.610777,
+      "country_code": "CA",
+      "headline_target_type": "CPI",
+      "lag_months": 0,
+      "macro_theme": "Inflation",
+      "observation_pairs": 27
+    },
+    {
+      "assigned_weight": 1.0,
+      "candidate_indicator_key": "unemployment_rate",
+      "candidate_indicator_name": "Unemployment Rate",
+      "confidence_bucket": "medium",
+      "correlation": -0.470027,
+      "country_code": "CH",
+      "headline_target_type": "CPI",
+      "lag_months": 6,
+      "macro_theme": "Inflation",
+      "observation_pairs": 66
+    },
+    {
+      "assigned_weight": 0.163382,
+      "candidate_indicator_key": "construction_output_mom",
+      "candidate_indicator_name": "Construction Output (MoM)",
+      "confidence_bucket": "medium",
+      "correlation": 0.62041,
+      "country_code": "EU",
+      "headline_target_type": "CPI",
+      "lag_months": 5,
+      "macro_theme": "Inflation",
+      "observation_pairs": 26
+    },
+    {
+      "assigned_weight": 0.132642,
+      "candidate_indicator_key": "core_cpi_yoy",
+      "candidate_indicator_name": "Core HICP (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": 0.50368,
+      "country_code": "EU",
+      "headline_target_type": "CPI",
+      "lag_months": 5,
+      "macro_theme": "Inflation",
+      "observation_pairs": 247
+    },
+    {
+      "assigned_weight": 0.11608,
+      "candidate_indicator_key": "consumer_inflation_expectation",
+      "candidate_indicator_name": "Consumer Inflation Expectation",
+      "confidence_bucket": "medium",
+      "correlation": 0.440792,
+      "country_code": "EU",
+      "headline_target_type": "CPI",
+      "lag_months": 0,
+      "macro_theme": "Inflation",
+      "observation_pairs": 128
+    },
+    {
+      "assigned_weight": 0.111836,
+      "candidate_indicator_key": "cpi_index",
+      "candidate_indicator_name": "Consumer Price Index",
+      "confidence_bucket": "medium",
+      "correlation": 0.424674,
+      "country_code": "EU",
+      "headline_target_type": "CPI",
+      "lag_months": 0,
+      "macro_theme": "Inflation",
+      "observation_pairs": 125
+    },
+    {
+      "assigned_weight": 0.108005,
+      "candidate_indicator_key": "gdp_qoq",
+      "candidate_indicator_name": "GDP (QoQ)",
+      "confidence_bucket": "medium",
+      "correlation": -0.410129,
+      "country_code": "EU",
+      "headline_target_type": "CPI",
+      "lag_months": 5,
+      "macro_theme": "Inflation",
+      "observation_pairs": 105
+    },
+    {
+      "assigned_weight": 0.107728,
+      "candidate_indicator_key": "manufacturing_pmi",
+      "candidate_indicator_name": "Manufacturing PMI",
+      "confidence_bucket": "medium",
+      "correlation": -0.409074,
+      "country_code": "EU",
+      "headline_target_type": "CPI",
+      "lag_months": 4,
+      "macro_theme": "Inflation",
+      "observation_pairs": 207
+    },
+    {
+      "assigned_weight": 0.105662,
+      "candidate_indicator_key": "unemployment_rate",
+      "candidate_indicator_name": "Unemployment Rate",
+      "confidence_bucket": "medium",
+      "correlation": -0.401232,
+      "country_code": "EU",
+      "headline_target_type": "CPI",
+      "lag_months": 5,
+      "macro_theme": "Inflation",
+      "observation_pairs": 130
+    },
+    {
+      "assigned_weight": 0.078907,
+      "candidate_indicator_key": "composite_pmi",
+      "candidate_indicator_name": "Composite PMI",
+      "confidence_bucket": "medium",
+      "correlation": -0.460976,
+      "country_code": "EU",
+      "headline_target_type": "CPI",
+      "lag_months": 4,
+      "macro_theme": "Inflation",
+      "observation_pairs": 40
+    },
+    {
+      "assigned_weight": 0.075757,
+      "candidate_indicator_key": "services_pmi",
+      "candidate_indicator_name": "Services PMI",
+      "confidence_bucket": "medium",
+      "correlation": -0.442574,
+      "country_code": "EU",
+      "headline_target_type": "CPI",
+      "lag_months": 4,
+      "macro_theme": "Inflation",
+      "observation_pairs": 40
+    },
+    {
+      "assigned_weight": 0.400614,
+      "candidate_indicator_key": "machine_tool_orders_yoy",
+      "candidate_indicator_name": "Machine Tool Orders (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": -0.435637,
+      "country_code": "JP",
+      "headline_target_type": "CPI",
+      "lag_months": 5,
+      "macro_theme": "Inflation",
+      "observation_pairs": 67
+    },
+    {
+      "assigned_weight": 0.318654,
+      "candidate_indicator_key": "cpi_headline_yoy",
+      "candidate_indicator_name": "Headline CPI (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": 0.533095,
+      "country_code": "JP",
+      "headline_target_type": "CPI",
+      "lag_months": 0,
+      "macro_theme": "Inflation",
+      "observation_pairs": 66
+    },
+    {
+      "assigned_weight": 0.280733,
+      "candidate_indicator_key": "core_cpi_yoy",
+      "candidate_indicator_name": "Core CPI (YoY)",
+      "confidence_bucket": "medium",
+      "correlation": 0.469655,
+      "country_code": "JP",
+      "headline_target_type": "CPI",
+      "lag_months": 0,
+      "macro_theme": "Inflation",
+      "observation_pairs": 64
+    },
+    {
+      "assigned_weight": 0.516494,
+      "candidate_indicator_key": "capacity_utilization",
+      "candidate_indicator_name": "Capacity Utilization",
+      "confidence_bucket": "medium",
+      "correlation": -0.453807,
+      "country_code": "NZ",
+      "headline_target_type": "CPI",
+      "lag_months": 0,
+      "macro_theme": "Inflation",
+      "observation_pairs": 24
+    },
+    {
+      "assigned_weight": 0.483506,
+      "candidate_indicator_key": "business_confidence",
+      "candidate_indicator_name": "Business Confidence",
+      "confidence_bucket": "medium",
+      "correlation": 0.424822,
+      "country_code": "NZ",
+      "headline_target_type": "CPI",
+      "lag_months": 1,
+      "macro_theme": "Inflation",
+      "observation_pairs": 26
+    },
+    {
+      "assigned_weight": 0.112843,
+      "candidate_indicator_key": "core_cpi_mom",
+      "candidate_indicator_name": "Core CPI (MoM)",
+      "confidence_bucket": "high",
+      "correlation": 0.631329,
+      "country_code": "UK",
+      "headline_target_type": "CPI",
+      "lag_months": 0,
+      "macro_theme": "Inflation",
+      "observation_pairs": 65
+    }
+  ],
+  "weight_distribution": [
+    {
+      "avg_weight": 0.166667,
+      "country_code": "AU",
+      "indicators": 6,
+      "macro_theme": "Inflation",
+      "max_weight": 0.190298,
+      "weight_sum": 1.0
+    },
+    {
+      "avg_weight": 1.0,
+      "country_code": "AU",
+      "indicators": 1,
+      "macro_theme": "Labor",
+      "max_weight": 1.0,
+      "weight_sum": 1.0
+    },
+    {
+      "avg_weight": 0.142857,
+      "country_code": "CA",
+      "indicators": 7,
+      "macro_theme": "Growth",
+      "max_weight": 0.170953,
+      "weight_sum": 1.0
+    },
+    {
+      "avg_weight": 0.25,
+      "country_code": "CA",
+      "indicators": 4,
+      "macro_theme": "Inflation",
+      "max_weight": 0.292715,
+      "weight_sum": 1.000001
+    },
+    {
+      "avg_weight": 0.166667,
+      "country_code": "CA",
+      "indicators": 6,
+      "macro_theme": "Labor",
+      "max_weight": 0.252861,
+      "weight_sum": 0.999999
+    },
+    {
+      "avg_weight": 1.0,
+      "country_code": "CH",
+      "indicators": 1,
+      "macro_theme": "Inflation",
+      "max_weight": 1.0,
+      "weight_sum": 1.0
+    },
+    {
+      "avg_weight": 0.2,
+      "country_code": "EU",
+      "indicators": 5,
+      "macro_theme": "Growth",
+      "max_weight": 0.254933,
+      "weight_sum": 1.0
+    },
+    {
+      "avg_weight": 0.111111,
+      "country_code": "EU",
+      "indicators": 9,
+      "macro_theme": "Inflation",
+      "max_weight": 0.163382,
+      "weight_sum": 0.999999
+    },
+    {
+      "avg_weight": 0.111111,
+      "country_code": "JP",
+      "indicators": 9,
+      "macro_theme": "Growth",
+      "max_weight": 0.152056,
+      "weight_sum": 1.0
+    },
+    {
+      "avg_weight": 0.333334,
+      "country_code": "JP",
+      "indicators": 3,
+      "macro_theme": "Inflation",
+      "max_weight": 0.400614,
+      "weight_sum": 1.000001
+    },
+    {
+      "avg_weight": 0.5,
+      "country_code": "NZ",
+      "indicators": 2,
+      "macro_theme": "Inflation",
+      "max_weight": 0.516494,
+      "weight_sum": 1.0
+    },
+    {
+      "avg_weight": 0.076923,
+      "country_code": "UK",
+      "indicators": 13,
+      "macro_theme": "Growth",
+      "max_weight": 0.108616,
+      "weight_sum": 1.0
+    },
+    {
+      "avg_weight": 0.076923,
+      "country_code": "UK",
+      "indicators": 13,
+      "macro_theme": "Inflation",
+      "max_weight": 0.112843,
+      "weight_sum": 1.0
+    },
+    {
+      "avg_weight": 1.0,
+      "country_code": "UK",
+      "indicators": 1,
+      "macro_theme": "Labor",
+      "max_weight": 1.0,
+      "weight_sum": 1.0
+    },
+    {
+      "avg_weight": 0.142857,
+      "country_code": "US",
+      "indicators": 7,
+      "macro_theme": "Inflation",
+      "max_weight": 0.209495,
+      "weight_sum": 1.0
+    },
+    {
+      "avg_weight": 0.5,
+      "country_code": "US",
+      "indicators": 2,
+      "macro_theme": "Labor",
+      "max_weight": 0.557061,
+      "weight_sum": 1.0
+    }
+  ]
+}

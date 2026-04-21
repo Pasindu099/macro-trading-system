@@ -266,15 +266,20 @@ class IngestService:
         exploding the DB with duplicate unmapped events.
         """
         raw_type = canonical.raw_payload.get("type")
+        raw_comparison = canonical.raw_payload.get("comparison")
 
         # Check if we already have this exact unmapped entry
         existing = await session.execute(
-            select(IndicatorRelease).where(
+            select(IndicatorRelease)
+            .where(
                 IndicatorRelease.indicator_id.is_(None),
                 IndicatorRelease.period == canonical.period_raw,
                 IndicatorRelease.released_at == canonical.released_at,
                 IndicatorRelease.raw_payload["type"].astext == raw_type,
+                IndicatorRelease.raw_payload["comparison"].astext == raw_comparison,
             )
+            .order_by(IndicatorRelease.id.desc())
+            .limit(1)
         )
         if existing.scalar_one_or_none() is not None:
             return  # already stored

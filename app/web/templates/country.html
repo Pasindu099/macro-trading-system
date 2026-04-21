@@ -1,75 +1,74 @@
 {% extends "base.html" %}
 
 {% block body %}
-<div class="shell shell--country">
-
-    <!-- Country header -->
-    <div class="country-hdr">
-        <div class="country-hdr__flag-cell">{{ country_flag }}</div>
-        <div class="country-hdr__info">
-            <div class="country-hdr__code">
-                <a href="/" style="color:var(--text-dim);text-decoration:none">HOME</a>
-                <span style="color:var(--text-dim)"> / </span>
-                {{ country.code }} &mdash; {{ country.currency_code }}
-            </div>
-            <div class="country-hdr__name">{{ country.name }}</div>
+<main class="shell shell--country">
+    <header class="country-header">
+        <a class="back-link" href="/">Back to dashboard</a>
+        <div class="topbar__meta">
+            <a class="topbar__link" href="/calendar">View economic calendar</a>
         </div>
-    </div>
-
-    <div class="country-hdr__stats">
-        <div class="stat-cell">
-            <div class="stat-cell__label">Central Bank</div>
-            <div class="stat-cell__value">{{ country.central_bank }}</div>
-        </div>
-        <div class="stat-cell">
-            <div class="stat-cell__label">Mandate</div>
-            <div class="stat-cell__value">{{ country.cb_mandate_type or "—" }}</div>
-        </div>
-        <div class="stat-cell">
-            <div class="stat-cell__label">Inflation Target</div>
-            <div class="stat-cell__value">
-                {% if country.cb_inflation_target is not none %}
-                    {{ "%.2f"|format(country.cb_inflation_target) }}%
-                {% else %}
-                    —
-                {% endif %}
+        <div class="country-header__title-row">
+            <div class="country-header__flag">{{ country_flag }}</div>
+            <div>
+                <p class="eyebrow">{{ country.code }} / {{ country.currency_code }}</p>
+                <h1>{{ country.name }}</h1>
             </div>
         </div>
-        <div class="stat-cell">
-            <div class="stat-cell__label">Last Updated</div>
-            <div class="stat-cell__value">
-                {% if country.latest_release_at %}
-                    {{ country.latest_release_at.strftime("%d-%b-%Y %H:%M UTC") }}
-                {% else %}
-                    —
-                {% endif %}
+        <div class="country-header__stats">
+            <div class="stat-block">
+                <span class="stat-block__label">Central bank</span>
+                <strong>{{ country.central_bank }}</strong>
+            </div>
+            <div class="stat-block">
+                <span class="stat-block__label">Mandate</span>
+                <strong>{{ country.cb_mandate_type or "Not set" }}</strong>
+            </div>
+            <div class="stat-block">
+                <span class="stat-block__label">Inflation target</span>
+                <strong>
+                    {% if country.cb_inflation_target is not none %}
+                        {{ "%.2f"|format(country.cb_inflation_target) }}%
+                    {% else %}
+                        Not set
+                    {% endif %}
+                </strong>
+            </div>
+            <div class="stat-block">
+                <span class="stat-block__label">Last updated</span>
+                <strong>
+                    {% if country.latest_release_at %}
+                        {{ country.latest_release_at.strftime("%b %d %H:%M UTC") }}
+                    {% else %}
+                        No releases
+                    {% endif %}
+                </strong>
+            </div>
+            <div class="stat-block">
+                <span class="stat-block__label">Indicators tracked</span>
+                <strong>{{ country.indicator_count }}</strong>
             </div>
         </div>
-        <div class="stat-cell">
-            <div class="stat-cell__label">Calendar</div>
-            <div class="stat-cell__value">
-                <a href="/calendar" style="color:var(--link)">View Calendar →</a>
-            </div>
-        </div>
-    </div>
+    </header>
 
-    <!-- Category tabs -->
-    <div class="tab-bar">
-        {% for category in category_tabs %}
-            <button
-                class="tab-btn {% if category == active_category %}is-active{% endif %}"
-                hx-get="/country/{{ country.code|lower }}/tab/{{ category.lower() }}"
-                hx-target="#tab-content"
-                hx-swap="innerHTML"
-                hx-on::after-request="document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('is-active')); this.classList.add('is-active');"
-                type="button"
-            >{{ category }}</button>
-        {% endfor %}
-    </div>
+    <section class="tab-panel">
+        <nav class="tabs" aria-label="Country categories">
+            {% for category in category_tabs %}
+                <button
+                    class="tab-button {% if category == active_category %}is-active{% endif %}"
+                    hx-get="/country/{{ country.code|lower }}/tab/{{ category.lower() }}"
+                    hx-target="#tab-content"
+                    hx-swap="innerHTML"
+                    hx-on::after-request="document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('is-active')); this.classList.add('is-active');"
+                    type="button"
+                >
+                    {{ category }}
+                </button>
+            {% endfor %}
+        </nav>
 
-    <section id="tab-content" aria-live="polite">
-        {% include "_country_tab.html" %}
+        <section id="tab-content" class="tab-content" aria-live="polite">
+            {% include "_country_tab.html" %}
+        </section>
     </section>
-
-</div>
+</main>
 {% endblock %}

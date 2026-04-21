@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
+import re
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_, asc, desc, func, select
@@ -35,6 +36,16 @@ RANGE_LOOKBACK_DAYS = {
     "5y": 365 * 5,
     "all": None,
 }
+CALENDAR_CATEGORIES = (
+    "Inflation",
+    "Growth",
+    "Labor",
+    "Monetary Policy",
+    "Trade",
+    "Sentiment",
+    "Housing",
+    "Other",
+)
 
 
 def _now() -> datetime:
@@ -83,10 +94,136 @@ def _release_to_schema(
     )
 
 
+def _calendar_event_rank(event: EconomicCalendarEvent) -> tuple[int, int, int, int]:
+    period_quality = 0
+    if event.period:
+        normalized_period = event.period.strip()
+        if re.fullmatch(r"[A-Z][a-z]{2}", normalized_period):
+            period_quality = 2
+        elif re.fullmatch(r"Q[1-4](?:[ /-]\d{2,4})?", normalized_period):
+            period_quality = 2
+        elif re.fullmatch(r"\d{4}-\d{2}-\d{2}", normalized_period):
+            period_quality = 2
+        elif len(normalized_period) <= 8 and "(" not in normalized_period and ")" not in normalized_period:
+            period_quality = 1
+
+    return (
+        1 if event.canonical_name else 0,
+        sum(
+            1 for value in (event.actual, event.estimate, event.previous, event.surprise)
+            if value is not None
+        ),
+        period_quality,
+        1 if event.status == "released" else 0,
+        event.release_id,
+    )
+
+
+def _normalize_calendar_event_name(name: str) -> str:
+    normalized = name.casefold().strip()
+    for prefix in (
+        "s&p global ",
+        "westpac ",
+        "markit ",
+        "commbank ",
+        "judo bank ",
+    ):
+        if normalized.startswith(prefix):
+            normalized = normalized.removeprefix(prefix)
+            break
+
+    normalized = normalized.replace("(mom)", "(mom)")
+    normalized = normalized.replace("(yoy)", "(yoy)")
+    normalized = normalized.replace("(qoq)", "(qoq)")
+    normalized = re.sub(r"\s+", " ", normalized)
+    return normalized
+
+
+def _dedupe_calendar_events(
+    events: list[EconomicCalendarEvent],
+) -> list[EconomicCalendarEvent]:
+    deduped: dict[tuple[object, ...], EconomicCalendarEvent] = {}
+
+    for event in events:
+        dedupe_name = _normalize_calendar_event_name(event.display_name)
+        key = (
+            event.country_code,
+            dedupe_name,
+            event.released_at,
+            event.primary_category,
+        )
+        existing = deduped.get(key)
+        if existing is None or _calendar_event_rank(event) > _calendar_event_rank(existing):
+            deduped[key] = event
+
+    return sorted(
+        deduped.values(),
+        key=lambda event: (event.released_at, event.importance, event.display_name),
+    )
+
+
+def _normalize_category_filter(category: str | None) -> str | None:
+    if not category:
+        return None
+
+    normalized = category.strip().casefold()
+    for allowed_category in CALENDAR_CATEGORIES:
+        if allowed_category.casefold() == normalized:
+            return allowed_category
+    return category.strip().title()
+
+
+def _latest_release_from_rows(
+    releases: list[IndicatorRelease],
+    *,
+    actual_only: bool = False,
+) -> IndicatorRelease | None:
+    eligible = [
+        release for release in releases
+        if not actual_only or release.actual is not None
+    ]
+    if not eligible:
+        return None
+
+    eligible.sort(
+        key=lambda release: (
+            release.period_start_date or date.min,
+            release.released_at,
+            release.retrieved_at,
+            release.id,
+        )
+    )
+    return eligible[-1]
+
+
+async def get_latest_indicator_release(
+    session: AsyncSession,
+    indicator_id: int,
+    *,
+    actual_only: bool = False,
+) -> IndicatorRelease | None:
+    releases_q = await session.execute(
+        select(IndicatorRelease)
+        .where(IndicatorRelease.indicator_id == indicator_id)
+        .order_by(
+            IndicatorRelease.period_start_date.desc().nullslast(),
+            desc(IndicatorRelease.released_at),
+            desc(IndicatorRelease.retrieved_at),
+            desc(IndicatorRelease.id),
+        )
+        .limit(24)
+    )
+    return _latest_release_from_rows(
+        list(releases_q.scalars().all()),
+        actual_only=actual_only,
+    )
+
+
 async def _country_summary(
     session: AsyncSession,
     country: Country,
 ) -> CountrySummary:
+    now = _now()
     indicator_count_q = await session.execute(
         select(func.count(Indicator.id)).where(Indicator.country_code == country.code)
     )
@@ -96,7 +233,11 @@ async def _country_summary(
         select(func.max(IndicatorRelease.released_at))
         .select_from(IndicatorRelease)
         .join(Indicator, Indicator.id == IndicatorRelease.indicator_id)
-        .where(Indicator.country_code == country.code)
+        .where(
+            Indicator.country_code == country.code,
+            IndicatorRelease.actual.is_not(None),
+            IndicatorRelease.released_at <= now,
+        )
     )
     latest_release_at = latest_release_q.scalar_one()
 
@@ -184,24 +325,25 @@ async def list_calendar_events(
     """Return calendar-ready releases from the ingested EODHD event stream."""
     start_at = _now() - timedelta(days=days_back)
     end_at = _now() + timedelta(days=days_forward)
+    normalized_category = _normalize_category_filter(category)
 
-    filters = [
-        IndicatorRelease.is_latest.is_(True),
+    mapped_filters = [
         IndicatorRelease.released_at >= start_at,
         IndicatorRelease.released_at <= end_at,
+        IndicatorRelease.indicator_id.is_not(None),
     ]
     if country_code:
-        filters.append(Indicator.country_code == country_code.upper())
-    if category:
-        filters.append(Indicator.primary_category == category.title())
+        mapped_filters.append(Indicator.country_code == country_code.upper())
+    if normalized_category:
+        mapped_filters.append(Indicator.primary_category == normalized_category)
     if importance is not None:
-        filters.append(Indicator.importance == importance)
+        mapped_filters.append(Indicator.importance == importance)
 
     calendar_q = await session.execute(
         select(IndicatorRelease, Indicator, Country)
         .join(Indicator, Indicator.id == IndicatorRelease.indicator_id)
         .join(Country, Country.code == Indicator.country_code)
-        .where(*filters)
+        .where(*mapped_filters)
         .order_by(
             asc(IndicatorRelease.released_at),
             asc(Indicator.importance),
@@ -235,8 +377,113 @@ async def list_calendar_events(
             previous=float(release.previous) if release.previous is not None else None,
             surprise=float(release.surprise) if release.surprise is not None else None,
             unit=indicator.unit,
+            is_positive_when_higher=indicator.is_higher_better_for_currency,
         ))
-    return events
+
+    country_rows = await session.execute(select(Country))
+    countries = {country.code: country for country in country_rows.scalars().all()}
+
+    unmapped_filters = [
+        IndicatorRelease.indicator_id.is_(None),
+        IndicatorRelease.released_at >= start_at,
+        IndicatorRelease.released_at <= end_at,
+    ]
+    if country_code:
+        unmapped_filters.append(
+            IndicatorRelease.raw_payload["country"].astext == country_code.upper()
+        )
+
+    unmapped_q = await session.execute(
+        select(IndicatorRelease)
+        .where(*unmapped_filters)
+        .order_by(asc(IndicatorRelease.released_at), asc(IndicatorRelease.id))
+        .limit(limit)
+    )
+
+    for release in unmapped_q.scalars().all():
+        raw_country = (release.raw_payload or {}).get("country")
+        country = countries.get(raw_country)
+        if country is None:
+            continue
+
+        raw_type = (release.raw_payload or {}).get("type") or "Unmapped event"
+        raw_comparison = (release.raw_payload or {}).get("comparison")
+        display_name = raw_type if raw_comparison in (None, "") else f"{raw_type} ({str(raw_comparison).upper()})"
+        inferred_category = _infer_calendar_category(raw_type)
+        inferred_importance = _infer_calendar_importance(raw_type)
+        inferred_direction = _infer_calendar_positive_when_higher(raw_type)
+
+        if normalized_category and inferred_category != normalized_category:
+            continue
+        if importance is not None and inferred_importance != importance:
+            continue
+
+        events.append(EconomicCalendarEvent(
+            release_id=release.id,
+            indicator_id=None,
+            country_code=country.code,
+            country_name=country.name,
+            currency_code=country.currency_code,
+            canonical_name=None,
+            display_name=display_name,
+            primary_category=inferred_category,
+            importance=inferred_importance,
+            period=release.period,
+            released_at=release.released_at,
+            status=(
+                "released"
+                if release.actual is not None
+                else "upcoming" if release.released_at >= now else "pending"
+            ),
+            actual=float(release.actual) if release.actual is not None else None,
+            estimate=float(release.estimate) if release.estimate is not None else None,
+            previous=float(release.previous) if release.previous is not None else None,
+            surprise=float(release.surprise) if release.surprise is not None else None,
+            unit=None,
+            is_positive_when_higher=inferred_direction,
+        ))
+
+    deduped_events = _dedupe_calendar_events(events)
+    return deduped_events[:limit]
+
+
+def _infer_calendar_category(raw_type: str) -> str:
+    normalized = raw_type.lower()
+    if any(token in normalized for token in ["interest rate", "central bank", "fed", "ecb", "boj", "rba", "rbnz", "boc", "snb"]):
+        return "Monetary Policy"
+    if any(token in normalized for token in ["sentiment", "confidence", "expectations", "survey", "zew"]):
+        return "Sentiment"
+    if any(token in normalized for token in ["house", "housing", "property", "rightmove"]):
+        return "Housing"
+    if any(token in normalized for token in ["cpi", "inflation", "ppi", "price"]):
+        return "Inflation"
+    if any(token in normalized for token in ["employment", "earnings", "payroll", "jobless", "claims", "unemployment"]):
+        return "Labor"
+    if any(token in normalized for token in ["trade", "import", "export", "balance"]):
+        return "Trade"
+    return "Growth"
+
+
+def _infer_calendar_importance(raw_type: str) -> int:
+    normalized = raw_type.lower()
+    if any(token in normalized for token in ["inflation", "cpi", "payroll", "unemployment", "interest rate"]):
+        return 1
+    if any(token in normalized for token in ["trade", "export", "import", "house", "housing", "price index"]):
+        return 2
+    return 3
+
+
+def _infer_calendar_positive_when_higher(raw_type: str) -> bool | None:
+    normalized = raw_type.lower()
+    if any(token in normalized for token in ["unemployment", "jobless", "claimant", "claims"]):
+        return False
+    if any(token in normalized for token in [
+        "cpi", "inflation", "ppi", "price", "payroll", "earnings",
+        "employment", "pmi", "confidence", "sales", "gdp", "trade",
+        "export", "import", "credit", "production",
+    ]):
+        return True
+    return None
 
 
 async def get_country(
@@ -344,9 +591,13 @@ async def get_indicator_explorer_payload(
     )
     release_rows = releases_q.scalars().all()
 
-    grouped: dict[tuple[str | None, date | None], list[IndicatorRelease]] = {}
+    grouped: dict[tuple[object, ...], list[IndicatorRelease]] = {}
     for release in release_rows:
-        key = (release.period, release.period_start_date)
+        key = (
+            release.period,
+            release.period_start_date,
+            release.released_at if release.period is None and release.period_start_date is None else None,
+        )
         grouped.setdefault(key, []).append(release)
 
     picked_releases = [
@@ -413,14 +664,7 @@ async def get_country_detail_payload(
     release_count = release_count_q.scalar_one()
 
     indicators_q = await session.execute(
-        select(Indicator, IndicatorRelease)
-        .outerjoin(
-            IndicatorRelease,
-            and_(
-                IndicatorRelease.indicator_id == Indicator.id,
-                IndicatorRelease.is_latest.is_(True),
-            ),
-        )
+        select(Indicator)
         .where(Indicator.country_code == normalized_country_code)
         .order_by(
             Indicator.importance.asc(),
@@ -429,8 +673,14 @@ async def get_country_detail_payload(
         )
     )
 
-    indicators = [
-        IndicatorSnapshot(
+    indicators = []
+    for indicator in indicators_q.scalars().all():
+        release = await get_latest_indicator_release(
+            session,
+            indicator.id,
+            actual_only=True,
+        )
+        indicators.append(IndicatorSnapshot(
             id=indicator.id,
             canonical_name=indicator.canonical_name,
             display_name=indicator.display_name,
@@ -442,9 +692,7 @@ async def get_country_detail_payload(
             importance=indicator.importance,
             is_higher_better_for_currency=indicator.is_higher_better_for_currency,
             latest_release=_release_to_schema(release),
-        )
-        for indicator, release in indicators_q.all()
-    ]
+        ))
 
     return CountryDetailPayload(
         country=await _country_summary(session, country),
@@ -481,7 +729,13 @@ async def get_economic_calendar(
     days_back: int = Query(default=1, ge=0, le=14),
     days_forward: int = Query(default=7, ge=1, le=30),
     country: str | None = Query(default=None, min_length=2, max_length=2),
-    category: str | None = Query(default=None, pattern="^(Inflation|Growth|Labor)$"),
+    category: str | None = Query(
+        default=None,
+        pattern=(
+            "^(Inflation|Growth|Labor|Monetary Policy|Trade|"
+            "Sentiment|Housing|Other)$"
+        ),
+    ),
     importance: int | None = Query(default=None, ge=1, le=3),
     limit: int = Query(default=200, ge=1, le=500),
     session: AsyncSession = Depends(get_session),

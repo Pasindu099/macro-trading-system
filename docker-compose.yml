@@ -17,6 +17,24 @@ services:
       timeout: 5s
       retries: 5
 
+  app:
+    build: .
+    container_name: macro_dashboard_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://macro_user:MyMacro2026Pass@postgres:5432/macro_dashboard_dev
+      - EODHD_API_KEY=69e3b037bd2fa6.04084397
+      - LOG_LEVEL=INFO
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/venv
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
 volumes:
   postgres_data:
     name: macro_dashboard_postgres_data

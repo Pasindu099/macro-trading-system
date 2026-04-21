@@ -159,11 +159,11 @@ class BiggestSurprisesPayload(BaseModel):
 class EconomicCalendarEvent(BaseModel):
     """One upcoming or recently released economic event."""
     release_id: int
-    indicator_id: int
+    indicator_id: int | None = None
     country_code: str
     country_name: str
     currency_code: str
-    canonical_name: str
+    canonical_name: str | None = None
     display_name: str
     primary_category: str
     importance: int
@@ -175,6 +175,7 @@ class EconomicCalendarEvent(BaseModel):
     previous: float | None = None
     surprise: float | None = None
     unit: str | None = None
+    is_positive_when_higher: bool | None = None
 
 
 class EconomicCalendarPayload(BaseModel):

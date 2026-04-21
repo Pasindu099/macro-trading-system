@@ -57,6 +57,9 @@ SCHEDULED_LOOKBACK_DAYS = 45
 # Post-release trigger lookback — narrow, we just want the fresh print.
 POST_RELEASE_LOOKBACK_DAYS = 7
 
+# Forward fetch window so the calendar can show upcoming releases.
+CALENDAR_FORWARD_DAYS = 14
+
 # UTC times for the 3 daily runs.
 SCHEDULED_SESSIONS: dict[str, str] = {
     "scheduled_asia":   "00:00",
@@ -119,8 +122,9 @@ class Scheduler:
     async def _run_scheduled_session(self, session_name: str) -> None:
         """A daily scheduled run — fetches all 8 countries with wide lookback."""
         countries = sorted(ALLOWED_COUNTRIES)
-        to_date = date.today()
-        from_date = to_date - timedelta(days=SCHEDULED_LOOKBACK_DAYS)
+        today = date.today()
+        to_date = today + timedelta(days=CALENDAR_FORWARD_DAYS)
+        from_date = today - timedelta(days=SCHEDULED_LOOKBACK_DAYS)
 
         async with run_logger(session_name, countries=countries) as run:
             assert self._ingest_service is not None
@@ -156,8 +160,9 @@ class Scheduler:
         country = trigger_config["country"]
         trigger_name = trigger_config["name"]
         lookback_days = _resolve_post_release_lookback_days(trigger_config)
-        to_date = date.today()
-        from_date = to_date - timedelta(days=lookback_days)
+        today = date.today()
+        to_date = today + timedelta(days=CALENDAR_FORWARD_DAYS)
+        from_date = today - timedelta(days=lookback_days)
 
         async with run_logger("post_release", countries=[country]) as run:
             assert self._ingest_service is not None

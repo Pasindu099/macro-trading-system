@@ -1,0 +1,25 @@
+metric_id,country_code,horizon_months,sample_count,correlation,directional_accuracy,status,notes
+1,AU,1,92,-0.198386,0.380435,evaluated,Policy-rate validation uses stored monetary-policy rate releases only; countries without rate-change samples are not evaluated.
+2,AU,2,115,-0.330386,0.304348,evaluated,Policy-rate validation uses stored monetary-policy rate releases only; countries without rate-change samples are not evaluated.
+3,AU,3,129,-0.397059,0.271318,evaluated,Policy-rate validation uses stored monetary-policy rate releases only; countries without rate-change samples are not evaluated.
+4,NZ,1,16,,0.000000,evaluated,Policy-rate validation uses stored monetary-policy rate releases only; countries without rate-change samples are not evaluated.
+5,NZ,2,22,,0.000000,evaluated,Policy-rate validation uses stored monetary-policy rate releases only; countries without rate-change samples are not evaluated.
+6,NZ,3,28,,0.000000,evaluated,Policy-rate validation uses stored monetary-policy rate releases only; countries without rate-change samples are not evaluated.
+7,EU,2,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+8,EU,3,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+9,EU,1,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+10,JP,2,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+11,US,3,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+12,UK,3,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+13,US,1,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+14,UK,1,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+15,CH,2,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+16,CA,1,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+17,CA,3,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+18,CA,2,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+19,UK,2,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+20,US,2,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+21,CH,1,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+22,JP,3,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+23,CH,3,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.
+24,JP,1,0,,,no_policy_rate_history,No stored policy-rate change samples available for this country/horizon.

@@ -1,76 +1,123 @@
 {% extends "base.html" %}
 
 {% block body %}
-<div class="shell shell--calendar">
+<main class="shell shell--calendar">
+    <header class="calendar-hero">
+        <a class="back-link" href="/">Back to dashboard</a>
+        <div class="calendar-hero__row">
+            <div>
+                <p class="eyebrow">Economic Calendar</p>
+                <h1>Macro releases from the ingested EODHD feed.</h1>
+                <p class="calendar-hero__copy">
+                    Filter the calendar by country, category, importance, and time window to keep the
+                    trading focus on both recent and upcoming macro catalysts that matter.
+                </p>
+            </div>
+            <div class="calendar-hero__meta">
+                <span class="topbar__pill">Source: EODHD ingest</span>
+                <a class="topbar__link" href="/docs#/public/get_economic_calendar_api_calendar_get">Calendar API</a>
+            </div>
+        </div>
+    </header>
 
-    <div class="sec-bar">
-        <span class="sec-bar__title">ECONOMIC CALENDAR &mdash; EODHD FEED</span>
-        <span class="sec-bar__meta">INGESTED RELEASES ONLY</span>
-    </div>
-
-    <div class="calendar-stage">
-
-        <!-- Sidebar filters -->
-        <aside class="calendar-sidebar">
-
-            <div class="sidebar-section">
-                <span class="sidebar-label">FORWARD WINDOW</span>
+    <section class="calendar-controls">
+        <div class="control-group">
+            <span class="control-group__label">Past window</span>
+            <div class="segmented-control" id="calendar-back-window-control">
                 {% for days in calendar_windows %}
                     <button
-                        class="sidebar-btn {% if days == 7 %}is-active{% endif %}"
+                        class="control-button {% if days == 14 %}is-active{% endif %}"
                         data-window="{{ days }}"
-                        id="cal-win-{{ days }}"
                         type="button"
-                    >{{ days }}D FORWARD</button>
+                    >
+                        {{ days }}D
+                    </button>
                 {% endfor %}
             </div>
+        </div>
 
-            <div class="sidebar-section">
-                <span class="sidebar-label">COUNTRY</span>
-                <select class="sidebar-select" id="calendar-country">
-                    <option value="">ALL TRACKED</option>
+        <div class="control-group">
+            <span class="control-group__label">Forward window</span>
+            <div class="segmented-control" id="calendar-window-control">
+                {% for days in calendar_windows %}
+                    <button
+                        class="control-button {% if days == 7 %}is-active{% endif %}"
+                        data-window="{{ days }}"
+                        type="button"
+                    >
+                        {{ days }}D
+                    </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="calendar-filter-grid">
+            <label class="calendar-filter">
+                <span class="control-group__label">Country</span>
+                <select id="calendar-country">
+                    <option value="">All tracked</option>
                     {% for country in countries %}
                         <option value="{{ country.code }}">{{ country.code }} / {{ country.currency_code }}</option>
                     {% endfor %}
                 </select>
-            </div>
+            </label>
 
-            <div class="sidebar-section">
-                <span class="sidebar-label">CATEGORY</span>
-                <select class="sidebar-select" id="calendar-category">
-                    <option value="">ALL CATEGORIES</option>
+            <label class="calendar-filter">
+                <span class="control-group__label">Category</span>
+                <select id="calendar-category">
+                    <option value="">All categories</option>
                     {% for category in category_tabs %}
-                        <option value="{{ category }}">{{ category|upper }}</option>
+                        <option value="{{ category }}">{{ category }}</option>
                     {% endfor %}
                 </select>
-            </div>
+            </label>
 
-            <div class="sidebar-section">
-                <span class="sidebar-label">IMPORTANCE</span>
-                <select class="sidebar-select" id="calendar-importance">
-                    <option value="">ALL TIERS</option>
-                    <option value="1">TIER 1 (HIGH)</option>
-                    <option value="2">TIER 2 (MED)</option>
-                    <option value="3">TIER 3 (LOW)</option>
+            <label class="calendar-filter">
+                <span class="control-group__label">Importance</span>
+                <select id="calendar-importance">
+                    <option value="">All levels</option>
+                    <option value="1">H - High</option>
+                    <option value="2">M - Medium</option>
+                    <option value="3">L - Low</option>
                 </select>
-            </div>
+            </label>
 
-        </aside>
-
-        <!-- Calendar content -->
-        <div class="calendar-content">
-            <div class="sec-bar" style="position:sticky;top:28px;z-index:10">
-                <span class="sec-bar__title" id="calendar-title">LOADING...</span>
-                <span class="sec-bar__meta" id="calendar-meta"></span>
-            </div>
-
-            <div id="calendar-groups" aria-live="polite">
-                <div style="padding:24px 14px;font-size:11px;color:var(--muted)">LOADING CALENDAR EVENTS...</div>
-            </div>
+            <label class="calendar-filter">
+                <span class="control-group__label">Time zone</span>
+                <select id="calendar-timezone">
+                    <option value="browser">Browser local</option>
+                    <option value="UTC">UTC</option>
+                    <option value="Europe/Berlin">Berlin</option>
+                    <option value="Europe/London">London</option>
+                    <option value="America/New_York">New York</option>
+                    <option value="America/Chicago">Chicago</option>
+                    <option value="Asia/Tokyo">Tokyo</option>
+                    <option value="Australia/Sydney">Sydney</option>
+                    <option value="Pacific/Auckland">Auckland</option>
+                </select>
+            </label>
         </div>
 
-    </div>
-</div>
+        <div class="calendar-filter-bar">
+            <p id="calendar-active-filters" class="calendar-filter-summary">Showing all events.</p>
+            <button id="calendar-reset-filters" class="control-button" type="button">Reset filters</button>
+        </div>
+    </section>
 
-<script src="{{ url_for('static', path='js/calendar.js') }}" defer></script>
+    <section class="calendar-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Release Queue</p>
+                <h2 id="calendar-title">Next 7 days</h2>
+            </div>
+            <p class="panel-copy" id="calendar-meta">Loading calendar events...</p>
+        </div>
+
+        <div id="calendar-groups" class="calendar-groups" aria-live="polite">
+            <div class="empty-panel">Loading calendar events...</div>
+        </div>
+    </section>
+</main>
+
+<script src="{{ url_for('static', path='js/calendar.js') }}?v=20260421a" defer></script>
 {% endblock %}

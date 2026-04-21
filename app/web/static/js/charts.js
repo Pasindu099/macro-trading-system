@@ -73,6 +73,42 @@
         };
     }
 
+    function buildReferenceBadge(options = {}) {
+        if (!options.referenceBadgeText) {
+            return [];
+        }
+
+        return [
+            {
+                type: "group",
+                right: 24,
+                top: 12,
+                silent: true,
+                children: [
+                    {
+                        type: "rect",
+                        shape: { x: 0, y: 0, width: 140, height: 26, r: 13 },
+                        style: {
+                            fill: "rgba(35, 196, 131, 0.12)",
+                            stroke: "#23c483",
+                            lineWidth: 1,
+                        },
+                    },
+                    {
+                        type: "text",
+                        style: {
+                            x: 12,
+                            y: 17,
+                            text: options.referenceBadgeText,
+                            fill: "#23c483",
+                            font: "12px 'IBM Plex Mono', monospace",
+                        },
+                    },
+                ],
+            },
+        ];
+    }
+
     function toSeriesConfig(series) {
         return (Array.isArray(series) ? series : []).map((item) => ({
             name: item.name,
@@ -83,16 +119,16 @@
             data: item.data || [],
             lineStyle: {
                 width: 2,
-                color: item.color || "#f5a623",
+                color: item.color || "#50b5ff",
                 type: item.dashed ? "dashed" : "solid",
             },
             itemStyle: {
-                color: item.color || "#f5a623",
+                color: item.color || "#50b5ff",
             },
             areaStyle: item.area
                 ? {
                     opacity: 0.08,
-                    color: item.color || "#f5a623",
+                    color: item.color || "#50b5ff",
                 }
                 : undefined,
         }));
@@ -116,6 +152,7 @@
                 name: options.unit || "",
             },
             series: toSeriesConfig(series),
+            graphic: buildReferenceBadge(options),
         }, true);
     }
 
@@ -131,8 +168,25 @@
             type: "bar",
             barMaxWidth: 24,
             data: (item.data || []).map((point) => point[1]),
-            itemStyle: { color: item.color || "#f5a623" },
+            itemStyle: { color: item.color || "#50b5ff" },
         }));
+
+        if (options.referenceLineValue !== null && options.referenceLineValue !== undefined) {
+            renderedSeries.push({
+                name: options.referenceLineLabel || "Reference",
+                type: "line",
+                data: categories.map(() => options.referenceLineValue),
+                showSymbol: false,
+                smooth: false,
+                connectNulls: true,
+                lineStyle: {
+                    width: 2,
+                    color: "#23c483",
+                    type: "dashed",
+                },
+                itemStyle: { color: "#23c483" },
+            });
+        }
 
         chart.setOption({
             ...chartBaseOptions(options),
@@ -151,6 +205,7 @@
                 name: options.unit || "",
             },
             series: renderedSeries,
+            graphic: buildReferenceBadge(options),
         }, true);
     }
 
@@ -185,6 +240,13 @@
             bins[index].count += 1;
         });
 
+        let targetBinLabel = null;
+        if (options.referenceValue !== null && options.referenceValue !== undefined) {
+            const rawIndex = Math.floor((options.referenceValue - min) / step);
+            const index = Math.min(binCount - 1, Math.max(0, rawIndex));
+            targetBinLabel = bins[index]?.label || null;
+        }
+
         chart.setOption({
             ...chartBaseOptions(options),
             xAxis: {
@@ -208,9 +270,24 @@
                     type: "bar",
                     barWidth: "85%",
                     data: bins.map((bin) => bin.count),
-                    itemStyle: { color: "#f5a623" },
+                    itemStyle: { color: "#50b5ff" },
+                    markLine: targetBinLabel ? {
+                        symbol: "none",
+                        label: {
+                            show: true,
+                            formatter: options.referenceLineLabel || "CB Target",
+                            color: "#23c483",
+                        },
+                        lineStyle: {
+                            color: "#23c483",
+                            type: "dashed",
+                            width: 2,
+                        },
+                        data: [{ xAxis: targetBinLabel }],
+                    } : undefined,
                 },
             ],
+            graphic: buildReferenceBadge(options),
         }, true);
     }
 
@@ -252,6 +329,7 @@
                     barMaxWidth: 28,
                 },
             ],
+            graphic: buildReferenceBadge(options),
         }, true);
     }
 
@@ -320,6 +398,7 @@
                     },
                 },
             ],
+            graphic: buildReferenceBadge(options),
         }, true);
     }
 
@@ -359,11 +438,11 @@
                     connectNulls: true,
                     lineStyle: {
                         width: 2,
-                        color: options.color || "#f5a623",
+                        color: options.color || "#50b5ff",
                     },
                     areaStyle: {
                         opacity: 0.08,
-                        color: options.color || "#f5a623",
+                        color: options.color || "#50b5ff",
                     },
                 },
             ],

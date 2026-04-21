@@ -202,7 +202,7 @@ def test_canonicalize_all_allowlist_countries_accepted(
     [
         ("Mar", date(2026, 3, 1)),
         ("Jan", date(2026, 1, 1)),
-        ("Q4", date(2026, 10, 1)),
+        ("Q4", date(2025, 10, 1)),
         ("Q1", date(2026, 1, 1)),
         ("2026-04-15", date(2026, 4, 15)),
         ("Mar 2025", date(2025, 3, 1)),
@@ -224,6 +224,12 @@ def test_parse_period_december_from_january_release_uses_prior_year() -> None:
     result = _parse_period("Dec", released_at)
     # Dec > Feb + 1 = March, so year goes back
     assert result == date(2025, 12, 1)
+
+
+def test_parse_period_q4_from_january_release_uses_prior_year() -> None:
+    released_at = datetime(2026, 1, 28, 12, 0, tzinfo=timezone.utc)
+    result = _parse_period("Q4", released_at)
+    assert result == date(2025, 10, 1)
 
 
 def test_parse_period_none_returns_none() -> None:

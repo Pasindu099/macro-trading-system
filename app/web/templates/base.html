@@ -4,29 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ page_title }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}?v=20260421a">
     <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js" defer></script>
-    <script src="{{ url_for('static', path='js/charts.js') }}" defer></script>
+    <script src="{{ url_for('static', path='js/charts.js') }}?v=20260421a" defer></script>
 </head>
 <body>
-<nav class="fnbar">
-    <div class="fnbar__brand">MACRO<span style="color:var(--text-dim);margin:0 4px">/</span>TERMINAL</div>
-    <div class="fnbar__nav">
-        <a class="fnbar__link" href="/"><span class="fnbar__key">F1</span><span> HOME</span></a>
-        <a class="fnbar__link" href="/country/us"><span class="fnbar__key">F2</span><span> COUNTRIES</span></a>
-        <a class="fnbar__link" href="/calendar"><span class="fnbar__key">F3</span><span> CALENDAR</span></a>
-        <a class="fnbar__link" href="/docs"><span class="fnbar__key">F8</span><span> API</span></a>
-    </div>
-    <div class="fnbar__right">
-        <div class="fnbar__status">
-            <span class="fnbar__dot"></span>
-            LIVE
-        </div>
-    </div>
-</nav>
-{% block body %}{% endblock %}
+    {% block body %}{% endblock %}
 </body>
 </html>

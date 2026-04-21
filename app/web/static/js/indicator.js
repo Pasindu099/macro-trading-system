@@ -1,18 +1,31 @@
 (function () {
-    function fmt(value) {
-        if (value === null || value === undefined) return "—";
-        return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(value);
+    function formatNumber(value) {
+        if (value === null || value === undefined) {
+            return "N/A";
+        }
+        return new Intl.NumberFormat(undefined, {
+            maximumFractionDigits: 2,
+        }).format(value);
     }
 
-    function fmtSurprise(value) {
-        if (value === null || value === undefined) return "—";
-        const sign = value >= 0 ? "+" : "";
-        return `<span class="${value >= 0 ? "is-positive" : "is-negative"}">${sign}${fmt(value)}</span>`;
+    function formatSignedNumber(value, suffix = "") {
+        if (value === null || value === undefined) {
+            return "N/A";
+        }
+
+        const sign = value > 0 ? "+" : "";
+        return `${sign}${formatNumber(value)}${suffix}`;
     }
 
-    function fmtDate(value) {
-        if (!value) return "—";
-        return new Date(value).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+    function formatDate(value) {
+        if (!value) {
+            return "N/A";
+        }
+        return new Date(value).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        });
     }
 
     function selectState() {
@@ -33,34 +46,54 @@
     function buildLineSeries(points, state, payload) {
         const series = [
             {
-                name: "ACTUAL",
-                data: points.map((p) => [p.released_at, p.actual]),
-                color: "#f5a623",
+                name: "Actual",
+                data: points.map((point) => [point.released_at, point.actual]),
+                color: "#50b5ff",
             },
         ];
+
         if (state.overlayEstimate) {
             series.push({
-                name: "CONSENSUS",
-                data: points.map((p) => [p.released_at, p.estimate]),
-                color: "#ffcc00",
+                name: "Consensus",
+                data: points.map((point) => [point.released_at, point.estimate]),
+                color: "#f3ba63",
             });
         }
+
         if (state.overlayPrevious) {
             series.push({
-                name: "PREVIOUS",
-                data: points.map((p) => [p.released_at, p.previous]),
-                color: "#555555",
+                name: "Previous",
+                data: points.map((point) => [point.released_at, point.previous]),
+                color: "#8fa5b5",
             });
         }
+
         if (state.overlayTarget && payload.cb_target !== null && payload.cb_target !== undefined) {
             series.push({
-                name: "CB TARGET",
-                data: points.map((p) => [p.released_at, payload.cb_target]),
-                color: "#00cc44",
+                name: "CB Target",
+                data: points.map((point) => [point.released_at, payload.cb_target]),
+                color: "#23c483",
                 dashed: true,
             });
         }
+
         return series;
+    }
+
+    function buildHeatmapMatrix(points) {
+        return points.map((point, index) => [
+            index,
+            0,
+            point.surprise ?? point.actual ?? 0,
+        ]);
+    }
+
+    function buildReferenceBadgeText(payload, state) {
+        if (!state.overlayTarget || payload.cb_target === null || payload.cb_target === undefined) {
+            return null;
+        }
+
+        return `CB Target ${formatNumber(payload.cb_target)}${payload.indicator.unit ? ` ${payload.indicator.unit}` : ""}`;
     }
 
     function renderChart(payload, state) {
@@ -69,49 +102,82 @@
         const containerId = "indicator-chart";
         const points = Array.isArray(payload.series) ? payload.series : [];
 
-        chartTitle.textContent = payload.indicator.display_name.toUpperCase();
-        chartMeta.textContent = `${payload.total_points} PTS | ${payload.revision_mode.replace("_", " ").toUpperCase()} | ${payload.range_key.toUpperCase()}`;
+        chartTitle.textContent = payload.indicator.display_name;
+        chartMeta.textContent = `${payload.total_points} points | ${payload.revision_mode.replace("_", " ")} | ${payload.range_key.toUpperCase()}`;
 
-        if (!window.MacroCharts) return;
-
-        if (state.chartType === "line") {
-            window.MacroCharts.renderLineChart(containerId, buildLineSeries(points, state, payload), {
-                unit: payload.indicator.unit,
-                title: payload.indicator.display_name,
-            });
+        if (!window.MacroCharts) {
             return;
         }
-        if (state.chartType === "bar") {
-            window.MacroCharts.renderBarChart(
+
+        if (state.chartType === "line") {
+            window.MacroCharts.renderLineChart(
                 containerId,
-                [{ name: "ACTUAL", data: points.map((p) => [p.released_at, p.actual]), color: "#f5a623" }],
-                { unit: payload.indicator.unit, title: payload.indicator.display_name }
+                buildLineSeries(points, state, payload),
+                {
+                    unit: payload.indicator.unit,
+                    title: payload.indicator.display_name,
+                    referenceBadgeText: buildReferenceBadgeText(payload, state),
+                }
             );
             return;
         }
+
+        if (state.chartType === "bar") {
+            const barSeries = [
+                {
+                    name: "Actual",
+                    data: points.map((point) => [point.released_at, point.actual]),
+                    color: "#50b5ff",
+                },
+            ];
+            window.MacroCharts.renderBarChart(
+                containerId,
+                barSeries,
+                {
+                    unit: payload.indicator.unit,
+                    title: payload.indicator.display_name,
+                    referenceLineValue: state.overlayTarget ? payload.cb_target : null,
+                    referenceLineLabel: "CB Target",
+                    referenceBadgeText: buildReferenceBadgeText(payload, state),
+                }
+            );
+            return;
+        }
+
         if (state.chartType === "histogram") {
             window.MacroCharts.renderHistogram(
                 containerId,
-                points.map((p) => p.actual).filter((v) => v !== null && v !== undefined),
-                { title: `${payload.indicator.display_name} DISTRIBUTION` }
+                points.map((point) => point.actual).filter((value) => value !== null && value !== undefined),
+                {
+                    title: `${payload.indicator.display_name} distribution`,
+                    referenceValue: state.overlayTarget ? payload.cb_target : null,
+                    referenceLineLabel: "CB Target",
+                    referenceBadgeText: buildReferenceBadgeText(payload, state),
+                }
             );
             return;
         }
+
         if (state.chartType === "deviation") {
             window.MacroCharts.renderDeviationChart(
                 containerId,
-                points.map((p) => [p.released_at, p.surprise]),
-                { title: `${payload.indicator.display_name} SURPRISE` }
+                points.map((point) => [point.released_at, point.surprise]),
+                {
+                    title: `${payload.indicator.display_name} surprise`,
+                    referenceBadgeText: buildReferenceBadgeText(payload, state),
+                }
             );
             return;
         }
+
         window.MacroCharts.renderHeatmap(
             containerId,
-            points.map((p, i) => [i, 0, p.surprise ?? p.actual ?? 0]),
+            buildHeatmapMatrix(points),
             {
-                xLabels: points.map((p) => p.period || String(p.released_at).slice(0, 10)),
-                yLabels: ["SURPRISE"],
-                title: `${payload.indicator.display_name} HEATMAP`,
+                xLabels: points.map((point) => point.period || String(point.released_at).slice(0, 10)),
+                yLabels: ["Surprise intensity"],
+                title: `${payload.indicator.display_name} heatmap`,
+                referenceBadgeText: buildReferenceBadgeText(payload, state),
             }
         );
     }
@@ -119,23 +185,29 @@
     function renderRecentPrints(payload) {
         const body = document.getElementById("recent-prints-body");
         const meta = document.getElementById("prints-meta");
-        meta.textContent = `${payload.recent_prints.length} ROWS | ${payload.revision_mode.replace("_", " ").toUpperCase()}`;
+        meta.textContent = `${payload.recent_prints.length} rows shown in ${payload.revision_mode.replace("_", " ")} mode.`;
 
         if (!payload.recent_prints.length) {
-            body.innerHTML = `<tr class="loading-row"><td colspan="7">NO PRINTS FOR THIS SELECTION</td></tr>`;
+            body.innerHTML = `
+                <tr>
+                    <td colspan="7" class="prints-table__loading">No prints available for this selection.</td>
+                </tr>
+            `;
             return;
         }
 
-        body.innerHTML = payload.recent_prints.map((p) => `
+        body.innerHTML = payload.recent_prints.map((point) => `
             <tr>
-                <td class="num">${p.period || "—"}</td>
-                <td class="num">${fmtDate(p.released_at)}</td>
-                <td class="num">${fmt(p.actual)}</td>
-                <td class="num">${fmt(p.estimate)}</td>
-                <td class="num">${fmt(p.previous)}</td>
-                <td class="num">${fmtSurprise(p.surprise)}</td>
-                <td class="num ${p.change_percentage >= 0 ? "is-positive" : p.change_percentage < 0 ? "is-negative" : ""}">
-                    ${p.change_percentage !== null && p.change_percentage !== undefined ? (p.change_percentage >= 0 ? "+" : "") + fmt(p.change_percentage) + "%" : "—"}
+                <td>${point.period || "N/A"}</td>
+                <td>${formatDate(point.released_at)}</td>
+                <td>${formatNumber(point.actual)}</td>
+                <td>${formatNumber(point.estimate)}</td>
+                <td>${formatNumber(point.previous)}</td>
+                <td class="${point.surprise > 0 ? "is-positive" : point.surprise < 0 ? "is-negative" : ""}">
+                    ${formatSignedNumber(point.surprise)}
+                </td>
+                <td class="${point.change_percentage > 0 ? "is-positive" : point.change_percentage < 0 ? "is-negative" : ""}">
+                    ${formatSignedNumber(point.change_percentage, "%")}
                 </td>
             </tr>
         `).join("");
@@ -143,33 +215,45 @@
 
     async function loadIndicatorPage() {
         const state = selectState();
-        if (!state.countryCode || !state.canonicalName) return;
+        if (!state.countryCode || !state.canonicalName) {
+            return;
+        }
 
-        const params = new URLSearchParams({ range_key: state.rangeKey, revision_mode: state.revisionMode });
-        const res = await fetch(
+        const params = new URLSearchParams({
+            range_key: state.rangeKey,
+            revision_mode: state.revisionMode,
+        });
+
+        const response = await fetch(
             `/api/country/${encodeURIComponent(state.countryCode)}/indicator/${encodeURIComponent(state.canonicalName)}?${params.toString()}`
         );
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
 
-        const body = await res.json();
-        renderChart(body.data, state);
-        renderRecentPrints(body.data);
+        const body = await response.json();
+        const payload = body.data;
+        renderChart(payload, state);
+        renderRecentPrints(payload);
     }
 
-    function bindControlGroup(groupId, attribute) {
-        const buttons = document.querySelectorAll(`#${groupId} [data-${attribute}]`);
-        buttons.forEach((btn) => {
-            btn.addEventListener("click", async function () {
-                buttons.forEach((b) => b.classList.remove("is-active"));
-                btn.classList.add("is-active");
+    function bindControlGroup(groupId, attributeName) {
+        const buttons = document.querySelectorAll(`#${groupId} [data-${attributeName}]`);
+        buttons.forEach((button) => {
+            button.addEventListener("click", async function () {
+                buttons.forEach((item) => item.classList.remove("is-active"));
+                button.classList.add("is-active");
                 await loadIndicatorPage();
             });
         });
     }
 
-    function bindCheckbox(id) {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener("change", loadIndicatorPage);
+    function bindCheckbox(checkboxId) {
+        const checkbox = document.getElementById(checkboxId);
+        if (!checkbox) {
+            return;
+        }
+        checkbox.addEventListener("change", loadIndicatorPage);
     }
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -180,12 +264,20 @@
         bindCheckbox("overlay-target");
         bindCheckbox("overlay-previous");
 
-        loadIndicatorPage().catch((err) => {
-            const meta = document.getElementById("chart-meta");
+        loadIndicatorPage().catch((error) => {
+            const chartMeta = document.getElementById("chart-meta");
             const body = document.getElementById("recent-prints-body");
-            if (meta) meta.textContent = "ERROR LOADING DATA";
-            if (body) body.innerHTML = `<tr class="loading-row"><td colspan="7">INDICATOR DATA COULD NOT BE LOADED</td></tr>`;
-            console.error(err);
+            if (chartMeta) {
+                chartMeta.textContent = "Unable to load indicator data";
+            }
+            if (body) {
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="prints-table__loading">Indicator data could not be loaded.</td>
+                    </tr>
+                `;
+            }
+            console.error(error);
         });
     });
 })();

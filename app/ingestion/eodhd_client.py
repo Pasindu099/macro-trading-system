@@ -193,6 +193,51 @@ class EODHDClient:
         logger.info("Fetched %d events for country=%s", len(raw_events), country)
         return raw_events
 
+    async def fetch_financial_news(
+        self,
+        *,
+        ticker: str | None = None,
+        topic: str | None = None,
+        limit: int = 10,
+        offset: int = 0,
+        from_date: date | None = None,
+        to_date: date | None = None,
+    ) -> list[dict[str, Any]]:
+        """Fetch financial news from EODHD.
+
+        EODHD requires at least one of ticker (`s`) or topic (`t`).
+        """
+        if not ticker and not topic:
+            raise ValueError("Either ticker or topic must be provided")
+        if limit < 1 or limit > 1000:
+            raise ValueError(f"limit must be 1..1000, got {limit}")
+        if offset < 0:
+            raise ValueError("offset must be >= 0")
+
+        url = f"{self._base_url}/news"
+        params: dict[str, Any] = {
+            "api_token": self._api_key,
+            "fmt": "json",
+            "limit": limit,
+            "offset": offset,
+        }
+        if ticker:
+            params["s"] = ticker
+        if topic:
+            params["t"] = topic
+        if from_date:
+            params["from"] = from_date.isoformat()
+        if to_date:
+            params["to"] = to_date.isoformat()
+
+        logger.info(
+            "Fetching EODHD news: ticker=%s topic=%s limit=%d offset=%d",
+            ticker, topic, limit, offset,
+        )
+        data = await self._request_with_retries(url, params)
+        logger.info("Fetched %d news items", len(data))
+        return data
+
     async def _request_with_retries(
         self,
         url: str,

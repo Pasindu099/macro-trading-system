@@ -1,0 +1,2559 @@
+{
+  "generated_at": "2026-04-21T08:00:12.715044Z",
+  "indicators_with_insufficient_history": [
+    {
+      "actual_count": 11,
+      "country_code": "AU",
+      "frequency": "monthly",
+      "indicator_key": "cpi_headline_mom",
+      "indicator_name": "Headline CPI (MoM)",
+      "release_count": 17
+    },
+    {
+      "actual_count": 20,
+      "country_code": "AU",
+      "frequency": "monthly",
+      "indicator_key": "consumer_price_index",
+      "indicator_name": "Consumer Price Index",
+      "release_count": 22
+    },
+    {
+      "actual_count": 0,
+      "country_code": "CA",
+      "frequency": "quarterly",
+      "indicator_key": "boc_business_outlook_survey",
+      "indicator_name": "BoC Business Outlook Survey",
+      "release_count": 1
+    },
+    {
+      "actual_count": 4,
+      "country_code": "CH",
+      "frequency": "monthly",
+      "indicator_key": "m3_money_supply",
+      "indicator_name": "M3 Money Supply",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "EU",
+      "frequency": "monthly",
+      "indicator_key": "new_car_sales_yoy",
+      "indicator_name": "New Car Sales (YoY)",
+      "release_count": 5
+    },
+    {
+      "actual_count": 21,
+      "country_code": "EU",
+      "frequency": "monthly",
+      "indicator_key": "construction_output_mom",
+      "indicator_name": "Construction Output (MoM)",
+      "release_count": 22
+    },
+    {
+      "actual_count": 0,
+      "country_code": "JP",
+      "frequency": "monthly",
+      "indicator_key": "tokyo_core_cpi_yoy",
+      "indicator_name": "Tokyo Core CPI (YoY)",
+      "release_count": 1
+    },
+    {
+      "actual_count": 6,
+      "country_code": "JP",
+      "frequency": "monthly",
+      "indicator_key": "adjusted_trade_balance",
+      "indicator_name": "Adjusted Trade Balance",
+      "release_count": 8
+    },
+    {
+      "actual_count": 4,
+      "country_code": "NZ",
+      "frequency": "monthly",
+      "indicator_key": "balance_of_trade_mom",
+      "indicator_name": "Balance of Trade (MoM)",
+      "release_count": 4
+    },
+    {
+      "actual_count": 4,
+      "country_code": "NZ",
+      "frequency": "monthly",
+      "indicator_key": "balance_of_trade_yoy",
+      "indicator_name": "Balance of Trade (YoY)",
+      "release_count": 4
+    },
+    {
+      "actual_count": 3,
+      "country_code": "UK",
+      "frequency": "monthly",
+      "indicator_key": "rightmove_hpi_yoy",
+      "indicator_name": "Rightmove House Price Index (YoY)",
+      "release_count": 4
+    },
+    {
+      "actual_count": 4,
+      "country_code": "UK",
+      "frequency": "monthly",
+      "indicator_key": "halifax_hpi_yoy",
+      "indicator_name": "Halifax House Price Index (YoY)",
+      "release_count": 4
+    },
+    {
+      "actual_count": 21,
+      "country_code": "UK",
+      "frequency": "monthly",
+      "indicator_key": "core_rpi_mom",
+      "indicator_name": "Core RPI (MoM)",
+      "release_count": 24
+    },
+    {
+      "actual_count": 23,
+      "country_code": "UK",
+      "frequency": "monthly",
+      "indicator_key": "core_rpi_yoy",
+      "indicator_name": "Core RPI (YoY)",
+      "release_count": 24
+    },
+    {
+      "actual_count": 2,
+      "country_code": "US",
+      "frequency": "monthly",
+      "indicator_key": "economic_optimism_index",
+      "indicator_name": "Economic Optimism Index",
+      "release_count": 3
+    },
+    {
+      "actual_count": 3,
+      "country_code": "US",
+      "frequency": "monthly",
+      "indicator_key": "umich_inflation_exp_1y",
+      "indicator_name": "UMich 1Y Inflation Expectations",
+      "release_count": 3
+    },
+    {
+      "actual_count": 13,
+      "country_code": "US",
+      "frequency": "monthly",
+      "indicator_key": "u6_unemployment_rate",
+      "indicator_name": "U-6 Underemployment Rate",
+      "release_count": 14
+    },
+    {
+      "actual_count": 15,
+      "country_code": "US",
+      "frequency": "monthly",
+      "indicator_key": "ism_services_business_activity",
+      "indicator_name": "ISM Services Business Activity",
+      "release_count": 16
+    }
+  ],
+  "issue_counts": [
+    {
+      "issue_count": 890,
+      "issue_type": "exact_duplicate_candidate",
+      "severity": "info"
+    },
+    {
+      "issue_count": 26,
+      "issue_type": "future_reference_period",
+      "severity": "review"
+    },
+    {
+      "issue_count": 182,
+      "issue_type": "iqr_outlier_candidate",
+      "severity": "review"
+    },
+    {
+      "issue_count": 2289,
+      "issue_type": "missing_estimate",
+      "severity": "review"
+    },
+    {
+      "issue_count": 1712,
+      "issue_type": "multiple_latest_rows",
+      "severity": "review"
+    },
+    {
+      "issue_count": 50,
+      "issue_type": "release_before_reference_period",
+      "severity": "review"
+    },
+    {
+      "issue_count": 12,
+      "issue_type": "statistical_outlier_candidate",
+      "severity": "review"
+    },
+    {
+      "issue_count": 18,
+      "issue_type": "insufficient_history",
+      "severity": "warning"
+    },
+    {
+      "issue_count": 715,
+      "issue_type": "missing_actual",
+      "severity": "warning"
+    },
+    {
+      "issue_count": 485,
+      "issue_type": "missing_reference_period",
+      "severity": "warning"
+    },
+    {
+      "issue_count": 30895,
+      "issue_type": "unmapped_raw_release",
+      "severity": "warning"
+    }
+  ],
+  "missingness_by_raw_table": {
+    "countries": {
+      "cb_inflation_target": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "cb_mandate_type": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "central_bank": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "code": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "currency_code": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "name": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "timezone": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      }
+    },
+    "indicator_releases": {
+      "actual": {
+        "missing_count": 8085,
+        "missing_pct": 18.03
+      },
+      "change": {
+        "missing_count": 9750,
+        "missing_pct": 21.74
+      },
+      "change_percentage": {
+        "missing_count": 10153,
+        "missing_pct": 22.64
+      },
+      "estimate": {
+        "missing_count": 18223,
+        "missing_pct": 40.63
+      },
+      "id": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "indicator_id": {
+        "missing_count": 30895,
+        "missing_pct": 68.88
+      },
+      "is_latest": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "period": {
+        "missing_count": 11972,
+        "missing_pct": 26.69
+      },
+      "period_start_date": {
+        "missing_count": 12006,
+        "missing_pct": 26.77
+      },
+      "previous": {
+        "missing_count": 7251,
+        "missing_pct": 16.17
+      },
+      "raw_payload": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "released_at": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "retrieved_at": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "surprise": {
+        "missing_count": 19192,
+        "missing_pct": 42.79
+      }
+    },
+    "indicators": {
+      "canonical_name": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "comparison": {
+        "missing_count": 101,
+        "missing_pct": 50.5
+      },
+      "country_code": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "display_name": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "frequency": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "id": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "importance": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "is_higher_better_for_currency": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "notes": {
+        "missing_count": 183,
+        "missing_pct": 91.5
+      },
+      "primary_category": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "secondary_categories": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "unit": {
+        "missing_count": 1,
+        "missing_pct": 0.5
+      }
+    },
+    "ingestion_runs": {
+      "api_calls_used": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "countries_fetched": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "errors": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "events_inserted": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "events_updated": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "finished_at": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "id": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "run_type": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "started_at": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      },
+      "status": {
+        "missing_count": 0,
+        "missing_pct": 0.0
+      }
+    }
+  },
+  "observation_counts_by_country": [
+    {
+      "actual_values": 1522,
+      "country_code": "AU",
+      "flagged_observations": 275,
+      "observations": 1629
+    },
+    {
+      "actual_values": 1877,
+      "country_code": "CA",
+      "flagged_observations": 316,
+      "observations": 2005
+    },
+    {
+      "actual_values": 414,
+      "country_code": "CH",
+      "flagged_observations": 192,
+      "observations": 443
+    },
+    {
+      "actual_values": 1368,
+      "country_code": "EU",
+      "flagged_observations": 124,
+      "observations": 1411
+    },
+    {
+      "actual_values": 2526,
+      "country_code": "JP",
+      "flagged_observations": 828,
+      "observations": 2603
+    },
+    {
+      "actual_values": 848,
+      "country_code": "NZ",
+      "flagged_observations": 532,
+      "observations": 890
+    },
+    {
+      "actual_values": 2682,
+      "country_code": "UK",
+      "flagged_observations": 454,
+      "observations": 2874
+    },
+    {
+      "actual_values": 1923,
+      "country_code": "US",
+      "flagged_observations": 402,
+      "observations": 2020
+    }
+  ],
+  "outlier_candidates": [
+    {
+      "actual_value": -594.3,
+      "country_code": "AU",
+      "data_quality_flags": [
+        "statistical_outlier_candidate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "employment_change",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-14T01:30:00+00:00"
+    },
+    {
+      "actual_value": -1.5,
+      "country_code": "AU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "leading_index_mom",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-20T01:30:00+00:00"
+    },
+    {
+      "actual_value": -373.8,
+      "country_code": "AU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "part_time_employment_change",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-14T01:30:00+00:00"
+    },
+    {
+      "actual_value": -17.7,
+      "country_code": "AU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_mom",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-06-04T01:30:00+00:00"
+    },
+    {
+      "actual_value": 16.9,
+      "country_code": "AU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_mom",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-07-03T01:30:00+00:00"
+    },
+    {
+      "actual_value": -1010.7,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "employment_change",
+      "period_label": "Mar",
+      "reference_period_start": "2020-03-01",
+      "release_timestamp_utc": "2020-04-09T12:30:00+00:00"
+    },
+    {
+      "actual_value": -1993.8,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "statistical_outlier_candidate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "employment_change",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-08T12:30:00+00:00"
+    },
+    {
+      "actual_value": 952.9,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "employment_change",
+      "period_label": "Jun",
+      "reference_period_start": "2020-06-01",
+      "release_timestamp_utc": "2020-07-10T12:30:00+00:00"
+    },
+    {
+      "actual_value": -1472.0,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "statistical_outlier_candidate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "full_time_employment_change",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-08T12:30:00+00:00"
+    },
+    {
+      "actual_value": -7.2,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_mom",
+      "period_label": "Mar",
+      "reference_period_start": "2020-03-01",
+      "release_timestamp_utc": "2020-05-29T12:30:00+00:00"
+    },
+    {
+      "actual_value": -11.6,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "statistical_outlier_candidate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_mom",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-06-30T12:30:00+00:00"
+    },
+    {
+      "actual_value": 4.5,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_mom",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-07-31T12:30:00+00:00"
+    },
+    {
+      "actual_value": 6.5,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_mom",
+      "period_label": "Jun",
+      "reference_period_start": "2020-06-01",
+      "release_timestamp_utc": "2020-08-28T12:30:00+00:00"
+    },
+    {
+      "actual_value": 3.0,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_mom",
+      "period_label": "Jul",
+      "reference_period_start": "2020-07-01",
+      "release_timestamp_utc": "2020-09-30T12:30:00+00:00"
+    },
+    {
+      "actual_value": -28.5,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "statistical_outlier_candidate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "manufacturing_sales_mom",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-06-15T12:30:00+00:00"
+    },
+    {
+      "actual_value": 20.7,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "manufacturing_sales_mom",
+      "period_label": "Jun",
+      "reference_period_start": "2020-06-01",
+      "release_timestamp_utc": "2020-08-14T12:30:00+00:00"
+    },
+    {
+      "actual_value": -536.7,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "part_time_employment_change",
+      "period_label": "Mar",
+      "reference_period_start": "2020-03-01",
+      "release_timestamp_utc": "2020-04-09T12:30:00+00:00"
+    },
+    {
+      "actual_value": -521.9,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "part_time_employment_change",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-08T12:30:00+00:00"
+    },
+    {
+      "actual_value": -22.0,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_ex_autos_mom",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-06-19T12:30:00+00:00"
+    },
+    {
+      "actual_value": 15.7,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_ex_autos_mom",
+      "period_label": "Jun",
+      "reference_period_start": "2020-06-01",
+      "release_timestamp_utc": "2020-08-21T12:30:00+00:00"
+    },
+    {
+      "actual_value": -10.0,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_mom",
+      "period_label": "Mar",
+      "reference_period_start": "2020-03-01",
+      "release_timestamp_utc": "2020-05-22T12:30:00+00:00"
+    },
+    {
+      "actual_value": -26.4,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_mom",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-06-19T12:30:00+00:00"
+    },
+    {
+      "actual_value": 18.7,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_mom",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-07-21T12:30:00+00:00"
+    },
+    {
+      "actual_value": 23.7,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_mom",
+      "period_label": "Jun",
+      "reference_period_start": "2020-06-01",
+      "release_timestamp_utc": "2020-08-21T12:30:00+00:00"
+    },
+    {
+      "actual_value": -32.5,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-06-19T12:30:00+00:00"
+    },
+    {
+      "actual_value": 56.7,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2021-04-01",
+      "release_timestamp_utc": "2021-06-23T12:30:00+00:00"
+    },
+    {
+      "actual_value": -21.6,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "statistical_outlier_candidate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "wholesale_sales_mom",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-06-18T12:30:00+00:00"
+    },
+    {
+      "actual_value": 18.5,
+      "country_code": "CA",
+      "data_quality_flags": [
+        "statistical_outlier_candidate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "wholesale_sales_mom",
+      "period_label": "Jun",
+      "reference_period_start": "2020-06-01",
+      "release_timestamp_utc": "2020-08-19T12:30:00+00:00"
+    },
+    {
+      "actual_value": -2.6,
+      "country_code": "CH",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q1",
+      "reference_period_start": "2020-01-01",
+      "release_timestamp_utc": "2020-06-03T05:45:00+00:00"
+    },
+    {
+      "actual_value": -8.2,
+      "country_code": "CH",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q2",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-08-27T05:45:00+00:00"
+    },
+    {
+      "actual_value": 7.2,
+      "country_code": "CH",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q3",
+      "reference_period_start": "2020-07-01",
+      "release_timestamp_utc": "2020-12-01T06:45:00+00:00"
+    },
+    {
+      "actual_value": 35.7,
+      "country_code": "CH",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2021-04-01",
+      "release_timestamp_utc": "2021-06-01T06:30:00+00:00"
+    },
+    {
+      "actual_value": -28.4,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "construction_output_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-06-17T09:00:00+00:00"
+    },
+    {
+      "actual_value": 42.3,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "construction_output_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2021-04-01",
+      "release_timestamp_utc": "2021-06-17T09:00:00+00:00"
+    },
+    {
+      "actual_value": 9.3,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "economic_sentiment",
+      "period_label": "Sep",
+      "reference_period_start": "2024-09-01",
+      "release_timestamp_utc": "2024-09-17T08:00:00+00:00"
+    },
+    {
+      "actual_value": 12.5,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "economic_sentiment",
+      "period_label": "Nov",
+      "reference_period_start": "2024-11-01",
+      "release_timestamp_utc": "2024-11-12T10:00:00+00:00"
+    },
+    {
+      "actual_value": 18.0,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "economic_sentiment",
+      "period_label": "Jan",
+      "reference_period_start": "2025-01-01",
+      "release_timestamp_utc": "2025-01-21T10:00:00+00:00"
+    },
+    {
+      "actual_value": -18.5,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "economic_sentiment",
+      "period_label": "Apr",
+      "reference_period_start": "2025-04-01",
+      "release_timestamp_utc": "2025-04-15T09:00:00+00:00"
+    },
+    {
+      "actual_value": 11.6,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "economic_sentiment",
+      "period_label": "May",
+      "reference_period_start": "2025-05-01",
+      "release_timestamp_utc": "2025-05-13T09:00:00+00:00"
+    },
+    {
+      "actual_value": -3.8,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q1",
+      "reference_period_start": "2020-01-01",
+      "release_timestamp_utc": "2020-04-30T09:00:00+00:00"
+    },
+    {
+      "actual_value": -3.8,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q1",
+      "reference_period_start": "2020-01-01",
+      "release_timestamp_utc": "2020-05-15T09:00:00+00:00"
+    },
+    {
+      "actual_value": -3.6,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q1",
+      "reference_period_start": "2020-01-01",
+      "release_timestamp_utc": "2020-06-09T09:00:00+00:00"
+    },
+    {
+      "actual_value": -12.1,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q2",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-07-31T09:00:00+00:00"
+    },
+    {
+      "actual_value": -12.1,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q2",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-08-14T09:00:00+00:00"
+    },
+    {
+      "actual_value": -11.8,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q2",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-09-08T09:00:00+00:00"
+    },
+    {
+      "actual_value": 12.7,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q3",
+      "reference_period_start": "2020-07-01",
+      "release_timestamp_utc": "2020-10-30T10:00:00+00:00"
+    },
+    {
+      "actual_value": 12.6,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q3",
+      "reference_period_start": "2020-07-01",
+      "release_timestamp_utc": "2020-11-13T10:00:00+00:00"
+    },
+    {
+      "actual_value": 12.5,
+      "country_code": "EU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q3",
+      "reference_period_start": "2020-07-01",
+      "release_timestamp_utc": "2020-12-08T10:00:00+00:00"
+    },
+    {
+      "actual_value": 27.8,
+      "country_code": "JP",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "composite_pmi",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-04-23T00:30:00+00:00"
+    },
+    {
+      "actual_value": 25.8,
+      "country_code": "JP",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "composite_pmi",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-08T00:30:00+00:00"
+    },
+    {
+      "actual_value": 27.4,
+      "country_code": "JP",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "composite_pmi",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-05-21T00:30:00+00:00"
+    },
+    {
+      "actual_value": 27.8,
+      "country_code": "JP",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "composite_pmi",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-06-03T00:30:00+00:00"
+    },
+    {
+      "actual_value": -7827.0,
+      "country_code": "JP",
+      "data_quality_flags": [
+        "missing_estimate",
+        "statistical_outlier_candidate"
+      ],
+      "indicator_key": "foreign_bond_investment",
+      "period_label": "Jul/17",
+      "reference_period_start": "2021-07-17",
+      "release_timestamp_utc": "2021-07-28T23:50:00+00:00"
+    },
+    {
+      "actual_value": 547.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Dec",
+      "reference_period_start": "2019-12-01",
+      "release_timestamp_utc": "2020-01-29T21:45:00+00:00"
+    },
+    {
+      "actual_value": 594.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Feb",
+      "reference_period_start": "2020-02-01",
+      "release_timestamp_utc": "2020-03-24T21:45:00+00:00"
+    },
+    {
+      "actual_value": 672.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Mar",
+      "reference_period_start": "2020-03-01",
+      "release_timestamp_utc": "2020-04-28T22:45:00+00:00"
+    },
+    {
+      "actual_value": 1267.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-25T22:45:00+00:00"
+    },
+    {
+      "actual_value": 1253.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-06-24T22:45:00+00:00"
+    },
+    {
+      "actual_value": -1017.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Sep",
+      "reference_period_start": "2020-09-01",
+      "release_timestamp_utc": "2020-10-26T21:45:00+00:00"
+    },
+    {
+      "actual_value": -626.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Jan",
+      "reference_period_start": "2021-01-01",
+      "release_timestamp_utc": "2021-02-25T21:45:00+00:00"
+    },
+    {
+      "actual_value": -2144.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Aug",
+      "reference_period_start": "2021-08-01",
+      "release_timestamp_utc": "2021-09-23T22:45:00+00:00"
+    },
+    {
+      "actual_value": -2171.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Sep",
+      "reference_period_start": "2021-09-01",
+      "release_timestamp_utc": "2021-10-26T21:45:00+00:00"
+    },
+    {
+      "actual_value": -1286.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Oct",
+      "reference_period_start": "2021-10-01",
+      "release_timestamp_utc": "2021-11-24T21:45:00+00:00"
+    },
+    {
+      "actual_value": -864.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Nov",
+      "reference_period_start": "2021-11-01",
+      "release_timestamp_utc": "2021-12-19T21:45:00+00:00"
+    },
+    {
+      "actual_value": -1082.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Jan",
+      "reference_period_start": "2022-01-01",
+      "release_timestamp_utc": "2022-02-24T22:45:00+00:00"
+    },
+    {
+      "actual_value": 584.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Apr",
+      "reference_period_start": "2022-04-01",
+      "release_timestamp_utc": "2022-05-19T22:45:00+00:00"
+    },
+    {
+      "actual_value": -701.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Jun",
+      "reference_period_start": "2022-06-01",
+      "release_timestamp_utc": "2022-07-20T22:45:00+00:00"
+    },
+    {
+      "actual_value": -1092.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Jul",
+      "reference_period_start": "2022-07-01",
+      "release_timestamp_utc": "2022-08-18T22:45:00+00:00"
+    },
+    {
+      "actual_value": -2447.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Aug",
+      "reference_period_start": "2022-08-01",
+      "release_timestamp_utc": "2022-09-21T22:45:00+00:00"
+    },
+    {
+      "actual_value": -1615.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Sep",
+      "reference_period_start": "2022-09-01",
+      "release_timestamp_utc": "2022-10-20T21:45:00+00:00"
+    },
+    {
+      "actual_value": -2129.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Oct",
+      "reference_period_start": "2022-10-01",
+      "release_timestamp_utc": "2022-11-21T21:45:00+00:00"
+    },
+    {
+      "actual_value": -1863.0,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "balance_of_trade",
+      "period_label": "Nov",
+      "reference_period_start": "2022-11-01",
+      "release_timestamp_utc": "2022-12-20T21:45:00+00:00"
+    },
+    {
+      "actual_value": 87.4,
+      "country_code": "NZ",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "credit_card_spending_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2021-04-01",
+      "release_timestamp_utc": "2021-05-21T03:00:00+00:00"
+    },
+    {
+      "actual_value": 856.5,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "statistical_outlier_candidate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "claimant_count_change",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-19T06:00:00+00:00"
+    },
+    {
+      "actual_value": 528.9,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "claimant_count_change",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-06-16T06:00:00+00:00"
+    },
+    {
+      "actual_value": -5.8,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_mom",
+      "period_label": "Mar",
+      "reference_period_start": "2020-03-01",
+      "release_timestamp_utc": "2020-05-13T06:00:00+00:00"
+    },
+    {
+      "actual_value": -20.4,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "statistical_outlier_candidate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_mom",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-06-12T06:00:00+00:00"
+    },
+    {
+      "actual_value": 8.7,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_mom",
+      "period_label": "Jun",
+      "reference_period_start": "2020-06-01",
+      "release_timestamp_utc": "2020-08-12T06:00:00+00:00"
+    },
+    {
+      "actual_value": 6.6,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_mom",
+      "period_label": "Jul",
+      "reference_period_start": "2020-07-01",
+      "release_timestamp_utc": "2020-09-11T06:00:00+00:00"
+    },
+    {
+      "actual_value": -20.4,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q2",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-08-12T06:00:00+00:00"
+    },
+    {
+      "actual_value": -19.8,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q2",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-09-30T06:00:00+00:00"
+    },
+    {
+      "actual_value": 15.5,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q3",
+      "reference_period_start": "2020-07-01",
+      "release_timestamp_utc": "2020-11-12T07:00:00+00:00"
+    },
+    {
+      "actual_value": 16.0,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_qoq",
+      "period_label": "Q3",
+      "reference_period_start": "2020-07-01",
+      "release_timestamp_utc": "2020-12-22T07:00:00+00:00"
+    },
+    {
+      "actual_value": -24.5,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-06-12T06:00:00+00:00"
+    },
+    {
+      "actual_value": -24.0,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-07-14T06:00:00+00:00"
+    },
+    {
+      "actual_value": -16.8,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Jun",
+      "reference_period_start": "2020-06-01",
+      "release_timestamp_utc": "2020-08-12T06:00:00+00:00"
+    },
+    {
+      "actual_value": -11.7,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Jul",
+      "reference_period_start": "2020-07-01",
+      "release_timestamp_utc": "2020-09-11T06:00:00+00:00"
+    },
+    {
+      "actual_value": -9.3,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Aug",
+      "reference_period_start": "2020-08-01",
+      "release_timestamp_utc": "2020-10-09T06:00:00+00:00"
+    },
+    {
+      "actual_value": -8.4,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Sep",
+      "reference_period_start": "2020-09-01",
+      "release_timestamp_utc": "2020-11-12T07:00:00+00:00"
+    },
+    {
+      "actual_value": -8.2,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Oct",
+      "reference_period_start": "2020-10-01",
+      "release_timestamp_utc": "2020-12-10T07:00:00+00:00"
+    },
+    {
+      "actual_value": -8.9,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Nov",
+      "reference_period_start": "2020-11-01",
+      "release_timestamp_utc": "2021-01-15T07:00:00+00:00"
+    },
+    {
+      "actual_value": -6.5,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Dec",
+      "reference_period_start": "2020-12-01",
+      "release_timestamp_utc": "2021-02-12T07:00:00+00:00"
+    },
+    {
+      "actual_value": -9.2,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Jan",
+      "reference_period_start": "2021-01-01",
+      "release_timestamp_utc": "2021-03-12T07:00:00+00:00"
+    },
+    {
+      "actual_value": -7.8,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Feb",
+      "reference_period_start": "2021-02-01",
+      "release_timestamp_utc": "2021-04-13T06:00:00+00:00"
+    },
+    {
+      "actual_value": 27.6,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2021-04-01",
+      "release_timestamp_utc": "2021-06-11T06:00:00+00:00"
+    },
+    {
+      "actual_value": 24.6,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "May",
+      "reference_period_start": "2021-05-01",
+      "release_timestamp_utc": "2021-07-09T06:00:00+00:00"
+    },
+    {
+      "actual_value": 15.2,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Jun",
+      "reference_period_start": "2021-06-01",
+      "release_timestamp_utc": "2021-08-12T06:00:00+00:00"
+    },
+    {
+      "actual_value": 10.0,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Jan",
+      "reference_period_start": "2022-01-01",
+      "release_timestamp_utc": "2022-03-11T07:00:00+00:00"
+    },
+    {
+      "actual_value": 9.5,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "gdp_yoy",
+      "period_label": "Feb",
+      "reference_period_start": "2022-02-01",
+      "release_timestamp_utc": "2022-04-11T06:00:00+00:00"
+    },
+    {
+      "actual_value": -24.4,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "industrial_production_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-06-12T06:00:00+00:00"
+    },
+    {
+      "actual_value": 27.5,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "industrial_production_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2021-04-01",
+      "release_timestamp_utc": "2021-06-11T06:00:00+00:00"
+    },
+    {
+      "actual_value": -4.8,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "niesr_monthly_gdp_tracker",
+      "period_label": "Mar",
+      "reference_period_start": "2020-03-01",
+      "release_timestamp_utc": "2020-04-09T13:10:00+00:00"
+    },
+    {
+      "actual_value": -11.8,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "niesr_monthly_gdp_tracker",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-13T13:00:00+00:00"
+    },
+    {
+      "actual_value": -17.6,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "niesr_monthly_gdp_tracker",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-06-12T13:00:00+00:00"
+    },
+    {
+      "actual_value": -21.2,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "niesr_monthly_gdp_tracker",
+      "period_label": "Q2",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-07-14T13:00:00+00:00"
+    },
+    {
+      "actual_value": -7.9,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "niesr_monthly_gdp_tracker",
+      "period_label": "Jul",
+      "reference_period_start": "2020-07-01",
+      "release_timestamp_utc": "2020-08-12T13:00:00+00:00"
+    },
+    {
+      "actual_value": 7.0,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "niesr_monthly_gdp_tracker",
+      "period_label": "Aug",
+      "reference_period_start": "2020-08-01",
+      "release_timestamp_utc": "2020-09-11T13:00:00+00:00"
+    },
+    {
+      "actual_value": 15.2,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "niesr_monthly_gdp_tracker",
+      "period_label": "Q3",
+      "reference_period_start": "2020-07-01",
+      "release_timestamp_utc": "2020-10-09T11:10:00+00:00"
+    },
+    {
+      "actual_value": 10.2,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "niesr_monthly_gdp_tracker",
+      "period_label": "Oct",
+      "reference_period_start": "2020-10-01",
+      "release_timestamp_utc": "2020-11-12T13:00:00+00:00"
+    },
+    {
+      "actual_value": 4.8,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "niesr_monthly_gdp_tracker",
+      "period_label": "Q2",
+      "reference_period_start": "2021-04-01",
+      "release_timestamp_utc": "2021-07-09T13:00:00+00:00"
+    },
+    {
+      "actual_value": -15.2,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_ex_fuel_mom",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-22T06:00:00+00:00"
+    },
+    {
+      "actual_value": 37.7,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_ex_fuel_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2021-04-01",
+      "release_timestamp_utc": "2021-05-21T06:00:00+00:00"
+    },
+    {
+      "actual_value": -18.1,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_mom",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-22T06:00:00+00:00"
+    },
+    {
+      "actual_value": 13.9,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_mom",
+      "period_label": "Jun",
+      "reference_period_start": "2020-06-01",
+      "release_timestamp_utc": "2020-07-24T06:00:00+00:00"
+    },
+    {
+      "actual_value": 42.4,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2021-04-01",
+      "release_timestamp_utc": "2021-05-21T06:00:00+00:00"
+    },
+    {
+      "actual_value": -20236.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "adp_employment_change",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-06T12:15:00+00:00"
+    },
+    {
+      "actual_value": -2760.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "adp_employment_change",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-06-03T12:15:00+00:00"
+    },
+    {
+      "actual_value": 4.7,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "avg_hourly_earnings_mom",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-08T12:30:00+00:00"
+    },
+    {
+      "actual_value": 11976.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "Apr/04",
+      "reference_period_start": "2020-04-04",
+      "release_timestamp_utc": "2020-04-16T12:30:00+00:00"
+    },
+    {
+      "actual_value": 15976.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "Apr/11",
+      "reference_period_start": "2020-04-11",
+      "release_timestamp_utc": "2020-04-23T12:30:00+00:00"
+    },
+    {
+      "actual_value": 17992.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "Apr/18",
+      "reference_period_start": "2020-04-18",
+      "release_timestamp_utc": "2020-04-30T12:30:00+00:00"
+    },
+    {
+      "actual_value": 22647.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "Apr/25",
+      "reference_period_start": "2020-04-25",
+      "release_timestamp_utc": "2020-05-07T12:30:00+00:00"
+    },
+    {
+      "actual_value": 22833.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "May/02",
+      "reference_period_start": "2020-05-02",
+      "release_timestamp_utc": "2020-05-14T12:30:00+00:00"
+    },
+    {
+      "actual_value": 25073.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "May/09",
+      "reference_period_start": "2020-05-09",
+      "release_timestamp_utc": "2020-05-21T12:30:00+00:00"
+    },
+    {
+      "actual_value": 21052.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "May/16",
+      "reference_period_start": "2020-05-16",
+      "release_timestamp_utc": "2020-05-28T12:30:00+00:00"
+    },
+    {
+      "actual_value": 21487.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "May/23",
+      "reference_period_start": "2020-05-23",
+      "release_timestamp_utc": "2020-06-04T12:30:00+00:00"
+    },
+    {
+      "actual_value": 20929.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "May/30",
+      "reference_period_start": "2020-05-30",
+      "release_timestamp_utc": "2020-06-11T12:30:00+00:00"
+    },
+    {
+      "actual_value": 20544.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "Jun/06",
+      "reference_period_start": "2020-06-06",
+      "release_timestamp_utc": "2020-06-18T12:30:00+00:00"
+    },
+    {
+      "actual_value": 19522.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "Jun/13",
+      "reference_period_start": "2020-06-13",
+      "release_timestamp_utc": "2020-06-25T12:30:00+00:00"
+    },
+    {
+      "actual_value": 12628.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "Sep/05",
+      "reference_period_start": "2020-09-05",
+      "release_timestamp_utc": "2020-09-17T12:30:00+00:00"
+    },
+    {
+      "actual_value": 12580.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "Sep/12",
+      "reference_period_start": "2020-09-12",
+      "release_timestamp_utc": "2020-09-24T12:30:00+00:00"
+    },
+    {
+      "actual_value": 11767.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "Sep/19",
+      "reference_period_start": "2020-09-19",
+      "release_timestamp_utc": "2020-10-01T12:30:00+00:00"
+    },
+    {
+      "actual_value": 10976.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "Sep/26",
+      "reference_period_start": "2020-09-26",
+      "release_timestamp_utc": "2020-10-08T12:30:00+00:00"
+    },
+    {
+      "actual_value": 10018.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "continuing_jobless_claims",
+      "period_label": "Oct/03",
+      "reference_period_start": "2020-10-03",
+      "release_timestamp_utc": "2020-10-15T12:30:00+00:00"
+    },
+    {
+      "actual_value": 3283.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "Mar/21",
+      "reference_period_start": "2020-03-21",
+      "release_timestamp_utc": "2020-03-26T12:30:00+00:00"
+    },
+    {
+      "actual_value": 6648.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "statistical_outlier_candidate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "Mar/28",
+      "reference_period_start": "2020-03-28",
+      "release_timestamp_utc": "2020-04-02T12:30:00+00:00"
+    },
+    {
+      "actual_value": 6606.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "statistical_outlier_candidate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "Apr/04",
+      "reference_period_start": "2020-04-04",
+      "release_timestamp_utc": "2020-04-09T12:30:00+00:00"
+    },
+    {
+      "actual_value": 5245.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "Apr/11",
+      "reference_period_start": "2020-04-11",
+      "release_timestamp_utc": "2020-04-16T12:30:00+00:00"
+    },
+    {
+      "actual_value": 4427.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "Apr/18",
+      "reference_period_start": "2020-04-18",
+      "release_timestamp_utc": "2020-04-23T12:30:00+00:00"
+    },
+    {
+      "actual_value": 3839.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "Apr/25",
+      "reference_period_start": "2020-04-25",
+      "release_timestamp_utc": "2020-04-30T12:30:00+00:00"
+    },
+    {
+      "actual_value": 3169.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "May/02",
+      "reference_period_start": "2020-05-02",
+      "release_timestamp_utc": "2020-05-07T12:30:00+00:00"
+    },
+    {
+      "actual_value": 2981.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "May/09",
+      "reference_period_start": "2020-05-09",
+      "release_timestamp_utc": "2020-05-14T12:30:00+00:00"
+    },
+    {
+      "actual_value": 2438.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "May/16",
+      "reference_period_start": "2020-05-16",
+      "release_timestamp_utc": "2020-05-21T12:30:00+00:00"
+    },
+    {
+      "actual_value": 2123.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "May/23",
+      "reference_period_start": "2020-05-23",
+      "release_timestamp_utc": "2020-05-28T12:30:00+00:00"
+    },
+    {
+      "actual_value": 1877.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "May/30",
+      "reference_period_start": "2020-05-30",
+      "release_timestamp_utc": "2020-06-04T12:30:00+00:00"
+    },
+    {
+      "actual_value": 1542.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "Jun/06",
+      "reference_period_start": "2020-06-06",
+      "release_timestamp_utc": "2020-06-11T12:30:00+00:00"
+    },
+    {
+      "actual_value": 1508.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "Jun/13",
+      "reference_period_start": "2020-06-13",
+      "release_timestamp_utc": "2020-06-18T12:30:00+00:00"
+    },
+    {
+      "actual_value": 1480.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "initial_jobless_claims",
+      "period_label": "Jun/20",
+      "reference_period_start": "2020-06-20",
+      "release_timestamp_utc": "2020-06-25T12:30:00+00:00"
+    },
+    {
+      "actual_value": 2612.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "jobless_claims_4week_average",
+      "period_label": "Mar/28",
+      "reference_period_start": "2020-03-28",
+      "release_timestamp_utc": "2020-04-02T12:30:00+00:00"
+    },
+    {
+      "actual_value": 4265.5,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "jobless_claims_4week_average",
+      "period_label": "Apr/04",
+      "reference_period_start": "2020-04-04",
+      "release_timestamp_utc": "2020-04-09T12:30:00+00:00"
+    },
+    {
+      "actual_value": 5508.5,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "jobless_claims_4week_average",
+      "period_label": "Apr/11",
+      "reference_period_start": "2020-04-11",
+      "release_timestamp_utc": "2020-04-16T12:30:00+00:00"
+    },
+    {
+      "actual_value": 5786.5,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "jobless_claims_4week_average",
+      "period_label": "Apr/18",
+      "reference_period_start": "2020-04-18",
+      "release_timestamp_utc": "2020-04-23T12:30:00+00:00"
+    },
+    {
+      "actual_value": 5033.25,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "jobless_claims_4week_average",
+      "period_label": "Apr/25",
+      "reference_period_start": "2020-04-25",
+      "release_timestamp_utc": "2020-04-30T12:30:00+00:00"
+    },
+    {
+      "actual_value": 4173.5,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "jobless_claims_4week_average",
+      "period_label": "May/02",
+      "reference_period_start": "2020-05-02",
+      "release_timestamp_utc": "2020-05-07T12:30:00+00:00"
+    },
+    {
+      "actual_value": 3616.5,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "jobless_claims_4week_average",
+      "period_label": "May/09",
+      "reference_period_start": "2020-05-09",
+      "release_timestamp_utc": "2020-05-14T12:30:00+00:00"
+    },
+    {
+      "actual_value": 3042.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "jobless_claims_4week_average",
+      "period_label": "May/16",
+      "reference_period_start": "2020-05-16",
+      "release_timestamp_utc": "2020-05-21T12:30:00+00:00"
+    },
+    {
+      "actual_value": 2608.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "jobless_claims_4week_average",
+      "period_label": "May/23",
+      "reference_period_start": "2020-05-23",
+      "release_timestamp_utc": "2020-05-28T12:30:00+00:00"
+    },
+    {
+      "actual_value": 2284.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "jobless_claims_4week_average",
+      "period_label": "May/30",
+      "reference_period_start": "2020-05-30",
+      "release_timestamp_utc": "2020-06-04T12:30:00+00:00"
+    },
+    {
+      "actual_value": 2002.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "jobless_claims_4week_average",
+      "period_label": "Jun/06",
+      "reference_period_start": "2020-06-06",
+      "release_timestamp_utc": "2020-06-11T12:30:00+00:00"
+    },
+    {
+      "actual_value": 1773.5,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "jobless_claims_4week_average",
+      "period_label": "Jun/13",
+      "reference_period_start": "2020-06-13",
+      "release_timestamp_utc": "2020-06-18T12:30:00+00:00"
+    },
+    {
+      "actual_value": 1620.75,
+      "country_code": "US",
+      "data_quality_flags": [
+        "missing_estimate",
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "jobless_claims_4week_average",
+      "period_label": "Jun/20",
+      "reference_period_start": "2020-06-20",
+      "release_timestamp_utc": "2020-06-25T12:30:00+00:00"
+    },
+    {
+      "actual_value": 16.6,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "new_home_sales",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-06-23T14:00:00+00:00"
+    },
+    {
+      "actual_value": -11.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "new_home_sales",
+      "period_label": "Nov",
+      "reference_period_start": "2020-11-01",
+      "release_timestamp_utc": "2020-12-23T15:00:00+00:00"
+    },
+    {
+      "actual_value": -18.2,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "new_home_sales",
+      "period_label": "Feb",
+      "reference_period_start": "2021-02-01",
+      "release_timestamp_utc": "2021-03-23T14:00:00+00:00"
+    },
+    {
+      "actual_value": 20.7,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "new_home_sales",
+      "period_label": "Mar",
+      "reference_period_start": "2021-03-01",
+      "release_timestamp_utc": "2021-04-23T14:00:00+00:00"
+    },
+    {
+      "actual_value": 14.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "new_home_sales",
+      "period_label": "Sep",
+      "reference_period_start": "2021-09-01",
+      "release_timestamp_utc": "2021-10-26T14:00:00+00:00"
+    },
+    {
+      "actual_value": -8.6,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "new_home_sales",
+      "period_label": "Mar",
+      "reference_period_start": "2022-03-01",
+      "release_timestamp_utc": "2022-04-26T14:00:00+00:00"
+    },
+    {
+      "actual_value": 10.7,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "new_home_sales",
+      "period_label": "May",
+      "reference_period_start": "2022-05-01",
+      "release_timestamp_utc": "2022-06-24T14:00:00+00:00"
+    },
+    {
+      "actual_value": 28.8,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "new_home_sales",
+      "period_label": "Aug",
+      "reference_period_start": "2022-08-01",
+      "release_timestamp_utc": "2022-09-27T14:00:00+00:00"
+    },
+    {
+      "actual_value": -10.9,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "new_home_sales",
+      "period_label": "Sep",
+      "reference_period_start": "2022-09-01",
+      "release_timestamp_utc": "2022-10-26T14:00:00+00:00"
+    },
+    {
+      "actual_value": 9.6,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "new_home_sales",
+      "period_label": "Mar",
+      "reference_period_start": "2023-03-01",
+      "release_timestamp_utc": "2023-04-25T14:00:00+00:00"
+    },
+    {
+      "actual_value": 8.8,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "new_home_sales",
+      "period_label": "Mar",
+      "reference_period_start": "2024-03-01",
+      "release_timestamp_utc": "2024-04-23T14:00:00+00:00"
+    },
+    {
+      "actual_value": -11.3,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "new_home_sales",
+      "period_label": "May",
+      "reference_period_start": "2024-05-01",
+      "release_timestamp_utc": "2024-06-26T14:00:00+00:00"
+    },
+    {
+      "actual_value": -13.7,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "new_home_sales",
+      "period_label": "May",
+      "reference_period_start": "2025-05-01",
+      "release_timestamp_utc": "2025-06-25T14:00:00+00:00"
+    },
+    {
+      "actual_value": -20500.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "nfp",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-08T12:30:00+00:00"
+    },
+    {
+      "actual_value": 2509.0,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "nfp",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-06-05T12:30:00+00:00"
+    },
+    {
+      "actual_value": -8.7,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_mom",
+      "period_label": "Mar",
+      "reference_period_start": "2020-03-01",
+      "release_timestamp_utc": "2020-04-15T12:30:00+00:00"
+    },
+    {
+      "actual_value": -16.4,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_mom",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-15T12:30:00+00:00"
+    },
+    {
+      "actual_value": 17.7,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_mom",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-06-16T12:30:00+00:00"
+    },
+    {
+      "actual_value": 9.8,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_mom",
+      "period_label": "Mar",
+      "reference_period_start": "2021-03-01",
+      "release_timestamp_utc": "2021-04-15T12:30:00+00:00"
+    },
+    {
+      "actual_value": 51.2,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "retail_sales_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2021-04-01",
+      "release_timestamp_utc": "2021-05-14T12:30:00+00:00"
+    },
+    {
+      "actual_value": 14.7,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "unemployment_rate",
+      "period_label": "Apr",
+      "reference_period_start": "2020-04-01",
+      "release_timestamp_utc": "2020-05-08T12:30:00+00:00"
+    },
+    {
+      "actual_value": 13.3,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "unemployment_rate",
+      "period_label": "May",
+      "reference_period_start": "2020-05-01",
+      "release_timestamp_utc": "2020-06-05T12:30:00+00:00"
+    }
+  ],
+  "release_date_alignment_issues": [
+    {
+      "country_code": "JP",
+      "indicator_key": "industrial_production_mom",
+      "issue_count": 18,
+      "issue_type": "release_before_reference_period"
+    },
+    {
+      "country_code": "JP",
+      "indicator_key": "foreign_bond_investment",
+      "issue_count": 9,
+      "issue_type": "future_reference_period"
+    },
+    {
+      "country_code": "JP",
+      "indicator_key": "foreign_bond_investment",
+      "issue_count": 9,
+      "issue_type": "release_before_reference_period"
+    },
+    {
+      "country_code": "JP",
+      "indicator_key": "stock_investment_by_foreigners",
+      "issue_count": 9,
+      "issue_type": "future_reference_period"
+    },
+    {
+      "country_code": "JP",
+      "indicator_key": "stock_investment_by_foreigners",
+      "issue_count": 9,
+      "issue_type": "release_before_reference_period"
+    },
+    {
+      "country_code": "UK",
+      "indicator_key": "avg_earnings_excl_bonus",
+      "issue_count": 8,
+      "issue_type": "release_before_reference_period"
+    },
+    {
+      "country_code": "UK",
+      "indicator_key": "avg_earnings_excl_bonus",
+      "issue_count": 8,
+      "issue_type": "future_reference_period"
+    },
+    {
+      "country_code": "NZ",
+      "indicator_key": "global_dairy_trade_price_index",
+      "issue_count": 4,
+      "issue_type": "release_before_reference_period"
+    },
+    {
+      "country_code": "AU",
+      "indicator_key": "cash_rate",
+      "issue_count": 1,
+      "issue_type": "release_before_reference_period"
+    },
+    {
+      "country_code": "EU",
+      "indicator_key": "consumer_confidence",
+      "issue_count": 1,
+      "issue_type": "release_before_reference_period"
+    }
+  ],
+  "summary": {
+    "flagged_observations": 3123,
+    "indicators": 200,
+    "observations": 13875,
+    "quality_issues": 37274,
+    "raw_releases": 44852
+  }
+}

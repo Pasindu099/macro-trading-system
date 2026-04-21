@@ -8,7 +8,7 @@ Useful when:
   - Testing that the ingest pipeline works end-to-end.
 
 Usage:
-    # Fetch all 8 countries, last 45 days (same as a scheduled run):
+    # Fetch all tracked countries, last 45 days (same as a scheduled run):
     python scripts/run_manual_ingest.py
 
     # Fetch just one country:

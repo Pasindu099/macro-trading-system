@@ -6,7 +6,7 @@ Three kinds of jobs run:
    - 00:00 UTC — catches Asian session (JP, AU, NZ)
    - 09:00 UTC — catches European session (EU, UK, CH)
    - 14:00 UTC — catches Americas session (US, CA)
-   Each run fetches all 8 countries with a 45-day lookback.
+   Each run fetches all tracked countries with a 45-day lookback.
 
 2. POST-RELEASE TRIGGERS
    - Fire ~15 minutes after major releases (NFP, CPI, etc.)
@@ -120,7 +120,7 @@ class Scheduler:
     # ── Job implementations ─────────────────────────────────────────
 
     async def _run_scheduled_session(self, session_name: str) -> None:
-        """A daily scheduled run — fetches all 8 countries with wide lookback."""
+        """A daily scheduled run — fetches all tracked countries with wide lookback."""
         countries = sorted(ALLOWED_COUNTRIES)
         today = date.today()
         to_date = today + timedelta(days=CALENDAR_FORWARD_DAYS)

@@ -1,6 +1,6 @@
 """Backfill historical economic events from EODHD.
 
-Loops over 8 countries × ~6 years (2020-present) in 6-month chunks.
+Loops over all tracked countries across ~6 years (2020-present) in 6-month chunks.
 Results are canonicalized and written to the database.
 
 Resumable: progress is checkpointed to .backfill_progress.json. If the
@@ -16,7 +16,7 @@ Usage:
     python scripts/run_backfill.py --from 2022-01-01 --to 2024-12-31
 
 Notes:
-    - Total API calls expected: 8 countries × ~14 chunks ≈ 110 calls
+    - Total API calls expected: tracked countries × ~14 chunks
     - Well under the 50,000/day limit
     - Takes ~5-10 minutes total depending on network and EODHD response speed
 """

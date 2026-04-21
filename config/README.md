@@ -7,7 +7,7 @@ relevant seed script).
 ## Files
 
 ### `countries.yaml`
-Static reference data for the 8 tracked countries. Loaded into the `countries`
+Static reference data for the tracked countries. Loaded into the `countries`
 table by `scripts/seed_countries.py`.
 
 **To change:** Edit the file, then run:

@@ -7,7 +7,7 @@ CanonicalEvent with either a matched canonical_name or None for unmapped.
 Key responsibilities:
     1. Match (eodhd_type, comparison, country) → canonical_name
     2. Normalize malformed period strings to period_start_date
-    3. Filter events from countries outside our 8-country allowlist
+    3. Filter events from countries outside our tracked-country allowlist
     4. Parse EODHD's date string into a timezone-aware datetime
     5. Log unmapped events to a dedicated logger for review
 

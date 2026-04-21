@@ -30,11 +30,13 @@ from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
-# EODHD country codes for the 8 currencies we track. Events from other
+# EODHD country codes for the countries we track. Events from other
 # countries are silently discarded. See spec §4.2 for the rationale.
 ALLOWED_COUNTRIES: frozenset[str] = frozenset({
     "US",  # United States — USD
     "EU",  # Eurozone — EUR
+    "DE",  # Germany — EUR
+    "FR",  # France — EUR
     "UK",  # United Kingdom — GBP (note: EODHD uses UK, not GB)
     "JP",  # Japan — JPY
     "AU",  # Australia — AUD
@@ -139,7 +141,7 @@ class EODHDClient:
             to_date: End date (inclusive).
             limit: Max results to return (EODHD caps at 1000).
             filter_allowed_countries: If True (default), drop events whose
-                country field isn't in our 8-country allowlist. This shouldn't
+                country field isn't in our tracked-country allowlist. This shouldn't
                 trigger in normal flow since we filter by country in the URL,
                 but acts as a defensive second filter.
 

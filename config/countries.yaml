@@ -1,10 +1,11 @@
-# Static reference data for the 8 tracked countries.
+# Static reference data for the 10 tracked countries.
 # This file is loaded once into the `countries` table by scripts/seed_countries.py.
 # Changes here only take effect after re-running the seed script.
 #
 # EODHD uses non-ISO codes in some cases:
 #   - `UK` not `GB` for United Kingdom
 #   - `EU` not `EA`/`EMU` for Eurozone
+# Germany and France use the ISO-like EODHD codes `DE` and `FR`.
 # These are verified via the EODHD data audit (see spec v1.2 §4.2).
 
 countries:
@@ -23,6 +24,22 @@ countries:
     cb_inflation_target: 2.00
     cb_mandate_type: single  # price stability primarily
     timezone: Europe/Frankfurt
+
+  - code: DE
+    currency_code: EUR
+    name: Germany
+    central_bank: European Central Bank
+    cb_inflation_target: 2.00
+    cb_mandate_type: single
+    timezone: Europe/Berlin
+
+  - code: FR
+    currency_code: EUR
+    name: France
+    central_bank: European Central Bank
+    cb_inflation_target: 2.00
+    cb_mandate_type: single
+    timezone: Europe/Paris
 
   - code: UK
     currency_code: GBP

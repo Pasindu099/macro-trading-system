@@ -168,7 +168,7 @@ def test_canonicalize_country_outside_allowlist_returns_none(
 def test_canonicalize_all_allowlist_countries_accepted(
     sample_mapping_yaml: dict,
 ) -> None:
-    """Events from each of the 8 allowed countries should not be dropped."""
+    """Events from each allowed country should not be dropped."""
     # Add a mapping for each (using a minimal shared indicator)
     yaml_data = {
         "mappings": [
@@ -178,12 +178,12 @@ def test_canonicalize_all_allowlist_countries_accepted(
                 "display_name": "Headline CPI", "primary_category": "Inflation",
                 "frequency": "monthly", "unit": "%", "importance": 1,
             }
-            for c in ["US", "EU", "UK", "JP", "AU", "NZ", "CA", "CH"]
+            for c in ["US", "EU", "DE", "FR", "UK", "JP", "AU", "NZ", "CA", "CH"]
         ]
     }
     canonicalizer = Canonicalizer.from_yaml_data(yaml_data)
 
-    for country in ["US", "EU", "UK", "JP", "AU", "NZ", "CA", "CH"]:
+    for country in ["US", "EU", "DE", "FR", "UK", "JP", "AU", "NZ", "CA", "CH"]:
         raw = {
             "type": "Inflation Rate", "comparison": "yoy", "country": country,
             "date": "2026-04-10 12:30:00", "period": "Mar", "actual": 3.0,

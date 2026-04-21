@@ -108,7 +108,7 @@ def test_admin_health(client: TestClient) -> None:
     assert data["database_ok"] is True
     assert "scheduler_enabled" in data
     assert "countries" in data
-    # At least the 8 countries should be reported once seed ran.
+    # At least one tracked country should be reported once seed ran.
     assert len(data["countries"]) >= 1
 
     # Each country has basic fields

@@ -41,7 +41,7 @@ class Base(DeclarativeBase):
 
 
 class Country(Base):
-    """One of the 8 tracked countries / currencies.
+    """One of the tracked countries / currencies.
 
     Reference data — populated once via scripts/seed_countries.py and rarely
     changes afterwards.

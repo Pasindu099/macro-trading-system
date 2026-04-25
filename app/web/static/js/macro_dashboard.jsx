@@ -446,6 +446,158 @@ SCENARIO MATRIX
 ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
   }
 
+  function escapeXml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
+  }
+
+  function odtParagraph(text, style = "Body") {
+    return `<text:p text:style-name="${style}">${escapeXml(text)}</text:p>`;
+  }
+
+  function odtHeading(text, level = 1) {
+    return `<text:h text:style-name="Heading${level}" text:outline-level="${level}">${escapeXml(text)}</text:h>`;
+  }
+
+  function odtBullet(text) {
+    return `<text:list text:style-name="BulletList"><text:list-item>${odtParagraph(text.replace(/^[•\-]\s*/, ""))}</text:list-item></text:list>`;
+  }
+
+  function odtTable(name, headers, rows) {
+    const headerCells = headers.map(h => `<table:table-cell office:value-type="string">${odtParagraph(h, "TableHeader")}</table:table-cell>`).join("");
+    const rowXml = rows.map(row => `<table:table-row>${row.map(cell => `<table:table-cell office:value-type="string">${odtParagraph(cell, "TableCell")}</table:table-cell>`).join("")}</table:table-row>`).join("");
+    return `<table:table table:name="${escapeXml(name)}"><table:table-row>${headerCells}</table:table-row>${rowXml}</table:table>`;
+  }
+
+  function odtContent(title, subtitle, sections) {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-content
+  xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+  xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+  xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+  xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
+  xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
+  office:version="1.2">
+  <office:automatic-styles>
+    <style:style style:name="Title" style:family="paragraph"><style:text-properties fo:font-size="24pt" fo:font-weight="bold" fo:color="#0D1F3C"/></style:style>
+    <style:style style:name="Subtitle" style:family="paragraph"><style:text-properties fo:font-size="12pt" fo:color="#6B7280"/></style:style>
+    <style:style style:name="Heading1" style:family="paragraph"><style:text-properties fo:font-size="15pt" fo:font-weight="bold" fo:color="#C9A84C"/></style:style>
+    <style:style style:name="Heading2" style:family="paragraph"><style:text-properties fo:font-size="12pt" fo:font-weight="bold" fo:color="#1A3A6B"/></style:style>
+    <style:style style:name="Body" style:family="paragraph"><style:text-properties fo:font-size="10.5pt" fo:color="#111827"/></style:style>
+    <style:style style:name="TableHeader" style:family="paragraph"><style:text-properties fo:font-size="9pt" fo:font-weight="bold" fo:color="#FFFFFF"/></style:style>
+    <style:style style:name="TableCell" style:family="paragraph"><style:text-properties fo:font-size="8.5pt" fo:color="#111827"/></style:style>
+    <text:list-style style:name="BulletList"><text:list-level-style-bullet text:level="1" text:bullet-char="•"/></text:list-style>
+  </office:automatic-styles>
+  <office:body>
+    <office:text>
+      ${odtParagraph(title, "Title")}
+      ${odtParagraph(subtitle, "Subtitle")}
+      ${odtParagraph("Educational use only. Not financial advice.", "Subtitle")}
+      ${sections.join("\n")}
+    </office:text>
+  </office:body>
+</office:document-content>`;
+  }
+
+  async function exportOdt(title, subtitle, sections, filename) {
+    const JSZip = window.JSZip;
+    if (!JSZip) {
+      alert("ODF export library is still loading. Try again in a moment.");
+      return;
+    }
+    const zip = new JSZip();
+    zip.file("mimetype", "application/vnd.oasis.opendocument.text", { compression: "STORE" });
+    zip.file("META-INF/manifest.xml", `<?xml version="1.0" encoding="UTF-8"?>
+<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">
+  <manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/>
+  <manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>
+  <manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>
+  <manifest:file-entry manifest:full-path="meta.xml" manifest:media-type="text/xml"/>
+</manifest:manifest>`);
+    zip.file("styles.xml", `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" office:version="1.2"><office:styles/></office:document-styles>`);
+    zip.file("meta.xml", `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-meta xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" office:version="1.2"><office:meta><meta:generator>Macro Dashboard Brief Builder</meta:generator></office:meta></office:document-meta>`);
+    zip.file("content.xml", odtContent(title, subtitle, sections));
+    const blob = await zip.generateAsync({ type: "blob", mimeType: "application/vnd.oasis.opendocument.text" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function exportWeeklyOdt() {
+    const eventRows = events.map(e => [
+      e.day,
+      e.date,
+      e.region,
+      e.event,
+      e.forecast || "—",
+      e.prior || "—",
+      e.impact,
+    ]);
+    const riskLines = (weeklyForm.risks || "[Fill in tail risks]").split("\n").filter(Boolean);
+    return exportOdt(
+      "Macro Market Intelligence - Weekly Preview",
+      `Week of ${weeklyForm.weekLabel || weekLabel} | ${weeklyForm.instructor || "Instructor"} | ${weeklyForm.course || "Course"}`,
+      [
+        odtHeading("01 - Weekly Macro Theme & Narrative"),
+        ...String(weeklyForm.theme || "[Fill in your macro theme]").split("\n").filter(Boolean).map(line => odtParagraph(line)),
+        odtHeading("02 - Economic Calendar"),
+        odtTable("Economic Calendar", ["Day", "Date", "Region", "Event", "Forecast", "Prior", "Impact"], eventRows),
+        odtHeading("03 - Market Snapshot"),
+        odtParagraph("[Update with Friday closing prices, weekly change, moving averages, and cross-asset bias.]"),
+        odtHeading("04 - Central Bank Policy Tracker"),
+        odtParagraph("[Update current rates, last decisions, next meetings, and market pricing.]"),
+        odtHeading("05 - Asset Class & Sector Outlook"),
+        odtParagraph("[Update equities, fixed income/yields, FX, commodities, and volatility.]"),
+        odtHeading("06 - Tail Risks & Wildcards"),
+        ...riskLines.map(line => odtBullet(line)),
+      ],
+      `weekly-preview-${(weeklyForm.weekLabel || weekLabel).replace(/\s+/g, "-").toLowerCase()}.odt`
+    );
+  }
+
+  function exportEventOdt() {
+    const scenarioLines = (eventForm.scenarios || "[Fill in scenario matrix]").split("\n").filter(Boolean);
+    return exportOdt(
+      "Macro Market Intelligence - Event Prep Brief",
+      `${eventForm.eventName || "Event"} | ${eventForm.date || "Date"} ${eventForm.time || ""} | ${eventForm.region} | ${eventForm.impact}`,
+      [
+        odtHeading("01 - Quick Reference"),
+        odtTable("Quick Reference", ["Field", "Value"], [
+          ["Event", eventForm.eventName || "[Event name]"],
+          ["Date / Time", `${eventForm.date || "[Date]"} ${eventForm.time || "[Time UTC]"}`],
+          ["Region", eventForm.region],
+          ["Impact", eventForm.impact],
+          ["Instructor", eventForm.instructor || "[Name]"],
+        ]),
+        odtHeading("02 - What Is This Data?"),
+        ...String(eventForm.overview || "[Fill in event overview]").split("\n").filter(Boolean).map(line => odtParagraph(line)),
+        odtHeading("03 - The Numbers - Consensus & Key Levels"),
+        odtParagraph("[Fill in consensus forecast, prior print, and the levels that would change the market narrative.]"),
+        odtHeading("04 - Scenario Outcome Matrix"),
+        ...scenarioLines.map(line => odtBullet(line)),
+        odtHeading("05 - Asset Class Sensitivity Guide"),
+        odtParagraph("[Map likely sensitivity for FX, rates, equities, commodities, and volatility.]"),
+        odtHeading("06 - Monetary Policy Implications"),
+        odtParagraph("[Explain how this event feeds into the current central-bank reaction function.]"),
+        odtHeading("07 - Learning Framework"),
+        odtBullet("Read the print: headline, consensus surprise, revisions, and sub-components."),
+        odtBullet("Watch the immediate reaction: first move, reversal, or continuation."),
+        odtBullet("Understand the narrative: policy pricing, real yields, and risk sentiment."),
+        odtBullet("Update the macro view using the weight of evidence."),
+      ],
+      `event-prep-${(eventForm.eventName || "event").replace(/\s+/g, "-").toLowerCase()}.odt`
+    );
+  }
+
   function exportPdf(title, text, filename) {
     const jsPDF = window.jspdf?.jsPDF;
     if (!jsPDF) {
@@ -517,7 +669,7 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
               "1. Fetch the calendar",
               "2. Edit events if needed",
               "3. Generate starter text",
-              "4. Copy to your .docx",
+              "4. Export branded .odt",
             ].map((t, i) => (
               <div key={i} style={{ padding: "6px 12px", fontSize: 11, color: T.grey, lineHeight: 1.5 }}>{t}</div>
             ))}
@@ -695,13 +847,13 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
                 )}
               </div>
 
-              {/* Step 3 — Copy to Word summary */}
+              {/* Step 3 — Export report summary */}
               <div className="card" style={{background:"rgba(201,168,76,0.04)", borderColor:"rgba(201,168,76,0.15)"}}>
                 <div className="card-header">
                   <span className="card-number">03</span>
                   <div>
-                    <div className="card-title">Copy to Your Word Template</div>
-                    <div className="card-desc">Everything ready? Here's your structured summary to paste into the .docx</div>
+                    <div className="card-title">Export OpenDocument Report</div>
+                    <div className="card-desc">Everything ready? Export a branded .odt file with the theme, calendar, risks, and report sections</div>
                   </div>
                 </div>
                 <div className="output-box" style={{maxHeight:280}}>
@@ -720,6 +872,9 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
                     navigator.clipboard?.writeText(weeklyReportText());
                   }}>
                     📋 Copy All to Clipboard
+                  </button>
+                  <button className="btn btn-primary" style={{marginLeft:10}} onClick={exportWeeklyOdt}>
+                    Export ODT
                   </button>
                   <button className="btn btn-ghost" style={{marginLeft:10}} onClick={() => exportPdf("Weekly Preview", weeklyReportText(), "weekly-preview.pdf")}>
                     Export PDF
@@ -856,7 +1011,7 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
                   <span className="card-number">03</span>
                   <div>
                     <div className="card-title">Copy to Your Event Prep Template</div>
-                    <div className="card-desc">Structured output ready to paste into the .docx</div>
+                    <div className="card-desc">Structured output ready to export as an OpenDocument .odt brief</div>
                   </div>
                 </div>
                 <div className="output-box" style={{maxHeight:260}}>
@@ -875,6 +1030,9 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
                     navigator.clipboard?.writeText(eventReportText());
                   }}>
                     📋 Copy All to Clipboard
+                  </button>
+                  <button className="btn btn-primary" style={{marginLeft:10}} onClick={exportEventOdt}>
+                    Export ODT
                   </button>
                   <button className="btn btn-ghost" style={{marginLeft:10}} onClick={() => exportPdf("Event Prep Brief", eventReportText(), "event-prep-brief.pdf")}>
                     Export PDF

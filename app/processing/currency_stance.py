@@ -131,18 +131,28 @@ async def build_currency_stance(
         text(
             f"""
             WITH windows(window_months) AS (VALUES {values}),
+            theme_by_currency AS (
+                SELECT
+                    index_date,
+                    currency_code,
+                    CASE
+                        WHEN currency_code = 'EUR'
+                            AND bool_or(country_code = 'EU') THEN 'EU'
+                        ELSE min(country_code)
+                    END AS country_code,
+                    avg(inflation_score) AS inflation_score,
+                    avg(labor_score) AS labor_score,
+                    avg(growth_score) AS growth_score
+                FROM processed.theme_indices
+                GROUP BY index_date, currency_code
+            ),
             country_dim AS (
                 SELECT DISTINCT country_code, currency_code
-                FROM processed.theme_indices
-            ),
-            date_dim AS (
-                SELECT DISTINCT index_date
-                FROM processed.theme_indices
+                FROM theme_by_currency
             ),
             base_grid AS (
-                SELECT d.index_date, c.country_code, c.currency_code
-                FROM date_dim d
-                CROSS JOIN country_dim c
+                SELECT index_date, country_code, currency_code
+                FROM theme_by_currency
             ),
             rolling AS (
                 SELECT
@@ -162,12 +172,12 @@ async def build_currency_stance(
                     max(hist.index_date) AS latest_hist_date
                 FROM base_grid base
                 CROSS JOIN windows w
-                JOIN processed.theme_indices hist
-                    ON hist.country_code = base.country_code
+                JOIN theme_by_currency hist
+                    ON hist.currency_code = base.currency_code
                     AND hist.index_date <= base.index_date
                     AND hist.index_date > base.index_date - (w.window_months || ' months')::interval
-                LEFT JOIN processed.theme_indices prev
-                    ON prev.country_code = base.country_code
+                LEFT JOIN theme_by_currency prev
+                    ON prev.currency_code = base.currency_code
                     AND prev.index_date <= base.index_date - (w.window_months || ' months')::interval
                     AND prev.index_date > base.index_date - ((w.window_months * 2) || ' months')::interval
                 GROUP BY base.index_date, base.country_code, base.currency_code, w.window_months

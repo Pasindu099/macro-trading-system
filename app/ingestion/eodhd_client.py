@@ -240,6 +240,42 @@ class EODHDClient:
         logger.info("Fetched %d news items", len(data))
         return data
 
+    async def fetch_eod_history(
+        self,
+        symbol: str,
+        *,
+        from_date: date | None = None,
+        to_date: date | None = None,
+        period: str = "d",
+    ) -> list[dict[str, Any]]:
+        """Fetch EOD history for one symbol.
+
+        Used for market time series such as EODHD government bond yield
+        tickers (for example US10Y.GBOND).
+        """
+        if not symbol or "." not in symbol:
+            raise ValueError("symbol must include an exchange suffix, e.g. US10Y.GBOND")
+        if period not in {"d", "w", "m"}:
+            raise ValueError("period must be one of: d, w, m")
+        if from_date and to_date and from_date > to_date:
+            raise ValueError(f"from_date ({from_date}) must be <= to_date ({to_date})")
+
+        url = f"{self._base_url}/eod/{symbol}"
+        params: dict[str, Any] = {
+            "api_token": self._api_key,
+            "fmt": "json",
+            "period": period,
+        }
+        if from_date:
+            params["from"] = from_date.isoformat()
+        if to_date:
+            params["to"] = to_date.isoformat()
+
+        logger.info("Fetching EODHD history: symbol=%s period=%s", symbol, period)
+        data = await self._request_with_retries(url, params)
+        logger.info("Fetched %d EOD rows for symbol=%s", len(data), symbol)
+        return data
+
     async def _request_with_retries(
         self,
         url: str,

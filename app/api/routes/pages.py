@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import csv
 import calendar
-from datetime import date, timezone
+from datetime import date, timedelta, timezone
 from io import BytesIO
 from io import StringIO
 from pathlib import Path
@@ -49,6 +50,27 @@ CURRENCY_METER_LOOKBACKS = (
     ("1M Ago", 1),
     ("3M Ago", 3),
     ("6M Ago", 6),
+)
+YIELD_HISTORY_DAYS = 70
+YIELD_BASE_CURRENCY = "USD"
+YIELD_BENCHMARKS = (
+    {"currency": "USD", "country_code": "US", "label": "US 10Y", "symbol": "US10Y.GBOND"},
+    {"currency": "EUR", "country_code": "DE", "label": "Germany 10Y", "symbol": "DE10Y.GBOND"},
+    {"currency": "GBP", "country_code": "UK", "label": "UK 10Y", "symbol": "UK10Y.GBOND"},
+    {"currency": "JPY", "country_code": "JP", "label": "Japan 10Y", "symbol": "JP10Y.GBOND"},
+    {"currency": "AUD", "country_code": "AU", "label": "Australia 10Y", "symbol": "AU10Y.GBOND"},
+    {"currency": "CAD", "country_code": "CA", "label": "Canada 10Y", "symbol": "CA10Y.GBOND"},
+    {"currency": "CHF", "country_code": "CH", "label": "Switzerland 10Y", "symbol": "SW10Y.GBOND"},
+    {"currency": "NZD", "country_code": "NZ", "label": "New Zealand 10Y", "symbol": "NZ10Y.GBOND"},
+)
+YIELD_PAIR_DEFS = (
+    ("EUR/USD", "EUR", "USD"),
+    ("GBP/USD", "GBP", "USD"),
+    ("USD/JPY", "USD", "JPY"),
+    ("AUD/USD", "AUD", "USD"),
+    ("USD/CAD", "USD", "CAD"),
+    ("USD/CHF", "USD", "CHF"),
+    ("NZD/USD", "NZD", "USD"),
 )
 COUNTRY_FLAGS = {
     "US": "🇺🇸",
@@ -115,6 +137,26 @@ def _score_color_class(value: float | None) -> str:
     if value <= -0.25:
         return "is-negative"
     return "is-neutral"
+
+
+def _spread_color_class(value: float | None) -> str:
+    if value is None or abs(value) < 5:
+        return "is-neutral"
+    if value > 0:
+        return "is-positive"
+    return "is-negative"
+
+
+def _format_bp(value: float | None, decimals: int = 0) -> str:
+    if value is None:
+        return "N/A"
+    return f"{value:+.{decimals}f} bp"
+
+
+def _format_yield(value: float | None) -> str:
+    if value is None:
+        return "N/A"
+    return f"{value:.2f}%"
 
 
 def _subtract_months(value: date, months: int) -> date:
@@ -858,6 +900,177 @@ async def _build_fundamental_currency_meter(
     return meter_rows
 
 
+def _yield_history_point(
+    rows: list[dict[str, Any]],
+    offset: int,
+) -> tuple[date | None, float | None]:
+    if not rows:
+        return None, None
+    index = max(0, len(rows) - 1 - offset)
+    row = rows[index]
+    row_date = row.get("date")
+    parsed_date = None
+    if isinstance(row_date, date):
+        parsed_date = row_date
+    elif row_date:
+        try:
+            parsed_date = date.fromisoformat(str(row_date)[:10])
+        except ValueError:
+            parsed_date = None
+
+    for key in ("close", "adjusted_close", "value"):
+        if row.get(key) is None:
+            continue
+        try:
+            return parsed_date, float(row[key])
+        except (TypeError, ValueError):
+            continue
+    return parsed_date, None
+
+
+async def _build_yield_differentials() -> dict[str, Any]:
+    today = _now().date()
+    from_date = today - timedelta(days=YIELD_HISTORY_DAYS)
+
+    try:
+        async with EODHDClient() as client:
+            histories = await asyncio.gather(
+                *(
+                    client.fetch_eod_history(
+                        str(benchmark["symbol"]),
+                        from_date=from_date,
+                        to_date=today,
+                    )
+                    for benchmark in YIELD_BENCHMARKS
+                ),
+                return_exceptions=True,
+            )
+    except (EODHDError, ValueError):
+        return {"rows": [], "pairs": [], "stats": [], "base_currency": YIELD_BASE_CURRENCY}
+
+    rows: list[dict[str, Any]] = []
+    for benchmark, history in zip(YIELD_BENCHMARKS, histories, strict=True):
+        if isinstance(history, Exception):
+            continue
+        clean_history = [
+            row for row in history
+            if isinstance(row, dict) and row.get("date") and row.get("close") is not None
+        ]
+        clean_history.sort(key=lambda row: str(row.get("date")))
+        latest_date, latest_yield = _yield_history_point(clean_history, 0)
+        _, yield_5d = _yield_history_point(clean_history, 5)
+        _, yield_1m = _yield_history_point(clean_history, 21)
+        if latest_yield is None:
+            continue
+
+        change_5d_bp = (
+            (latest_yield - yield_5d) * 100
+            if yield_5d is not None
+            else None
+        )
+        change_1m_bp = (
+            (latest_yield - yield_1m) * 100
+            if yield_1m is not None
+            else None
+        )
+        rows.append({
+            "currency": benchmark["currency"],
+            "country_code": benchmark["country_code"],
+            "flag": _flag_for_country(str(benchmark["country_code"])),
+            "label": benchmark["label"],
+            "symbol": benchmark["symbol"],
+            "date": latest_date,
+            "yield": latest_yield,
+            "yield_display": _format_yield(latest_yield),
+            "change_5d_bp": change_5d_bp,
+            "change_5d_display": _format_bp(change_5d_bp),
+            "change_5d_class": _spread_color_class(change_5d_bp),
+            "change_1m_bp": change_1m_bp,
+            "change_1m_display": _format_bp(change_1m_bp),
+            "change_1m_class": _spread_color_class(change_1m_bp),
+        })
+
+    if not rows:
+        return {"rows": [], "pairs": [], "stats": [], "base_currency": YIELD_BASE_CURRENCY}
+
+    rows_by_currency = {str(row["currency"]): row for row in rows}
+    base_yield = rows_by_currency.get(YIELD_BASE_CURRENCY, {}).get("yield")
+    for row in rows:
+        spread = (
+            (float(row["yield"]) - float(base_yield)) * 100
+            if base_yield is not None
+            else None
+        )
+        row["spread_vs_base_bp"] = spread
+        row["spread_display"] = _format_bp(spread)
+        row["spread_class"] = _spread_color_class(spread)
+        row["spread_abs"] = abs(spread) if spread is not None else 0
+
+    rows.sort(key=lambda row: float(row["spread_vs_base_bp"] or 0), reverse=True)
+
+    pairs: list[dict[str, Any]] = []
+    for label, left_currency, right_currency in YIELD_PAIR_DEFS:
+        left = rows_by_currency.get(left_currency)
+        right = rows_by_currency.get(right_currency)
+        if not left or not right:
+            continue
+        spread = (float(left["yield"]) - float(right["yield"])) * 100
+        pairs.append({
+            "label": label,
+            "left_currency": left_currency,
+            "right_currency": right_currency,
+            "spread_bp": spread,
+            "spread_display": _format_bp(spread),
+            "spread_class": _spread_color_class(spread),
+        })
+
+    dated_rows = [row for row in rows if row.get("date") is not None]
+    latest_date = max((row["date"] for row in dated_rows), default=None)
+    non_base_rows = [row for row in rows if row["currency"] != YIELD_BASE_CURRENCY]
+    highest = max(non_base_rows, key=lambda row: float(row["spread_vs_base_bp"] or 0), default=None)
+    lowest = min(non_base_rows, key=lambda row: float(row["spread_vs_base_bp"] or 0), default=None)
+    base = rows_by_currency.get(YIELD_BASE_CURRENCY)
+    stats = [
+        {
+            "label": "US 10Y",
+            "value": base["yield_display"] if base else "N/A",
+            "detail": "base benchmark",
+            "class": "is-neutral",
+        },
+        {
+            "label": "Highest vs USD",
+            "value": (
+                f"{highest['currency']} {highest['spread_display']}"
+                if highest else "N/A"
+            ),
+            "detail": highest["label"] if highest else "no spread",
+            "class": highest["spread_class"] if highest else "is-neutral",
+        },
+        {
+            "label": "Lowest vs USD",
+            "value": (
+                f"{lowest['currency']} {lowest['spread_display']}"
+                if lowest else "N/A"
+            ),
+            "detail": lowest["label"] if lowest else "no spread",
+            "class": lowest["spread_class"] if lowest else "is-neutral",
+        },
+        {
+            "label": "Updated",
+            "value": latest_date.strftime("%b %d") if latest_date else "N/A",
+            "detail": "latest EOD close",
+            "class": "is-neutral",
+        },
+    ]
+
+    return {
+        "rows": rows,
+        "pairs": pairs,
+        "stats": stats,
+        "base_currency": YIELD_BASE_CURRENCY,
+    }
+
+
 async def _build_country_rows(
     session: AsyncSession,
     country_code: str,
@@ -1049,6 +1262,7 @@ async def landing_page(
     surprises = await list_biggest_surprises(session, days=7, limit=5)
     currency_stance = await _build_currency_stance_dashboard(session)
     currency_meter = await _build_fundamental_currency_meter(session)
+    yield_differentials = await _build_yield_differentials()
     news_items: list[dict[str, Any]] = []
 
     try:
@@ -1084,6 +1298,7 @@ async def landing_page(
             "news_items": news_items,
             "currency_stance": currency_stance,
             "currency_meter": currency_meter,
+            "yield_differentials": yield_differentials,
         },
     )
 

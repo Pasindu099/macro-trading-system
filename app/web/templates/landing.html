@@ -174,6 +174,67 @@
         {% endif %}
     </section>
 
+    <section class="yield-diff-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Rates Lens</p>
+                <h2>Bond Yield Differentials</h2>
+            </div>
+            <p class="panel-copy">10Y sovereign yield spreads for the main FX currencies, ranked against the US 10Y benchmark.</p>
+        </div>
+
+        {% if yield_differentials.rows %}
+            <div class="yield-stats-grid">
+                {% for stat in yield_differentials.stats %}
+                    <div class="yield-stat-card">
+                        <span>{{ stat.label }}</span>
+                        <strong class="{{ stat.class }}">{{ stat.value }}</strong>
+                        <small>{{ stat.detail }}</small>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="yield-diff-layout">
+                <div class="yield-table" role="table" aria-label="10 year bond yield differentials">
+                    <div class="yield-table__header" role="row">
+                        <span>Currency</span>
+                        <span>10Y Yield</span>
+                        <span>Vs USD</span>
+                        <span>5D</span>
+                        <span>1M</span>
+                    </div>
+                    {% for row in yield_differentials.rows %}
+                        <div class="yield-row" role="row">
+                            <div class="yield-row__currency">
+                                <span class="yield-row__flag">{{ row.flag }}</span>
+                                <div>
+                                    <strong>{{ row.currency }}</strong>
+                                    <small>{{ row.label }}</small>
+                                </div>
+                            </div>
+                            <strong>{{ row.yield_display }}</strong>
+                            <strong class="{{ row.spread_class }}">{{ row.spread_display }}</strong>
+                            <span class="{{ row.change_5d_class }}">{{ row.change_5d_display }}</span>
+                            <span class="{{ row.change_1m_class }}">{{ row.change_1m_display }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="yield-pair-grid" aria-label="FX pair yield spreads">
+                    {% for pair in yield_differentials.pairs %}
+                        <div class="yield-pair-card">
+                            <span>{{ pair.label }}</span>
+                            <strong class="{{ pair.spread_class }}">{{ pair.spread_display }}</strong>
+                            <small>{{ pair.left_currency }} minus {{ pair.right_currency }}</small>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-panel">Bond yield differential data is not available from EODHD right now.</div>
+        {% endif %}
+    </section>
+
     <section id="news-feed" class="news-panel">
         <div class="panel-heading">
             <div>

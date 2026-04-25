@@ -69,6 +69,7 @@ a {
 .topbar,
 .surprises-panel,
 .currency-stance-panel,
+.yield-diff-panel,
 .news-panel,
 .countries-panel,
 .country-header,
@@ -90,6 +91,7 @@ a {
 
 .surprises-panel,
 .currency-stance-panel,
+.yield-diff-panel,
 .news-panel,
 .countries-panel,
 .tab-panel {
@@ -647,6 +649,129 @@ a {
 
 .meter-value.is-neutral {
     color: var(--warning);
+}
+
+.yield-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.yield-stat-card,
+.yield-pair-card {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    padding: 13px;
+    border: 1px solid rgba(86, 120, 145, 0.46);
+    border-radius: var(--radius-sm);
+    background: rgba(7, 16, 24, 0.58);
+}
+
+.yield-stat-card span,
+.yield-pair-card span,
+.yield-row small,
+.yield-stat-card small,
+.yield-pair-card small {
+    color: var(--muted);
+}
+
+.yield-stat-card span,
+.yield-pair-card span {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.yield-stat-card strong {
+    font-size: 1.35rem;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.yield-diff-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.55fr);
+    gap: 14px;
+    align-items: start;
+}
+
+.yield-table {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.yield-table__header,
+.yield-row {
+    display: grid;
+    grid-template-columns: minmax(170px, 1.4fr) repeat(4, minmax(82px, 0.65fr));
+    gap: 10px;
+    align-items: center;
+}
+
+.yield-table__header {
+    padding: 0 12px 2px;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.yield-table__header span:not(:first-child),
+.yield-row > strong,
+.yield-row > span {
+    text-align: right;
+}
+
+.yield-row {
+    min-height: 62px;
+    padding: 10px 12px;
+    border: 1px solid rgba(70, 105, 128, 0.54);
+    border-radius: var(--radius-sm);
+    background:
+        linear-gradient(180deg, rgba(16, 31, 42, 0.9), rgba(8, 14, 21, 0.94)),
+        var(--bg-panel-2);
+    font-variant-numeric: tabular-nums;
+}
+
+.yield-row__currency {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+}
+
+.yield-row__currency div {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.yield-row__currency strong,
+.yield-row__currency small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.yield-row__flag {
+    font-size: 1.35rem;
+}
+
+.yield-pair-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.yield-pair-card strong {
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
 }
 
 .surprise-card,
@@ -1994,13 +2119,15 @@ a {
     .analytics-overview,
     .analytics-card-grid,
     .research-hero,
-    .research-controls {
+    .research-controls,
+    .yield-diff-layout {
         grid-template-columns: 1fr;
     }
 
     .analytics-kpi-grid,
     .category-card-grid,
-    .country-depth-grid {
+    .country-depth-grid,
+    .yield-stats-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
@@ -2058,6 +2185,27 @@ a {
 
     .fundamental-meter-grid {
         grid-template-columns: 1fr;
+    }
+
+    .yield-table__header {
+        display: none;
+    }
+
+    .yield-row {
+        grid-template-columns: minmax(0, 1fr) repeat(2, minmax(72px, auto));
+        gap: 8px;
+    }
+
+    .yield-row > strong:nth-of-type(1) {
+        grid-column: 2;
+    }
+
+    .yield-row > strong:nth-of-type(2) {
+        grid-column: 3;
+    }
+
+    .yield-row > span {
+        font-size: 0.78rem;
     }
 
     .meter-metric-row {
@@ -2124,6 +2272,7 @@ a {
     .topbar,
     .surprises-panel,
     .currency-stance-panel,
+    .yield-diff-panel,
     .news-panel,
     .countries-panel,
     .country-header,
@@ -2144,5 +2293,18 @@ a {
     .research-warning {
         padding-left: 14px;
         padding-right: 14px;
+    }
+
+    .yield-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .yield-row {
+        grid-template-columns: 1fr;
+    }
+
+    .yield-row > strong,
+    .yield-row > span {
+        text-align: left;
     }
 }

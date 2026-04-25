@@ -231,7 +231,7 @@
                 </div>
             </div>
         {% else %}
-            <div class="empty-panel">Bond yield differential data is not available from EODHD right now.</div>
+            <div class="empty-panel">{{ yield_differentials.message or "Bond yield differential data is not available from EODHD right now." }}</div>
         {% endif %}
     </section>
 

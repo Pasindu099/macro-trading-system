@@ -26,7 +26,7 @@ from app.api.routes.public import (
 )
 from app.db.models import Country, Indicator, IndicatorRelease, IngestionRun
 from app.db.session import get_session
-from app.ingestion.eodhd_client import EODHDClient, EODHDError
+from app.ingestion.eodhd_client import EODHDAuthError, EODHDClient, EODHDError
 from app.processing.bank_research import load_bank_research_index
 
 router = APIRouter(tags=["pages"])
@@ -946,7 +946,15 @@ async def _build_yield_differentials() -> dict[str, Any]:
                 return_exceptions=True,
             )
     except (EODHDError, ValueError):
-        return {"rows": [], "pairs": [], "stats": [], "base_currency": YIELD_BASE_CURRENCY}
+        return {
+            "rows": [],
+            "pairs": [],
+            "stats": [],
+            "base_currency": YIELD_BASE_CURRENCY,
+            "message": "Bond yield data is unavailable from EODHD right now.",
+        }
+
+    auth_blocked = any(isinstance(history, EODHDAuthError) for history in histories)
 
     rows: list[dict[str, Any]] = []
     for benchmark, history in zip(YIELD_BENCHMARKS, histories, strict=True):
@@ -991,7 +999,18 @@ async def _build_yield_differentials() -> dict[str, Any]:
         })
 
     if not rows:
-        return {"rows": [], "pairs": [], "stats": [], "base_currency": YIELD_BASE_CURRENCY}
+        message = (
+            "The current EODHD key does not include GBOND yield access."
+            if auth_blocked
+            else "Bond yield data is unavailable from EODHD right now."
+        )
+        return {
+            "rows": [],
+            "pairs": [],
+            "stats": [],
+            "base_currency": YIELD_BASE_CURRENCY,
+            "message": message,
+        }
 
     rows_by_currency = {str(row["currency"]): row for row in rows}
     base_yield = rows_by_currency.get(YIELD_BASE_CURRENCY, {}).get("yield")
@@ -1068,6 +1087,7 @@ async def _build_yield_differentials() -> dict[str, Any]:
         "pairs": pairs,
         "stats": stats,
         "base_currency": YIELD_BASE_CURRENCY,
+        "message": "",
     }
 
 

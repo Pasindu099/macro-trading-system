@@ -168,6 +168,27 @@ const css = `
     padding: 5px 8px; font-size: 12px; margin: 0;
   }
 
+  .brief-builder-table { width: 100%; border-collapse: collapse; }
+  .brief-builder-table th {
+    background: rgba(8,15,30,0.78); color: ${T.cream}; font-size: 10px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 9px 8px; border: 1px solid rgba(201,168,76,0.22);
+  }
+  .brief-builder-table td {
+    padding: 8px; border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.025); vertical-align: top;
+  }
+  .brief-builder-table textarea,
+  .brief-builder-table input {
+    min-height: 38px; padding: 7px 8px; font-size: 12px; margin: 0;
+  }
+  .brief-builder-table textarea { resize: vertical; }
+  .brief-builder-table .mini-cell { min-width: 94px; }
+  .brief-builder-table .wide-cell { min-width: 210px; }
+  .brief-table-actions {
+    display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;
+  }
+
   /* Impact badges */
   .badge {
     display: inline-flex; align-items: center; gap: 4px;
@@ -273,6 +294,28 @@ const css = `
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const REGIONS = ["🇺🇸 US", "🇪🇺 EU", "🇬🇧 UK", "🇯🇵 JP", "🇩🇪 DE", "🇨🇦 CA", "🇨🇭 CH", "🇦🇺 AU", "🇳🇿 NZ", "🇨🇳 CN"];
 const IMPACTS = ["HIGH", "MED", "LOW"];
+
+const DEFAULT_CONSENSUS_ROWS = [
+  { id: 1, metric: "[Headline figure — e.g. NFP]", consensus: "[+XXXk]", prior: "[+XXXk]", range: "[+XXk to +XXXk]", why: "[Below 100k would suggest cooling; above 250k would challenge cut expectations]" },
+  { id: 2, metric: "[Sub-component 1 — e.g. Avg Hourly Earnings m/m]", consensus: "[+X.X%]", prior: "[+X.X%]", range: "[X.X%–X.X%]", why: "[Wages above +0.4% m/m would reignite inflation concerns]" },
+  { id: 3, metric: "[Sub-component 2 — e.g. Unemployment Rate]", consensus: "[X.X%]", prior: "[X.X%]", range: "[X.X%–X.X%]", why: "[Shows whether labour slack is building or tightening]" },
+];
+
+const DEFAULT_SCENARIO_ROWS = [
+  { id: 1, outcome: "MUCH HOTTER", dataPrint: "[e.g. >+275k / >0.5% wages]", marketReaction: "[USD rallies sharply, UST yields spike, equities sell off, gold falls]", policyImplication: "[Market reprices cuts lower. Hawkish reassessment. Higher-for-longer narrative strengthens]", probability: "[X%]" },
+  { id: 2, outcome: "SLIGHTLY HOT", dataPrint: "[e.g. +200k–+275k / wages inline]", marketReaction: "[Mild USD strength, yields edge higher, equities mixed. Growth stocks underperform]", policyImplication: "[Delays cut expectations by 1–2 meetings. Central bank likely stays data dependent]", probability: "[X%]" },
+  { id: 3, outcome: "IN-LINE", dataPrint: "[e.g. +175k–+200k / wages as expected]", marketReaction: "[Muted immediate reaction. USD flat, yields unchanged, equities stable]", policyImplication: "[Consistent with base case. No change to rate path. Soft landing narrative intact]", probability: "[X%]" },
+  { id: 4, outcome: "SLIGHTLY SOFT", dataPrint: "[e.g. +100k–+175k / wages miss]", marketReaction: "[USD softens, yields fall, equities initially rally, gold supported]", policyImplication: "[Adds to case for earlier cut. Market may re-price one additional cut]", probability: "[X%]" },
+  { id: 5, outcome: "MUCH WEAKER", dataPrint: "[e.g. <+100k / rising unemployment]", marketReaction: "[USD sells off, yields fall sharply, equities volatile, gold rallies]", policyImplication: "[Emergency cut concerns surface. Market may price more aggressive easing]", probability: "[X%]" },
+];
+
+const DEFAULT_ASSET_ROWS = [
+  { id: 1, assetClass: "USD (Dollar Index)", beat: "↑↑ Strong", miss: "↓↓ Strong", watch: "[DXY most sensitive. Real yield differentials drive USD. Watch EUR/USD and USD/JPY first]", tickers: "DXY, EUR/USD, GBP/USD, USD/JPY" },
+  { id: 2, assetClass: "US Treasuries / Yields", beat: "↑ Yields", miss: "↓ Yields", watch: "[2Y most sensitive to policy expectations; 10Y to growth/inflation path]", tickers: "US02Y, US10Y, TLT" },
+  { id: 3, assetClass: "US Equities", beat: "↓ Initially", miss: "↑ Initially", watch: "[Strong data can hit equities if it removes cut expectations. Weak data can rally equities on cut hopes]", tickers: "SPX, NDX, RTY" },
+  { id: 4, assetClass: "Gold (XAU/USD)", beat: "↓ Moderate", miss: "↑ Strong", watch: "[Gold is inversely correlated to real yields and USD. Watch safe-haven demand in extreme misses]", tickers: "XAU/USD, GDX" },
+  { id: 5, assetClass: "Crude Oil", beat: "↑ Mild", miss: "↓ Mild", watch: "[Demand-side effect: strong growth supports oil, but USD inverse correlation also matters]", tickers: "WTI, Brent, XLE" },
+];
 
 function getWeekDates() {
   const today = new Date();
@@ -381,6 +424,9 @@ function MacroDashboardApp() {
   const [fetchStatus, setFetchStatus] = useState({ state: "idle", msg: "Ready to fetch high-impact calendar data", sub: "" });
   const [weeklyForm, setWeeklyForm] = useState({ weekLabel: "", instructor: "", course: "", theme: "", risks: "" });
   const [eventForm, setEventForm] = useState({ date: "", eventName: "", region: "🇺🇸 US", time: "", impact: "HIGH", instructor: "", course: "", overview: "", scenarios: "" });
+  const [consensusRows, setConsensusRows] = useState(DEFAULT_CONSENSUS_ROWS);
+  const [scenarioRows, setScenarioRows] = useState(DEFAULT_SCENARIO_ROWS);
+  const [assetRows, setAssetRows] = useState(DEFAULT_ASSET_ROWS);
   const [aiOutput, setAiOutput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [activeAI, setActiveAI] = useState(null);
@@ -405,6 +451,9 @@ function MacroDashboardApp() {
   function addEvent() { setEvents(ev => [...ev, blankEvent(weekDates)]); }
   function removeEvent(id) { setEvents(ev => ev.filter(e => e.id !== id)); }
   function updateEvent(id, field, val) { setEvents(ev => ev.map(e => e.id === id ? { ...e, [field]: val } : e)); }
+  function updateStructuredRow(setter, id, field, val) { setter(rows => rows.map(row => row.id === id ? { ...row, [field]: val } : row)); }
+  function addStructuredRow(setter, template) { setter(rows => [...rows, { ...template, id: Date.now() + Math.random() }]); }
+  function removeStructuredRow(setter, id) { setter(rows => rows.filter(row => row.id !== id)); }
 
   // AI assist
   async function handleAI(type, context) {
@@ -442,8 +491,17 @@ Instructor: ${eventForm.instructor || "[Name]"}
 EVENT OVERVIEW
 ${eventForm.overview || "[Fill in event overview]"}
 
+CONSENSUS & KEY LEVELS
+${consensusRows.map(row => `${row.metric} | Consensus: ${row.consensus} | Prior: ${row.prior} | Range: ${row.range} | Why: ${row.why}`).join("\n")}
+
 SCENARIO MATRIX
-${eventForm.scenarios || "[Fill in scenario matrix]"}`;
+${scenarioRows.map(row => `${row.outcome}: ${row.dataPrint} | Market: ${row.marketReaction} | Policy: ${row.policyImplication} | Probability: ${row.probability}`).join("\n")}
+
+SCENARIO NOTES
+${eventForm.scenarios || "[Fill in scenario summary notes]"}
+
+ASSET CLASS SENSITIVITY
+${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss} | Watch: ${row.watch} | Tickers: ${row.tickers}`).join("\n")}`;
   }
 
   function escapeXml(value) {
@@ -845,34 +903,35 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
 
         odtSectionHeader("02", "THE NUMBERS — CONSENSUS & KEY LEVELS"),
         odtParagraph("* Forecasts from Bloomberg consensus / Reuters poll. Range of estimates reflects the spread of economist forecasts.", "BodySmall"),
-        odtTable("ConsensusLevels", ["Metric", "Consensus / Forecast", "Prior Print", "Range of Estimates", "Why This Level Matters"], [
-          ["[Headline figure]",   "[+XXXk / X.X%]", "[+XXXk / X.X%]", "[+XXk to +XXXk]", "[Explain: below X would suggest cooling; above Y would challenge cut expectations]"],
-          ["[Sub-component 1]",   "[X.X%]",         "[X.X%]",         "[X.X%–X.X%]",     "[Why this sub-component moves markets]"],
-          ["[Sub-component 2]",   "[X.X%]",         "[X.X%]",         "[X.X%–X.X%]",     "[Significance of this sub-component]"],
-          ["[Add rows as needed]","—",               "—",              "—",               "—"],
-        ], [1]),
+        odtTable("ConsensusLevels", ["Metric", "Consensus / Forecast", "Prior Print", "Range of Estimates", "Why This Level Matters"], consensusRows.map(row => [
+          row.metric,
+          row.consensus,
+          row.prior,
+          row.range,
+          row.why,
+        ]), [1]),
 
         odtSectionHeader("03", "SCENARIO OUTCOME MATRIX — WHAT TO EXPECT"),
         odtParagraph("This matrix maps potential data outcomes to likely market reactions and policy implications. It is NOT a prediction — markets are complex and outcomes depend on context. Use this to build awareness, not certainty.", "BodySmall"),
-        odtTable("ScenarioMatrix", ["Outcome", "Data Print", "Expected Market Reaction", "Monetary Policy Implication", "Probability*"], [
-          ["MUCH HOTTER",   "[e.g. >+275k / >0.5% wages]",   "[USD rallies sharply, UST yields spike, equities sell off (especially growth/tech), gold falls, rate-sensitive sectors hit hardest]",                   "[Market reprices Fed cuts lower or removes them entirely. Hawkish reassessment. 'Higher for longer' narrative strengthens]", "[X%]"],
-          ["SLIGHTLY HOT",  "[e.g. +200k–+275k / wages inline]", "[Mild USD strength, yields edge higher, equities mixed — growth stocks underperform. Market digests as 'resilient but not alarming']",              "[Delays cut expectations by 1–2 meetings. Fed likely to stay on hold and emphasise data dependency]",                         "[X%]"],
-          ["IN-LINE",       "[e.g. +175k–+200k / wages as expected]", "[Muted immediate reaction. USD broadly flat, yields unchanged, equities stable. Focus shifts to press conference / forward guidance language]", "[Consistent with Fed's base case. No change to cut path pricing. 'Soft landing' narrative intact]",                            "[X%]"],
-          ["SLIGHTLY SOFT", "[e.g. +100k–+175k / wages miss]", "[USD softens, yields fall, equities initially rally (rate cut hopes), watch for growth concern narrative developing. Gold supported]",                "[Adds to case for earlier cut. Market may re-price 1 additional cut. Dovish pivot language may emerge]",                       "[X%]"],
-          ["MUCH WEAKER",   "[e.g. <+100k / rising unemployment]", "[Significant USD sell-off, yields fall sharply, equities volatile — initial rally then potential recession fear. Gold rallies. Risk-off tone possible]", "[Emergency cut concerns surface. Market may price in >2 cuts this year. Fed credibility tested — watch for unscheduled statement risk]", "[X%]"],
-        ]),
+        odtTable("ScenarioMatrix", ["Outcome", "Data Print", "Expected Market Reaction", "Monetary Policy Implication", "Probability*"], scenarioRows.map(row => [
+          row.outcome,
+          row.dataPrint,
+          row.marketReaction,
+          row.policyImplication,
+          row.probability,
+        ])),
         ...scenarioNotes.map(line => odtBullet(line.replace(/^[•\-]\s*/, ""))),
         odtParagraph("* Probability estimates are subjective and illustrative. Fill in based on current market positioning and analyst surveys.", "BodySmall"),
 
         odtSectionHeader("04", "ASSET CLASS SENSITIVITY GUIDE"),
         odtParagraph("How each major asset class is expected to respond. Sensitivity ratings assume a material beat or miss vs consensus.", "BodySmall"),
-        odtTable("AssetSensitivity", ["Asset Class", "Beat Sensitivity", "Miss Sensitivity", "What to Watch", "Key Pairs / Tickers"], [
-          ["USD (Dollar Index)",      "↑↑ Strong", "↓↓ Strong", "[DXY most sensitive. Real yield differentials drive USD. Watch how EUR/USD and USD/JPY react first]",                                                 "DXY, EUR/USD, GBP/USD, USD/JPY"],
-          ["US Treasuries / Yields",  "↑ Yields",  "↓ Yields",  "[2Y most sensitive to policy expectations, 10Y to growth/inflation path]",                                                                           "US02Y, US10Y, TLT"],
-          ["US Equities",             "↓ Initially","↑ Initially","[Strong jobs data can initially hit equities if it removes cut expectations. Weak data can rally equities on rate cut hopes, until recession fears dominate]", "SPX, NDX, RTY"],
-          ["Gold (XAU/USD)",          "↓ Moderate","↑ Strong",  "[Gold is inversely correlated to real yields and USD. Strong data = higher real yields = gold falls. Watch for safe-haven demand overriding in extreme miss scenarios]", "XAU/USD, GDX"],
-          ["Crude Oil",               "↑ Mild",    "↓ Mild",    "[Demand-side effect: strong jobs = stronger growth expectations = higher oil demand. But USD inverse correlation also matters]",                    "WTI, Brent, XLE"],
-        ]),
+        odtTable("AssetSensitivity", ["Asset Class", "Beat Sensitivity", "Miss Sensitivity", "What to Watch", "Key Pairs / Tickers"], assetRows.map(row => [
+          row.assetClass,
+          row.beat,
+          row.miss,
+          row.watch,
+          row.tickers,
+        ])),
 
         odtSectionHeader("05", "MONETARY POLICY IMPLICATIONS"),
         odtHeading2("Current Policy Backdrop"),
@@ -1347,10 +1406,130 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
                 )}
               </div>
 
+              {/* Consensus and key levels */}
+              <div className="card">
+                <div className="card-header">
+                  <span className="card-number">03</span>
+                  <div>
+                    <div className="card-title">The Numbers — Consensus & Key Levels</div>
+                    <div className="card-desc">Add the headline forecast, prior print, estimate range, and why each level matters</div>
+                  </div>
+                </div>
+                <div style={{overflowX:"auto"}}>
+                  <table className="brief-builder-table">
+                    <thead>
+                      <tr>
+                        <th>Metric</th>
+                        <th>Consensus / Forecast</th>
+                        <th>Prior Print</th>
+                        <th>Range of Estimates</th>
+                        <th>Why This Level Matters</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {consensusRows.map(row => (
+                        <tr key={row.id}>
+                          <td className="wide-cell"><textarea rows={2} value={row.metric} onChange={e => updateStructuredRow(setConsensusRows, row.id, "metric", e.target.value)} /></td>
+                          <td className="mini-cell"><input value={row.consensus} onChange={e => updateStructuredRow(setConsensusRows, row.id, "consensus", e.target.value)} /></td>
+                          <td className="mini-cell"><input value={row.prior} onChange={e => updateStructuredRow(setConsensusRows, row.id, "prior", e.target.value)} /></td>
+                          <td className="mini-cell"><input value={row.range} onChange={e => updateStructuredRow(setConsensusRows, row.id, "range", e.target.value)} /></td>
+                          <td className="wide-cell"><textarea rows={2} value={row.why} onChange={e => updateStructuredRow(setConsensusRows, row.id, "why", e.target.value)} /></td>
+                          <td><button className="btn btn-danger btn-sm" onClick={() => removeStructuredRow(setConsensusRows, row.id)}>Remove</button></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="brief-table-actions">
+                  <button className="btn btn-ghost btn-sm" onClick={() => addStructuredRow(setConsensusRows, { metric: "[New metric]", consensus: "[X]", prior: "[X]", range: "[X-Y]", why: "[Why this level matters]" })}>Add Row</button>
+                </div>
+              </div>
+
+              {/* Scenario outcome matrix */}
+              <div className="card">
+                <div className="card-header">
+                  <span className="card-number">04</span>
+                  <div>
+                    <div className="card-title">Scenario Outcome Matrix — What to Expect</div>
+                    <div className="card-desc">Map each data outcome to likely market reaction, policy implication, and probability</div>
+                  </div>
+                </div>
+                <div style={{overflowX:"auto"}}>
+                  <table className="brief-builder-table">
+                    <thead>
+                      <tr>
+                        <th>Outcome</th>
+                        <th>Data Print</th>
+                        <th>Expected Market Reaction</th>
+                        <th>Monetary Policy Implication</th>
+                        <th>Probability*</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {scenarioRows.map(row => (
+                        <tr key={row.id}>
+                          <td className="mini-cell"><input value={row.outcome} onChange={e => updateStructuredRow(setScenarioRows, row.id, "outcome", e.target.value)} /></td>
+                          <td className="wide-cell"><textarea rows={3} value={row.dataPrint} onChange={e => updateStructuredRow(setScenarioRows, row.id, "dataPrint", e.target.value)} /></td>
+                          <td className="wide-cell"><textarea rows={3} value={row.marketReaction} onChange={e => updateStructuredRow(setScenarioRows, row.id, "marketReaction", e.target.value)} /></td>
+                          <td className="wide-cell"><textarea rows={3} value={row.policyImplication} onChange={e => updateStructuredRow(setScenarioRows, row.id, "policyImplication", e.target.value)} /></td>
+                          <td className="mini-cell"><input value={row.probability} onChange={e => updateStructuredRow(setScenarioRows, row.id, "probability", e.target.value)} /></td>
+                          <td><button className="btn btn-danger btn-sm" onClick={() => removeStructuredRow(setScenarioRows, row.id)}>Remove</button></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="brief-table-actions">
+                  <button className="btn btn-ghost btn-sm" onClick={() => addStructuredRow(setScenarioRows, { outcome: "[Outcome]", dataPrint: "[Data print]", marketReaction: "[Market reaction]", policyImplication: "[Policy implication]", probability: "[X%]" })}>Add Row</button>
+                </div>
+              </div>
+
+              {/* Asset sensitivity */}
+              <div className="card">
+                <div className="card-header">
+                  <span className="card-number">05</span>
+                  <div>
+                    <div className="card-title">Asset Class Sensitivity Guide</div>
+                    <div className="card-desc">Define beat/miss sensitivity and the key markets students should watch</div>
+                  </div>
+                </div>
+                <div style={{overflowX:"auto"}}>
+                  <table className="brief-builder-table">
+                    <thead>
+                      <tr>
+                        <th>Asset Class</th>
+                        <th>Beat Sensitivity</th>
+                        <th>Miss Sensitivity</th>
+                        <th>What to Watch</th>
+                        <th>Key Pairs / Tickers</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {assetRows.map(row => (
+                        <tr key={row.id}>
+                          <td className="mini-cell"><textarea rows={2} value={row.assetClass} onChange={e => updateStructuredRow(setAssetRows, row.id, "assetClass", e.target.value)} /></td>
+                          <td className="mini-cell"><input value={row.beat} onChange={e => updateStructuredRow(setAssetRows, row.id, "beat", e.target.value)} /></td>
+                          <td className="mini-cell"><input value={row.miss} onChange={e => updateStructuredRow(setAssetRows, row.id, "miss", e.target.value)} /></td>
+                          <td className="wide-cell"><textarea rows={3} value={row.watch} onChange={e => updateStructuredRow(setAssetRows, row.id, "watch", e.target.value)} /></td>
+                          <td className="mini-cell"><textarea rows={2} value={row.tickers} onChange={e => updateStructuredRow(setAssetRows, row.id, "tickers", e.target.value)} /></td>
+                          <td><button className="btn btn-danger btn-sm" onClick={() => removeStructuredRow(setAssetRows, row.id)}>Remove</button></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="brief-table-actions">
+                  <button className="btn btn-ghost btn-sm" onClick={() => addStructuredRow(setAssetRows, { assetClass: "[Asset class]", beat: "[Beat]", miss: "[Miss]", watch: "[What to watch]", tickers: "[Tickers]" })}>Add Row</button>
+                </div>
+              </div>
+
               {/* Copy summary */}
               <div className="card" style={{background:"rgba(201,168,76,0.04)", borderColor:"rgba(201,168,76,0.15)"}}>
                 <div className="card-header">
-                  <span className="card-number">03</span>
+                  <span className="card-number">06</span>
                   <div>
                     <div className="card-title">Copy to Your Event Prep Template</div>
                     <div className="card-desc">Structured output ready to export as an OpenDocument .odt brief</div>
@@ -1364,8 +1543,14 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
                   <span className="line-gold">Instructor: </span>{eventForm.instructor || "[Name]"}{"\n\n"}
                   <span className="line-gold">── EVENT OVERVIEW ──{"\n"}</span>
                   {eventForm.overview || "[Fill in event overview]"}{"\n\n"}
+                  <span className="line-gold">── CONSENSUS & KEY LEVELS ──{"\n"}</span>
+                  {consensusRows.map(row => `${row.metric} | ${row.consensus} | Prior ${row.prior} | Range ${row.range}\n`).join("")}{"\n"}
                   <span className="line-gold">── SCENARIO MATRIX ──{"\n"}</span>
-                  {eventForm.scenarios || "[Fill in scenario matrix]"}
+                  {scenarioRows.map(row => `${row.outcome}: ${row.dataPrint} | ${row.marketReaction}\n`).join("")}{"\n"}
+                  <span className="line-gold">── SCENARIO NOTES ──{"\n"}</span>
+                  {eventForm.scenarios || "[Fill in scenario summary notes]"}{"\n\n"}
+                  <span className="line-gold">── ASSET CLASS SENSITIVITY ──{"\n"}</span>
+                  {assetRows.map(row => `${row.assetClass}: Beat ${row.beat}; Miss ${row.miss}; Watch ${row.tickers}\n`).join("")}
                 </div>
                 <div style={{marginTop:12}}>
                   <button className="btn btn-primary" onClick={() => {
@@ -1392,5 +1577,3 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
 
 const root = ReactDOM.createRoot(document.getElementById('macro-dashboard-root'));
 root.render(<MacroDashboardApp />);
-
-

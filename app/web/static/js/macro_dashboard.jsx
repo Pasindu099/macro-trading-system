@@ -459,21 +459,154 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
     return `<text:p text:style-name="${style}">${escapeXml(text)}</text:p>`;
   }
 
-  function odtHeading(text, level = 1) {
-    return `<text:h text:style-name="Heading${level}" text:outline-level="${level}">${escapeXml(text)}</text:h>`;
-  }
-
   function odtBullet(text) {
     return `<text:list text:style-name="BulletList"><text:list-item>${odtParagraph(text.replace(/^[•\-]\s*/, ""))}</text:list-item></text:list>`;
   }
 
-  function odtTable(name, headers, rows) {
-    const headerCells = headers.map(h => `<table:table-cell office:value-type="string">${odtParagraph(h, "TableHeader")}</table:table-cell>`).join("");
-    const rowXml = rows.map(row => `<table:table-row>${row.map(cell => `<table:table-cell office:value-type="string">${odtParagraph(cell, "TableCell")}</table:table-cell>`).join("")}</table:table-row>`).join("");
-    return `<table:table table:name="${escapeXml(name)}"><table:table-row>${headerCells}</table:table-row>${rowXml}</table:table>`;
+  function odtTitleBlock(mainTitle, subtitle, dateLine) {
+    return `<table:table table:name="TitleBlock" table:style-name="TitleBlockTable"><table:table-column table:style-name="FullWidthCol"/><table:table-row><table:table-cell table:style-name="TitleBlockCell" office:value-type="string">${odtParagraph(mainTitle, "DocMainTitle")}${odtParagraph(subtitle, "DocSubtitle")}${dateLine ? odtParagraph(dateLine, "DocDateLine") : ""}</table:table-cell></table:table-row></table:table>`;
   }
 
-  function odtContent(title, subtitle, sections) {
+  function odtSectionHeader(num, text) {
+    const safeName = `SH${num.replace(/\W/g, "")}`;
+    return `<table:table table:name="${safeName}" table:style-name="SectionHeaderTable"><table:table-column table:style-name="FullWidthCol"/><table:table-row><table:table-cell table:style-name="SectionHeaderCell" office:value-type="string"><text:p text:style-name="SectionHeaderText">${escapeXml(num)} — ${escapeXml(text)}</text:p></table:table-cell></table:table-row></table:table>`;
+  }
+
+  function odtDisclaimerBox(text) {
+    return `<table:table table:name="DisclaimerBox" table:style-name="DisclaimerTable"><table:table-column table:style-name="FullWidthCol"/><table:table-row><table:table-cell table:style-name="DisclaimerCell" office:value-type="string">${odtParagraph(text, "DisclaimerText")}</table:table-cell></table:table-row></table:table>`;
+  }
+
+  function odtHeading2(text) {
+    return odtParagraph(text, "Heading2");
+  }
+
+  function odtTable(name, headers, rows, greenColIndices = []) {
+    const n = headers.length;
+    const colStyle = n <= 2 ? "ColW2" : n === 3 ? "ColW3" : n === 4 ? "ColW4" : n === 5 ? "ColW5" : n === 6 ? "ColW6" : "ColW7";
+    const colDefs = headers.map(() => `<table:table-column table:style-name="${colStyle}"/>`).join("");
+    const headerCells = headers.map(h =>
+      `<table:table-cell table:style-name="DataHeaderCell" office:value-type="string">${odtParagraph(h, "TableHeader")}</table:table-cell>`
+    ).join("");
+    const rowXml = rows.map((row, ri) => {
+      const base = ri % 2 === 0 ? "DataCell" : "DataCellAlt";
+      const cells = row.map((cell, ci) => {
+        const cellStyle = greenColIndices.includes(ci) ? "DataCellGreen" : base;
+        const pStyle = greenColIndices.includes(ci) ? "TableCellGreen" : "TableCell";
+        return `<table:table-cell table:style-name="${cellStyle}" office:value-type="string">${odtParagraph(cell, pStyle)}</table:table-cell>`;
+      }).join("");
+      return `<table:table-row>${cells}</table:table-row>`;
+    }).join("");
+    return `<table:table table:name="${escapeXml(name)}" table:style-name="DataTable">${colDefs}<table:table-row>${headerCells}</table:table-row>${rowXml}</table:table>`;
+  }
+
+  function odtAllStyles() {
+    return `
+  <style:style style:name="DocMainTitle" style:family="paragraph">
+    <style:paragraph-properties fo:text-align="center" fo:margin-bottom="3pt" fo:margin-top="2pt"/>
+    <style:text-properties fo:font-size="22pt" fo:font-weight="bold" fo:color="#C9A84C" fo:font-family="Times New Roman" fo:font-family-generic="roman"/>
+  </style:style>
+  <style:style style:name="DocSubtitle" style:family="paragraph">
+    <style:paragraph-properties fo:text-align="center" fo:margin-bottom="3pt" fo:margin-top="0pt"/>
+    <style:text-properties fo:font-size="14pt" fo:font-weight="bold" fo:color="#FFFFFF" fo:font-family="Arial" fo:font-family-generic="swiss"/>
+  </style:style>
+  <style:style style:name="DocDateLine" style:family="paragraph">
+    <style:paragraph-properties fo:text-align="center" fo:margin-top="3pt" fo:margin-bottom="2pt"/>
+    <style:text-properties fo:font-size="10pt" fo:color="#CCCCCC" fo:font-family="Arial" fo:font-family-generic="swiss"/>
+  </style:style>
+  <style:style style:name="SectionHeaderText" style:family="paragraph">
+    <style:paragraph-properties fo:margin-left="8pt" fo:margin-top="4pt" fo:margin-bottom="4pt" fo:margin-right="4pt"/>
+    <style:text-properties fo:font-size="12pt" fo:font-weight="bold" fo:color="#FFFFFF" fo:font-family="Arial" fo:font-family-generic="swiss"/>
+  </style:style>
+  <style:style style:name="DisclaimerText" style:family="paragraph">
+    <style:paragraph-properties fo:text-align="center" fo:margin-left="6pt" fo:margin-right="6pt" fo:margin-top="3pt" fo:margin-bottom="3pt"/>
+    <style:text-properties fo:font-size="9.5pt" fo:font-weight="bold" fo:color="#92400E" fo:font-family="Arial" fo:font-family-generic="swiss"/>
+  </style:style>
+  <style:style style:name="Body" style:family="paragraph">
+    <style:paragraph-properties fo:margin-top="2pt" fo:margin-bottom="3pt"/>
+    <style:text-properties fo:font-size="10pt" fo:color="#111827" fo:font-family="Arial" fo:font-family-generic="swiss"/>
+  </style:style>
+  <style:style style:name="BodySmall" style:family="paragraph">
+    <style:paragraph-properties fo:margin-top="2pt" fo:margin-bottom="2pt"/>
+    <style:text-properties fo:font-size="9pt" fo:font-style="italic" fo:color="#374151" fo:font-family="Arial" fo:font-family-generic="swiss"/>
+  </style:style>
+  <style:style style:name="Heading2" style:family="paragraph">
+    <style:paragraph-properties fo:margin-top="8pt" fo:margin-bottom="4pt"/>
+    <style:text-properties fo:font-size="11pt" fo:font-weight="bold" fo:color="#1A3A6B" fo:font-family="Arial" fo:font-family-generic="swiss"/>
+  </style:style>
+  <style:style style:name="TableHeader" style:family="paragraph">
+    <style:paragraph-properties fo:margin-left="4pt" fo:margin-right="4pt" fo:margin-top="3pt" fo:margin-bottom="3pt"/>
+    <style:text-properties fo:font-size="9pt" fo:font-weight="bold" fo:color="#FFFFFF" fo:font-family="Arial" fo:font-family-generic="swiss"/>
+  </style:style>
+  <style:style style:name="TableCell" style:family="paragraph">
+    <style:paragraph-properties fo:margin-left="4pt" fo:margin-right="4pt" fo:margin-top="2pt" fo:margin-bottom="2pt"/>
+    <style:text-properties fo:font-size="9pt" fo:color="#111827" fo:font-family="Arial" fo:font-family-generic="swiss"/>
+  </style:style>
+  <style:style style:name="TableCellGreen" style:family="paragraph">
+    <style:paragraph-properties fo:margin-left="4pt" fo:margin-right="4pt" fo:margin-top="2pt" fo:margin-bottom="2pt"/>
+    <style:text-properties fo:font-size="9pt" fo:color="#1A7A4A" fo:font-weight="bold" fo:font-family="Arial" fo:font-family-generic="swiss"/>
+  </style:style>
+  <style:style style:name="TitleBlockTable" style:family="table">
+    <style:table-properties style:width="17cm" table:align="margins" fo:margin-bottom="10pt"/>
+  </style:style>
+  <style:style style:name="SectionHeaderTable" style:family="table">
+    <style:table-properties style:width="17cm" table:align="margins" fo:margin-top="12pt" fo:margin-bottom="6pt"/>
+  </style:style>
+  <style:style style:name="DisclaimerTable" style:family="table">
+    <style:table-properties style:width="17cm" table:align="margins" fo:margin-top="8pt" fo:margin-bottom="10pt"/>
+  </style:style>
+  <style:style style:name="DataTable" style:family="table">
+    <style:table-properties style:width="17cm" table:align="margins" fo:margin-top="6pt" fo:margin-bottom="6pt"/>
+  </style:style>
+  <style:style style:name="FullWidthCol" style:family="table-column">
+    <style:table-column-properties style:column-width="17cm"/>
+  </style:style>
+  <style:style style:name="ColW2" style:family="table-column">
+    <style:table-column-properties style:column-width="8.25cm"/>
+  </style:style>
+  <style:style style:name="ColW3" style:family="table-column">
+    <style:table-column-properties style:column-width="5.5cm"/>
+  </style:style>
+  <style:style style:name="ColW4" style:family="table-column">
+    <style:table-column-properties style:column-width="4.1cm"/>
+  </style:style>
+  <style:style style:name="ColW5" style:family="table-column">
+    <style:table-column-properties style:column-width="3.2cm"/>
+  </style:style>
+  <style:style style:name="ColW6" style:family="table-column">
+    <style:table-column-properties style:column-width="2.7cm"/>
+  </style:style>
+  <style:style style:name="ColW7" style:family="table-column">
+    <style:table-column-properties style:column-width="2.35cm"/>
+  </style:style>
+  <style:style style:name="TitleBlockCell" style:family="table-cell">
+    <style:table-cell-properties fo:background-color="#0D1F3C" fo:padding="14pt" fo:border="none"/>
+  </style:style>
+  <style:style style:name="SectionHeaderCell" style:family="table-cell">
+    <style:table-cell-properties fo:background-color="#0D1F3C" fo:padding-left="10pt" fo:padding-top="6pt" fo:padding-bottom="6pt" fo:padding-right="8pt" fo:border="none"/>
+  </style:style>
+  <style:style style:name="DisclaimerCell" style:family="table-cell">
+    <style:table-cell-properties fo:background-color="#FFFBEB" fo:border="1pt solid #F59E0B" fo:padding="8pt"/>
+  </style:style>
+  <style:style style:name="DataHeaderCell" style:family="table-cell">
+    <style:table-cell-properties fo:background-color="#0D1F3C" fo:border="0.5pt solid #374151" fo:padding-left="5pt" fo:padding-right="5pt" fo:padding-top="4pt" fo:padding-bottom="4pt"/>
+  </style:style>
+  <style:style style:name="DataCell" style:family="table-cell">
+    <style:table-cell-properties fo:background-color="#FFFFFF" fo:border="0.5pt solid #D1D5DB" fo:padding-left="5pt" fo:padding-right="5pt" fo:padding-top="3pt" fo:padding-bottom="3pt"/>
+  </style:style>
+  <style:style style:name="DataCellAlt" style:family="table-cell">
+    <style:table-cell-properties fo:background-color="#F9FAFB" fo:border="0.5pt solid #D1D5DB" fo:padding-left="5pt" fo:padding-right="5pt" fo:padding-top="3pt" fo:padding-bottom="3pt"/>
+  </style:style>
+  <style:style style:name="DataCellGreen" style:family="table-cell">
+    <style:table-cell-properties fo:background-color="#FFFFFF" fo:border="0.5pt solid #D1D5DB" fo:padding-left="5pt" fo:padding-right="5pt" fo:padding-top="3pt" fo:padding-bottom="3pt"/>
+  </style:style>
+  <text:list-style style:name="BulletList">
+    <text:list-level-style-bullet text:level="1" text:bullet-char="&#x2022;">
+      <style:list-level-properties text:space-before="4pt" text:min-label-width="6pt" fo:margin-left="6pt"/>
+    </text:list-level-style-bullet>
+  </text:list-style>`;
+  }
+
+  function odtContent(sections) {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <office:document-content
   xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
@@ -482,28 +615,68 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
   xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
   xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
   office:version="1.2">
-  <office:automatic-styles>
-    <style:style style:name="Title" style:family="paragraph"><style:text-properties fo:font-size="24pt" fo:font-weight="bold" fo:color="#0D1F3C"/></style:style>
-    <style:style style:name="Subtitle" style:family="paragraph"><style:text-properties fo:font-size="12pt" fo:color="#6B7280"/></style:style>
-    <style:style style:name="Heading1" style:family="paragraph"><style:text-properties fo:font-size="15pt" fo:font-weight="bold" fo:color="#C9A84C"/></style:style>
-    <style:style style:name="Heading2" style:family="paragraph"><style:text-properties fo:font-size="12pt" fo:font-weight="bold" fo:color="#1A3A6B"/></style:style>
-    <style:style style:name="Body" style:family="paragraph"><style:text-properties fo:font-size="10.5pt" fo:color="#111827"/></style:style>
-    <style:style style:name="TableHeader" style:family="paragraph"><style:text-properties fo:font-size="9pt" fo:font-weight="bold" fo:color="#FFFFFF"/></style:style>
-    <style:style style:name="TableCell" style:family="paragraph"><style:text-properties fo:font-size="8.5pt" fo:color="#111827"/></style:style>
-    <text:list-style style:name="BulletList"><text:list-level-style-bullet text:level="1" text:bullet-char="•"/></text:list-style>
-  </office:automatic-styles>
+  <office:automatic-styles>${odtAllStyles()}</office:automatic-styles>
   <office:body>
     <office:text>
-      ${odtParagraph(title, "Title")}
-      ${odtParagraph(subtitle, "Subtitle")}
-      ${odtParagraph("Educational use only. Not financial advice.", "Subtitle")}
       ${sections.join("\n")}
     </office:text>
   </office:body>
 </office:document-content>`;
   }
 
-  async function exportOdt(title, subtitle, sections, filename) {
+  function odtStylesFile(headerLeft, headerRight) {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-styles
+  xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+  xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+  xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+  xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
+  xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"
+  office:version="1.2">
+  <office:styles>
+    <style:default-style style:family="paragraph">
+      <style:text-properties fo:font-family="Arial" fo:font-family-generic="swiss"/>
+    </style:default-style>
+  </office:styles>
+  <office:automatic-styles>
+    <style:page-layout style:name="PageLayout">
+      <style:page-layout-properties fo:page-width="21cm" fo:page-height="29.7cm"
+        fo:margin-top="1.8cm" fo:margin-bottom="1.8cm"
+        fo:margin-left="2cm" fo:margin-right="2cm"/>
+      <style:header-style>
+        <style:header-footer-properties fo:min-height="0.8cm" fo:margin-bottom="0.3cm"/>
+      </style:header-style>
+      <style:footer-style>
+        <style:header-footer-properties fo:min-height="0.7cm" fo:margin-top="0.3cm"/>
+      </style:footer-style>
+    </style:page-layout>
+    <style:style style:name="HdrLeft" style:family="paragraph">
+      <style:paragraph-properties fo:border-bottom="0.5pt solid #C9A84C" fo:padding-bottom="3pt"/>
+      <style:text-properties fo:font-size="8pt" fo:color="#374151" fo:font-weight="bold" fo:font-family="Arial"/>
+    </style:style>
+    <style:style style:name="HdrRight" style:family="paragraph">
+      <style:paragraph-properties fo:text-align="right" fo:border-bottom="0.5pt solid #C9A84C" fo:padding-bottom="3pt"/>
+      <style:text-properties fo:font-size="8pt" fo:color="#374151" fo:font-family="Arial"/>
+    </style:style>
+    <style:style style:name="FtrCenter" style:family="paragraph">
+      <style:paragraph-properties fo:text-align="center" fo:border-top="0.5pt solid #D1D5DB" fo:padding-top="3pt"/>
+      <style:text-properties fo:font-size="8pt" fo:color="#9CA3AF" fo:font-family="Arial"/>
+    </style:style>
+  </office:automatic-styles>
+  <office:master-styles>
+    <style:master-page style:name="Standard" style:page-layout-name="PageLayout">
+      <style:header>
+        <text:p text:style-name="HdrLeft">${escapeXml(headerLeft)}<text:tab/><text:tab/><text:tab/><text:tab/><text:tab/>${escapeXml(headerRight)}</text:p>
+      </style:header>
+      <style:footer>
+        <text:p text:style-name="FtrCenter">&#x26A0; FOR EDUCATIONAL PURPOSES ONLY — NOT FINANCIAL ADVICE<text:tab/><text:tab/>Page <text:page-number text:select-page="current">1</text:page-number></text:p>
+      </style:footer>
+    </style:master-page>
+  </office:master-styles>
+</office:document-styles>`;
+  }
+
+  async function exportOdt(sections, filename, headerLeft, headerRight) {
     const JSZip = window.JSZip;
     if (!JSZip) {
       alert("ODF export library is still loading. Try again in a moment.");
@@ -518,11 +691,10 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
   <manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>
   <manifest:file-entry manifest:full-path="meta.xml" manifest:media-type="text/xml"/>
 </manifest:manifest>`);
-    zip.file("styles.xml", `<?xml version="1.0" encoding="UTF-8"?>
-<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" office:version="1.2"><office:styles/></office:document-styles>`);
+    zip.file("styles.xml", odtStylesFile(headerLeft || "MACRO MARKET INTELLIGENCE", headerRight || ""));
     zip.file("meta.xml", `<?xml version="1.0" encoding="UTF-8"?>
 <office:document-meta xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" office:version="1.2"><office:meta><meta:generator>Macro Dashboard Brief Builder</meta:generator></office:meta></office:document-meta>`);
-    zip.file("content.xml", odtContent(title, subtitle, sections));
+    zip.file("content.xml", odtContent(sections));
     const blob = await zip.generateAsync({ type: "blob", mimeType: "application/vnd.oasis.opendocument.text" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -539,11 +711,11 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
     const eventRows = events.map(e => [
       e.day.slice(0, 3).toUpperCase(),
       e.date,
-      e.region,
+      e.region.replace(/[^\x00-\x7F]/g, "").trim(),
       e.event,
       e.forecast || "—",
       e.prior || "—",
-      e.impact,
+      (e.impact === "HIGH" ? "▲ HIGH" : e.impact === "MED" ? "● MED" : "▼ LOW"),
     ]);
     const riskLines = (weeklyForm.risks || [
       "Geopolitical / Political: [any weekend developments, elections, policy announcements]",
@@ -552,186 +724,219 @@ ${eventForm.scenarios || "[Fill in scenario matrix]"}`;
       "Data Revisions: [prior prints under revision that could change the narrative]",
       "Fed / ECB / BoE speakers: [scheduled speeches or interviews]",
     ].join("\n")).split("\n").filter(Boolean);
+    const themeLines = String(weeklyForm.theme || "[Fill in your macro theme and narrative here — 3-5 sentences covering the dominant market narrative, key risk events, and what could shift sentiment this week.]").split("\n").filter(Boolean);
     return exportOdt(
-      "MACRO MARKET INTELLIGENCE",
-      `WEEKLY MARKET PREVIEW | Week of ${activeWeek} | Prepared Sunday [DD Month YYYY]`,
       [
-        odtParagraph("EDUCATIONAL USE ONLY - This document is not a trading signal or financial advice. It is prepared to help students understand macroeconomic data and potential market dynamics.", "Subtitle"),
-        odtHeading("01 - WEEKLY MACRO THEME & NARRATIVE"),
-        odtParagraph("[Week's Defining Theme - e.g. 'Fed Policy Uncertainty Meets NFP Week']"),
-        ...String(weeklyForm.theme || "[Fill in your macro theme]").split("\n").filter(Boolean).map(line => odtParagraph(line)),
-        odtParagraph("Key themes to watch:"),
-        odtBullet("Growth vs. Inflation trade-off - where is the economy in the cycle?"),
-        odtBullet("Central bank divergence - which banks are cutting vs. holding vs. hiking?"),
-        odtBullet("Risk sentiment - risk-on or risk-off?"),
+        odtTitleBlock(
+          "MACRO MARKET INTELLIGENCE",
+          "WEEKLY MARKET PREVIEW",
+          `Week of ${activeWeek} | Prepared Sunday [DD Month YYYY]`
+        ),
+        odtDisclaimerBox("EDUCATIONAL USE ONLY — This document is not a trading signal or financial advice. It is prepared to help students understand macroeconomic data and potential market dynamics."),
+
+        odtSectionHeader("01", "WEEKLY MACRO THEME & NARRATIVE"),
+        odtParagraph("[Week's Defining Theme — e.g. 'Fed Policy Uncertainty Meets NFP Week']", "Heading2"),
+        ...themeLines.map(line => odtParagraph(line)),
+        odtParagraph("Key themes to watch:", "Heading2"),
+        odtBullet("Growth vs. Inflation trade-off — where is the economy in the cycle?"),
+        odtBullet("Central bank divergence — which banks are cutting vs. holding vs. hiking?"),
+        odtBullet("Risk sentiment — risk-on (equities/commodities up, USD down) or risk-off?"),
         odtBullet("Geopolitical / political backdrop and any weekend headlines to be aware of"),
-        odtHeading("02 - ECONOMIC CALENDAR"),
-        odtParagraph("All times shown in UTC. Impact rating reflects potential volatility, not direction."),
-        odtTable("Economic Calendar", ["Day", "Date", "Region", "Event", "Forecast", "Prior", "Impact"], eventRows),
-        odtParagraph("HIGH - major market mover | MED - moderate volatility potential | LOW - minor or localized impact"),
-        odtHeading("03 - PRIOR WEEK MARKET SNAPSHOT"),
-        odtParagraph("Update with Friday closing prices. DMA = Day Moving Average. Bias reflects technical posture only - not a trade recommendation."),
-        odtTable("Prior Week Market Snapshot", ["Asset / Index", "Weekly Close", "Wk Change", "50-DMA", "200-DMA", "Bias"], [
-          ["S&P 500 (SPX)", "[X,XXX.XX]", "[+X.X%]", "[X,XXX]", "[X,XXX]", "↑ Bullish"],
+
+        odtSectionHeader("02", "ECONOMIC CALENDAR"),
+        odtParagraph("All times shown in UTC. Impact rating reflects potential volatility, not direction. Events are illustrative — update each week with live consensus data.", "BodySmall"),
+        odtTable("EconomicCalendar", ["Day", "Date", "Region", "Event", "Forecast", "Prior", "Impact"], eventRows, [4]),
+        odtParagraph("▲ HIGH — major market mover | ● MED — moderate volatility potential | ▼ LOW — minor or localized impact", "BodySmall"),
+
+        odtSectionHeader("03", "PRIOR WEEK MARKET SNAPSHOT"),
+        odtParagraph("Update with Friday closing prices. DMA = Day Moving Average. Bias reflects technical posture only — not a trade recommendation.", "BodySmall"),
+        odtTable("MarketSnapshot", ["Asset / Index", "Weekly Close", "Wk Change", "50-DMA", "200-DMA", "Bias"], [
+          ["S&P 500 (SPX)",    "[X,XXX.XX]", "[+X.X%]", "[X,XXX]",  "[X,XXX]",  "↑ Bullish"],
           ["Nasdaq 100 (NDX)", "[X,XXX.XX]", "[-X.X%]", "[XX,XXX]", "[XX,XXX]", "↓ Bearish"],
           ["Dow Jones (DJIA)", "[XX,XXX.X]", "[+X.X%]", "[XX,XXX]", "[XX,XXX]", "↑ Bullish"],
-          ["FTSE 100", "[X,XXX.X]", "[+X.X%]", "[X,XXX]", "[X,XXX]", "→ Neutral"],
-          ["DAX 40", "[XX,XXX.X]", "[+X.X%]", "[XX,XXX]", "[XX,XXX]", "↑ Bullish"],
-          ["Nikkei 225", "[XX,XXX.X]", "[-X.X%]", "[XX,XXX]", "[XX,XXX]", "↓ Bearish"],
-          ["EUR/USD", "[X.XXXX]", "[+X.X%]", "[X.XXXX]", "[X.XXXX]", "↑ Bullish"],
-          ["GBP/USD", "[X.XXXX]", "[+X.X%]", "[X.XXXX]", "[X.XXXX]", "→ Neutral"],
-          ["USD/JPY", "[XXX.XX]", "[-X.X%]", "[XXX.XX]", "[XXX.XX]", "↓ Bearish"],
-          ["Gold (XAU/USD)", "[X,XXX.XX]", "[+X.X%]", "[X,XXX]", "[X,XXX]", "↑ Bullish"],
-          ["WTI Crude Oil", "[XX.XX]", "[-X.X%]", "[XX.XX]", "[XX.XX]", "↓ Bearish"],
-          ["US 10Y Yield", "[X.XX%]", "[+Xbp]", "—", "—", "→ Neutral"],
-          ["VIX (Fear Index)", "[XX.XX]", "[-X.X]", "—", "—", "→ Neutral"],
+          ["FTSE 100",         "[X,XXX.X]",  "[+X.X%]", "[X,XXX]",  "[X,XXX]",  "→ Neutral"],
+          ["DAX 40",           "[XX,XXX.X]", "[+X.X%]", "[XX,XXX]", "[XX,XXX]", "↑ Bullish"],
+          ["Nikkei 225",       "[XX,XXX.X]", "[-X.X%]", "[XX,XXX]", "[XX,XXX]", "↓ Bearish"],
+          ["EUR/USD",          "[X.XXXX]",   "[+X.X%]", "[X.XXXX]", "[X.XXXX]", "↑ Bullish"],
+          ["GBP/USD",          "[X.XXXX]",   "[+X.X%]", "[X.XXXX]", "[X.XXXX]", "→ Neutral"],
+          ["USD/JPY",          "[XXX.XX]",   "[-X.X%]", "[XXX.XX]", "[XXX.XX]", "↓ Bearish"],
+          ["Gold (XAU/USD)",   "[X,XXX.XX]", "[+X.X%]", "[X,XXX]",  "[X,XXX]",  "↑ Bullish"],
+          ["WTI Crude Oil",    "[XX.XX]",    "[-X.X%]", "[XX.XX]",  "[XX.XX]",  "↓ Bearish"],
+          ["US 10Y Yield",     "[X.XX%]",    "[+Xbp]",  "—",        "—",        "→ Neutral"],
+          ["VIX (Fear Index)", "[XX.XX]",    "[-X.X]",  "—",        "—",        "→ Neutral"],
         ]),
-        odtHeading("04 - CENTRAL BANK POLICY TRACKER"),
-        odtParagraph("Market pricing sourced from OIS/swap markets. Update rate decisions and meeting dates each week."),
-        odtTable("Central Bank Policy Tracker", ["Central Bank", "Current Rate", "Last Decision", "Next Meeting", "Market Pricing", "Bias / Stance"], [
-          ["US Federal Reserve", "[X.XX-X.XX%]", "[Hold/Cut/Hike]", "[Month DD]", "[X% cut priced]", "[Hawkish/Dovish/Neutral - key language]"],
-          ["ECB", "[X.XX%]", "[Hold/Cut/Hike]", "[Month DD]", "[X% cut priced]", "[Stance - key language]"],
-          ["Bank of England", "[X.XX%]", "[Hold/Cut/Hike]", "[Month DD]", "[X% cut priced]", "[Stance - key language]"],
-          ["Bank of Japan", "[X.XX%]", "[Hold/Cut/Hike]", "[Month DD]", "[X% hike priced]", "[Stance - key language]"],
-          ["SNB", "[X.XX%]", "[Hold/Cut/Hike]", "[Month DD]", "[X% cut priced]", "[Stance - key language]"],
-          ["Bank of Canada", "[X.XX%]", "[Hold/Cut/Hike]", "[Month DD]", "[X% cut priced]", "[Stance - key language]"],
+
+        odtSectionHeader("04", "CENTRAL BANK POLICY TRACKER"),
+        odtParagraph("Market pricing sourced from OIS/swap markets. Update rate decisions and meeting dates each week.", "BodySmall"),
+        odtTable("CentralBanks", ["Central Bank", "Current Rate", "Last Decision", "Next Meeting", "Market Pricing", "Bias / Stance"], [
+          ["Federal Reserve", "[X.XX–X.XX%]", "[Hold/Cut/Hike]", "[Month DD]", "[X% cut priced]",  "[Hawkish/Dovish/Neutral — key language]"],
+          ["ECB",             "[X.XX%]",      "[Hold/Cut/Hike]", "[Month DD]", "[X% cut priced]",  "[Stance — key language]"],
+          ["Bank of England", "[X.XX%]",      "[Hold/Cut/Hike]", "[Month DD]", "[X% cut priced]",  "[Stance — key language]"],
+          ["Bank of Japan",   "[X.XX%]",      "[Hold/Cut/Hike]", "[Month DD]", "[X% hike priced]", "[Stance — key language]"],
+          ["SNB",             "[X.XX%]",      "[Hold/Cut/Hike]", "[Month DD]", "[X% cut priced]",  "[Stance — key language]"],
+          ["Bank of Canada",  "[X.XX%]",      "[Hold/Cut/Hike]", "[Month DD]", "[X% cut priced]",  "[Stance — key language]"],
         ]),
-        odtHeading("05 - ASSET CLASS & SECTOR OUTLOOK"),
-        odtHeading("Equities", 2),
-        odtBullet("[Describe the key technical levels and fundamental drivers for global indices this week.]"),
-        odtBullet("Support / Resistance: S&P 500 [X,XXX] / [X,XXX] - [instructor note on level significance]"),
-        odtHeading("Fixed Income / Yields", 2),
-        odtBullet("[Describe yield dynamics - is the curve steepening or flattening? What is the bond market pricing for policy?]"),
-        odtBullet("US 10Y focal level: [X.XX%] - watch for break above/below ahead of [event]"),
-        odtHeading("FX (Major Pairs)", 2),
+
+        odtSectionHeader("05", "ASSET CLASS & SECTOR OUTLOOK"),
+        odtHeading2("Equities"),
+        odtBullet("[Describe the key technical levels and fundamental drivers for global indices this week. What could push equities higher? What are the downside risks?]"),
+        odtBullet("Support / Resistance: S&P 500 [X,XXX] / [X,XXX] — [instructor note on level significance]"),
+        odtHeading2("Fixed Income / Yields"),
+        odtBullet("[Describe yield dynamics — is the curve steepening or flattening? What is the bond market pricing for policy?]"),
+        odtBullet("US 10Y focal level: [X.XX%] — watch for break above/below ahead of [event]"),
+        odtHeading2("FX (Major Pairs)"),
         odtBullet("[Describe USD posture entering the week and key pair dynamics]"),
-        odtBullet("EUR/USD - [key level / driver]. GBP/USD - [key level]. USD/JPY - [intervention risk / carry dynamics]"),
-        odtHeading("Commodities", 2),
-        odtBullet("[Gold - safe haven demand, real yield dynamics]. [Oil - supply/demand, OPEC+ backdrop]."),
-        odtHeading("06 - MACRO LEARNING FOCUS THIS WEEK"),
+        odtBullet("EUR/USD — [key level / driver]. GBP/USD — [key level]. USD/JPY — [intervention risk / carry dynamics]"),
+        odtHeading2("Commodities"),
+        odtBullet("[Gold — safe haven demand, real yield dynamics]. [Oil — supply/demand, OPEC+ backdrop]. [Other commodities if relevant]"),
+
+        odtSectionHeader("06", "MACRO LEARNING FOCUS THIS WEEK"),
         odtParagraph("Each week we highlight one macro concept relevant to the upcoming events. Understanding the framework helps you read market reactions without needing to predict the outcome."),
-        odtParagraph("This week's concept: [e.g. 'Reading the Labour Market - Beyond the Headline Number']"),
-        odtBullet("[Key point 1 - e.g. NFP is revised heavily; watch the 3-month average trend rather than a single print]"),
-        odtBullet("[Key point 2 - e.g. Participation rate tells you about labour supply]"),
-        odtBullet("[Key point 3 - e.g. Average Hourly Earnings is the inflation signal]"),
+        odtParagraph("This week's concept: [e.g. 'Reading the Labour Market — Beyond the Headline Number']", "Heading2"),
+        odtBullet("[Key point 1 — e.g. NFP is revised heavily; watch the 3-month average trend rather than a single print]"),
+        odtBullet("[Key point 2 — e.g. Participation rate tells you about labour supply; a falling unemployment rate on low participation is not strong]"),
+        odtBullet("[Key point 3 — e.g. Average Hourly Earnings is the inflation signal — wages drive services inflation which the Fed watches most]"),
         odtBullet("[Suggested further reading / video / chart to review before Friday]"),
-        odtHeading("07 - TAIL RISKS & WILDCARDS"),
-        ...riskLines.map(line => odtBullet(line)),
+
+        odtSectionHeader("07", "TAIL RISKS & WILDCARDS"),
+        ...riskLines.map(line => odtBullet(line.replace(/^[•\-]\s*/, ""))),
+
+        odtParagraph(""),
         odtParagraph(`Prepared by ${instructor} | ${course}`),
         odtParagraph("This is an educational document. It does not constitute financial advice or a recommendation to trade."),
       ],
-      `weekly-market-preview-${activeWeek.replace(/\s+/g, "-").toLowerCase()}.odt`
+      `weekly-market-preview-${activeWeek.replace(/\s+/g, "-").toLowerCase()}.odt`,
+      "MACRO MARKET INTELLIGENCE | WEEKLY PREVIEW",
+      `Week of ${activeWeek}`
     );
   }
 
   function exportEventOdt() {
     const instructor = eventForm.instructor || "[Instructor Name]";
     const course = eventForm.course || "[Course / Programme Name]";
-    const scenarioNotes = (eventForm.scenarios || "[Fill in scenario matrix]").split("\n").filter(Boolean);
+    const scenarioNotes = (eventForm.scenarios || "").split("\n").filter(Boolean);
     const eventName = eventForm.eventName || "[Event Name]";
+    const overviewLines = String(eventForm.overview || "[Fill in event overview — explain what this indicator measures in plain English, why it matters to markets, and which transmission channels link it to monetary policy.]").split("\n").filter(Boolean);
+    const regionClean = (eventForm.region || "[Region]").replace(/[^\x00-\x7F]/g, "").trim();
     return exportOdt(
-      "EVENT PREPARATION BRIEF",
-      `MACRO MARKET INTELLIGENCE | ${eventName} | ${eventForm.date || "[DD Month YYYY]"}`,
       [
-        odtHeading("01 - Quick Reference"),
-        odtTable("Quick Reference", ["Release Date", "Release Time", "Region", "Frequency", "Market Impact", "Revision Risk"], [
-          [eventForm.date || "[DD Month YYYY]", eventForm.time || "[HH:MM UTC]", eventForm.region || "[Region]", "[Monthly/Qtly]", eventForm.impact || "HIGH", "[Low/Med/High]"],
+        odtTitleBlock(
+          "EVENT PREPARATION BRIEF",
+          "MACRO MARKET INTELLIGENCE",
+          `${eventName} — ${eventForm.date || "[DD Month YYYY]"}`
+        ),
+        odtDisclaimerBox("This brief is for educational purposes only. It is designed to help you understand what data to expect and how markets might react — it is NOT a trading signal or financial advice."),
+
+        odtSectionHeader("01", "WHAT IS THIS DATA? — EVENT OVERVIEW"),
+        odtTable("QuickRef", ["Release Date", "Release Time", "Region", "Frequency", "Market Impact", "Revision Risk"], [
+          [eventForm.date || "[DD Month YYYY]", eventForm.time || "[HH:MM UTC]", regionClean, "[Monthly/Qtly]", eventForm.impact === "HIGH" ? "▲ HIGH" : eventForm.impact === "MED" ? "● MED" : "▼ LOW", "[Low/Med/High]"],
         ]),
-        odtParagraph("This brief is for educational purposes only. It is designed to help you understand what data to expect and how markets might react - it is NOT a trading signal or financial advice."),
-        odtHeading("01 - WHAT IS THIS DATA? - EVENT OVERVIEW"),
-        odtHeading("Definition & Purpose", 2),
-        ...String(eventForm.overview || "[Fill in event overview]").split("\n").filter(Boolean).map(line => odtParagraph(line)),
-        odtHeading("Why It Matters to Markets", 2),
+        odtHeading2("Definition & Purpose"),
+        ...overviewLines.map(line => odtParagraph(line)),
+        odtHeading2("Why It Matters to Markets"),
         odtBullet("[Why do traders care about this number? Which transmission channels link it to monetary policy?]"),
         odtBullet("[Which assets are most sensitive to this release and why?]"),
-        odtHeading("Key Sub-Components to Watch", 2),
-        odtBullet("[Component 1 - headline figure]"),
-        odtBullet("[Component 2 - inflation or wage signal]"),
-        odtBullet("[Component 3 - unemployment / activity / sentiment detail]"),
-        odtBullet("[Component 4 - participation / revisions / breadth]"),
-        odtHeading("02 - THE NUMBERS - CONSENSUS & KEY LEVELS"),
-        odtTable("Consensus and Key Levels", ["Metric", "Consensus / Forecast", "Prior Print", "Range of Estimates", "Why This Level Matters"], [
-          ["[Headline figure]", "[+XXXk / X.X%]", "[+XXXk / X.X%]", "[Range]", "[Explain the significance of a meaningful beat/miss]"],
-          ["[Sub-component 1]", "[X.X%]", "[X.X%]", "[Range]", "[Why this sub-component moves markets]"],
-          ["[Sub-component 2]", "[X.X%]", "[X.X%]", "[Range]", "[Significance of this sub-component]"],
-          ["[Add rows as needed]", "—", "—", "—", "—"],
+        odtHeading2("Key Sub-Components to Watch"),
+        odtBullet("[Component 1 — headline figure: net number / rate / index level]"),
+        odtBullet("[Component 2 — inflation or wage signal within the report]"),
+        odtBullet("[Component 3 — unemployment / activity / sentiment sub-index]"),
+        odtBullet("[Component 4 — participation rate / revisions / breadth measure]"),
+        odtBullet("[Component 5 — prior month revisions: often significant and can flip the narrative]"),
+
+        odtSectionHeader("02", "THE NUMBERS — CONSENSUS & KEY LEVELS"),
+        odtParagraph("* Forecasts from Bloomberg consensus / Reuters poll. Range of estimates reflects the spread of economist forecasts.", "BodySmall"),
+        odtTable("ConsensusLevels", ["Metric", "Consensus / Forecast", "Prior Print", "Range of Estimates", "Why This Level Matters"], [
+          ["[Headline figure]",   "[+XXXk / X.X%]", "[+XXXk / X.X%]", "[+XXk to +XXXk]", "[Explain: below X would suggest cooling; above Y would challenge cut expectations]"],
+          ["[Sub-component 1]",   "[X.X%]",         "[X.X%]",         "[X.X%–X.X%]",     "[Why this sub-component moves markets]"],
+          ["[Sub-component 2]",   "[X.X%]",         "[X.X%]",         "[X.X%–X.X%]",     "[Significance of this sub-component]"],
+          ["[Add rows as needed]","—",               "—",              "—",               "—"],
+        ], [1]),
+
+        odtSectionHeader("03", "SCENARIO OUTCOME MATRIX — WHAT TO EXPECT"),
+        odtParagraph("This matrix maps potential data outcomes to likely market reactions and policy implications. It is NOT a prediction — markets are complex and outcomes depend on context. Use this to build awareness, not certainty.", "BodySmall"),
+        odtTable("ScenarioMatrix", ["Outcome", "Data Print", "Expected Market Reaction", "Monetary Policy Implication", "Probability*"], [
+          ["MUCH HOTTER",   "[e.g. >+275k / >0.5% wages]",   "[USD rallies sharply, UST yields spike, equities sell off (especially growth/tech), gold falls, rate-sensitive sectors hit hardest]",                   "[Market reprices Fed cuts lower or removes them entirely. Hawkish reassessment. 'Higher for longer' narrative strengthens]", "[X%]"],
+          ["SLIGHTLY HOT",  "[e.g. +200k–+275k / wages inline]", "[Mild USD strength, yields edge higher, equities mixed — growth stocks underperform. Market digests as 'resilient but not alarming']",              "[Delays cut expectations by 1–2 meetings. Fed likely to stay on hold and emphasise data dependency]",                         "[X%]"],
+          ["IN-LINE",       "[e.g. +175k–+200k / wages as expected]", "[Muted immediate reaction. USD broadly flat, yields unchanged, equities stable. Focus shifts to press conference / forward guidance language]", "[Consistent with Fed's base case. No change to cut path pricing. 'Soft landing' narrative intact]",                            "[X%]"],
+          ["SLIGHTLY SOFT", "[e.g. +100k–+175k / wages miss]", "[USD softens, yields fall, equities initially rally (rate cut hopes), watch for growth concern narrative developing. Gold supported]",                "[Adds to case for earlier cut. Market may re-price 1 additional cut. Dovish pivot language may emerge]",                       "[X%]"],
+          ["MUCH WEAKER",   "[e.g. <+100k / rising unemployment]", "[Significant USD sell-off, yields fall sharply, equities volatile — initial rally then potential recession fear. Gold rallies. Risk-off tone possible]", "[Emergency cut concerns surface. Market may price in >2 cuts this year. Fed credibility tested — watch for unscheduled statement risk]", "[X%]"],
         ]),
-        odtParagraph("* Forecasts from Bloomberg consensus / Reuters poll. Range of estimates reflects the spread of economist forecasts."),
-        odtHeading("03 - SCENARIO OUTCOME MATRIX - WHAT TO EXPECT"),
-        odtParagraph("This matrix maps potential data outcomes to likely market reactions and policy implications. It is NOT a prediction - markets are complex and outcomes depend on context."),
-        odtTable("Scenario Outcome Matrix", ["Outcome", "Data Print", "Expected Market Reaction", "Monetary Policy Implication", "Probability"], [
-          ["MUCH HOTTER", "[e.g. far above consensus]", "[USD rallies, yields spike, equities pressured, gold falls]", "[Hawkish reassessment / higher-for-longer narrative strengthens]", "[X%]"],
-          ["SLIGHTLY HOT", "[Modest beat]", "[Mild USD strength, yields edge higher, equities mixed]", "[Delays cut expectations by 1-2 meetings]", "[X%]"],
-          ["IN-LINE", "[Near consensus]", "[Muted immediate reaction; focus shifts to guidance]", "[Consistent with central bank base case]", "[X%]"],
-          ["SLIGHTLY SOFT", "[Modest miss]", "[USD softens, yields fall, equities may initially rally]", "[Adds to case for earlier easing]", "[X%]"],
-          ["MUCH WEAKER", "[Large miss / unemployment concern]", "[USD sell-off, yields fall sharply, equities volatile, gold supported]", "[Emergency cut / recession concerns can surface]", "[X%]"],
+        ...scenarioNotes.map(line => odtBullet(line.replace(/^[•\-]\s*/, ""))),
+        odtParagraph("* Probability estimates are subjective and illustrative. Fill in based on current market positioning and analyst surveys.", "BodySmall"),
+
+        odtSectionHeader("04", "ASSET CLASS SENSITIVITY GUIDE"),
+        odtParagraph("How each major asset class is expected to respond. Sensitivity ratings assume a material beat or miss vs consensus.", "BodySmall"),
+        odtTable("AssetSensitivity", ["Asset Class", "Beat Sensitivity", "Miss Sensitivity", "What to Watch", "Key Pairs / Tickers"], [
+          ["USD (Dollar Index)",      "↑↑ Strong", "↓↓ Strong", "[DXY most sensitive. Real yield differentials drive USD. Watch how EUR/USD and USD/JPY react first]",                                                 "DXY, EUR/USD, GBP/USD, USD/JPY"],
+          ["US Treasuries / Yields",  "↑ Yields",  "↓ Yields",  "[2Y most sensitive to policy expectations, 10Y to growth/inflation path]",                                                                           "US02Y, US10Y, TLT"],
+          ["US Equities",             "↓ Initially","↑ Initially","[Strong jobs data can initially hit equities if it removes cut expectations. Weak data can rally equities on rate cut hopes, until recession fears dominate]", "SPX, NDX, RTY"],
+          ["Gold (XAU/USD)",          "↓ Moderate","↑ Strong",  "[Gold is inversely correlated to real yields and USD. Strong data = higher real yields = gold falls. Watch for safe-haven demand overriding in extreme miss scenarios]", "XAU/USD, GDX"],
+          ["Crude Oil",               "↑ Mild",    "↓ Mild",    "[Demand-side effect: strong jobs = stronger growth expectations = higher oil demand. But USD inverse correlation also matters]",                    "WTI, Brent, XLE"],
         ]),
-        ...scenarioNotes.map(line => odtBullet(line)),
-        odtParagraph("* Probability estimates are subjective and illustrative. Fill in based on current market positioning and analyst surveys."),
-        odtHeading("04 - ASSET CLASS SENSITIVITY GUIDE"),
-        odtParagraph("How each major asset class is expected to respond. Sensitivity ratings assume a material beat or miss vs consensus."),
-        odtTable("Asset Class Sensitivity Guide", ["Asset Class", "Beat Sensitivity", "Miss Sensitivity", "What to Watch", "Key Pairs / Tickers"], [
-          ["USD (Dollar Index)", "↑↑ Strong", "↓↓ Strong", "[DXY most sensitive; real yield differentials drive USD]", "DXY, EUR/USD, GBP/USD, USD/JPY"],
-          ["US Treasuries / Yields", "↑ Yields", "↓ Yields", "[2Y most sensitive to policy expectations, 10Y to growth/inflation path]", "US02Y, US10Y, TLT"],
-          ["US Equities", "↓ Initially", "↑ Initially", "[Strong data can hit equities if it removes cut expectations]", "SPX, NDX, RTY"],
-          ["Gold (XAU/USD)", "↓ Moderate", "↑ Strong", "[Gold is inversely correlated to real yields and USD]", "XAU/USD, GDX"],
-          ["Crude Oil", "↑ Mild", "↓ Mild", "[Demand-side effect; USD inverse correlation also matters]", "WTI, Brent, XLE"],
-        ]),
-        odtHeading("05 - MONETARY POLICY IMPLICATIONS"),
-        odtHeading("Current Policy Backdrop", 2),
-        odtParagraph("Central Bank: [e.g. Federal Reserve / ECB / BoE]"),
-        odtParagraph("Current Rate: [X.XX-X.XX%]"),
-        odtParagraph("Last Decision: [Hold / +25bp / -25bp] on [Date]"),
-        odtParagraph("Next Meeting: [Date] | Market pricing: [X% probability of cut/hold/hike]"),
-        odtParagraph("Current Mandate Priority: [e.g. Fighting inflation / Supporting growth / Dual mandate balance]"),
-        odtHeading("How This Data Feeds Into Policy", 2),
-        odtBullet("[Explain the transmission mechanism from this data to policy expectations.]"),
-        odtBullet("[What level would be too hot, target-consistent, or concerning?]"),
-        odtBullet("[Are there scheduled central-bank speakers before or after this release?]"),
-        odtHeading("Rate Path Sensitivity", 2),
-        odtBullet("[How many cuts / hikes are currently priced this year by OIS/swap markets?]"),
-        odtBullet("[How might today's print shift that pricing?]"),
-        odtBullet("[Watch OIS pricing and futures post-release for real-time policy repricing.]"),
-        odtHeading("06 - HISTORICAL DATA & MARKET REACTIONS"),
-        odtParagraph("Use this section to track how markets have responded to prior releases of this indicator. Context changes, so historical reactions are calibration, not prediction."),
-        odtTable("Historical Data and Market Reactions", ["Release", "Actual", "Forecast", "Surprise", "USD Rx", "Equity Rx", "Observation"], [
-          ["[MMM YY]", "[+XXXk]", "[+XXXk]", "[+XX]", "[+X.X%]", "[+X.X%]", "[One-line instructor observation]"],
+
+        odtSectionHeader("05", "MONETARY POLICY IMPLICATIONS"),
+        odtHeading2("Current Policy Backdrop"),
+        odtParagraph("Central Bank:  [e.g. Federal Reserve / ECB / BoE]"),
+        odtParagraph("Current Rate:  [X.XX–X.XX%]"),
+        odtParagraph("Last Decision:  [Hold / +25bp / -25bp] on [Date]"),
+        odtParagraph("Next Meeting:  [Date] | Market pricing: [X% probability of cut/hold/hike]"),
+        odtParagraph("Current Mandate Priority:  [e.g. Fighting inflation / Supporting growth / Dual mandate balance]"),
+        odtHeading2("How This Data Feeds Into Policy"),
+        odtBullet("[Explain the transmission mechanism — e.g. 'The Fed watches NFP as part of its employment mandate. A persistently strong labour market keeps wages elevated, which keeps services inflation sticky — the hardest component of CPI to bring down.']"),
+        odtBullet("[What level of this data print would the central bank describe as: (a) too hot, (b) in their target range, (c) a concern?]"),
+        odtBullet("[Are there any scheduled Fed/ECB/BoE speakers before or after this release? What have they said recently?]"),
+        odtHeading2("Rate Path Sensitivity"),
+        odtBullet("[How many cuts / hikes are currently priced for this year by OIS/swap markets?]"),
+        odtBullet("[How might today's print shift that pricing? e.g. 'A print above +250k could remove the June cut entirely and push first cut expectations to September']"),
+        odtBullet("[Watch OIS pricing and Fed Fund Futures post-release for real-time policy repricing]"),
+
+        odtSectionHeader("06", "HISTORICAL DATA & MARKET REACTIONS"),
+        odtParagraph("Use this section to track how markets have responded to prior releases of this indicator. Understanding historical reactions helps calibrate expectations — but remember, context changes.", "BodySmall"),
+        odtTable("HistoricalReactions", ["Release", "Actual", "Forecast", "Surprise", "USD Rx", "Equity Rx", "Observation"], [
+          ["[MMM YY]", "[+XXXk]", "[+XXXk]", "[+XX]", "[+X.X%]", "[+X.X%]", "[One-line instructor observation on why market reacted as it did]"],
           ["[MMM YY]", "[+XXXk]", "[+XXXk]", "[-XX]", "[-X.X%]", "[-X.X%]", "[Observation]"],
-          ["[MMM YY]", "[+XXXk]", "[+XXXk]", "[+XX]", "[Flat]", "[+X.X%]", "[Observation]"],
-          ["[MMM YY]", "[+XXXk]", "[+XXXk]", "[-XX]", "[-X.X%]", "[-X.X%]", "[Observation]"],
-          ["[MMM YY]", "[+XXXk]", "[+XXXk]", "[+XX]", "[+X.X%]", "[Flat]", "[Observation]"],
-        ]),
-        odtParagraph("USD Rx = USD index reaction in first 30 mins. Equity Rx = S&P 500 reaction in first 30 mins."),
-        odtHeading("07 - PRE-RELEASE MARKET CONTEXT"),
-        odtHeading("Where Are Markets Positioned Entering This Release?", 2),
-        odtBullet("[CFTC Commitment of Traders - net positioning in USD, gold, equities futures]"),
-        odtBullet("[Options market - is there a vol skew?]"),
-        odtBullet("[Recent price action - has the asset been rallying or selling off into the event?]"),
-        odtHeading("Related Data Released Since Last Print", 2),
-        odtBullet("[List relevant leading indicators released since last month.]"),
+          ["[MMM YY]", "[+XXXk]", "[+XXXk]", "[+XX]", "[Flat]",   "[+X.X%]", "[Observation]"],
+          ["[MMM YY]", "[+XXXk]", "[+XXXk]", "[-XX]", "[-X.X%]", "[-X.X%]", "[Observation — e.g. 'Weak print but equities rallied — rate cut optimism dominated over growth fear']"],
+          ["[MMM YY]", "[+XXXk]", "[+XXXk]", "[+XX]", "[+X.X%]", "[Flat]",  "[Observation]"],
+        ], [3]),
+        odtParagraph("USD Rx = USD index reaction in first 30 mins. Equity Rx = S&P 500 reaction in first 30 mins. + = strengthened/rallied, – = weakened/fell.", "BodySmall"),
+
+        odtSectionHeader("07", "PRE-RELEASE MARKET CONTEXT"),
+        odtHeading2("Where Are Markets Positioned Entering This Release?"),
+        odtBullet("[CFTC Commitment of Traders — net positioning in USD, gold, equities futures: are speculators long or short?]"),
+        odtBullet("[Options market — is there a vol skew? Is the options market pricing more risk to the upside or downside?]"),
+        odtBullet("[Recent price action — has the asset been rallying or selling off into the event? Markets often 'price in' expectations pre-release]"),
+        odtHeading2("Related Data Released Since Last Print"),
+        odtBullet("[List any relevant leading indicators released since last month that give clues about today's print — e.g. ADP payrolls, ISM employment sub-index, jobless claims trend, Challenger job cuts]"),
         odtBullet("[Do these lead indicators point to a beat, miss, or in-line print vs consensus?]"),
-        odtHeading("The 'Buy the Rumour, Sell the News' Consideration", 2),
-        odtBullet("[Has the expected outcome already been priced in?]"),
-        odtBullet("[An in-line print after a big rally can trigger a pullback even though the data was good.]"),
-        odtHeading("08 - LEARNING FRAMEWORK - HOW TO ANALYSE THE RELEASE"),
+        odtHeading2("The 'Buy the Rumour, Sell the News' Consideration"),
+        odtBullet("[Has the expected outcome already been priced in? If markets have moved significantly pre-release, the post-release reaction may be muted or even counter-intuitive]"),
+        odtBullet("[An in-line print after a big rally into the event can trigger a 'sell the news' pullback even though the data was 'good']"),
+
+        odtSectionHeader("08", "LEARNING FRAMEWORK — HOW TO ANALYSE THE RELEASE"),
         odtParagraph("Use this framework after the release to deepen your macro analysis skills. Work through these questions after the data drops:"),
-        odtHeading("Step 1 - Read the Print", 2),
+        odtHeading2("Step 1 — Read the Print"),
         odtBullet("What was the actual headline number vs consensus? What was the surprise direction and magnitude?"),
-        odtBullet("Were any prior period numbers revised? Did revisions change the trend?"),
-        odtBullet("What did the sub-components say? Were they consistent with the headline?"),
-        odtHeading("Step 2 - Watch the Immediate Market Reaction (0-5 minutes)", 2),
+        odtBullet("Were any prior period numbers revised? By how much? Did revisions change the trend?"),
+        odtBullet("What did the sub-components say? Were they consistent with the headline or diverging?"),
+        odtHeading2("Step 2 — Watch the Immediate Market Reaction (0–5 minutes)"),
         odtBullet("Which assets moved first and by how much? Does this match the scenario matrix?"),
         odtBullet("Did the initial move hold, reverse, or extend in the first 30 minutes?"),
-        odtHeading("Step 3 - Understand the Narrative (Day / Week After)", 2),
-        odtBullet("How did central bank speakers frame the data?"),
+        odtHeading2("Step 3 — Understand the Narrative (Day / Week After)"),
+        odtBullet("How did central bank speakers frame the data? Did it change their guidance?"),
         odtBullet("Did rate pricing shift materially in OIS markets? By how many basis points?"),
-        odtHeading("Step 4 - Update Your Macro View", 2),
-        odtBullet("How does this data point fit alongside CPI, retail sales, PMIs, and other recent releases?"),
-        odtBullet("What is the weight of evidence telling you about monetary policy direction?"),
+        odtBullet("Did the data change your own view of the macro cycle? Growth accelerating, stable, or slowing?"),
+        odtHeading2("Step 4 — Update Your Macro View"),
+        odtBullet("How does this data point fit into the broader picture alongside CPI, retail sales, PMIs, and other recent releases?"),
+        odtBullet("What is the 'weight of evidence' telling you about the direction of monetary policy?"),
+
+        odtParagraph(""),
         odtParagraph(`Prepared by ${instructor} | ${course} | ${eventForm.date || "[Date]"}`),
         odtParagraph("This document is for educational use only. It is not financial advice. Past market reactions do not guarantee future outcomes."),
       ],
-      `daily-event-prep-${eventName.replace(/\s+/g, "-").toLowerCase()}.odt`
+      `daily-event-prep-${eventName.replace(/\s+/g, "-").toLowerCase()}.odt`,
+      "MACRO MARKET INTELLIGENCE | EVENT PREPARATION BRIEF",
+      `${eventName} — ${eventForm.date || "[DD Month YYYY]"}`
     );
   }
 

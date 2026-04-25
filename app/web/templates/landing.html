@@ -10,6 +10,9 @@
         <div class="topbar__meta">
             <span class="topbar__pill">10 countries tracked</span>
             <a class="topbar__link" href="#news-feed">News feed</a>
+            <a class="topbar__link" href="/bank-research">Bank research</a>
+            <a class="topbar__link" href="/analytics">Data analytics</a>
+            <a class="topbar__link" href="/brief-builder">Brief builder</a>
             <a class="topbar__link" href="/calendar">Economic calendar</a>
             <a class="topbar__link" href="/docs">API docs</a>
         </div>
@@ -49,73 +52,123 @@
     </section>
 
     <section class="currency-stance-panel">
-        <div class="panel-heading">
+        <div class="panel-heading fx-radar-heading">
             <div>
                 <p class="eyebrow">Currency Stance</p>
-                <h2>Fundamental Currency Meters</h2>
+                <h2>FX Strength Radar</h2>
             </div>
-            <p class="panel-copy">Rolling macro stance from inflation, labor, and growth pressure. Green is supportive, orange is neutral, red is negative.</p>
+            <div class="fx-radar-tools" aria-label="FX radar controls">
+                <div class="fx-radar-filters" data-fx-filters>
+                    <button class="fx-radar-button is-active" type="button" data-filter="all">All</button>
+                    <button class="fx-radar-button" type="button" data-filter="bullish">Bullish</button>
+                    <button class="fx-radar-button" type="button" data-filter="neutral">Neutral</button>
+                    <button class="fx-radar-button" type="button" data-filter="bearish">Bearish</button>
+                </div>
+                <label class="fx-radar-sort">
+                    <span>Sort</span>
+                    <select data-fx-sort>
+                        <option value="overall">Overall</option>
+                        <option value="inflation">Inflation</option>
+                        <option value="growth">Growth</option>
+                        <option value="labor">Labor</option>
+                    </select>
+                </label>
+            </div>
         </div>
 
-        {% if currency_stance %}
-            <div class="stance-window-grid">
-                {% for window, rows in currency_stance.items() %}
-                    <section class="stance-window">
-                        <div class="stance-window__header">
-                            <h3>{{ window }}M</h3>
-                            <span>
-                                {% if rows and rows[0].date %}
-                                    {{ rows[0].date.strftime("%b %d, %Y") }}
-                                {% else %}
-                                    Latest
-                                {% endif %}
-                            </span>
+        {% if currency_meter %}
+            <div class="fx-radar-legend" aria-label="FX strength score legend">
+                <span><i class="legend-dot is-positive"></i>Bullish >= +0.25</span>
+                <span><i class="legend-dot is-neutral"></i>Neutral</span>
+                <span><i class="legend-dot is-negative"></i>Bearish <= -0.25</span>
+                <span class="fx-radar-legend__meta">Current | 1M | 3M | 6M</span>
+            </div>
+
+            <div class="fundamental-meter-grid" data-fx-grid>
+                {% for row in currency_meter %}
+                    <a
+                        class="fundamental-meter-card"
+                        href="/country/{{ row.country_code|lower }}"
+                        data-category="{% if row.raw_score >= 0.25 %}bullish{% elif row.raw_score <= -0.25 %}bearish{% else %}neutral{% endif %}"
+                        data-overall="{{ row.raw_score if row.raw_score is not none else 0 }}"
+                        data-inflation="{{ row.metrics[0].score_values[0].raw_score if row.metrics[0].score_values[0].raw_score is not none else 0 }}"
+                        data-growth="{{ row.metrics[1].score_values[0].raw_score if row.metrics[1].score_values[0].raw_score is not none else 0 }}"
+                        data-labor="{{ row.metrics[2].score_values[0].raw_score if row.metrics[2].score_values[0].raw_score is not none else 0 }}"
+                    >
+                        <div class="fundamental-meter-card__header">
+                            <div>
+                                <strong>{{ row.currency }}</strong>
+                                <span>{{ row.label }}</span>
+                            </div>
+                            <strong class="fx-radar-score {{ row.color_class }}">{{ row.score }}</strong>
                         </div>
-                        <div class="stance-list">
-                            {% for row in rows %}
-                                <a class="stance-row" href="/country/{{ row.country_code|lower }}">
-                                    <div class="stance-row__rank">{{ row.rank }}</div>
-                                    <div class="stance-row__main">
-                                        <div class="stance-row__topline">
-                                            <strong>{{ row.currency }}</strong>
-                                            <span>{{ row.label }}</span>
-                                        </div>
-                                        <div class="stance-row__meta">
-                                            <span>{{ row.score }}</span>
-                                            <span>{{ row.trend }}</span>
-                                            <span>{{ row.confidence }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="stance-row__overall">
-                                        <div
-                                            class="stance-meter {{ row.color_class }}"
-                                            style="--meter-value: {{ row.score_percent }}%;"
-                                            aria-label="{{ row.currency }} overall stance {{ row.score }}"
-                                        >
-                                            <span>{{ row.score }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="category-meter-strip" aria-label="{{ row.currency }} category scores">
-                                        {% for meter in row.category_meters %}
-                                            <div class="category-meter-wrap">
-                                                <div
-                                                    class="category-meter {{ meter.color_class }}"
-                                                    style="--meter-value: {{ meter.percent }}%;"
-                                                    title="{{ meter.label }} {{ meter.score }}"
-                                                    aria-label="{{ meter.label }} {{ meter.score }}"
-                                                >
-                                                    <span>{{ meter.short_label }}</span>
-                                                </div>
-                                                <span>{{ meter.score }}</span>
-                                            </div>
+                        <div
+                            class="fx-score-bar {{ row.color_class }}"
+                            style="--score-position: {{ row.score_percent }}%;"
+                            aria-label="{{ row.currency }} overall score {{ row.score }}"
+                            title="{{ row.currency }} overall {{ row.score }} as of {{ row.latest_date.strftime('%b %d, %Y') }}"
+                        >
+                            <span></span>
+                        </div>
+                        <div class="meter-metric-list">
+                            {% for metric in row.metrics %}
+                                <div class="meter-metric-row">
+                                    <span class="meter-metric-label">{{ metric.label }}</span>
+                                    <span class="score-sparkline" aria-hidden="true">
+                                        {% for value in metric.score_values %}
+                                            <i
+                                                class="{{ value.color_class }}"
+                                                style="--bar-position: {{ value.bar_percent }}%;"
+                                            ></i>
                                         {% endfor %}
-                                    </div>
-                                </a>
+                                    </span>
+                                    {% for value in metric.score_values %}
+                                        <span
+                                            class="meter-value {{ value.color_class }}"
+                                            title="{{ metric.label }} {{ value.period }}: {{ value.score }}{% if value.date %} ({{ value.date.strftime('%b %d, %Y') }}){% endif %}"
+                                        >
+                                            {{ value.score }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
                             {% endfor %}
                         </div>
-                    </section>
+                    </a>
                 {% endfor %}
             </div>
+            <script>
+                (() => {
+                    const grid = document.querySelector("[data-fx-grid]");
+                    if (!grid) return;
+
+                    const cards = Array.from(grid.querySelectorAll(".fundamental-meter-card"));
+                    const filterButtons = document.querySelectorAll("[data-fx-filters] [data-filter]");
+                    const sortControl = document.querySelector("[data-fx-sort]");
+
+                    const applyView = () => {
+                        const activeFilter = document.querySelector("[data-fx-filters] .is-active")?.dataset.filter || "all";
+                        const sortKey = sortControl?.value || "overall";
+
+                        cards
+                            .sort((a, b) => Number(b.dataset[sortKey] || 0) - Number(a.dataset[sortKey] || 0))
+                            .forEach((card) => {
+                                const visible = activeFilter === "all" || card.dataset.category === activeFilter;
+                                card.hidden = !visible;
+                                grid.appendChild(card);
+                            });
+                    };
+
+                    filterButtons.forEach((button) => {
+                        button.addEventListener("click", () => {
+                            filterButtons.forEach((item) => item.classList.remove("is-active"));
+                            button.classList.add("is-active");
+                            applyView();
+                        });
+                    });
+                    sortControl?.addEventListener("change", applyView);
+                    applyView();
+                })();
+            </script>
         {% else %}
             <div class="empty-panel">Currency stance data has not been built yet.</div>
         {% endif %}

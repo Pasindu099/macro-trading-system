@@ -62,6 +62,33 @@ class Settings(BaseSettings):
         alias="ENABLE_SCHEDULER",
         description="Run background ingestion jobs. Disable for tests/scripts.",
     )
+
+    # Bank research ingestion
+    google_drive_api_key: str | None = Field(
+        default=None,
+        alias="GOOGLE_DRIVE_API_KEY",
+        description="Google Drive API key for reading daily public research folders",
+    )
+    openai_api_key: str | None = Field(
+        default=None,
+        alias="OPENAI_API_KEY",
+        description="OpenAI API key for bank research summarization",
+    )
+    openai_model: str = Field(
+        default="gpt-4o-mini",
+        alias="OPENAI_MODEL",
+        description="Model used for bank research report analysis",
+    )
+    bank_research_drive_folder_url: str | None = Field(
+        default=None,
+        alias="BANK_RESEARCH_DRIVE_FOLDER_URL",
+        description="Latest Google Drive folder URL containing bank research reports",
+    )
+    bank_research_retention_days: int = Field(
+        default=7,
+        alias="BANK_RESEARCH_RETENTION_DAYS",
+        description="Number of days to keep downloaded bank research files",
+    )
     
     # HTTP client behavior
     http_timeout_seconds: float = Field(

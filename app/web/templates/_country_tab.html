@@ -3,6 +3,7 @@
         <div class="indicator-table__header">
             <span>Indicator</span>
             <span>Latest</span>
+            <span>Previous</span>
             <span>Sparkline</span>
             <span>Trend</span>
             <span>Detail</span>
@@ -13,6 +14,7 @@
                     <span>{{ row.display_label }}</span>
                 </div>
                 <div class="indicator-row__value">{{ row.latest_value }}</div>
+                <div class="indicator-row__value">{{ row.previous_value }}</div>
                 <div class="indicator-row__spark">
                     <div
                         class="sparkline"

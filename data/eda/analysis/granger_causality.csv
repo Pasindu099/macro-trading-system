@@ -1,0 +1,232 @@
+central_bank_code,target_indicator_key,target_indicator,target_category,candidate_indicator_key,candidate_indicator,candidate_category,best_lag_periods,best_lag_correlation,abs_best_lag_correlation,observations,tested_max_lag,best_granger_lag,min_granger_p_value,granger_significant_05
+BOC,retail_sales_mom,Retail Sales (MoM),Growth,retail_sales_ex_autos_mom,Retail Sales Ex Autos (MoM),Growth,0,0.9446829115549437,0.9446829115549437,70,6,3,1.2262094011731935e-12,True
+BOE,cpi_headline_yoy,Headline CPI (YoY),Inflation,ppi_input_yoy,PPI Input (YoY),Inflation,6,0.9316263641289709,0.9316263641289709,62,6,3,8.47007942717891e-10,True
+FED,unemployment_rate,Unemployment Rate,Labor,adp_employment_change,ADP Employment Change,Labor,0,-0.7373595939126923,0.7373595939126923,34,5,2,1.4023799478153697e-09,True
+BOE,cpi_headline_yoy,Headline CPI (YoY),Inflation,ppi_core_output_yoy,PPI Core Output (YoY),Inflation,4,0.9526467870080663,0.9526467870080663,63,6,1,5.919672501021738e-09,True
+BOC,core_cpi_yoy,Core CPI (YoY),Inflation,ppi_yoy,PPI (YoY),Inflation,6,0.8856910770431676,0.8856910770431676,69,6,1,1.8175243670484418e-08,True
+BOC,core_cpi_yoy,Core CPI (YoY),Inflation,raw_materials_prices_yoy,Raw Materials Prices (YoY),Inflation,6,0.775959337422969,0.775959337422969,69,6,1,3.0325978521517275e-08,True
+BOE,gdp_mom,GDP (MoM),Growth,niesr_monthly_gdp_tracker,NIESR Monthly GDP Tracker,Growth,0,0.6995482984012537,0.6995482984012537,57,6,6,1.6004506404049045e-07,True
+BOE,cpi_headline_yoy,Headline CPI (YoY),Inflation,ppi_output_yoy,PPI Output (YoY),Inflation,4,0.9278949195150377,0.9278949195150377,64,6,1,1.8594112530405673e-07,True
+FED,avg_hourly_earnings_yoy,Average Hourly Earnings (YoY),Labor,manufacturing_payrolls,Manufacturing Payrolls,Labor,6,0.6641712213398357,0.6641712213398357,30,6,6,3.481875775531653e-07,True
+FED,avg_hourly_earnings_yoy,Average Hourly Earnings (YoY),Labor,private_nonfarm_payrolls,Private Nonfarm Payrolls,Labor,6,0.6675706831011958,0.6675706831011958,30,6,6,4.2963208157121085e-07,True
+FED,nfp,Non-Farm Payrolls,Labor,challenger_job_cuts,Challenger Job Cuts,Labor,0,-0.7821496533477501,0.7821496533477501,35,5,2,7.202893204984246e-07,True
+BOC,gdp_mom,GDP (MoM),Growth,retail_sales_ex_autos_mom,Retail Sales Ex Autos (MoM),Growth,0,0.8056575920804453,0.8056575920804453,68,6,4,9.787143772972027e-07,True
+BOC,gdp_mom,GDP (MoM),Growth,wholesale_sales_mom,Wholesale Sales (MoM),Growth,0,0.8489873730529127,0.8489873730529127,70,6,5,2.418158383694826e-06,True
+BOE,cpi_headline_yoy,Headline CPI (YoY),Inflation,ppi_core_output_mom,PPI Core Output (MoM),Inflation,6,0.7817937818345618,0.7817937818345618,49,6,1,4.83660459986174e-06,True
+FED,avg_hourly_earnings_yoy,Average Hourly Earnings (YoY),Labor,avg_hourly_earnings_mom,Average Hourly Earnings (MoM),Labor,6,-0.5586635537104093,0.5586635537104093,30,6,6,1.1334495319699915e-05,True
+FED,core_cpi_yoy,Core CPI (YoY),Inflation,export_prices_yoy,Export Prices (YoY),Inflation,5,0.8579744994884514,0.8579744994884514,30,5,1,1.6921733195347344e-05,True
+FED,core_cpi_yoy,Core CPI (YoY),Inflation,import_prices_yoy,Import Prices (YoY),Inflation,5,0.85830449080185,0.85830449080185,30,5,1,2.035275395365789e-05,True
+BOE,gdp_qoq,GDP (QoQ),Growth,retail_sales_ex_fuel_mom,Retail Sales Ex Fuel (MoM),Growth,0,0.7278607322492896,0.7278607322492896,24,4,3,2.5611004007173183e-05,True
+FED,core_cpi_yoy,Core CPI (YoY),Inflation,ppi_yoy,PPI (YoY),Inflation,3,0.9129362551564242,0.9129362551564242,31,5,1,3.074421825183564e-05,True
+SNB,cpi_headline_yoy,Headline CPI (YoY),Inflation,producer_import_prices_yoy,Producer & Import Prices (YoY),Inflation,6,0.8922059181365025,0.8922059181365025,68,6,1,3.081291608404053e-05,True
+FED,core_cpi_yoy,Core CPI (YoY),Inflation,consumer_inflation_expectations,Consumer Inflation Expectations,Inflation,2,0.9336727940271977,0.9336727940271977,34,6,1,3.259517311207611e-05,True
+FED,unemployment_rate,Unemployment Rate,Labor,challenger_job_cuts,Challenger Job Cuts,Labor,0,0.8513064761078255,0.8513064761078255,35,5,2,3.969035733711637e-05,True
+FED,nfp,Non-Farm Payrolls,Labor,participation_rate,Labor Force Participation Rate,Labor,5,-0.5425421181317148,0.5425421181317148,31,6,4,4.63821166193067e-05,True
+FED,core_pce_price_index_yoy,Core PCE Price Index (YoY),Inflation,export_prices_yoy,Export Prices (YoY),Inflation,5,0.873522510399167,0.873522510399167,33,6,1,4.648127953961269e-05,True
+BOC,retail_sales_mom,Retail Sales (MoM),Growth,wholesale_sales_mom,Wholesale Sales (MoM),Growth,0,0.8482296645382541,0.8482296645382541,72,6,1,4.7836067840048047e-05,True
+BOJ,cpi_ex_food_energy_yoy,CPI Ex Food and Energy (YoY),Inflation,ppi_yoy,PPI (YoY),Inflation,6,0.49926287915044526,0.49926287915044526,68,6,1,4.829512396415343e-05,True
+FED,core_cpi_yoy,Core CPI (YoY),Inflation,cpi_index,CPI Index,Inflation,6,-0.9662474407824881,0.9662474407824881,22,4,1,5.265033091555043e-05,True
+BOE,retail_sales_mom,Retail Sales (MoM),Growth,niesr_monthly_gdp_tracker,NIESR Monthly GDP Tracker,Growth,6,0.4960134606591625,0.4960134606591625,56,6,3,5.551946272106463e-05,True
+BOE,core_cpi_yoy,Core CPI (YoY),Inflation,ppi_input_yoy,PPI Input (YoY),Inflation,6,0.8121268200553945,0.8121268200553945,62,6,3,6.221434013066465e-05,True
+BOC,cpi_headline_yoy,Headline CPI (YoY),Inflation,raw_materials_prices_yoy,Raw Materials Prices (YoY),Inflation,6,0.7589237256753845,0.7589237256753845,69,6,1,7.856542290064134e-05,True
+BOC,cpi_headline_yoy,Headline CPI (YoY),Inflation,ppi_yoy,PPI (YoY),Inflation,6,0.8302824974230146,0.8302824974230146,69,6,1,8.709300111523199e-05,True
+BOC,gdp_mom,GDP (MoM),Growth,manufacturing_sales_mom,Manufacturing Sales (MoM),Growth,0,0.9174787505075283,0.9174787505075283,69,6,2,9.494881441291589e-05,True
+FED,pce_price_index_yoy,PCE Price Index (YoY),Inflation,export_prices_yoy,Export Prices (YoY),Inflation,3,0.9004382400716991,0.9004382400716991,35,6,1,9.942274449111894e-05,True
+BOE,retail_sales_yoy,Retail Sales (YoY),Growth,retail_sales_ex_fuel_yoy,Retail Sales Ex Fuel (YoY),Growth,0,0.9838473025619171,0.9838473025619171,73,6,6,0.00010625147815344698,True
+FED,nfp,Non-Farm Payrolls,Labor,average_weekly_hours,Average Weekly Hours,Labor,4,0.4313888724645654,0.4313888724645654,33,6,3,0.0001113681368465921,True
+ECB,cpi_headline_yoy,Headline HICP (YoY),Inflation,consumer_inflation_expectation,Consumer Inflation Expectation,Inflation,6,0.7652860874230513,0.7652860874230513,70,6,1,0.00011290101411756544,True
+FED,cpi_headline_yoy,Headline CPI (YoY),Inflation,import_prices_yoy,Import Prices (YoY),Inflation,3,0.8723191046071928,0.8723191046071928,32,5,1,0.00012683796116113243,True
+FED,pce_price_index_yoy,PCE Price Index (YoY),Inflation,import_prices_yoy,Import Prices (YoY),Inflation,4,0.8936114171565843,0.8936114171565843,33,6,1,0.00018887011644312893,True
+FED,core_cpi_yoy,Core CPI (YoY),Inflation,core_ppi_yoy,Core PPI (YoY),Inflation,3,0.9178867248697032,0.9178867248697032,31,5,1,0.00019274685261163119,True
+FED,core_cpi_mom,Core CPI (MoM),Inflation,cpi_index,CPI Index,Inflation,4,-0.7749754916929952,0.7749754916929952,23,4,1,0.00020023544339307632,True
+BOE,core_cpi_yoy,Core CPI (YoY),Inflation,ppi_core_output_yoy,PPI Core Output (YoY),Inflation,6,0.8446490630319782,0.8446490630319782,61,6,1,0.00020718764174283097,True
+FED,cpi_headline_yoy,Headline CPI (YoY),Inflation,cpi_index,CPI Index,Inflation,6,-0.965492913245944,0.965492913245944,22,4,1,0.00021635186968484607,True
+FED,ism_manufacturing_pmi,ISM Manufacturing PMI,Growth,ism_manufacturing_employment,ISM Manufacturing Employment,Growth,0,0.7197263633582912,0.7197263633582912,33,5,3,0.0002180814722342245,True
+FED,core_cpi_yoy,Core CPI (YoY),Inflation,cpi_headline_mom,Headline CPI (MoM),Inflation,5,0.7822395812824502,0.7822395812824502,27,5,1,0.0002513051910727886,True
+FED,core_pce_price_index_yoy,Core PCE Price Index (YoY),Inflation,import_prices_yoy,Import Prices (YoY),Inflation,5,0.8890514661994157,0.8890514661994157,32,6,1,0.0002716007447351353,True
+FED,cpi_headline_yoy,Headline CPI (YoY),Inflation,export_prices_yoy,Export Prices (YoY),Inflation,3,0.8799486991943265,0.8799486991943265,32,5,1,0.00030480163819089363,True
+FED,pce_price_index_yoy,PCE Price Index (YoY),Inflation,cpi_index,CPI Index,Inflation,6,-0.9607477111599744,0.9607477111599744,20,4,1,0.00032554065657518396,True
+RBA,rba_trimmed_mean_cpi_yoy,RBA Trimmed Mean CPI (YoY),Inflation,import_price_index_qoq,Import Price Index (QoQ),Inflation,4,0.7789145443823977,0.7789145443823977,21,4,1,0.00034509471524514165,True
+FED,core_pce_price_index_yoy,Core PCE Price Index (YoY),Inflation,cpi_index,CPI Index,Inflation,6,-0.9064707692035909,0.9064707692035909,20,4,1,0.00037591656822710194,True
+BOE,core_cpi_yoy,Core CPI (YoY),Inflation,ppi_output_yoy,PPI Output (YoY),Inflation,6,0.8355446028268324,0.8355446028268324,62,6,1,0.0003791021271226982,True
+BOE,cpi_headline_yoy,Headline CPI (YoY),Inflation,ppi_output_mom,PPI Output (MoM),Inflation,6,0.6658972668794979,0.6658972668794979,52,6,1,0.0003870510742869848,True
+FED,core_pce_price_index_yoy,Core PCE Price Index (YoY),Inflation,ppi_yoy,PPI (YoY),Inflation,3,0.9066108283463181,0.9066108283463181,32,5,1,0.0003892642961100591,True
+SNB,cpi_headline_yoy,Headline CPI (YoY),Inflation,producer_import_prices_mom,Producer & Import Prices (MoM),Inflation,6,0.45581230935909933,0.45581230935909933,60,6,1,0.00039388302222287755,True
+BOE,core_cpi_yoy,Core CPI (YoY),Inflation,retail_price_index_yoy,Retail Price Index (YoY),Inflation,3,0.9322102226052241,0.9322102226052241,73,6,1,0.000419385659392236,True
+ECB,core_cpi_yoy,Core HICP (YoY),Inflation,consumer_inflation_expectation,Consumer Inflation Expectation,Inflation,6,0.4294433646140069,0.4294433646140069,70,6,1,0.00044054146017971776,True
+BOJ,cpi_headline_yoy,Headline CPI (YoY),Inflation,ppi_yoy,PPI (YoY),Inflation,6,0.6620032664579768,0.6620032664579768,68,6,4,0.0004981196476984447,True
+FED,unemployment_rate,Unemployment Rate,Labor,average_weekly_hours,Average Weekly Hours,Labor,6,-0.4213731767579289,0.4213731767579289,30,6,6,0.0005723153355620665,True
+BOE,gdp_mom,GDP (MoM),Growth,retail_sales_ex_fuel_mom,Retail Sales Ex Fuel (MoM),Growth,0,0.7762232366005224,0.7762232366005224,68,6,4,0.0006236769951436377,True
+FED,cpi_headline_yoy,Headline CPI (YoY),Inflation,ppi_yoy,PPI (YoY),Inflation,1,0.941813917740938,0.941813917740938,33,5,1,0.0006682736865233264,True
+FED,unemployment_rate,Unemployment Rate,Labor,avg_hourly_earnings_mom,Average Hourly Earnings (MoM),Labor,1,0.47026657539852573,0.47026657539852573,35,6,3,0.0007193427108726401,True
+BOE,gdp_qoq,GDP (QoQ),Growth,industrial_production_yoy,Industrial Production (YoY),Growth,4,-0.6176003722297027,0.6176003722297027,20,4,3,0.0007593669161813165,True
+FED,retail_sales_mom,Retail Sales (MoM),Growth,ism_manufacturing_employment,ISM Manufacturing Employment,Growth,5,-0.5272602502056484,0.5272602502056484,24,4,4,0.0007798469119810302,True
+BOE,retail_sales_yoy,Retail Sales (YoY),Growth,niesr_monthly_gdp_tracker,NIESR Monthly GDP Tracker,Growth,0,0.5402634648049863,0.5402634648049863,61,6,6,0.0008724113240459231,True
+FED,pce_price_index_yoy,PCE Price Index (YoY),Inflation,ppi_yoy,PPI (YoY),Inflation,1,0.9311251371837455,0.9311251371837455,34,5,1,0.0008901877876224885,True
+RBA,rba_weighted_median_cpi_yoy,RBA Weighted Median CPI (YoY),Inflation,import_price_index_qoq,Import Price Index (QoQ),Inflation,4,0.7048000912058162,0.7048000912058162,20,4,1,0.0010788213743510625,True
+FED,cpi_headline_yoy,Headline CPI (YoY),Inflation,import_prices_mom,Import Prices (MoM),Inflation,5,0.5838050013660331,0.5838050013660331,28,5,1,0.00124037864924248,True
+FED,nfp,Non-Farm Payrolls,Labor,private_nonfarm_payrolls,Private Nonfarm Payrolls,Labor,0,0.9991234239868821,0.9991234239868821,37,6,4,0.001240914770670697,True
+FED,nfp,Non-Farm Payrolls,Labor,government_payrolls,Government Payrolls,Labor,0,0.7253509590452637,0.7253509590452637,37,6,4,0.001240914770670697,True
+RBA,monthly_cpi_indicator,Monthly CPI Indicator,Inflation,consumer_inflation_expectation,Consumer Inflation Expectation,Inflation,3,0.8706241291455152,0.8706241291455152,33,6,1,0.001260082362775434,True
+BOE,avg_earnings_excl_bonus,Average Earnings (excl. Bonus),Labor,claimant_count_change,Claimant Count Change,Labor,2,-0.455909917942123,0.455909917942123,71,6,1,0.0012639993961200081,True
+RBA,rba_weighted_median_cpi_yoy,RBA Weighted Median CPI (YoY),Inflation,producer_price_index_yoy,Producer Price Index (YoY),Inflation,1,0.914779907397062,0.914779907397062,23,4,1,0.00149551722741997,True
+FED,pce_price_index_yoy,PCE Price Index (YoY),Inflation,import_prices_mom,Import Prices (MoM),Inflation,6,0.6542880596144094,0.6542880596144094,29,5,1,0.0015623592203992853,True
+FED,core_cpi_yoy,Core CPI (YoY),Inflation,ppi_mom,PPI (MoM),Inflation,5,0.7294591497003234,0.7294591497003234,28,5,1,0.0015858414182580007,True
+RBA,cpi_headline_qoq,Headline CPI (QoQ),Inflation,import_price_index_qoq,Import Price Index (QoQ),Inflation,3,0.6892012935401266,0.6892012935401266,21,4,3,0.0021920549951062775,True
+FED,core_pce_price_index_yoy,Core PCE Price Index (YoY),Inflation,core_ppi_yoy,Core PPI (YoY),Inflation,3,0.9074538734501614,0.9074538734501614,32,5,1,0.002244907106381504,True
+BOE,gdp_yoy,GDP (YoY),Growth,retail_sales_ex_fuel_yoy,Retail Sales Ex Fuel (YoY),Growth,0,0.5822857269186311,0.5822857269186311,72,6,6,0.0023191361981424055,True
+RBNZ,participation_rate,Labor Force Participation Rate,Labor,labour_cost_index_yoy,Labour Cost Index (YoY),Labor,0,0.9013883026421741,0.9013883026421741,25,4,3,0.0026901753406435693,True
+BOJ,core_cpi_yoy,Core CPI (YoY),Inflation,ppi_yoy,PPI (YoY),Inflation,6,0.7387940898528161,0.7387940898528161,67,6,1,0.0026922639152243038,True
+BOJ,gdp_qoq,GDP (QoQ),Growth,retail_sales_yoy,Retail Sales (YoY),Growth,0,0.551843888303265,0.551843888303265,24,4,2,0.002775889403309375,True
+FED,core_cpi_yoy,Core CPI (YoY),Inflation,export_prices_mom,Export Prices (MoM),Inflation,6,0.7017396603511891,0.7017396603511891,28,5,1,0.002819032438221599,True
+RBNZ,unemployment_rate,Unemployment Rate,Labor,labour_cost_index_yoy,Labour Cost Index (YoY),Labor,6,0.8845453405334797,0.8845453405334797,19,4,2,0.002826785857974837,True
+FED,pce_price_index_yoy,PCE Price Index (YoY),Inflation,core_ppi_yoy,Core PPI (YoY),Inflation,1,0.946594352255749,0.946594352255749,34,5,1,0.0031391839639681816,True
+RBA,rba_trimmed_mean_cpi_qoq,RBA Trimmed Mean CPI (QoQ),Inflation,import_price_index_qoq,Import Price Index (QoQ),Inflation,3,0.784179144826948,0.784179144826948,22,4,3,0.003284241190112661,True
+RBA,rba_trimmed_mean_cpi_yoy,RBA Trimmed Mean CPI (YoY),Inflation,producer_price_index_yoy,Producer Price Index (YoY),Inflation,1,0.91113399548679,0.91113399548679,24,4,1,0.00334246076302886,True
+RBA,rba_trimmed_mean_cpi_qoq,RBA Trimmed Mean CPI (QoQ),Inflation,export_price_index_qoq,Export Price Index (QoQ),Inflation,3,0.6174334697418622,0.6174334697418622,22,4,2,0.0033440414892736874,True
+FED,core_pce_price_index_yoy,Core PCE Price Index (YoY),Inflation,cpi_headline_mom,Headline CPI (MoM),Inflation,4,0.7998562511292655,0.7998562511292655,27,5,1,0.003789960894800517,True
+FED,unemployment_rate,Unemployment Rate,Labor,participation_rate,Labor Force Participation Rate,Labor,0,-0.8345479196448112,0.8345479196448112,36,6,5,0.003876353217946936,True
+FED,core_pce_price_index_yoy,Core PCE Price Index (YoY),Inflation,consumer_inflation_expectations,Consumer Inflation Expectations,Inflation,1,0.898087726783637,0.898087726783637,33,5,1,0.003921209737150497,True
+RBA,rba_weighted_median_cpi_yoy,RBA Weighted Median CPI (YoY),Inflation,export_price_index_qoq,Export Price Index (QoQ),Inflation,6,0.6427142931337033,0.6427142931337033,18,4,2,0.003941049543778539,True
+FED,cpi_headline_yoy,Headline CPI (YoY),Inflation,core_ppi_yoy,Core PPI (YoY),Inflation,1,0.9439288046364702,0.9439288046364702,33,5,1,0.003942596064634154,True
+ECB,cpi_headline_yoy,Headline HICP (YoY),Inflation,cpi_index,Consumer Price Index,Inflation,6,-0.9230507641962948,0.9230507641962948,44,6,1,0.004258953127353399,True
+BOC,retail_sales_mom,Retail Sales (MoM),Growth,manufacturing_sales_mom,Manufacturing Sales (MoM),Growth,0,0.8729672040528338,0.8729672040528338,71,6,6,0.004278896420435447,True
+FED,unemployment_rate,Unemployment Rate,Labor,manufacturing_payrolls,Manufacturing Payrolls,Labor,0,-0.5566604414532773,0.5566604414532773,36,6,5,0.004361096297731328,True
+FED,core_cpi_mom,Core CPI (MoM),Inflation,import_prices_mom,Import Prices (MoM),Inflation,1,0.6217870779364394,0.6217870779364394,31,5,1,0.004407589522660647,True
+FED,core_pce_price_index_yoy,Core PCE Price Index (YoY),Inflation,export_prices_mom,Export Prices (MoM),Inflation,6,0.7239417975132084,0.7239417975132084,30,6,1,0.004436877269858959,True
+RBNZ,participation_rate,Labor Force Participation Rate,Labor,labour_cost_index_qoq,Labour Cost Index (QoQ),Labor,1,0.8498943866986552,0.8498943866986552,24,4,1,0.0045050400551067925,True
+FED,unemployment_rate,Unemployment Rate,Labor,private_nonfarm_payrolls,Private Nonfarm Payrolls,Labor,0,-0.5635681171355309,0.5635681171355309,36,6,6,0.004555310685694171,True
+BOC,retail_sales_mom,Retail Sales (MoM),Growth,ivey_pmi_sa,Ivey PMI s.a.,Growth,2,-0.4249567249460368,0.4249567249460368,68,6,4,0.004788948348784189,True
+RBA,rba_trimmed_mean_cpi_yoy,RBA Trimmed Mean CPI (YoY),Inflation,consumer_inflation_expectation,Consumer Inflation Expectation,Inflation,0,0.8200433932024371,0.8200433932024371,24,4,3,0.004934085014791955,True
+FED,cpi_headline_yoy,Headline CPI (YoY),Inflation,cpi_headline_mom,Headline CPI (MoM),Inflation,2,0.7543533784709575,0.7543533784709575,30,5,1,0.005022902413077915,True
+RBA,retail_sales_mom,Retail Sales (MoM),Growth,leading_index_mom,Leading Index (MoM),Growth,0,0.4417679153823937,0.4417679153823937,55,6,4,0.0050528668853150015,True
+FED,core_pce_price_index_yoy,Core PCE Price Index (YoY),Inflation,ppi_mom,PPI (MoM),Inflation,6,0.76714709107186,0.76714709107186,28,5,1,0.005485247974142102,True
+BOE,unemployment_rate,Unemployment Rate,Labor,avg_earnings_incl_bonus,Average Earnings (incl. Bonus),Labor,6,-0.4926398392203424,0.4926398392203424,69,6,2,0.005549114613468499,True
+BOJ,gdp_qoq,GDP (QoQ),Growth,services_pmi,S&P Global Services PMI,Growth,0,0.6464162844360852,0.6464162844360852,24,4,2,0.005775180804216109,True
+BOE,core_cpi_yoy,Core CPI (YoY),Inflation,ppi_core_output_mom,PPI Core Output (MoM),Inflation,6,0.6136424292311969,0.6136424292311969,49,6,1,0.005868336903980129,True
+FED,unemployment_rate,Unemployment Rate,Labor,government_payrolls,Government Payrolls,Labor,0,-0.9179791207602107,0.9179791207602107,36,6,3,0.006554610426072428,True
+FED,avg_hourly_earnings_yoy,Average Hourly Earnings (YoY),Labor,average_weekly_hours,Average Weekly Hours,Labor,6,0.6294974361405384,0.6294974361405384,30,6,6,0.007139266087476206,True
+FED,pce_price_index_mom,PCE Price Index (MoM),Inflation,cpi_index,CPI Index,Inflation,4,-0.6042206261657324,0.6042206261657324,20,4,1,0.007806861720769093,True
+RBA,rba_trimmed_mean_cpi_qoq,RBA Trimmed Mean CPI (QoQ),Inflation,consumer_inflation_expectation,Consumer Inflation Expectation,Inflation,0,0.7071475338576121,0.7071475338576121,24,4,4,0.007904872349702625,True
+FED,pce_price_index_mom,PCE Price Index (MoM),Inflation,consumer_inflation_expectations,Consumer Inflation Expectations,Inflation,6,-0.5656525699247219,0.5656525699247219,24,5,4,0.008309867955718052,True
+FED,nfp,Non-Farm Payrolls,Labor,adp_employment_change,ADP Employment Change,Labor,0,0.965856634377786,0.965856634377786,34,5,4,0.008349477859381818,True
+RBNZ,unemployment_rate,Unemployment Rate,Labor,labour_cost_index_qoq,Labour Cost Index (QoQ),Labor,6,0.6842476815614248,0.6842476815614248,19,4,4,0.008802347995701159,True
+FED,core_pce_price_index_yoy,Core PCE Price Index (YoY),Inflation,import_prices_mom,Import Prices (MoM),Inflation,6,0.6781559500358978,0.6781559500358978,29,5,1,0.009538291670536572,True
+FED,core_cpi_mom,Core CPI (MoM),Inflation,ppi_yoy,PPI (YoY),Inflation,0,0.6279792247889536,0.6279792247889536,33,5,2,0.010105214253162435,True
+FED,pce_price_index_yoy,PCE Price Index (YoY),Inflation,export_prices_mom,Export Prices (MoM),Inflation,5,0.669817792230238,0.669817792230238,31,6,1,0.010107524159771505,True
+RBA,rba_trimmed_mean_cpi_yoy,RBA Trimmed Mean CPI (YoY),Inflation,export_price_index_qoq,Export Price Index (QoQ),Inflation,6,0.6609766650418424,0.6609766650418424,19,4,1,0.010127316098696819,True
+ECB,core_cpi_yoy,Core HICP (YoY),Inflation,cpi_index,Consumer Price Index,Inflation,6,-0.842356078426967,0.842356078426967,44,6,6,0.010196907552392062,True
+FED,core_cpi_mom,Core CPI (MoM),Inflation,cpi_headline_mom,Headline CPI (MoM),Inflation,0,0.7131817279361106,0.7131817279361106,32,5,1,0.010617035925104858,True
+FED,pce_price_index_yoy,PCE Price Index (YoY),Inflation,ppi_mom,PPI (MoM),Inflation,5,0.7203600969620338,0.7203600969620338,29,5,1,0.010923502174210252,True
+FED,cpi_headline_yoy,Headline CPI (YoY),Inflation,consumer_inflation_expectations,Consumer Inflation Expectations,Inflation,0,0.9478638112885828,0.9478638112885828,36,6,1,0.010952953213706929,True
+BOE,core_cpi_yoy,Core CPI (YoY),Inflation,core_rpi_yoy,Core RPI (YoY),Inflation,6,-0.7764064116451265,0.7764064116451265,18,4,4,0.01195780785168337,True
+BOE,gdp_yoy,GDP (YoY),Growth,niesr_monthly_gdp_tracker,NIESR Monthly GDP Tracker,Growth,0,0.4522897824343422,0.4522897824343422,61,6,6,0.012178004884030251,True
+FED,core_cpi_yoy,Core CPI (YoY),Inflation,import_prices_mom,Import Prices (MoM),Inflation,6,0.6667138745587233,0.6667138745587233,27,5,1,0.012792537606317466,True
+FED,cpi_headline_yoy,Headline CPI (YoY),Inflation,ppi_mom,PPI (MoM),Inflation,4,0.7038268879402774,0.7038268879402774,29,5,1,0.012869071823144977,True
+FED,cpi_headline_yoy,Headline CPI (YoY),Inflation,export_prices_mom,Export Prices (MoM),Inflation,5,0.6507227439538655,0.6507227439538655,29,5,1,0.013138184323483805,True
+BOE,gdp_qoq,GDP (QoQ),Growth,retail_sales_ex_fuel_yoy,Retail Sales Ex Fuel (YoY),Growth,0,0.5311434141656767,0.5311434141656767,24,4,3,0.014141932031850896,True
+FED,pce_price_index_yoy,PCE Price Index (YoY),Inflation,cpi_headline_mom,Headline CPI (MoM),Inflation,4,0.7604451274566257,0.7604451274566257,27,5,1,0.015714280896809794,True
+RBA,cpi_headline_yoy,Headline CPI (YoY),Inflation,consumer_inflation_expectation,Consumer Inflation Expectation,Inflation,0,0.71790334038109,0.71790334038109,28,4,3,0.01577922488326869,True
+FED,core_cpi_mom,Core CPI (MoM),Inflation,ppi_mom,PPI (MoM),Inflation,1,0.5881992317004748,0.5881992317004748,31,5,5,0.015832875060564088,True
+RBA,rba_weighted_median_cpi_qoq,RBA Weighted Median CPI (QoQ),Inflation,export_price_index_qoq,Export Price Index (QoQ),Inflation,6,0.670992115834777,0.670992115834777,18,4,2,0.017764233725888524,True
+BOJ,gdp_qoq,GDP (QoQ),Growth,tertiary_industry_index_mom,Tertiary Industry Index (MoM),Growth,0,0.7051276770984002,0.7051276770984002,24,4,1,0.018431846451163712,True
+RBA,rba_trimmed_mean_cpi_yoy,RBA Trimmed Mean CPI (YoY),Inflation,producer_price_index_qoq,Producer Price Index (QoQ),Inflation,3,0.7517742452603667,0.7517742452603667,22,4,4,0.01846161050857999,True
+FED,core_cpi_mom,Core CPI (MoM),Inflation,export_prices_mom,Export Prices (MoM),Inflation,1,0.567446385154277,0.567446385154277,32,5,1,0.020257800132998476,True
+FED,core_cpi_mom,Core CPI (MoM),Inflation,core_ppi_yoy,Core PPI (YoY),Inflation,0,0.5847774445465858,0.5847774445465858,33,5,2,0.021232739271290754,True
+BOE,gdp_yoy,GDP (YoY),Growth,industrial_production_yoy,Industrial Production (YoY),Growth,0,0.9296197876439972,0.9296197876439972,73,6,1,0.02158018120237918,True
+BOJ,gdp_qoq,GDP (QoQ),Growth,retail_sales_mom,Retail Sales (MoM),Growth,0,0.47580525642079285,0.47580525642079285,24,4,2,0.021787881509625764,True
+FED,pce_price_index_yoy,PCE Price Index (YoY),Inflation,consumer_inflation_expectations,Consumer Inflation Expectations,Inflation,0,0.9428691365990064,0.9428691365990064,34,5,1,0.022246698805006026,True
+BOE,core_cpi_yoy,Core CPI (YoY),Inflation,ppi_output_mom,PPI Output (MoM),Inflation,6,0.43895103872043056,0.43895103872043056,52,6,1,0.022771165741442098,True
+RBA,rba_weighted_median_cpi_qoq,RBA Weighted Median CPI (QoQ),Inflation,import_price_index_qoq,Import Price Index (QoQ),Inflation,3,0.7510138304770456,0.7510138304770456,21,4,2,0.02658697939848624,True
+FED,core_pce_price_index_mom,Core PCE Price Index (MoM),Inflation,umich_inflation_exp_5y,UMich 5Y Inflation Expectations,Inflation,5,-0.66194294301332,0.66194294301332,25,5,5,0.02838698895273242,True
+RBA,cpi_headline_yoy,Headline CPI (YoY),Inflation,export_price_index_qoq,Export Price Index (QoQ),Inflation,5,0.721645203143833,0.721645203143833,20,4,2,0.02872144509355407,True
+BOE,retail_sales_mom,Retail Sales (MoM),Growth,retail_sales_ex_fuel_mom,Retail Sales Ex Fuel (MoM),Growth,0,0.9916696892319292,0.9916696892319292,73,6,6,0.028900031237689913,True
+FED,core_cpi_mom,Core CPI (MoM),Inflation,import_prices_yoy,Import Prices (YoY),Inflation,0,0.6610956257855082,0.6610956257855082,34,5,2,0.029854860776777313,True
+FED,core_cpi_yoy,Core CPI (YoY),Inflation,core_ppi_mom,Core PPI (MoM),Inflation,4,0.6863885865981667,0.6863885865981667,26,5,1,0.030086404958491755,True
+FED,avg_hourly_earnings_yoy,Average Hourly Earnings (YoY),Labor,government_payrolls,Government Payrolls,Labor,6,0.7171913448502808,0.7171913448502808,30,6,6,0.03214004588798573,True
+FED,core_pce_price_index_mom,Core PCE Price Index (MoM),Inflation,ppi_mom,PPI (MoM),Inflation,0,0.6268522704615289,0.6268522704615289,32,5,2,0.03259721700261794,True
+FED,nfp,Non-Farm Payrolls,Labor,manufacturing_payrolls,Manufacturing Payrolls,Labor,0,0.9958420019590108,0.9958420019590108,37,6,4,0.033274528260816616,True
+FED,pce_price_index_mom,PCE Price Index (MoM),Inflation,export_prices_mom,Export Prices (MoM),Inflation,0,0.8433088724044137,0.8433088724044137,32,5,2,0.033505247080351054,True
+FED,ism_manufacturing_pmi,ISM Manufacturing PMI,Growth,ism_services_employment,ISM Services Employment,Growth,0,0.7286456911562724,0.7286456911562724,25,4,3,0.03408076818185839,True
+RBA,rba_weighted_median_cpi_qoq,RBA Weighted Median CPI (QoQ),Inflation,producer_price_index_yoy,Producer Price Index (YoY),Inflation,0,0.874503384316635,0.874503384316635,24,4,1,0.034711595801220414,True
+RBA,rba_weighted_median_cpi_yoy,RBA Weighted Median CPI (YoY),Inflation,producer_price_index_qoq,Producer Price Index (QoQ),Inflation,3,0.7557377319061073,0.7557377319061073,21,4,1,0.034903671924822376,True
+FED,core_pce_price_index_mom,Core PCE Price Index (MoM),Inflation,import_prices_mom,Import Prices (MoM),Inflation,0,0.5384001580467634,0.5384001580467634,33,5,1,0.036110502705378016,True
+BOE,cpi_headline_yoy,Headline CPI (YoY),Inflation,core_rpi_yoy,Core RPI (YoY),Inflation,0,0.9378150386525165,0.9378150386525165,24,4,2,0.04006966526823433,True
+FED,pce_price_index_mom,PCE Price Index (MoM),Inflation,export_prices_yoy,Export Prices (YoY),Inflation,0,0.6709178460076707,0.6709178460076707,34,5,3,0.041647479470267375,True
+FED,core_cpi_mom,Core CPI (MoM),Inflation,consumer_inflation_expectations,Consumer Inflation Expectations,Inflation,1,0.5015985773919265,0.5015985773919265,33,5,2,0.04167646091473493,True
+FED,core_cpi_mom,Core CPI (MoM),Inflation,core_ppi_mom,Core PPI (MoM),Inflation,0,0.5431411941084473,0.5431411941084473,29,4,3,0.04290020426843723,True
+BOJ,cpi_ex_food_energy_yoy,CPI Ex Food and Energy (YoY),Inflation,cpi_index,Consumer Price Index,Inflation,6,0.7299742305593864,0.7299742305593864,63,6,1,0.04309995492773201,True
+BOE,retail_sales_yoy,Retail Sales (YoY),Growth,retail_sales_ex_fuel_mom,Retail Sales Ex Fuel (MoM),Growth,1,0.40874442377902803,0.40874442377902803,72,6,1,0.04625563589126967,True
+BOE,services_pmi,Services PMI,Growth,composite_pmi,Composite PMI,Growth,0,0.9480665259598818,0.9480665259598818,29,4,4,0.046544003534465216,True
+BOJ,core_cpi_yoy,Core CPI (YoY),Inflation,cpi_headline_mom,Headline CPI (MoM),Inflation,6,0.46456286769629873,0.46456286769629873,61,6,5,0.05219808949189658,False
+FED,core_pce_price_index_mom,Core PCE Price Index (MoM),Inflation,cpi_index,CPI Index,Inflation,0,-0.5431263839067818,0.5431263839067818,26,4,1,0.052653677337436026,False
+FED,core_cpi_mom,Core CPI (MoM),Inflation,export_prices_yoy,Export Prices (YoY),Inflation,0,0.5877112187160677,0.5877112187160677,34,5,2,0.05322212664479945,False
+RBA,cpi_headline_yoy,Headline CPI (YoY),Inflation,import_price_index_qoq,Import Price Index (QoQ),Inflation,4,0.7126041224830602,0.7126041224830602,21,4,1,0.05373336804815997,False
+FED,ism_manufacturing_pmi,ISM Manufacturing PMI,Growth,ny_empire_state_mfg,NY Empire State Manufacturing Index,Growth,0,0.6707734359394936,0.6707734359394936,26,4,2,0.05933821182092765,False
+RBA,cpi_headline_qoq,Headline CPI (QoQ),Inflation,export_price_index_qoq,Export Price Index (QoQ),Inflation,2,0.5329231942562775,0.5329231942562775,22,4,3,0.06049060593266051,False
+BOE,core_cpi_yoy,Core CPI (YoY),Inflation,retail_price_index_mom,Retail Price Index (MoM),Inflation,6,0.5359906012123743,0.5359906012123743,66,6,2,0.06310271922467736,False
+BOE,retail_sales_yoy,Retail Sales (YoY),Growth,manufacturing_pmi,Manufacturing PMI,Growth,2,0.4282131025211557,0.4282131025211557,25,4,2,0.0660658610753811,False
+BOE,cpi_headline_yoy,Headline CPI (YoY),Inflation,retail_price_index_mom,Retail Price Index (MoM),Inflation,4,0.5745572283839658,0.5745572283839658,68,6,3,0.06759556189375202,False
+BOE,services_pmi,Services PMI,Growth,industrial_production_yoy,Industrial Production (YoY),Growth,2,0.5394491928463372,0.5394491928463372,25,4,2,0.06964197399108936,False
+FED,pce_price_index_mom,PCE Price Index (MoM),Inflation,import_prices_yoy,Import Prices (YoY),Inflation,0,0.7126007434717416,0.7126007434717416,33,5,1,0.07391495517658347,False
+BOC,gdp_mom,GDP (MoM),Growth,ivey_pmi_sa,Ivey PMI s.a.,Growth,0,0.5193426799809946,0.5193426799809946,67,6,3,0.09906469685310172,False
+FED,core_pce_price_index_mom,Core PCE Price Index (MoM),Inflation,export_prices_yoy,Export Prices (YoY),Inflation,0,0.48799404357974374,0.48799404357974374,36,6,2,0.10228941759538043,False
+FED,core_pce_price_index_yoy,Core PCE Price Index (YoY),Inflation,michigan_inflation_expectations,Michigan Inflation Expectations,Inflation,4,0.7141333801533876,0.7141333801533876,28,5,1,0.10780227778099345,False
+FED,core_pce_price_index_mom,Core PCE Price Index (MoM),Inflation,export_prices_mom,Export Prices (MoM),Inflation,0,0.527717689150393,0.527717689150393,34,5,3,0.11104069476718915,False
+FED,core_pce_price_index_mom,Core PCE Price Index (MoM),Inflation,import_prices_yoy,Import Prices (YoY),Inflation,0,0.5477542294350106,0.5477542294350106,35,5,2,0.11482756027926859,False
+ECB,cpi_headline_yoy,Headline HICP (YoY),Inflation,cpi_headline_mom,Headline HICP (MoM),Inflation,4,0.4942886485631454,0.4942886485631454,68,6,1,0.11659070310164919,False
+FED,core_pce_price_index_yoy,Core PCE Price Index (YoY),Inflation,core_ppi_mom,Core PPI (MoM),Inflation,5,0.7413964367301645,0.7413964367301645,26,5,5,0.119712923998218,False
+FED,nfp,Non-Farm Payrolls,Labor,avg_hourly_earnings_mom,Average Hourly Earnings (MoM),Labor,0,-0.9655433125532876,0.9655433125532876,37,6,4,0.12409319905042665,False
+FED,ism_manufacturing_pmi,ISM Manufacturing PMI,Growth,ism_manufacturing_new_orders,ISM Manufacturing New Orders,Growth,0,0.9319330855499426,0.9319330855499426,33,5,5,0.1250000085435927,False
+BOE,retail_sales_yoy,Retail Sales (YoY),Growth,industrial_production_yoy,Industrial Production (YoY),Growth,0,0.8122873929128221,0.8122873929128221,73,6,6,0.12591738006704226,False
+RBA,rba_weighted_median_cpi_qoq,RBA Weighted Median CPI (QoQ),Inflation,producer_price_index_qoq,Producer Price Index (QoQ),Inflation,0,0.7193628780291152,0.7193628780291152,24,4,2,0.12675949001935735,False
+BOE,cpi_headline_yoy,Headline CPI (YoY),Inflation,cpi_headline_mom,Headline CPI (MoM),Inflation,5,0.5209118272392397,0.5209118272392397,63,6,3,0.1293513661065761,False
+RBA,cpi_headline_qoq,Headline CPI (QoQ),Inflation,consumer_inflation_expectation,Consumer Inflation Expectation,Inflation,6,-0.6703978627230505,0.6703978627230505,19,4,3,0.13140686084148187,False
+FED,retail_sales_mom,Retail Sales (MoM),Growth,ny_empire_state_mfg,NY Empire State Manufacturing Index,Growth,5,-0.516197551319703,0.516197551319703,19,4,2,0.13518397243838526,False
+SNB,cpi_headline_yoy,Headline CPI (YoY),Inflation,cpi_headline_mom,Headline CPI (MoM),Inflation,2,0.49713117160031073,0.49713117160031073,54,6,1,0.13642995896241628,False
+RBA,cpi_headline_yoy,Headline CPI (YoY),Inflation,producer_price_index_qoq,Producer Price Index (QoQ),Inflation,2,0.6828692620550699,0.6828692620550699,23,4,4,0.1439410972883393,False
+BOE,gdp_yoy,GDP (YoY),Growth,composite_pmi,Composite PMI,Growth,2,-0.4370235101654667,0.4370235101654667,24,4,2,0.14427468371805655,False
+BOJ,gdp_qoq,GDP (QoQ),Growth,machinery_orders_mom,Machinery Orders (MoM),Growth,0,0.6372626136562074,0.6372626136562074,24,4,3,0.1455763358319372,False
+FED,cpi_headline_yoy,Headline CPI (YoY),Inflation,core_ppi_mom,Core PPI (MoM),Inflation,3,0.6708795220957091,0.6708795220957091,27,5,1,0.14643206290388946,False
+BOE,unemployment_rate,Unemployment Rate,Labor,hmrc_payrolls_change,HMRC Payrolls Change,Labor,2,-0.4590425455875842,0.4590425455875842,38,6,5,0.1485589765268256,False
+FED,avg_hourly_earnings_yoy,Average Hourly Earnings (YoY),Labor,adp_employment_change,ADP Employment Change,Labor,6,0.8025275472739808,0.8025275472739808,27,5,5,0.15172641172975387,False
+FED,core_pce_price_index_mom,Core PCE Price Index (MoM),Inflation,cpi_headline_mom,Headline CPI (MoM),Inflation,0,0.7597409242187572,0.7597409242187572,30,5,4,0.15700321441215412,False
+FED,pce_price_index_mom,PCE Price Index (MoM),Inflation,import_prices_mom,Import Prices (MoM),Inflation,0,0.8113784635528002,0.8113784635528002,31,5,1,0.1626531224621205,False
+FED,ism_manufacturing_pmi,ISM Manufacturing PMI,Growth,retail_sales_yoy,Retail Sales (YoY),Growth,0,0.7552079704875287,0.7552079704875287,32,5,5,0.16430963338164312,False
+FED,pce_price_index_mom,PCE Price Index (MoM),Inflation,ppi_yoy,PPI (YoY),Inflation,0,0.6737675459515566,0.6737675459515566,31,5,1,0.18575886722586982,False
+FED,pce_price_index_mom,PCE Price Index (MoM),Inflation,core_ppi_yoy,Core PPI (YoY),Inflation,0,0.6328000046372445,0.6328000046372445,31,5,1,0.18847248628545898,False
+BOJ,cpi_headline_yoy,Headline CPI (YoY),Inflation,cpi_headline_mom,Headline CPI (MoM),Inflation,5,0.4406344953335264,0.4406344953335264,63,6,5,0.19623165958317446,False
+BOE,core_cpi_yoy,Core CPI (YoY),Inflation,cpi_headline_mom,Headline CPI (MoM),Inflation,6,0.47187382735071803,0.47187382735071803,62,6,2,0.21474579756091372,False
+FED,core_pce_price_index_mom,Core PCE Price Index (MoM),Inflation,ppi_yoy,PPI (YoY),Inflation,0,0.5204600298428018,0.5204600298428018,33,5,1,0.21570651137959898,False
+BOC,cpi_headline_yoy,Headline CPI (YoY),Inflation,core_cpi_mom,Core CPI (MoM),Inflation,6,0.5108423208175443,0.5108423208175443,39,6,1,0.21693801511280697,False
+FED,avg_hourly_earnings_yoy,Average Hourly Earnings (YoY),Labor,challenger_job_cuts,Challenger Job Cuts,Labor,6,-0.8412316752322706,0.8412316752322706,28,5,1,0.2318914932187258,False
+BOE,avg_earnings_excl_bonus,Average Earnings (excl. Bonus),Labor,avg_earnings_incl_bonus,Average Earnings (incl. Bonus),Labor,0,0.9230899656844133,0.9230899656844133,73,6,2,0.238489059133472,False
+BOE,gdp_mom,GDP (MoM),Growth,retail_sales_ex_fuel_yoy,Retail Sales Ex Fuel (YoY),Growth,0,0.4156388932193588,0.4156388932193588,68,6,6,0.24390388233540408,False
+RBA,monthly_cpi_indicator,Monthly CPI Indicator,Inflation,commodity_prices_yoy,Commodity Prices (YoY),Inflation,6,0.6087965978387142,0.6087965978387142,32,6,1,0.2455148278046818,False
+BOC,core_cpi_yoy,Core CPI (YoY),Inflation,core_cpi_mom,Core CPI (MoM),Inflation,6,0.5274662104307427,0.5274662104307427,39,6,1,0.24906096506277892,False
+FED,core_pce_price_index_mom,Core PCE Price Index (MoM),Inflation,core_ppi_mom,Core PPI (MoM),Inflation,0,0.631984040548648,0.631984040548648,29,4,2,0.24935968098142233,False
+FED,pce_price_index_yoy,PCE Price Index (YoY),Inflation,core_ppi_mom,Core PPI (MoM),Inflation,4,0.6625496179092646,0.6625496179092646,27,5,1,0.26022316179856925,False
+RBA,rba_trimmed_mean_cpi_qoq,RBA Trimmed Mean CPI (QoQ),Inflation,producer_price_index_yoy,Producer Price Index (YoY),Inflation,0,0.8791464191429698,0.8791464191429698,25,4,1,0.26850275697640497,False
+FED,core_pce_price_index_mom,Core PCE Price Index (MoM),Inflation,core_ppi_yoy,Core PPI (YoY),Inflation,0,0.4844217990700883,0.4844217990700883,33,5,1,0.2696340977835243,False
+RBA,cpi_headline_qoq,Headline CPI (QoQ),Inflation,producer_price_index_yoy,Producer Price Index (YoY),Inflation,6,-0.6149188555096377,0.6149188555096377,18,4,1,0.27433555824566974,False
+FED,pce_price_index_yoy,PCE Price Index (YoY),Inflation,michigan_inflation_expectations,Michigan Inflation Expectations,Inflation,1,0.6522971831783306,0.6522971831783306,31,5,1,0.29691973325605103,False
+RBA,rba_trimmed_mean_cpi_qoq,RBA Trimmed Mean CPI (QoQ),Inflation,producer_price_index_qoq,Producer Price Index (QoQ),Inflation,0,0.7812618939838821,0.7812618939838821,25,4,2,0.2978466011459049,False
+FED,pce_price_index_mom,PCE Price Index (MoM),Inflation,michigan_inflation_expectations,Michigan Inflation Expectations,Inflation,5,-0.5191388150651303,0.5191388150651303,23,4,3,0.30189327655780335,False
+FED,core_cpi_yoy,Core CPI (YoY),Inflation,michigan_inflation_expectations,Michigan Inflation Expectations,Inflation,5,0.6460053724814265,0.6460053724814265,28,5,1,0.3049768296898141,False
+FED,core_pce_price_index_mom,Core PCE Price Index (MoM),Inflation,michigan_inflation_expectations,Michigan Inflation Expectations,Inflation,5,-0.4462404509990696,0.4462404509990696,25,5,1,0.3118813451611416,False
+FED,pce_price_index_mom,PCE Price Index (MoM),Inflation,ppi_mom,PPI (MoM),Inflation,0,0.8392000262294966,0.8392000262294966,30,5,2,0.321953129535089,False
+RBA,cpi_headline_yoy,Headline CPI (YoY),Inflation,producer_price_index_yoy,Producer Price Index (YoY),Inflation,0,0.8682017160814696,0.8682017160814696,25,4,3,0.3514258425323799,False
+FED,core_cpi_mom,Core CPI (MoM),Inflation,umich_inflation_exp_5y,UMich 5Y Inflation Expectations,Inflation,6,-0.6574707744885728,0.6574707744885728,25,5,3,0.3648453963076778,False
+FED,pce_price_index_mom,PCE Price Index (MoM),Inflation,umich_inflation_exp_5y,UMich 5Y Inflation Expectations,Inflation,5,-0.4812488672818262,0.4812488672818262,23,4,4,0.36976745100985825,False
+RBA,cpi_headline_qoq,Headline CPI (QoQ),Inflation,producer_price_index_qoq,Producer Price Index (QoQ),Inflation,0,0.7828344517070255,0.7828344517070255,24,4,4,0.3983980050693066,False
+BOE,cpi_headline_yoy,Headline CPI (YoY),Inflation,retail_price_index_yoy,Retail Price Index (YoY),Inflation,0,0.9957769964407347,0.9957769964407347,76,6,5,0.4128015027415604,False
+FED,pce_price_index_mom,PCE Price Index (MoM),Inflation,core_ppi_mom,Core PPI (MoM),Inflation,0,0.7249231040352614,0.7249231040352614,29,4,2,0.4413876890747552,False
+FED,ism_manufacturing_pmi,ISM Manufacturing PMI,Growth,ism_manufacturing_prices,ISM Manufacturing Prices Paid,Growth,0,0.8472858590738662,0.8472858590738662,33,5,4,0.4444420246001901,False
+BOJ,cpi_headline_yoy,Headline CPI (YoY),Inflation,cpi_index,Consumer Price Index,Inflation,0,0.7308599180842273,0.7308599180842273,69,6,2,0.46000685327125623,False
+BOJ,gdp_qoq,GDP (QoQ),Growth,industrial_production_mom,Industrial Production (MoM),Growth,0,0.7218127462139567,0.7218127462139567,24,4,1,0.502076515369817,False
+BOJ,core_cpi_yoy,Core CPI (YoY),Inflation,cpi_index,Consumer Price Index,Inflation,0,0.7226233710750244,0.7226233710750244,69,6,2,0.5042040040590852,False
+FED,core_cpi_mom,Core CPI (MoM),Inflation,michigan_inflation_expectations,Michigan Inflation Expectations,Inflation,6,-0.41883637466921086,0.41883637466921086,25,5,1,0.5336503205047549,False
+FED,avg_hourly_earnings_yoy,Average Hourly Earnings (YoY),Labor,participation_rate,Labor Force Participation Rate,Labor,0,-0.4283170205065164,0.4283170205065164,35,5,2,0.5434634534513757,False
+FED,cpi_headline_yoy,Headline CPI (YoY),Inflation,michigan_inflation_expectations,Michigan Inflation Expectations,Inflation,0,0.6166827369969162,0.6166827369969162,33,5,1,0.5536781062554966,False
+FED,ism_manufacturing_pmi,ISM Manufacturing PMI,Growth,philly_fed_mfg,Philadelphia Fed Manufacturing Index,Growth,0,0.8884385268014457,0.8884385268014457,27,4,2,0.567037856757264,False
+FED,pce_price_index_mom,PCE Price Index (MoM),Inflation,cpi_headline_mom,Headline CPI (MoM),Inflation,0,0.9626666913003578,0.9626666913003578,30,5,1,0.7536384510767181,False

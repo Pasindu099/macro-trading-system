@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block body %}
+<main class="shell shell--research">
+    <header class="research-hero">
+        <div>
+            <a class="back-link" href="/">Back to dashboard</a>
+            <p class="eyebrow">Bank Research</p>
+            <h1>Research Signal Desk</h1>
+            <p class="calendar-hero__copy">
+                Cached bank reports from the latest Google Drive folder, summarized into assets, outlooks, reasons, and geopolitical market impact.
+            </p>
+        </div>
+        <div class="research-hero-card">
+            <span>Reports</span>
+            <strong>{{ research.reports|length }}</strong>
+            <span>
+                {% if research.generated_at %}
+                    Updated {{ research.generated_at[:16].replace("T", " ") }} UTC
+                {% else %}
+                    No cache built yet
+                {% endif %}
+            </span>
+        </div>
+    </header>
+
+    <section class="research-controls">
+        <label class="research-search">
+            <span>Search reports</span>
+            <input type="search" placeholder="Search bank, asset, outlook, geopolitics..." data-research-search>
+        </label>
+        <label class="research-search">
+            <span>Outlook</span>
+            <select data-research-outlook>
+                <option value="">All outlooks</option>
+                <option value="bullish">Bullish</option>
+                <option value="bearish">Bearish</option>
+                <option value="neutral">Neutral</option>
+                <option value="mixed">Mixed</option>
+                <option value="watch">Watch</option>
+            </select>
+        </label>
+    </section>
+
+    {% if research.errors %}
+        <section class="research-warning">
+            <strong>Ingestion warnings</strong>
+            {% for error in research.errors %}
+                <span>{{ error }}</span>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    {% if research.reports %}
+        <section class="research-layout" data-research-list>
+            <div class="research-list">
+                {% for report in research.reports %}
+                    {% set analysis = report.analysis %}
+                    {% set assets_text = analysis.assets|map(attribute="asset")|join(" ") if analysis.assets else "" %}
+                    {% set outlook_text = analysis.assets|map(attribute="outlook")|join(" ") if analysis.assets else "" %}
+                    <article
+                        class="research-card"
+                        data-search="{{ (analysis.title ~ ' ' ~ analysis.bank ~ ' ' ~ analysis.executive_summary ~ ' ' ~ assets_text ~ ' ' ~ outlook_text)|lower }}"
+                        data-outlooks="{{ outlook_text|lower }}"
+                    >
+                        <div class="research-card__header">
+                            <div>
+                                <h2>{{ analysis.title or report.file_name }}</h2>
+                                <span>{{ analysis.bank or "Unknown bank" }}{% if analysis.report_date %} | {{ analysis.report_date }}{% endif %}</span>
+                            </div>
+                            {% if report.drive_web_link %}
+                                <a href="{{ report.drive_web_link }}" target="_blank" rel="noreferrer">Open Drive</a>
+                            {% endif %}
+                        </div>
+
+                        <p>{{ analysis.executive_summary }}</p>
+
+                        {% if analysis.assets %}
+                            <div class="research-assets">
+                                {% for asset in analysis.assets %}
+                                    <div class="research-asset">
+                                        <div>
+                                            <strong>{{ asset.asset }}</strong>
+                                            <span>{{ asset.asset_class or "Market" }}</span>
+                                        </div>
+                                        <span class="research-outlook research-outlook--{{ asset.outlook|lower }}">{{ asset.outlook }}</span>
+                                        <p>{{ asset.reasons|join("; ") if asset.reasons is iterable and asset.reasons is not string else asset.reasons }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-panel">No asset calls were extracted yet.</div>
+                        {% endif %}
+
+                        {% if analysis.geopolitical and analysis.geopolitical.discussed %}
+                            <div class="research-geo">
+                                <strong>Geopolitical read-through</strong>
+                                <p>{{ analysis.geopolitical.summary }}</p>
+                                <div class="research-geo__grid">
+                                    <span>Global economy: {{ analysis.geopolitical.bank_view_global_economy }}</span>
+                                    <span>Financial markets: {{ analysis.geopolitical.bank_view_financial_markets }}</span>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if analysis.key_risks %}
+                            <div class="research-risks">
+                                {% for risk in analysis.key_risks %}
+                                    <span>{{ risk }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    {% else %}
+        <section class="empty-panel">
+            No bank research cache is available yet. Run
+            <code>python -m scripts.build_bank_research --folder-url &lt;drive-folder-url&gt;</code>
+            after setting <code>GOOGLE_DRIVE_API_KEY</code> and <code>OPENAI_API_KEY</code>.
+        </section>
+    {% endif %}
+</main>
+
+<script>
+    (() => {
+        const cards = Array.from(document.querySelectorAll(".research-card"));
+        const search = document.querySelector("[data-research-search]");
+        const outlook = document.querySelector("[data-research-outlook]");
+        const applyFilters = () => {
+            const query = (search?.value || "").trim().toLowerCase();
+            const selectedOutlook = (outlook?.value || "").toLowerCase();
+            cards.forEach((card) => {
+                const matchesQuery = !query || card.dataset.search.includes(query);
+                const matchesOutlook = !selectedOutlook || card.dataset.outlooks.includes(selectedOutlook);
+                card.hidden = !(matchesQuery && matchesOutlook);
+            });
+        };
+        search?.addEventListener("input", applyFilters);
+        outlook?.addEventListener("change", applyFilters);
+    })();
+</script>
+{% endblock %}

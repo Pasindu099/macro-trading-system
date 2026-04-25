@@ -1,0 +1,25 @@
+central_bank_code,target_family,target_indicator_key,target_indicator,target_category,observations,selection_basis,economic_note
+BOC,gdp_growth,retail_sales_mom,Retail Sales (MoM),Growth,73,preferred_indicator,Stronger growth normally supports currency strength through better real activity and tighter policy expectations.
+BOC,inflation,core_cpi_yoy,Core CPI (YoY),Inflation,76,preferred_indicator,"Higher inflation can support a currency when it increases expected policy tightening, but can become negative if it damages real growth."
+BOC,unemployment,unemployment_rate,Unemployment Rate,Labor,76,preferred_indicator,Higher unemployment is generally currency-negative because it signals labor-market weakness and easier policy pressure.
+BOE,gdp_growth,gdp_yoy,GDP (YoY),Growth,73,preferred_indicator,Stronger growth normally supports currency strength through better real activity and tighter policy expectations.
+BOE,inflation,core_cpi_yoy,Core CPI (YoY),Inflation,76,preferred_indicator,"Higher inflation can support a currency when it increases expected policy tightening, but can become negative if it damages real growth."
+BOE,unemployment,unemployment_rate,Unemployment Rate,Labor,76,preferred_indicator,Higher unemployment is generally currency-negative because it signals labor-market weakness and easier policy pressure.
+BOJ,gdp_growth,gdp_qoq,GDP (QoQ),Growth,25,preferred_indicator,Stronger growth normally supports currency strength through better real activity and tighter policy expectations.
+BOJ,inflation,cpi_headline_yoy,Headline CPI (YoY),Inflation,75,preferred_indicator,"Higher inflation can support a currency when it increases expected policy tightening, but can become negative if it damages real growth."
+BOJ,unemployment,unemployment_rate,Unemployment Rate,Labor,75,preferred_indicator,Higher unemployment is generally currency-negative because it signals labor-market weakness and easier policy pressure.
+ECB,gdp_growth,gdp_qoq,GDP (QoQ),Growth,24,preferred_indicator,Stronger growth normally supports currency strength through better real activity and tighter policy expectations.
+ECB,inflation,core_cpi_yoy,Core HICP (YoY),Inflation,76,preferred_indicator,"Higher inflation can support a currency when it increases expected policy tightening, but can become negative if it damages real growth."
+ECB,unemployment,unemployment_rate,Unemployment Rate,Labor,76,preferred_indicator,Higher unemployment is generally currency-negative because it signals labor-market weakness and easier policy pressure.
+FED,gdp_growth,retail_sales_mom,Retail Sales (MoM),Growth,38,preferred_indicator,Stronger growth normally supports currency strength through better real activity and tighter policy expectations.
+FED,inflation,core_cpi_yoy,Core CPI (YoY),Inflation,36,preferred_indicator,"Higher inflation can support a currency when it increases expected policy tightening, but can become negative if it damages real growth."
+FED,unemployment,unemployment_rate,Unemployment Rate,Labor,36,preferred_indicator,Higher unemployment is generally currency-negative because it signals labor-market weakness and easier policy pressure.
+RBA,gdp_growth,retail_sales_mom,Retail Sales (MoM),Growth,69,preferred_indicator,Stronger growth normally supports currency strength through better real activity and tighter policy expectations.
+RBA,inflation,cpi_headline_yoy,Headline CPI (YoY),Inflation,29,preferred_indicator,"Higher inflation can support a currency when it increases expected policy tightening, but can become negative if it damages real growth."
+RBA,unemployment,unemployment_rate,Unemployment Rate,Labor,76,preferred_indicator,Higher unemployment is generally currency-negative because it signals labor-market weakness and easier policy pressure.
+RBNZ,gdp_growth,balance_of_trade,Balance of Trade,Growth,76,best_available_category_proxy,Stronger growth normally supports currency strength through better real activity and tighter policy expectations.
+RBNZ,inflation,cpi_headline_yoy,Headline CPI (YoY),Inflation,26,preferred_indicator,"Higher inflation can support a currency when it increases expected policy tightening, but can become negative if it damages real growth."
+RBNZ,unemployment,unemployment_rate,Unemployment Rate,Labor,25,preferred_indicator,Higher unemployment is generally currency-negative because it signals labor-market weakness and easier policy pressure.
+SNB,gdp_growth,gdp_qoq,GDP (QoQ),Growth,23,preferred_indicator,Stronger growth normally supports currency strength through better real activity and tighter policy expectations.
+SNB,inflation,cpi_headline_yoy,Headline CPI (YoY),Inflation,74,preferred_indicator,"Higher inflation can support a currency when it increases expected policy tightening, but can become negative if it damages real growth."
+SNB,unemployment,unemployment_rate,Unemployment Rate,Labor,76,preferred_indicator,Higher unemployment is generally currency-negative because it signals labor-market weakness and easier policy pressure.

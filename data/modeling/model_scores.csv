@@ -1,0 +1,193 @@
+central_bank_code,target_family,target_indicator_key,target_indicator,model,split,observations,rmse,mae,mape_pct
+BOC,inflation,core_cpi_yoy,Core CPI (YoY),persistence_baseline,validation,12,0.19092123252360818,0.16063641637776518,48.12503989651786
+BOC,inflation,core_cpi_yoy,Core CPI (YoY),persistence_baseline,test,12,0.10153497067828318,0.07754861480305908,259.82427886386444
+BOC,inflation,core_cpi_yoy,Core CPI (YoY),ridge,validation,12,0.4388144065682782,0.39966170937302686,85.36483087143912
+BOC,inflation,core_cpi_yoy,Core CPI (YoY),ridge,test,12,0.3955733770615977,0.3171646948690388,698.5461523340065
+BOC,inflation,core_cpi_yoy,Core CPI (YoY),random_forest,validation,12,0.20879399545590205,0.16920778090328567,51.26899753484818
+BOC,inflation,core_cpi_yoy,Core CPI (YoY),random_forest,test,12,0.15036674134997818,0.1193610773029619,599.4160921921581
+BOC,inflation,core_cpi_yoy,Core CPI (YoY),hist_gradient_boosting,validation,12,0.25610001081394407,0.19323159436556614,65.63154172354803
+BOC,inflation,core_cpi_yoy,Core CPI (YoY),hist_gradient_boosting,test,12,0.43009275963866545,0.4083613567613029,3577.475272843881
+BOC,gdp_growth,gdp_mom,GDP (MoM),persistence_baseline,validation,12,0.14889602441909766,0.11945861885917401,263.2373921017686
+BOC,gdp_growth,gdp_mom,GDP (MoM),persistence_baseline,test,12,0.14999220626861592,0.10665948112426253,264.34955426890923
+BOC,gdp_growth,gdp_mom,GDP (MoM),ridge,validation,12,1.3851479634110944,0.9908832675505767,2434.384438454731
+BOC,gdp_growth,gdp_mom,GDP (MoM),ridge,test,12,1.5569646554003982,1.2755940914288415,4366.671488883562
+BOC,gdp_growth,gdp_mom,GDP (MoM),random_forest,validation,12,0.12961162816838173,0.09615622912186939,189.83866063149677
+BOC,gdp_growth,gdp_mom,GDP (MoM),random_forest,test,12,0.19993497798431606,0.1679522611743759,454.247502371241
+BOC,gdp_growth,gdp_mom,GDP (MoM),hist_gradient_boosting,validation,12,0.36551407844196443,0.3030088690434572,751.6461675693168
+BOC,gdp_growth,gdp_mom,GDP (MoM),hist_gradient_boosting,test,12,0.5310375722531236,0.45655094359666676,1364.0096771774301
+BOC,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,validation,12,0.08198369469945188,0.06497977827775799,137.46782877523927
+BOC,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,test,12,0.11139390561901362,0.08354542921426017,150.07230499597395
+BOC,unemployment,unemployment_rate,Unemployment Rate,ridge,validation,12,0.5794007099505368,0.5310432636018405,767.9772211878415
+BOC,unemployment,unemployment_rate,Unemployment Rate,ridge,test,12,1.0430653736702757,0.9022944115904075,1802.0548415650724
+BOC,unemployment,unemployment_rate,Unemployment Rate,random_forest,validation,12,0.2234183587551391,0.18544779410441817,252.6876811151593
+BOC,unemployment,unemployment_rate,Unemployment Rate,random_forest,test,12,0.17007808416204093,0.13344498794184198,150.37058514748392
+BOC,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,validation,12,0.38155061711340016,0.33646962062876334,492.58172987997233
+BOC,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,test,12,0.249107933884795,0.19770839744860128,453.0781858391685
+BOE,inflation,core_cpi_yoy,Core CPI (YoY),persistence_baseline,validation,12,0.16123377606139816,0.14080965890570998,1361.433641846804
+BOE,inflation,core_cpi_yoy,Core CPI (YoY),persistence_baseline,test,12,0.0817604471065412,0.06813370592211766,362.10975713251156
+BOE,inflation,core_cpi_yoy,Core CPI (YoY),ridge,validation,12,0.2903534158228411,0.26371641618436237,743.5374722129061
+BOE,inflation,core_cpi_yoy,Core CPI (YoY),ridge,test,12,1.0956409916042096,1.0271196660639783,4610.99378859233
+BOE,inflation,core_cpi_yoy,Core CPI (YoY),random_forest,validation,12,0.35159558190118334,0.2943106748122381,844.0197276009334
+BOE,inflation,core_cpi_yoy,Core CPI (YoY),random_forest,test,12,0.4000345006740455,0.3616915901306316,2084.38624001306
+BOE,inflation,core_cpi_yoy,Core CPI (YoY),hist_gradient_boosting,validation,12,0.22626852057969127,0.16749716867780043,760.7284040633921
+BOE,inflation,core_cpi_yoy,Core CPI (YoY),hist_gradient_boosting,test,12,0.2263725806766126,0.1966353915231667,575.8529487862866
+BOE,gdp_growth,gdp_yoy,GDP (YoY),persistence_baseline,validation,12,0.05050443880344768,0.04226338190439358,84.75523237241876
+BOE,gdp_growth,gdp_yoy,GDP (YoY),persistence_baseline,test,12,0.04951820419543628,0.03467764669078446,113.40763647252854
+BOE,gdp_growth,gdp_yoy,GDP (YoY),ridge,validation,12,1.2496823700943271,1.0409980447479386,1910.2449154128801
+BOE,gdp_growth,gdp_yoy,GDP (YoY),ridge,test,12,2.560592487725374,2.099131078698679,4124.259782932813
+BOE,gdp_growth,gdp_yoy,GDP (YoY),random_forest,validation,12,0.31202658014715673,0.25791909877482,453.38921699650695
+BOE,gdp_growth,gdp_yoy,GDP (YoY),random_forest,test,12,0.215012770405772,0.16715404196702996,561.7589114831062
+BOE,gdp_growth,gdp_yoy,GDP (YoY),hist_gradient_boosting,validation,12,0.4681780166270321,0.36768456722998466,461.2732214520171
+BOE,gdp_growth,gdp_yoy,GDP (YoY),hist_gradient_boosting,test,12,0.5365685075526617,0.48208013295167945,983.8639802392287
+BOE,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,validation,12,0.267853771330153,0.1822514070663891,168.3863931095294
+BOE,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,test,12,0.2603070759131693,0.16402626635975026,11.861020617236798
+BOE,unemployment,unemployment_rate,Unemployment Rate,ridge,validation,12,6.398735438491055,6.126144504814834,4333.183738605691
+BOE,unemployment,unemployment_rate,Unemployment Rate,ridge,test,12,2.3314068245610096,1.887431966153889,147.35103541546525
+BOE,unemployment,unemployment_rate,Unemployment Rate,random_forest,validation,12,0.3637623640902684,0.32577801078225066,214.27007955402817
+BOE,unemployment,unemployment_rate,Unemployment Rate,random_forest,test,12,1.4024231517758534,1.347674138895692,94.03554135834308
+BOE,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,validation,12,0.3636529838179414,0.2818102033885481,130.2608127159607
+BOE,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,test,12,1.224564173815261,1.1192324605681208,74.65442110921833
+BOJ,inflation,cpi_headline_yoy,Headline CPI (YoY),persistence_baseline,validation,12,0.23663383483742179,0.18224450537150835,28.389037187044675
+BOJ,inflation,cpi_headline_yoy,Headline CPI (YoY),persistence_baseline,test,12,0.23036427404243925,0.17119938383384112,133.21668108613773
+BOJ,inflation,cpi_headline_yoy,Headline CPI (YoY),ridge,validation,12,0.6687382743518705,0.6013226507184303,80.51930219619913
+BOJ,inflation,cpi_headline_yoy,Headline CPI (YoY),ridge,test,12,0.5257349280188394,0.451493926911398,106.55655452938223
+BOJ,inflation,cpi_headline_yoy,Headline CPI (YoY),random_forest,validation,12,0.4240112028477043,0.3567218876294942,43.37855304124359
+BOJ,inflation,cpi_headline_yoy,Headline CPI (YoY),random_forest,test,12,0.47297303806324187,0.4078899242863389,178.19571376769943
+BOJ,inflation,cpi_headline_yoy,Headline CPI (YoY),hist_gradient_boosting,validation,12,0.45779232425948174,0.36815980870434223,46.49884374440085
+BOJ,inflation,cpi_headline_yoy,Headline CPI (YoY),hist_gradient_boosting,test,12,0.473669118185558,0.36607810603607477,133.81741873106446
+BOJ,gdp_growth,gdp_qoq,GDP (QoQ),persistence_baseline,validation,12,0.09129536279958636,0.08548735119225093,236.6342199566755
+BOJ,gdp_growth,gdp_qoq,GDP (QoQ),persistence_baseline,test,12,0.10132897191035012,0.06994419643002348,85.96595384271316
+BOJ,gdp_growth,gdp_qoq,GDP (QoQ),ridge,validation,12,0.38910210844934684,0.33456512261529386,864.9082368985354
+BOJ,gdp_growth,gdp_qoq,GDP (QoQ),ridge,test,12,0.5873655130858388,0.4642453785953678,782.2734346657903
+BOJ,gdp_growth,gdp_qoq,GDP (QoQ),random_forest,validation,12,0.08389082580380451,0.07441292660529543,120.8120563015394
+BOJ,gdp_growth,gdp_qoq,GDP (QoQ),random_forest,test,12,0.31599088260132,0.15094620603103123,302.53208741491903
+BOJ,gdp_growth,gdp_qoq,GDP (QoQ),hist_gradient_boosting,validation,12,0.2744572836356769,0.2257639900477605,996.2876932372322
+BOJ,gdp_growth,gdp_qoq,GDP (QoQ),hist_gradient_boosting,test,12,0.5019137958790892,0.4266685370927556,856.5504323586753
+BOJ,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,validation,12,0.6168229482784101,0.5057279488918659,73.1755604288499
+BOJ,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,test,12,0.6168229482784099,0.321826876567551,135.70299393470134
+BOJ,unemployment,unemployment_rate,Unemployment Rate,ridge,validation,12,0.8808124820024914,0.7451126576083172,101.61477168264146
+BOJ,unemployment,unemployment_rate,Unemployment Rate,ridge,test,12,0.8558436274209519,0.5891304161590659,182.77402726452746
+BOJ,unemployment,unemployment_rate,Unemployment Rate,random_forest,validation,12,0.42603409044329993,0.33665811262680617,59.788965488478375
+BOJ,unemployment,unemployment_rate,Unemployment Rate,random_forest,test,12,0.606969556454602,0.5378244820398451,239.64883725775744
+BOJ,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,validation,12,0.38835550885881404,0.30675615570308684,50.821344244940306
+BOJ,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,test,12,0.6630338449894276,0.563393681020184,282.76256312049514
+ECB,inflation,core_cpi_yoy,Core HICP (YoY),persistence_baseline,validation,12,0.084341847199511,0.054442428265346114,241.79168890804706
+ECB,inflation,core_cpi_yoy,Core HICP (YoY),persistence_baseline,test,12,0.0923918645056522,0.054442428265346114,23.5310094191869
+ECB,inflation,core_cpi_yoy,Core HICP (YoY),ridge,validation,12,0.5567302891332163,0.5136219179215152,2330.680839456978
+ECB,inflation,core_cpi_yoy,Core HICP (YoY),ridge,test,12,0.9107256916472455,0.8325569306049222,369.07582736489815
+ECB,inflation,core_cpi_yoy,Core HICP (YoY),random_forest,validation,12,0.08767362575156333,0.07115001324396418,202.5117953850605
+ECB,inflation,core_cpi_yoy,Core HICP (YoY),random_forest,test,12,0.13473085156638936,0.10888350967130726,43.50140935768243
+ECB,inflation,core_cpi_yoy,Core HICP (YoY),hist_gradient_boosting,validation,12,0.15655395500345326,0.13602168814155205,619.2346469513587
+ECB,inflation,core_cpi_yoy,Core HICP (YoY),hist_gradient_boosting,test,12,0.34974979337444523,0.3418552484248704,150.0444703544348
+ECB,gdp_growth,gdp_qoq,GDP (QoQ),persistence_baseline,validation,12,0.03128860425887443,0.029053703954669118,156.33144505435243
+ECB,gdp_growth,gdp_qoq,GDP (QoQ),persistence_baseline,test,12,0.00893960121682125,0.004469800608410625,41.616161616161705
+ECB,gdp_growth,gdp_qoq,GDP (QoQ),ridge,validation,12,0.652661494014513,0.5510499889977128,2482.4257737433722
+ECB,gdp_growth,gdp_qoq,GDP (QoQ),ridge,test,12,0.6429131482503874,0.5291314671620808,2529.898271789014
+ECB,gdp_growth,gdp_qoq,GDP (QoQ),random_forest,validation,12,0.043140844802190395,0.03774465934404309,193.19065373749706
+ECB,gdp_growth,gdp_qoq,GDP (QoQ),random_forest,test,12,0.05936607611106053,0.05411699664114397,258.706684157594
+ECB,gdp_growth,gdp_qoq,GDP (QoQ),hist_gradient_boosting,validation,12,0.23456388568005684,0.20322283068723668,1844.1390220360115
+ECB,gdp_growth,gdp_qoq,GDP (QoQ),hist_gradient_boosting,test,12,0.2933520253421593,0.24150504542718984,1235.7798347511307
+ECB,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,validation,12,0.1039452841816456,0.07350041531720437,8.99296143499755
+ECB,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,test,12,0.12002567560653049,0.09800055375627252,10.905092430065832
+ECB,unemployment,unemployment_rate,Unemployment Rate,ridge,validation,12,0.45619046957145165,0.3973096362678621,47.682886462170075
+ECB,unemployment,unemployment_rate,Unemployment Rate,ridge,test,12,0.5873594102788893,0.5014526936265633,57.11501584973392
+ECB,unemployment,unemployment_rate,Unemployment Rate,random_forest,validation,12,0.37695125916566585,0.335693901271773,37.18827048456768
+ECB,unemployment,unemployment_rate,Unemployment Rate,random_forest,test,12,0.5208962913124274,0.5088451893295383,54.14113076170278
+ECB,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,validation,12,0.42774505038920535,0.3987302215182331,45.81086772403144
+ECB,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,test,12,0.8468249616250577,0.8097421942791693,86.79829236930607
+FED,inflation,core_cpi_yoy,Core CPI (YoY),persistence_baseline,validation,12,0.052686223430099696,0.040114604946880406,16.521285962060517
+FED,inflation,core_cpi_yoy,Core CPI (YoY),persistence_baseline,test,12,0.025568144175526105,0.020057302473440192,3.291947903944773
+FED,inflation,core_cpi_yoy,Core CPI (YoY),ridge,validation,12,0.6212196052505852,0.5029278429987531,172.81648966160728
+FED,inflation,core_cpi_yoy,Core CPI (YoY),ridge,test,12,1.157214489421835,1.0991422189249442,188.78782288219597
+FED,inflation,core_cpi_yoy,Core CPI (YoY),random_forest,validation,12,0.2081105709660887,0.1740371166943866,69.85998642368263
+FED,inflation,core_cpi_yoy,Core CPI (YoY),random_forest,test,12,0.39231776001486135,0.3421899756155695,59.11687003682996
+FED,inflation,core_cpi_yoy,Core CPI (YoY),hist_gradient_boosting,validation,12,0.23094680798944564,0.17507961315269135,55.87460073558654
+FED,inflation,core_cpi_yoy,Core CPI (YoY),hist_gradient_boosting,test,12,0.6509489831630124,0.6072994882545375,98.29612403115527
+FED,gdp_growth,retail_sales_mom,Retail Sales (MoM),persistence_baseline,validation,12,0.032908100150634965,0.027197705819807794,153.75105039179607
+FED,gdp_growth,retail_sales_mom,Retail Sales (MoM),persistence_baseline,test,12,0.11284043752735114,0.0834062978474106,200.66234019720875
+FED,gdp_growth,retail_sales_mom,Retail Sales (MoM),ridge,validation,12,0.6989383275753246,0.6415718516572119,3579.5911361435933
+FED,gdp_growth,retail_sales_mom,Retail Sales (MoM),ridge,test,12,0.5912497270420326,0.5005748983541055,3203.030565300744
+FED,gdp_growth,retail_sales_mom,Retail Sales (MoM),random_forest,validation,12,0.06590943135950153,0.05998274512224269,524.7780765559095
+FED,gdp_growth,retail_sales_mom,Retail Sales (MoM),random_forest,test,12,0.1329861864989537,0.11612174610480401,353.13885730509213
+FED,gdp_growth,retail_sales_mom,Retail Sales (MoM),hist_gradient_boosting,validation,12,0.5222097779927533,0.46240972607453196,2198.1644069540243
+FED,gdp_growth,retail_sales_mom,Retail Sales (MoM),hist_gradient_boosting,test,12,0.35121866511911015,0.29420856382491395,1715.3959664924112
+FED,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,validation,12,0.01734349781635957,0.01012642105357769,2.832555383330351
+FED,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,test,12,0.03604019666735546,0.030379263160733083,13.406711478838615
+FED,unemployment,unemployment_rate,Unemployment Rate,ridge,validation,12,0.06188806154782838,0.05369878892540834,16.18994177720616
+FED,unemployment,unemployment_rate,Unemployment Rate,ridge,test,12,0.07703168200664313,0.05964414622503261,27.635563712185114
+FED,unemployment,unemployment_rate,Unemployment Rate,random_forest,validation,12,0.13390909990372202,0.08230221264261794,24.899307319338124
+FED,unemployment,unemployment_rate,Unemployment Rate,random_forest,test,12,0.6446648771708766,0.5717718586691499,244.92533020990055
+FED,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,validation,12,0.8828318931195726,0.8401092864679792,251.0704468077664
+FED,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,test,12,1.5969986818494786,1.5673836776120715,664.3109959635066
+RBA,inflation,cpi_headline_yoy,Headline CPI (YoY),persistence_baseline,validation,12,0.09421283560877292,0.07162654362323788,40.352175042458434
+RBA,inflation,cpi_headline_yoy,Headline CPI (YoY),persistence_baseline,test,12,0.1469237013312007,0.1263997828645374,164.7250571378411
+RBA,inflation,cpi_headline_yoy,Headline CPI (YoY),ridge,validation,12,0.30428943231002586,0.27158456473596515,56.74562653098128
+RBA,inflation,cpi_headline_yoy,Headline CPI (YoY),ridge,test,12,0.27091362486934756,0.24098185024449661,465.9308274036849
+RBA,inflation,cpi_headline_yoy,Headline CPI (YoY),random_forest,validation,12,0.6223432908925974,0.5920491899547938,130.2804092006678
+RBA,inflation,cpi_headline_yoy,Headline CPI (YoY),random_forest,test,12,0.5534386922443252,0.5464701063308947,985.7008556001288
+RBA,inflation,cpi_headline_yoy,Headline CPI (YoY),hist_gradient_boosting,validation,12,0.5735459877942053,0.5074354270417413,99.59066348475672
+RBA,inflation,cpi_headline_yoy,Headline CPI (YoY),hist_gradient_boosting,test,12,0.9278714481714951,0.7847037106167863,1559.450319701971
+RBA,gdp_growth,retail_sales_mom,Retail Sales (MoM),persistence_baseline,validation,12,0.11277495834405031,0.0902922293753919,224.64420265856333
+RBA,gdp_growth,retail_sales_mom,Retail Sales (MoM),persistence_baseline,test,12,0.08163835719476682,0.029344974547002384,19.994765583000884
+RBA,gdp_growth,retail_sales_mom,Retail Sales (MoM),ridge,validation,12,0.8308096565355909,0.6807544779742072,1779.004414627885
+RBA,gdp_growth,retail_sales_mom,Retail Sales (MoM),ridge,test,12,0.6688794766688996,0.4650999273809609,343.27413892469735
+RBA,gdp_growth,retail_sales_mom,Retail Sales (MoM),random_forest,validation,12,0.2825142825925693,0.23932866082506177,517.8491106413838
+RBA,gdp_growth,retail_sales_mom,Retail Sales (MoM),random_forest,test,12,0.17997181789767752,0.16220171602571185,90.88573421438163
+RBA,gdp_growth,retail_sales_mom,Retail Sales (MoM),hist_gradient_boosting,validation,12,0.19117681917169352,0.13561210214093383,339.75563772281583
+RBA,gdp_growth,retail_sales_mom,Retail Sales (MoM),hist_gradient_boosting,test,12,0.3017251765916687,0.2381644975346081,132.70854716264495
+RBA,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,validation,12,0.0850191054922281,0.06208917586267293,14.415397433162788
+RBA,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,test,12,0.1370891884016256,0.0931337637940094,147.92300936768126
+RBA,unemployment,unemployment_rate,Unemployment Rate,ridge,validation,12,0.27125058752957915,0.2084200754824178,47.12341286473478
+RBA,unemployment,unemployment_rate,Unemployment Rate,ridge,test,12,0.46194956083119254,0.4133292923633092,458.40257881481017
+RBA,unemployment,unemployment_rate,Unemployment Rate,random_forest,validation,12,0.26655906112883715,0.23411716419540918,56.60076546470921
+RBA,unemployment,unemployment_rate,Unemployment Rate,random_forest,test,12,0.19778263761492432,0.16944865945706644,97.59883586518305
+RBA,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,validation,12,0.8104172641759377,0.7614719917737925,188.30671350767858
+RBA,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,test,12,0.652989218918656,0.5207723948225692,452.8220915065222
+RBNZ,inflation,cpi_headline_yoy,Headline CPI (YoY),persistence_baseline,validation,12,0.09410190265607574,0.06503332999337165,10.053917070163742
+RBNZ,inflation,cpi_headline_yoy,Headline CPI (YoY),persistence_baseline,test,12,0.02570668082554967,0.016258332498342912,3.433361376062241
+RBNZ,inflation,cpi_headline_yoy,Headline CPI (YoY),ridge,validation,12,5.427775099776191,5.051755788554055,693.4891441541818
+RBNZ,inflation,cpi_headline_yoy,Headline CPI (YoY),ridge,test,12,5.952631202345888,5.9515972903483485,1399.279532177825
+RBNZ,inflation,cpi_headline_yoy,Headline CPI (YoY),random_forest,validation,12,0.36035620130444607,0.3518497173434713,48.77598170069846
+RBNZ,inflation,cpi_headline_yoy,Headline CPI (YoY),random_forest,test,12,0.18873195100149692,0.18751492287515284,43.65363263406438
+RBNZ,inflation,cpi_headline_yoy,Headline CPI (YoY),hist_gradient_boosting,validation,12,0.12027286046601858,0.09771982530373462,15.160459438285672
+RBNZ,inflation,cpi_headline_yoy,Headline CPI (YoY),hist_gradient_boosting,test,12,0.3678571193347565,0.35798121413613937,84.70200925051681
+RBNZ,gdp_growth,balance_of_trade,Balance of Trade,persistence_baseline,validation,12,0.0012034876269236188,0.0010217874374221318,0.3900531963399591
+RBNZ,gdp_growth,balance_of_trade,Balance of Trade,persistence_baseline,test,12,0.0009653671699839998,0.0007589601389203828,0.2892472268670591
+RBNZ,gdp_growth,balance_of_trade,Balance of Trade,ridge,validation,12,1.3412857570077348,1.0764154450768306,411.85826776347545
+RBNZ,gdp_growth,balance_of_trade,Balance of Trade,ridge,test,12,1.690260389947319,1.5072691468152863,575.5161505298834
+RBNZ,gdp_growth,balance_of_trade,Balance of Trade,random_forest,validation,12,0.08779922384355648,0.0821236032239617,31.355241348779977
+RBNZ,gdp_growth,balance_of_trade,Balance of Trade,random_forest,test,12,0.08601406156928262,0.08062959049347752,30.72969806604507
+RBNZ,gdp_growth,balance_of_trade,Balance of Trade,hist_gradient_boosting,validation,12,0.38638495340183104,0.3220247497607452,122.50353694529015
+RBNZ,gdp_growth,balance_of_trade,Balance of Trade,hist_gradient_boosting,test,12,0.25205731549895466,0.2509079602153337,95.65820073714114
+RBNZ,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,validation,12,0.08198531376355252,0.06573449032508051,7.452950026885589
+RBNZ,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,test,12,0.03098753591113728,0.021911496775026833,1.5294801631321764
+RBNZ,unemployment,unemployment_rate,Unemployment Rate,ridge,validation,12,1.4287845523939895,1.3097219872835089,120.42331932451454
+RBNZ,unemployment,unemployment_rate,Unemployment Rate,ridge,test,12,2.103505346514924,2.0997068701939083,140.93401108519768
+RBNZ,unemployment,unemployment_rate,Unemployment Rate,random_forest,validation,12,0.7009893888825046,0.6563271549341935,61.89171486521845
+RBNZ,unemployment,unemployment_rate,Unemployment Rate,random_forest,test,12,1.2771552399070085,1.2677521243811058,84.73748649822419
+RBNZ,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,validation,12,0.6572417843230359,0.611383126822186,57.064264836444636
+RBNZ,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,test,12,1.1483478607285937,1.1386181053616702,76.13294951218944
+SNB,inflation,cpi_headline_yoy,Headline CPI (YoY),persistence_baseline,validation,12,0.143104902055237,0.10967834304197459,52.39325818177216
+SNB,inflation,cpi_headline_yoy,Headline CPI (YoY),persistence_baseline,test,12,0.09481975633650759,0.06451667237763213,9.690343886481266
+SNB,inflation,cpi_headline_yoy,Headline CPI (YoY),ridge,validation,12,0.4176446300997672,0.36519006875964893,128.4618193520056
+SNB,inflation,cpi_headline_yoy,Headline CPI (YoY),ridge,test,12,0.836767571244501,0.7990028336736428,118.98870315932363
+SNB,inflation,cpi_headline_yoy,Headline CPI (YoY),random_forest,validation,12,0.23796032454492042,0.20831708879797195,77.56063695681456
+SNB,inflation,cpi_headline_yoy,Headline CPI (YoY),random_forest,test,12,0.2315310597263948,0.19031616780623448,29.673401000008674
+SNB,inflation,cpi_headline_yoy,Headline CPI (YoY),hist_gradient_boosting,validation,12,0.3406174509923743,0.2949267046825956,103.88463073942577
+SNB,inflation,cpi_headline_yoy,Headline CPI (YoY),hist_gradient_boosting,test,12,0.26385691890398794,0.22710006776657596,35.28692243778816
+SNB,gdp_growth,gdp_qoq,GDP (QoQ),persistence_baseline,validation,12,0.03940298821752892,0.03829282146826121,107.11820271326093
+SNB,gdp_growth,gdp_qoq,GDP (QoQ),persistence_baseline,test,12,0.06422642050021359,0.04842915656280097,186.62194140444612
+SNB,gdp_growth,gdp_qoq,GDP (QoQ),ridge,validation,12,0.5174731507753768,0.34425741663005177,1141.6852572128114
+SNB,gdp_growth,gdp_qoq,GDP (QoQ),ridge,test,12,1.198254080548222,1.1031275378050671,7941.090240429326
+SNB,gdp_growth,gdp_qoq,GDP (QoQ),random_forest,validation,12,0.06013579367462328,0.04442826621813143,101.72937984377712
+SNB,gdp_growth,gdp_qoq,GDP (QoQ),random_forest,test,12,0.054599537170791926,0.04490112484856187,257.6810937176813
+SNB,gdp_growth,gdp_qoq,GDP (QoQ),hist_gradient_boosting,validation,12,0.377375210739242,0.25496551216067115,957.1727736627827
+SNB,gdp_growth,gdp_qoq,GDP (QoQ),hist_gradient_boosting,test,12,1.102886781792711,1.0885118625892223,9852.243513601754
+SNB,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,validation,12,0.21428713071363414,0.1544103118141363,75.21353482005605
+SNB,unemployment,unemployment_rate,Unemployment Rate,persistence_baseline,test,12,0.18794224642668642,0.13725361050145446,28.97743695767247
+SNB,unemployment,unemployment_rate,Unemployment Rate,ridge,validation,12,0.25973568732785857,0.20106677436633846,82.39137512803705
+SNB,unemployment,unemployment_rate,Unemployment Rate,ridge,test,12,0.29261081842769543,0.23688524243875478,50.05976998521555
+SNB,unemployment,unemployment_rate,Unemployment Rate,random_forest,validation,12,0.4204524687735381,0.3537249930432232,97.56438660967751
+SNB,unemployment,unemployment_rate,Unemployment Rate,random_forest,test,12,0.2066929014599034,0.16367080131689923,40.620141089024415
+SNB,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,validation,12,0.21111416263619043,0.17138505087495895,34.40604289416947
+SNB,unemployment,unemployment_rate,Unemployment Rate,hist_gradient_boosting,test,12,0.4316936574670672,0.37815150350983834,83.36519541667619

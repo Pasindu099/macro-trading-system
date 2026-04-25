@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div id="macro-dashboard-root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script
+    type="text/babel"
+    data-presets="env,react"
+    src="{{ url_for('static', path='js/macro_dashboard.jsx') }}?v=20260425b"
+></script>
+{% endblock %}

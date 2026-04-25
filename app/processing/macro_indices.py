@@ -418,7 +418,11 @@ async def build_theme_indices(
     await session.execute(
         text(
             """
-            WITH theme_totals AS (
+            WITH index_days AS (
+                SELECT DISTINCT index_date, country_code, currency_code
+                FROM processed.theme_index_components
+            ),
+            theme_totals AS (
                 SELECT country_code, macro_theme, count(*) AS expected_components
                 FROM processed.relationship_weights
                 GROUP BY country_code, macro_theme
@@ -440,6 +444,86 @@ async def build_theme_indices(
                     AND t.macro_theme = c.macro_theme
                 GROUP BY c.index_date, c.country_code, c.currency_code, c.macro_theme
             ),
+            headline_snapshots AS (
+                SELECT
+                    index_date,
+                    country_code,
+                    currency_code,
+                    macro_theme,
+                    headline_score,
+                    row_number() OVER (
+                        PARTITION BY index_date, country_code, macro_theme
+                        ORDER BY release_timestamp_utc DESC, source_release_id DESC
+                    ) AS latest_rank
+                FROM (
+                    SELECT
+                        d.index_date,
+                        f.country_code,
+                        f.currency_code,
+                        CASE
+                            WHEN fmap.headline_target_type = 'CPI' THEN 'Inflation'
+                            WHEN fmap.headline_target_type = 'UNEMPLOYMENT' THEN 'Labor'
+                            WHEN fmap.headline_target_type = 'GDP' THEN 'Growth'
+                        END AS macro_theme,
+                        (
+                            coalesce(
+                                f.standardized_surprise_score,
+                                f.momentum,
+                                f.mom_change,
+                                f.expanding_z_score
+                            )
+                            * CASE
+                                WHEN fmap.headline_target_type = 'UNEMPLOYMENT' THEN -1
+                                ELSE 1
+                              END
+                        ) AS headline_score,
+                        f.release_timestamp_utc,
+                        f.source_release_id
+                    FROM index_days d
+                    JOIN processed.indicator_features f
+                        ON f.country_code = d.country_code
+                        AND f.release_date_utc <= d.index_date
+                        AND f.release_timestamp_utc < (d.index_date + 1)::timestamptz
+                    JOIN processed.indicator_feature_map fmap
+                        ON fmap.indicator_id = f.indicator_id
+                        AND fmap.headline_target_type IN ('CPI', 'UNEMPLOYMENT', 'GDP')
+                    WHERE coalesce(
+                        f.standardized_surprise_score,
+                        f.momentum,
+                        f.mom_change,
+                        f.expanding_z_score
+                    ) IS NOT NULL
+                ) headline_candidates
+            ),
+            headline_latest AS (
+                SELECT *
+                FROM headline_snapshots
+                WHERE latest_rank = 1
+            ),
+            blended_theme_scores AS (
+                SELECT
+                    coalesce(t.index_date, h.index_date) AS index_date,
+                    coalesce(t.country_code, h.country_code) AS country_code,
+                    coalesce(t.currency_code, h.currency_code) AS currency_code,
+                    coalesce(t.macro_theme, h.macro_theme) AS macro_theme,
+                    CASE
+                        WHEN h.headline_score IS NULL THEN t.theme_score
+                        WHEN t.theme_score IS NULL THEN h.headline_score
+                        ELSE (t.theme_score * 0.30) + (h.headline_score * 0.70)
+                    END AS theme_score,
+                    coalesce(t.contributors, 0)
+                        + CASE WHEN h.headline_score IS NULL THEN 0 ELSE 1 END AS contributors,
+                    coalesce(t.avg_abs_corr, 1.0) AS avg_abs_corr,
+                    greatest(
+                        coalesce(t.completeness, 0),
+                        CASE WHEN h.headline_score IS NULL THEN 0 ELSE 1 END
+                    ) AS completeness
+                FROM theme_scores t
+                FULL OUTER JOIN headline_latest h
+                    ON h.index_date = t.index_date
+                    AND h.country_code = t.country_code
+                    AND h.macro_theme = t.macro_theme
+            ),
             pivoted AS (
                 SELECT
                     index_date,
@@ -457,7 +541,7 @@ async def build_theme_indices(
                     max(completeness) FILTER (WHERE macro_theme = 'Inflation') AS inflation_completeness,
                     max(completeness) FILTER (WHERE macro_theme = 'Labor') AS labor_completeness,
                     max(completeness) FILTER (WHERE macro_theme = 'Growth') AS growth_completeness
-                FROM theme_scores
+                FROM blended_theme_scores
                 GROUP BY index_date, country_code
             )
             INSERT INTO processed.theme_indices (

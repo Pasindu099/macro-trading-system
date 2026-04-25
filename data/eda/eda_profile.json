@@ -1,0 +1,43 @@
+{
+  "category_counts": {
+    "Growth": 5468,
+    "Housing": 572,
+    "Inflation": 4012,
+    "Labor": 2366,
+    "Monetary Policy": 174,
+    "Sentiment": 1374,
+    "Trade": 1134
+  },
+  "central_bank_counts": {
+    "BOC": 2094,
+    "BOE": 2479,
+    "BOJ": 3361,
+    "ECB": 891,
+    "FED": 2641,
+    "RBA": 2260,
+    "RBNZ": 652,
+    "SNB": 722
+  },
+  "date_range": {
+    "end": "2026-04-22",
+    "start": "2019-10-01"
+  },
+  "dropped_or_excluded": {
+    "duplicate_country_indicator_date_rows": 1881,
+    "future_observation_rows": 32,
+    "missing_date_rows": 0,
+    "missing_value_rows": 902,
+    "unsupported_country_rows": 248
+  },
+  "frequency_counts": {
+    "monthly": 12848,
+    "quarterly": 853,
+    "weekly": 1399
+  },
+  "generated_at": "2026-04-24T08:21:32.346788Z",
+  "indicator_count": 210,
+  "input_rows": 18085,
+  "outlier_iqr_count": 394,
+  "output_rows": 15100,
+  "scaling": "both"
+}

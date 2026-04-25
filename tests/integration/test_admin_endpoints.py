@@ -62,6 +62,32 @@ def test_calendar_page_renders_html(client: TestClient) -> None:
     assert "Economic Calendar" in r.text
 
 
+def test_analytics_page_renders_html(client: TestClient) -> None:
+    r = client.get("/analytics")
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]
+    assert "Data Analytics" in r.text
+    assert "Country Depth" in r.text
+    assert "Download PDF report" in r.text
+
+
+def test_analytics_report_downloads_csv(client: TestClient) -> None:
+    r = client.get("/analytics/report.csv")
+    assert r.status_code == 200
+    assert "text/csv" in r.headers["content-type"]
+    assert "attachment" in r.headers["content-disposition"]
+    assert "Macro Dashboard Data Summary" in r.text
+    assert "Category Coverage" in r.text
+
+
+def test_analytics_report_downloads_pdf(client: TestClient) -> None:
+    r = client.get("/analytics/report.pdf")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "application/pdf"
+    assert "attachment" in r.headers["content-disposition"]
+    assert r.content.startswith(b"%PDF")
+
+
 def test_country_page_404_for_unknown_country(client: TestClient) -> None:
     r = client.get("/country/ZZ")
     assert r.status_code == 404

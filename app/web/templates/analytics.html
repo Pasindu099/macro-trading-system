@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block body %}
+{% set mapped = analytics.data_quality[0] if analytics.data_quality else none %}
+<main class="shell shell--analytics">
+    <header class="analytics-hero">
+        <a class="back-link" href="/">Back to dashboard</a>
+        <div class="analytics-hero__grid">
+            <div>
+                <p class="eyebrow">Data Analytics</p>
+                <h1>Know what data you have in seconds.</h1>
+                <p class="calendar-hero__copy">
+                    A visual inventory of database size, mapping coverage, section mix, market depth,
+                    and recent ingestion activity.
+                </p>
+            </div>
+            <div class="analytics-hero-card">
+                <span>Latest observed print</span>
+                <strong>
+                    {% if analytics.latest_observed_release_at %}
+                        {{ analytics.latest_observed_release_at.strftime("%b %d, %Y") }}
+                    {% else %}
+                        No releases yet
+                    {% endif %}
+                </strong>
+                <a class="analytics-download-link" href="/analytics/report.pdf">Download PDF report</a>
+                <a class="topbar__link" href="/analytics/report.csv">Download CSV</a>
+                <a class="topbar__link" href="/calendar">Open calendar</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="analytics-overview">
+        <div class="analytics-kpi-grid">
+            {% for stat in analytics.headline_stats %}
+                <div class="analytics-kpi">
+                    <span class="analytics-kpi__label">{{ stat.label }}</span>
+                    <strong>{{ stat.value }}</strong>
+                    <span>{{ stat.detail }}</span>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="analytics-donut-card">
+            <div class="analytics-donut" style="--donut-value: {{ mapped.share if mapped else 0 }}%;">
+                <span>{{ mapped.share if mapped else 0 }}%</span>
+            </div>
+            <div>
+                <p class="eyebrow">Mapped Coverage</p>
+                <h2>{{ mapped.value if mapped else "0" }} mapped releases</h2>
+                <p class="panel-copy">
+                    {{ "{:,}".format(analytics.total_releases) }} total stored releases. Use unmapped
+                    coverage to decide where mapping work will have the biggest impact.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="analytics-card-grid">
+        <div class="analytics-panel analytics-panel--tight">
+            <div class="analytics-section-heading">
+                <div>
+                    <p class="eyebrow">Coverage</p>
+                    <h2>Completeness</h2>
+                </div>
+            </div>
+            <div class="analytics-bar-list">
+                {% for item in analytics.data_quality %}
+                    <div class="analytics-bar-row">
+                        <div class="analytics-bar-row__header">
+                            <span>{{ item.label }}</span>
+                            <strong>{{ item.value }} &middot; {{ item.share }}%</strong>
+                        </div>
+                        <div class="analytics-bar" style="--bar-value: {{ item.share }}%;"></div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="analytics-panel analytics-panel--tight">
+            <div class="analytics-section-heading">
+                <div>
+                    <p class="eyebrow">Cadence</p>
+                    <h2>Frequency Mix</h2>
+                </div>
+            </div>
+            <div class="analytics-pill-list">
+                {% for item in analytics.frequency_rows %}
+                    <div class="analytics-pill-row">
+                        <span>{{ item.label }}</span>
+                        <strong>{{ item.indicator_count }}</strong>
+                        <div class="analytics-bar" style="--bar-value: {{ item.share }}%;"></div>
+                    </div>
+                {% else %}
+                    <div class="empty-panel">No indicators have been seeded yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="analytics-panel analytics-panel--tight">
+            <div class="analytics-section-heading">
+                <div>
+                    <p class="eyebrow">Priority</p>
+                    <h2>Importance</h2>
+                </div>
+            </div>
+            <div class="analytics-priority-list">
+                {% for item in analytics.importance_rows %}
+                    <div class="analytics-priority">
+                        <span>{{ item.label }}</span>
+                        <strong>{{ item.indicator_count }}</strong>
+                        <small>{{ item.share }}%</small>
+                    </div>
+                {% else %}
+                    <div class="empty-panel">No importance metadata is available.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="analytics-panel">
+        <div class="analytics-section-heading">
+            <div>
+                <p class="eyebrow">Sections</p>
+                <h2>Category Coverage</h2>
+            </div>
+            <p class="panel-copy">Primary sections ranked by mapped release count.</p>
+        </div>
+        <div class="category-card-grid">
+            {% for row in analytics.category_rows %}
+                <article class="category-card category-card--{{ loop.index }}">
+                    <div class="category-card__top">
+                        <h3>{{ row.category }}</h3>
+                        <span>{{ row.share }}%</span>
+                    </div>
+                    <div class="category-card__bar" style="--bar-value: {{ row.share }}%;"></div>
+                    <div class="category-card__stats">
+                        <span>{{ "{:,}".format(row.indicator_count) }} indicators</span>
+                        <strong>{{ "{:,}".format(row.release_count) }} releases</strong>
+                    </div>
+                    <small>{{ row.latest_release_at.strftime("%b %d, %Y") if row.latest_release_at else "No prints" }}</small>
+                </article>
+            {% else %}
+                <div class="empty-panel">No categories are available.</div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="analytics-panel">
+        <div class="analytics-section-heading">
+            <div>
+                <p class="eyebrow">Markets</p>
+                <h2>Country Depth</h2>
+            </div>
+            <p class="panel-copy">A quick view of which markets have the deepest stored release history.</p>
+        </div>
+        <div class="country-depth-grid">
+            {% for row in analytics.country_rows %}
+                <a class="country-depth-card" href="/country/{{ row.code|lower }}">
+                    <div class="country-depth-card__main">
+                        <span class="country-depth-card__flag">{{ row.flag }}</span>
+                        <div>
+                            <strong>{{ row.code }} &middot; {{ row.currency_code }}</strong>
+                            <span>{{ row.name }}</span>
+                        </div>
+                    </div>
+                    <div class="country-depth-card__numbers">
+                        <span>{{ "{:,}".format(row.release_count) }} releases</span>
+                        <span>{{ row.indicator_count }} indicators</span>
+                    </div>
+                    <div class="analytics-bar" style="--bar-value: {{ row.share }}%;"></div>
+                </a>
+            {% else %}
+                <div class="empty-panel">No countries are available.</div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="analytics-panel">
+        <div class="analytics-section-heading">
+            <div>
+                <p class="eyebrow">Pipeline</p>
+                <h2>Recent Ingestion Runs</h2>
+            </div>
+            <p class="panel-copy">{{ "{:,}".format(analytics.ingestion_run_total) }} runs logged.</p>
+        </div>
+        <div class="run-timeline">
+            {% for run in analytics.recent_runs %}
+                <div class="run-timeline__item">
+                    <span class="run-timeline__dot"></span>
+                    <div>
+                        <strong>{{ run.run_type }} #{{ run.id }}</strong>
+                        <span>{{ run.started_at.strftime("%b %d, %Y %H:%M") if run.started_at else "Unknown start" }}</span>
+                    </div>
+                    <div class="run-timeline__metrics">
+                        <span>{{ run.status }}</span>
+                        <span>{{ "{:,}".format(run.events_inserted) }} inserted</span>
+                        <span>{{ "{:,}".format(run.events_updated) }} updated</span>
+                        <span>{{ "{:,}".format(run.api_calls_used) }} calls</span>
+                    </div>
+                </div>
+            {% else %}
+                <div class="empty-panel">No ingestion runs have been logged yet.</div>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+{% endblock %}

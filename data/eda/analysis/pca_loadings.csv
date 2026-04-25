@@ -1,0 +1,286 @@
+central_bank_code,component,indicator_key,indicator,primary_category,loading,abs_loading
+BOC,PC1,employment_change,Employment Change,Labor,0.3072153942361847,0.3072153942361847
+BOC,PC1,gdp_mom,GDP (MoM),Growth,0.3029410682734002,0.3029410682734002
+BOC,PC1,manufacturing_sales_mom,Manufacturing Sales (MoM),Growth,0.29611411722665953,0.29611411722665953
+BOC,PC1,full_time_employment_change,Full-Time Employment Change,Labor,0.2939698828103399,0.2939698828103399
+BOC,PC1,wholesale_sales_mom,Wholesale Sales (MoM),Growth,0.28250791234739137,0.28250791234739137
+BOC,PC1,retail_sales_mom,Retail Sales (MoM),Growth,0.2821038372612122,0.2821038372612122
+BOC,PC1,retail_sales_ex_autos_mom,Retail Sales Ex Autos (MoM),Growth,0.2768860914433692,0.2768860914433692
+BOC,PC1,part_time_employment_change,Part-Time Employment Change,Labor,0.2598300173507031,0.2598300173507031
+BOC,PC1,ivey_pmi_sa,Ivey PMI s.a.,Growth,0.23136696623002762,0.23136696623002762
+BOC,PC1,raw_materials_prices_mom,Raw Materials Prices (MoM),Inflation,0.217349393707546,0.217349393707546
+BOC,PC1,cpi_headline_mom,Headline CPI (MoM),Inflation,0.19871838548752477,0.19871838548752477
+BOC,PC1,raw_materials_prices_yoy,Raw Materials Prices (YoY),Inflation,0.18059794282292468,0.18059794282292468
+BOC,PC2,manufacturing_pmi,Manufacturing PMI,Growth,0.36791830969554884,0.36791830969554884
+BOC,PC2,core_cpi_mom,Core CPI (MoM),Inflation,0.3347891241472648,0.3347891241472648
+BOC,PC2,imports,Imports,Trade,-0.32768570851205253,0.32768570851205253
+BOC,PC2,new_housing_price_index_mom,New Housing Price Index (MoM),Housing,0.3142587968528253,0.3142587968528253
+BOC,PC2,new_housing_price_index_yoy,New Housing Price Index (YoY),Housing,0.29511925939487493,0.29511925939487493
+BOC,PC2,exports,Exports,Trade,-0.28864498142891387,0.28864498142891387
+BOC,PC2,cfib_business_barometer,CFIB Business Barometer,Sentiment,0.26452663556971656,0.26452663556971656
+BOC,PC2,vehicle_sales_mom,Vehicle Sales (MoM),Growth,-0.20220844953276798,0.20220844953276798
+BOC,PC2,new_motor_vehicle_sales,New Motor Vehicle Sales,Growth,-0.20151102341355626,0.20151102341355626
+BOC,PC2,ppi_yoy,PPI (YoY),Inflation,0.17760570921575336,0.17760570921575336
+BOC,PC2,unemployment_rate,Unemployment Rate,Labor,0.1722843932933105,0.1722843932933105
+BOC,PC2,raw_materials_prices_yoy,Raw Materials Prices (YoY),Inflation,0.1579838141991155,0.1579838141991155
+BOC,PC3,cpi_headline_yoy,Headline CPI (YoY),Inflation,-0.3886655144833463,0.3886655144833463
+BOC,PC3,core_cpi_yoy,Core CPI (YoY),Inflation,-0.3682846424639844,0.3682846424639844
+BOC,PC3,unemployment_rate,Unemployment Rate,Labor,0.3419538347147182,0.3419538347147182
+BOC,PC3,ppi_yoy,PPI (YoY),Inflation,-0.2850960545906697,0.2850960545906697
+BOC,PC3,exports,Exports,Trade,-0.2764128765294349,0.2764128765294349
+BOC,PC3,raw_materials_prices_yoy,Raw Materials Prices (YoY),Inflation,-0.26114800412213457,0.26114800412213457
+BOC,PC3,budget_balance,Budget Balance,Growth,-0.25163799074461923,0.25163799074461923
+BOC,PC3,balance_of_trade,Balance of Trade,Trade,-0.2338486366816714,0.2338486366816714
+BOC,PC3,imports,Imports,Trade,-0.20409156614942564,0.20409156614942564
+BOC,PC3,new_housing_price_index_yoy,New Housing Price Index (YoY),Housing,-0.18834132968928521,0.18834132968928521
+BOC,PC3,retail_sales_yoy,Retail Sales (YoY),Growth,-0.16668078230779393,0.16668078230779393
+BOC,PC3,retail_sales_mom,Retail Sales (MoM),Growth,0.15588843782235826,0.15588843782235826
+BOE,PC1,ppi_input_yoy,PPI Input (YoY),Inflation,0.2980000646450012,0.2980000646450012
+BOE,PC1,ppi_output_yoy,PPI Output (YoY),Inflation,0.28123143703146875,0.28123143703146875
+BOE,PC1,ppi_core_output_yoy,PPI Core Output (YoY),Inflation,0.2791065365445043,0.2791065365445043
+BOE,PC1,cbi_industrial_trends_orders,CBI Industrial Trends Orders,Sentiment,0.27886565177823824,0.27886565177823824
+BOE,PC1,retail_price_index_yoy,Retail Price Index (YoY),Inflation,0.2535130341110903,0.2535130341110903
+BOE,PC1,cpi_headline_yoy,Headline CPI (YoY),Inflation,0.24861187191893855,0.24861187191893855
+BOE,PC1,ppi_core_output_mom,PPI Core Output (MoM),Inflation,0.23824550686843823,0.23824550686843823
+BOE,PC1,retail_price_index_mom,Retail Price Index (MoM),Inflation,0.21170287437339097,0.21170287437339097
+BOE,PC1,core_cpi_yoy,Core CPI (YoY),Inflation,0.20584107630165804,0.20584107630165804
+BOE,PC1,cpi_headline_mom,Headline CPI (MoM),Inflation,0.2016623350347221,0.2016623350347221
+BOE,PC1,avg_earnings_incl_bonus,Average Earnings (incl. Bonus),Labor,0.19381028925335186,0.19381028925335186
+BOE,PC1,gdp_yoy,GDP (YoY),Growth,0.19243001261262693,0.19243001261262693
+BOE,PC2,retail_sales_yoy,Retail Sales (YoY),Growth,0.3404996048231921,0.3404996048231921
+BOE,PC2,retail_sales_ex_fuel_yoy,Retail Sales Ex Fuel (YoY),Growth,0.33266986181404834,0.33266986181404834
+BOE,PC2,industrial_production_yoy,Industrial Production (YoY),Growth,0.30130404130718974,0.30130404130718974
+BOE,PC2,niesr_monthly_gdp_tracker,NIESR Monthly GDP Tracker,Growth,0.26476670305288125,0.26476670305288125
+BOE,PC2,claimant_count_change,Claimant Count Change,Labor,-0.2600240832323665,0.2600240832323665
+BOE,PC2,gdp_qoq,GDP (QoQ),Growth,0.25427716304818615,0.25427716304818615
+BOE,PC2,consumer_confidence,Consumer Confidence,Sentiment,0.25383270997931934,0.25383270997931934
+BOE,PC2,gdp_yoy,GDP (YoY),Growth,0.25111127386545035,0.25111127386545035
+BOE,PC2,gdp_mom,GDP (MoM),Growth,0.21610470427070808,0.21610470427070808
+BOE,PC2,unemployment_rate,Unemployment Rate,Labor,0.20186554494341552,0.20186554494341552
+BOE,PC2,cbi_business_optimism,CBI Business Optimism Index,Sentiment,0.17686611184819906,0.17686611184819906
+BOE,PC2,ppi_input_mom,PPI Input (MoM),Inflation,0.15961930148174097,0.15961930148174097
+BOE,PC3,bank_rate,Bank Rate,Monetary Policy,0.375363198610923,0.375363198610923
+BOE,PC3,hmrc_payrolls_change,HMRC Payrolls Change,Labor,-0.3342432743865316,0.3342432743865316
+BOE,PC3,avg_earnings_excl_bonus,Average Earnings (excl. Bonus),Labor,0.29159685847372296,0.29159685847372296
+BOE,PC3,house_price_index_yoy,House Price Index (YoY),Housing,-0.2558106461273045,0.2558106461273045
+BOE,PC3,avg_earnings_incl_bonus,Average Earnings (incl. Bonus),Labor,0.24540551051169157,0.24540551051169157
+BOE,PC3,core_cpi_yoy,Core CPI (YoY),Inflation,0.24200817557400317,0.24200817557400317
+BOE,PC3,house_price_index_mom,House Price Index (MoM),Housing,-0.21929239646103993,0.21929239646103993
+BOE,PC3,core_rpi_mom,Core RPI (MoM),Inflation,0.20966358495277673,0.20966358495277673
+BOE,PC3,public_sector_net_borrowing,Public Sector Net Borrowing,Growth,0.20689900895251542,0.20689900895251542
+BOE,PC3,nationwide_hpi_yoy,Nationwide House Prices (YoY),Housing,-0.2063446907602015,0.2063446907602015
+BOE,PC3,retail_sales_mom,Retail Sales (MoM),Growth,-0.1735213017312006,0.1735213017312006
+BOE,PC3,retail_sales_ex_fuel_mom,Retail Sales Ex Fuel (MoM),Growth,-0.17336772933449626,0.17336772933449626
+BOJ,PC1,tankan_small_manufacturers_index,Tankan Small Manufacturers Index,Sentiment,0.24782375290220016,0.24782375290220016
+BOJ,PC1,tankan_large_manufacturing_outlook,Tankan Large Manufacturing Outlook,Sentiment,0.24423008895579443,0.24423008895579443
+BOJ,PC1,tankan_large_manufacturers_index,Tankan Large Manufacturers Index,Sentiment,0.23831716982197093,0.23831716982197093
+BOJ,PC1,composite_pmi,S&P Global Composite PMI,Growth,0.2360756317683934,0.2360756317683934
+BOJ,PC1,leading_economic_index,Leading Economic Index,Growth,0.23200069746641183,0.23200069746641183
+BOJ,PC1,tankan_non_manufacturing_outlook,Tankan Non-Manufacturing Outlook,Sentiment,0.22867532862191334,0.22867532862191334
+BOJ,PC1,services_pmi,S&P Global Services PMI,Growth,0.2276024113633742,0.2276024113633742
+BOJ,PC1,tankan_large_non_manufacturing_index,Tankan Large Non-Manufacturing Index,Sentiment,0.21335805522716392,0.21335805522716392
+BOJ,PC1,reuters_tankan_index,Reuters Tankan Index,Sentiment,0.21183158126850538,0.21183158126850538
+BOJ,PC1,coincident_index,Coincident Index,Growth,0.20308626972107424,0.20308626972107424
+BOJ,PC1,eco_watchers_current,Eco Watchers Survey Current,Sentiment,0.19720622788942468,0.19720622788942468
+BOJ,PC1,eco_watchers_outlook,Eco Watchers Survey Outlook,Sentiment,0.18445720111149305,0.18445720111149305
+BOJ,PC2,machine_tool_orders_yoy,Machine Tool Orders (YoY),Growth,-0.3153816985389736,0.3153816985389736
+BOJ,PC2,cpi_ex_food_energy_yoy,CPI Ex Food and Energy (YoY),Inflation,0.29936855939906104,0.29936855939906104
+BOJ,PC2,exports_yoy,Exports (YoY),Growth,-0.2528835815065719,0.2528835815065719
+BOJ,PC2,imports_yoy,Imports (YoY),Growth,-0.2522980026779893,0.2522980026779893
+BOJ,PC2,manufacturing_pmi,S&P Global Manufacturing PMI,Growth,-0.2500254898605776,0.2500254898605776
+BOJ,PC2,ppi_mom,PPI (MoM),Inflation,-0.2423865560154988,0.2423865560154988
+BOJ,PC2,cpi_headline_yoy,Headline CPI (YoY),Inflation,0.2423028146893594,0.2423028146893594
+BOJ,PC2,core_cpi_yoy,Core CPI (YoY),Inflation,0.23592106603156357,0.23592106603156357
+BOJ,PC2,unemployment_rate,Unemployment Rate,Labor,-0.21583799445021543,0.21583799445021543
+BOJ,PC2,cpi_index,Consumer Price Index,Inflation,0.2118882974725932,0.2118882974725932
+BOJ,PC2,tankan_large_non_manufacturing_index,Tankan Large Non-Manufacturing Index,Sentiment,0.19926340685371893,0.19926340685371893
+BOJ,PC2,coincident_index,Coincident Index,Growth,0.19896051287571098,0.19896051287571098
+BOJ,PC3,gdp_qoq,GDP (QoQ),Growth,0.3495981542811818,0.3495981542811818
+BOJ,PC3,tertiary_industry_index_mom,Tertiary Industry Index (MoM),Growth,0.34317370025125826,0.34317370025125826
+BOJ,PC3,capacity_utilization,Capacity Utilization,Growth,0.33026928244834025,0.33026928244834025
+BOJ,PC3,industrial_production_mom,Industrial Production (MoM),Growth,0.2989540259049987,0.2989540259049987
+BOJ,PC3,retail_sales_mom,Retail Sales (MoM),Growth,0.26630129456197726,0.26630129456197726
+BOJ,PC3,household_spending_mom,Household Spending (MoM),Growth,0.23782385471929438,0.23782385471929438
+BOJ,PC3,balance_of_trade,Balance of Trade,Growth,0.21337375977877984,0.21337375977877984
+BOJ,PC3,eco_watchers_current,Eco Watchers Survey Current,Sentiment,0.2047005807097212,0.2047005807097212
+BOJ,PC3,imports_yoy,Imports (YoY),Growth,-0.19743002176785907,0.19743002176785907
+BOJ,PC3,unemployment_rate,Unemployment Rate,Labor,0.1665536899220844,0.1665536899220844
+BOJ,PC3,ppi_yoy,PPI (YoY),Inflation,-0.16246721412963547,0.16246721412963547
+BOJ,PC3,eco_watchers_outlook,Eco Watchers Survey Outlook,Sentiment,0.16047035796063153,0.16047035796063153
+ECB,PC1,composite_pmi,Composite PMI,Growth,-0.3867684281633559,0.3867684281633559
+ECB,PC1,services_pmi,Services PMI,Growth,-0.37567530645008684,0.37567530645008684
+ECB,PC1,unemployment_rate,Unemployment Rate,Labor,-0.3711035434790552,0.3711035434790552
+ECB,PC1,core_cpi_yoy,Core HICP (YoY),Inflation,0.34285004012500675,0.34285004012500675
+ECB,PC1,consumer_confidence,Consumer Confidence,Sentiment,-0.30708044421092995,0.30708044421092995
+ECB,PC1,manufacturing_pmi,Manufacturing PMI,Growth,-0.30229470397423713,0.30229470397423713
+ECB,PC1,zew_economic_sentiment,ZEW Economic Sentiment Index,Sentiment,-0.2924408695272612,0.2924408695272612
+ECB,PC1,cpi_index,Consumer Price Index,Inflation,0.2800318713794748,0.2800318713794748
+ECB,PC1,cpi_headline_yoy,Headline HICP (YoY),Inflation,0.22369111017821755,0.22369111017821755
+ECB,PC1,economic_sentiment,Economic Sentiment,Sentiment,-0.13314060248524032,0.13314060248524032
+ECB,PC1,consumer_inflation_expectation,Consumer Inflation Expectation,Inflation,-0.11497299008631229,0.11497299008631229
+ECB,PC1,construction_output_yoy,Construction Output (YoY),Growth,-0.0970305667135235,0.0970305667135235
+ECB,PC2,consumer_inflation_expectation,Consumer Inflation Expectation,Inflation,-0.5136478377762088,0.5136478377762088
+ECB,PC2,cpi_headline_yoy,Headline HICP (YoY),Inflation,-0.4592560903435156,0.4592560903435156
+ECB,PC2,cpi_headline_mom,Headline HICP (MoM),Inflation,-0.3774808594230369,0.3774808594230369
+ECB,PC2,zew_economic_sentiment,ZEW Economic Sentiment Index,Sentiment,0.3356168132550795,0.3356168132550795
+ECB,PC2,core_cpi_yoy,Core HICP (YoY),Inflation,-0.22576169767264764,0.22576169767264764
+ECB,PC2,manufacturing_pmi,Manufacturing PMI,Growth,-0.21796746161452618,0.21796746161452618
+ECB,PC2,cpi_index,Consumer Price Index,Inflation,0.20905354655626468,0.20905354655626468
+ECB,PC2,consumer_confidence,Consumer Confidence,Sentiment,0.19434384394983686,0.19434384394983686
+ECB,PC2,composite_pmi,Composite PMI,Growth,-0.1517355207271258,0.1517355207271258
+ECB,PC2,services_pmi,Services PMI,Growth,-0.15097699335747577,0.15097699335747577
+ECB,PC2,construction_output_yoy,Construction Output (YoY),Growth,-0.13105840982053746,0.13105840982053746
+ECB,PC2,economic_sentiment,Economic Sentiment,Sentiment,-0.11652030518176802,0.11652030518176802
+ECB,PC3,construction_output_yoy,Construction Output (YoY),Growth,0.5252143092080225,0.5252143092080225
+ECB,PC3,economic_sentiment,Economic Sentiment,Sentiment,0.4192522596323578,0.4192522596323578
+ECB,PC3,gdp_qoq,GDP (QoQ),Growth,0.4122818182851361,0.4122818182851361
+ECB,PC3,manufacturing_pmi,Manufacturing PMI,Growth,0.29696346543333146,0.29696346543333146
+ECB,PC3,cpi_index,Consumer Price Index,Inflation,0.28322075709896904,0.28322075709896904
+ECB,PC3,consumer_confidence,Consumer Confidence,Sentiment,0.19713339825311144,0.19713339825311144
+ECB,PC3,consumer_inflation_expectation,Consumer Inflation Expectation,Inflation,-0.17902876565819226,0.17902876565819226
+ECB,PC3,core_cpi_yoy,Core HICP (YoY),Inflation,0.17292226580539152,0.17292226580539152
+ECB,PC3,composite_pmi,Composite PMI,Growth,-0.1504443460823395,0.1504443460823395
+ECB,PC3,cpi_headline_yoy,Headline HICP (YoY),Inflation,0.14908252887978307,0.14908252887978307
+ECB,PC3,zew_economic_sentiment,ZEW Economic Sentiment Index,Sentiment,0.1470713932758489,0.1470713932758489
+ECB,PC3,unemployment_rate,Unemployment Rate,Labor,-0.1308829353952686,0.1308829353952686
+FED,PC1,pce_prices_qoq,PCE Prices (QoQ),Inflation,-0.19558651137559838,0.19558651137559838
+FED,PC1,core_pce_prices_qoq,Core PCE Prices (QoQ),Inflation,-0.18688672830451017,0.18688672830451017
+FED,PC1,import_prices_yoy,Import Prices (YoY),Inflation,-0.1792315315874171,0.1792315315874171
+FED,PC1,ppi_yoy,PPI (YoY),Inflation,-0.1788593287047309,0.1788593287047309
+FED,PC1,core_cpi_mom,Core CPI (MoM),Inflation,-0.1772916426165493,0.1772916426165493
+FED,PC1,pce_price_index_mom,PCE Price Index (MoM),Inflation,-0.17647333544931948,0.17647333544931948
+FED,PC1,cpi_headline_mom,Headline CPI (MoM),Inflation,-0.17626656830446494,0.17626656830446494
+FED,PC1,challenger_job_cuts,Challenger Job Cuts,Labor,0.17544747716201167,0.17544747716201167
+FED,PC1,core_ppi_yoy,Core PPI (YoY),Inflation,-0.173587180509985,0.173587180509985
+FED,PC1,ism_manufacturing_employment,ISM Manufacturing Employment,Growth,-0.17262195761652402,0.17262195761652402
+FED,PC1,export_prices_yoy,Export Prices (YoY),Inflation,-0.1689640082423053,0.1689640082423053
+FED,PC1,pce_price_index_yoy,PCE Price Index (YoY),Inflation,-0.16554010443676634,0.16554010443676634
+FED,PC2,fed_interest_rate_decision,Fed Interest Rate Decision,Monetary Policy,0.27124057442157407,0.27124057442157407
+FED,PC2,cpi_index,CPI Index,Inflation,0.27004696278593654,0.27004696278593654
+FED,PC2,sp_global_manufacturing_pmi,S&P Global Manufacturing PMI,Growth,-0.26445403460365147,0.26445403460365147
+FED,PC2,average_weekly_hours,Average Weekly Hours,Labor,-0.2423310205982268,0.2423310205982268
+FED,PC2,participation_rate,Labor Force Participation Rate,Labor,0.23851937639758714,0.23851937639758714
+FED,PC2,sp_global_composite_pmi,S&P Global Composite PMI,Growth,-0.23190538304107272,0.23190538304107272
+FED,PC2,sp_global_services_pmi,S&P Global Services PMI,Growth,-0.2203253641162483,0.2203253641162483
+FED,PC2,umich_consumer_sentiment,UMich Consumer Sentiment,Sentiment,-0.21337221560587422,0.21337221560587422
+FED,PC2,unemployment_rate,Unemployment Rate,Labor,-0.20540949914613502,0.20540949914613502
+FED,PC2,umich_inflation_exp_5y,UMich 5Y Inflation Expectations,Inflation,0.18889451184967487,0.18889451184967487
+FED,PC2,continuing_jobless_claims,Continuing Jobless Claims,Labor,-0.18818890122709123,0.18818890122709123
+FED,PC2,cpi_sa_index,CPI SA Index,Inflation,0.18680588740284654,0.18680588740284654
+FED,PC3,core_cpi_yoy,Core CPI (YoY),Inflation,0.2301013050285981,0.2301013050285981
+FED,PC3,nfib_business_optimism,NFIB Business Optimism Index,Sentiment,-0.22953536011222814,0.22953536011222814
+FED,PC3,employment_cost_index_qoq,Employment Cost Index (QoQ),Labor,0.21568640479353274,0.21568640479353274
+FED,PC3,employment_cost_wages_qoq,Employment Cost - Wages (QoQ),Labor,0.20657450100692398,0.20657450100692398
+FED,PC3,consumer_inflation_expectations,Consumer Inflation Expectations,Inflation,0.20191746753140494,0.20191746753140494
+FED,PC3,cpi_headline_yoy,Headline CPI (YoY),Inflation,0.19681431878109207,0.19681431878109207
+FED,PC3,avg_hourly_earnings_yoy,Average Hourly Earnings (YoY),Labor,0.19413937002778708,0.19413937002778708
+FED,PC3,avg_hourly_earnings_mom,Average Hourly Earnings (MoM),Labor,0.1916399285961332,0.1916399285961332
+FED,PC3,pce_price_index_yoy,PCE Price Index (YoY),Inflation,0.18510219782095985,0.18510219782095985
+FED,PC3,philly_fed_mfg,Philadelphia Fed Manufacturing Index,Growth,-0.18503121885194876,0.18503121885194876
+FED,PC3,cpi_sa_index,CPI SA Index,Inflation,-0.1848307923108634,0.1848307923108634
+FED,PC3,core_pce_price_index_yoy,Core PCE Price Index (YoY),Inflation,0.18424629342052368,0.18424629342052368
+RBA,PC1,producer_price_index_yoy,Producer Price Index (YoY),Inflation,0.29561882158306263,0.29561882158306263
+RBA,PC1,rba_weighted_median_cpi_qoq,RBA Weighted Median CPI (QoQ),Inflation,0.29037488103995285,0.29037488103995285
+RBA,PC1,rba_trimmed_mean_cpi_qoq,RBA Trimmed Mean CPI (QoQ),Inflation,0.28274021850543146,0.28274021850543146
+RBA,PC1,unemployment_rate,Unemployment Rate,Labor,-0.2756138622458076,0.2756138622458076
+RBA,PC1,rba_trimmed_mean_cpi_yoy,RBA Trimmed Mean CPI (YoY),Inflation,0.27224530312354656,0.27224530312354656
+RBA,PC1,cpi_headline_yoy,Headline CPI (YoY),Inflation,0.271121537222668,0.271121537222668
+RBA,PC1,rba_weighted_median_cpi_yoy,RBA Weighted Median CPI (YoY),Inflation,0.2612950537863377,0.2612950537863377
+RBA,PC1,private_sector_credit_yoy,Private Sector Credit (YoY),Growth,0.25984111219564254,0.25984111219564254
+RBA,PC1,producer_price_index_qoq,Producer Price Index (QoQ),Inflation,0.25646398217885574,0.25646398217885574
+RBA,PC1,consumer_inflation_expectation,Consumer Inflation Expectation,Inflation,0.2264625412710353,0.2264625412710353
+RBA,PC1,cpi_headline_qoq,Headline CPI (QoQ),Inflation,0.20759380712142547,0.20759380712142547
+RBA,PC1,private_sector_credit_mom,Private Sector Credit (MoM),Growth,0.16298974472505884,0.16298974472505884
+RBA,PC2,manufacturing_pmi,Manufacturing PMI,Growth,-0.30764204423777997,0.30764204423777997
+RBA,PC2,ai_group_construction_index,Ai Group Construction Index,Growth,-0.2948634732094977,0.2948634732094977
+RBA,PC2,ai_group_manufacturing_index,Ai Group Manufacturing Index,Growth,-0.2863480543502006,0.2863480543502006
+RBA,PC2,corelogic_dwelling_prices_mom,CoreLogic Dwelling Prices (MoM),Housing,0.25773197275349014,0.25773197275349014
+RBA,PC2,ai_group_services_index,Ai Group Services Index,Growth,-0.2538551812410303,0.2538551812410303
+RBA,PC2,monthly_cpi_indicator,Monthly CPI Indicator,Inflation,-0.2526964058736206,0.2526964058736206
+RBA,PC2,commodity_prices_yoy,Commodity Prices (YoY),Inflation,-0.25125963536432466,0.25125963536432466
+RBA,PC2,current_account,Current Account,Trade,-0.23628285434058816,0.23628285434058816
+RBA,PC2,export_price_index_qoq,Export Price Index (QoQ),Inflation,-0.2361362128161683,0.2361362128161683
+RBA,PC2,westpac_consumer_confidence_index,Westpac Consumer Confidence Index,Sentiment,-0.22060729150744193,0.22060729150744193
+RBA,PC2,cpi_headline_qoq,Headline CPI (QoQ),Inflation,-0.20013228614771017,0.20013228614771017
+RBA,PC2,import_price_index_qoq,Import Price Index (QoQ),Inflation,-0.19341990165665027,0.19341990165665027
+RBA,PC3,balance_of_trade,Balance of Trade,Trade,-0.2868467633675802,0.2868467633675802
+RBA,PC3,composite_pmi,Composite PMI,Growth,0.26947219431962705,0.26947219431962705
+RBA,PC3,services_pmi,Services PMI,Growth,0.2662468412842586,0.2662468412842586
+RBA,PC3,housing_credit_mom,Housing Credit (MoM),Growth,0.261330281806111,0.261330281806111
+RBA,PC3,leading_index_mom,Leading Index (MoM),Growth,0.24028225819416468,0.24028225819416468
+RBA,PC3,cash_rate,Cash Rate,Monetary Policy,-0.2370602642831837,0.2370602642831837
+RBA,PC3,employment_change,Employment Change,Labor,0.2340182163305727,0.2340182163305727
+RBA,PC3,current_account,Current Account,Trade,-0.23397678013773743,0.23397678013773743
+RBA,PC3,monthly_cpi_indicator,Monthly CPI Indicator,Inflation,-0.21608947493543681,0.21608947493543681
+RBA,PC3,part_time_employment_change,Part-Time Employment Change,Labor,0.20466149939905057,0.20466149939905057
+RBA,PC3,westpac_consumer_confidence_index,Westpac Consumer Confidence Index,Sentiment,0.18904495785236186,0.18904495785236186
+RBA,PC3,nab_business_confidence,NAB Business Confidence,Sentiment,0.17344727658122736,0.17344727658122736
+RBNZ,PC1,unemployment_rate,Unemployment Rate,Labor,-0.37848874133532384,0.37848874133532384
+RBNZ,PC1,cpi_headline_yoy,Headline CPI (YoY),Inflation,0.3671195894021882,0.3671195894021882
+RBNZ,PC1,labour_cost_index_qoq,Labour Cost Index (QoQ),Labor,0.35321267422765024,0.35321267422765024
+RBNZ,PC1,cpi_headline_qoq,Headline CPI (QoQ),Inflation,0.3066232593921583,0.3066232593921583
+RBNZ,PC1,business_confidence,Business Confidence,Growth,-0.3009365416206782,0.3009365416206782
+RBNZ,PC1,consumer_price_index,Consumer Price Index,Inflation,0.29164816242618075,0.29164816242618075
+RBNZ,PC1,labour_cost_index_yoy,Labour Cost Index (YoY),Labor,0.28865105436331484,0.28865105436331484
+RBNZ,PC1,participation_rate,Labor Force Participation Rate,Labor,0.2805312756910554,0.2805312756910554
+RBNZ,PC1,balance_of_trade,Balance of Trade,Growth,-0.22715575783305308,0.22715575783305308
+RBNZ,PC1,credit_card_spending_yoy,Credit Card Spending (YoY),Growth,0.1894627330737939,0.1894627330737939
+RBNZ,PC1,employment_change_qoq,Employment Change (QoQ),Labor,0.187206024923684,0.187206024923684
+RBNZ,PC1,capacity_utilization,Capacity Utilization,Growth,0.12236148436467617,0.12236148436467617
+RBNZ,PC2,capacity_utilization,Capacity Utilization,Growth,0.4462103334839835,0.4462103334839835
+RBNZ,PC2,imports,Imports,Growth,-0.3937952279188587,0.3937952279188587
+RBNZ,PC2,participation_rate,Labor Force Participation Rate,Labor,-0.36468825709212266,0.36468825709212266
+RBNZ,PC2,consumer_price_index,Consumer Price Index,Inflation,0.3604406265014578,0.3604406265014578
+RBNZ,PC2,exports,Exports,Growth,-0.3221435664934933,0.3221435664934933
+RBNZ,PC2,labour_cost_index_yoy,Labour Cost Index (YoY),Labor,-0.3190101702958986,0.3190101702958986
+RBNZ,PC2,business_confidence,Business Confidence,Growth,-0.26476302763835274,0.26476302763835274
+RBNZ,PC2,labour_cost_index_qoq,Labour Cost Index (QoQ),Labor,-0.2026017318259382,0.2026017318259382
+RBNZ,PC2,employment_change_qoq,Employment Change (QoQ),Labor,0.15356674494066858,0.15356674494066858
+RBNZ,PC2,unemployment_rate,Unemployment Rate,Labor,-0.11404888984831196,0.11404888984831196
+RBNZ,PC2,cpi_headline_yoy,Headline CPI (YoY),Inflation,-0.10653823874642729,0.10653823874642729
+RBNZ,PC2,credit_card_spending_yoy,Credit Card Spending (YoY),Growth,-0.09491283900389264,0.09491283900389264
+RBNZ,PC3,employment_change_qoq,Employment Change (QoQ),Labor,-0.44639987151925226,0.44639987151925226
+RBNZ,PC3,exports,Exports,Growth,-0.3726955334793356,0.3726955334793356
+RBNZ,PC3,cpi_headline_qoq,Headline CPI (QoQ),Inflation,-0.3694991761884383,0.3694991761884383
+RBNZ,PC3,labour_cost_index_yoy,Labour Cost Index (YoY),Labor,0.3180295150300849,0.3180295150300849
+RBNZ,PC3,credit_card_spending_yoy,Credit Card Spending (YoY),Growth,-0.29529804746298516,0.29529804746298516
+RBNZ,PC3,imports,Imports,Growth,-0.247005129469522,0.247005129469522
+RBNZ,PC3,capacity_utilization,Capacity Utilization,Growth,-0.2142224433104666,0.2142224433104666
+RBNZ,PC3,participation_rate,Labor Force Participation Rate,Labor,0.21359723117070098,0.21359723117070098
+RBNZ,PC3,balance_of_trade,Balance of Trade,Growth,0.21027431051670512,0.21027431051670512
+RBNZ,PC3,business_confidence,Business Confidence,Growth,-0.20018336902686495,0.20018336902686495
+RBNZ,PC3,global_dairy_trade_price_index,Global Dairy Trade Price Index,Growth,0.1624050115323243,0.1624050115323243
+RBNZ,PC3,cpi_headline_yoy,Headline CPI (YoY),Inflation,-0.14476549282086637,0.14476549282086637
+SNB,PC1,cpi_headline_yoy,Headline CPI (YoY),Inflation,-0.5163344998946099,0.5163344998946099
+SNB,PC1,unemployment_rate,Unemployment Rate,Labor,0.48321777522018317,0.48321777522018317
+SNB,PC1,economic_sentiment_index,Economic Sentiment Index,Sentiment,0.4509574005699118,0.4509574005699118
+SNB,PC1,producer_import_prices_yoy,Producer & Import Prices (YoY),Inflation,-0.36537008667215926,0.36537008667215926
+SNB,PC1,cpi_headline_mom,Headline CPI (MoM),Inflation,-0.26501624093777176,0.26501624093777176
+SNB,PC1,consumer_confidence,Consumer Confidence,Sentiment,0.2181253572205324,0.2181253572205324
+SNB,PC1,retail_sales_yoy,Retail Sales (YoY),Growth,0.1517689963486781,0.1517689963486781
+SNB,PC1,balance_of_trade,Balance of Trade,Growth,0.12220710287111171,0.12220710287111171
+SNB,PC1,retail_sales_mom,Retail Sales (MoM),Growth,0.06699923095402899,0.06699923095402899
+SNB,PC1,producer_import_prices_mom,Producer & Import Prices (MoM),Inflation,-0.043758949958990684,0.043758949958990684
+SNB,PC1,gdp_qoq,GDP (QoQ),Growth,0.029273917539229803,0.029273917539229803
+SNB,PC2,producer_import_prices_mom,Producer & Import Prices (MoM),Inflation,-0.526690470992808,0.526690470992808
+SNB,PC2,consumer_confidence,Consumer Confidence,Sentiment,-0.39801045733059437,0.39801045733059437
+SNB,PC2,producer_import_prices_yoy,Producer & Import Prices (YoY),Inflation,-0.35602339817554185,0.35602339817554185
+SNB,PC2,gdp_qoq,GDP (QoQ),Growth,-0.35551781399131455,0.35551781399131455
+SNB,PC2,retail_sales_yoy,Retail Sales (YoY),Growth,-0.34323440732647714,0.34323440732647714
+SNB,PC2,cpi_headline_mom,Headline CPI (MoM),Inflation,-0.31526571949080595,0.31526571949080595
+SNB,PC2,economic_sentiment_index,Economic Sentiment Index,Sentiment,-0.21957681570711834,0.21957681570711834
+SNB,PC2,balance_of_trade,Balance of Trade,Growth,-0.12775092956731238,0.12775092956731238
+SNB,PC2,cpi_headline_yoy,Headline CPI (YoY),Inflation,-0.11650375197065127,0.11650375197065127
+SNB,PC2,retail_sales_mom,Retail Sales (MoM),Growth,-0.11401681966237603,0.11401681966237603
+SNB,PC2,unemployment_rate,Unemployment Rate,Labor,-0.05224631908444899,0.05224631908444899
+SNB,PC3,retail_sales_mom,Retail Sales (MoM),Growth,-0.7011432682807085,0.7011432682807085
+SNB,PC3,retail_sales_yoy,Retail Sales (YoY),Growth,-0.5032961671292822,0.5032961671292822
+SNB,PC3,consumer_confidence,Consumer Confidence,Sentiment,0.29211127773736834,0.29211127773736834
+SNB,PC3,balance_of_trade,Balance of Trade,Growth,0.2539915897582966,0.2539915897582966
+SNB,PC3,gdp_qoq,GDP (QoQ),Growth,-0.1902028867711137,0.1902028867711137
+SNB,PC3,producer_import_prices_mom,Producer & Import Prices (MoM),Inflation,0.15231741957961503,0.15231741957961503
+SNB,PC3,producer_import_prices_yoy,Producer & Import Prices (YoY),Inflation,0.1448834317422907,0.1448834317422907
+SNB,PC3,unemployment_rate,Unemployment Rate,Labor,0.0910577424855739,0.0910577424855739
+SNB,PC3,economic_sentiment_index,Economic Sentiment Index,Sentiment,0.08387328667561329,0.08387328667561329
+SNB,PC3,cpi_headline_mom,Headline CPI (MoM),Inflation,0.07561163459559032,0.07561163459559032
+SNB,PC3,cpi_headline_yoy,Headline CPI (YoY),Inflation,-0.061952046300975616,0.061952046300975616

@@ -2,242 +2,170 @@
   "confidence_distribution": [
     {
       "confidence": "high",
-      "rows": 3226,
+      "rows": 8512,
       "window_months": 1
     },
     {
       "confidence": "low",
-      "rows": 3950,
+      "rows": 277,
       "window_months": 1
     },
     {
       "confidence": "medium",
-      "rows": 5297,
+      "rows": 4547,
       "window_months": 1
     },
     {
       "confidence": "high",
-      "rows": 3193,
+      "rows": 8493,
       "window_months": 2
     },
     {
       "confidence": "low",
-      "rows": 3891,
+      "rows": 165,
       "window_months": 2
     },
     {
       "confidence": "medium",
-      "rows": 5632,
+      "rows": 4936,
       "window_months": 2
     },
     {
       "confidence": "high",
-      "rows": 3179,
+      "rows": 8487,
       "window_months": 3
     },
     {
       "confidence": "low",
-      "rows": 3875,
+      "rows": 149,
       "window_months": 3
     },
     {
       "confidence": "medium",
-      "rows": 5848,
+      "rows": 5154,
       "window_months": 3
     }
   ],
-  "generated_at": "2026-04-21T08:58:29.964450Z",
+  "generated_at": "2026-04-24T19:52:17.029393Z",
   "latest_rankings": [
     {
       "confidence": "high",
-      "country_code": "CA",
-      "currency": "CAD",
-      "date": "2026-04-30",
-      "meter_color": "green",
-      "overall_stance_label": "bullish",
-      "overall_stance_score": 1.614555,
-      "rank_strongest": 1,
-      "trend_label": "improving",
-      "window_months": 1
-    },
-    {
-      "confidence": "medium",
-      "country_code": "AU",
-      "currency": "AUD",
-      "date": "2026-04-30",
-      "meter_color": "green",
-      "overall_stance_label": "bullish",
-      "overall_stance_score": 0.975654,
-      "rank_strongest": 2,
-      "trend_label": "improving",
-      "window_months": 1
-    },
-    {
-      "confidence": "medium",
       "country_code": "EU",
       "currency": "EUR",
       "date": "2026-04-30",
       "meter_color": "green",
       "overall_stance_label": "bullish",
-      "overall_stance_score": 0.942851,
-      "rank_strongest": 3,
-      "trend_label": "improving",
-      "window_months": 1
-    },
-    {
-      "confidence": "medium",
-      "country_code": "US",
-      "currency": "USD",
-      "date": "2026-04-30",
-      "meter_color": "green",
-      "overall_stance_label": "mildly_bullish",
-      "overall_stance_score": 0.607017,
-      "rank_strongest": 4,
-      "trend_label": "improving",
-      "window_months": 1
-    },
-    {
-      "confidence": "high",
-      "country_code": "UK",
-      "currency": "GBP",
-      "date": "2026-04-30",
-      "meter_color": "red",
-      "overall_stance_label": "mildly_bearish",
-      "overall_stance_score": -0.386462,
-      "rank_strongest": 5,
-      "trend_label": "improving",
-      "window_months": 1
-    },
-    {
-      "confidence": "medium",
-      "country_code": "JP",
-      "currency": "JPY",
-      "date": "2026-04-30",
-      "meter_color": "red",
-      "overall_stance_label": "mildly_bearish",
-      "overall_stance_score": -0.520552,
-      "rank_strongest": 6,
-      "trend_label": "improving",
-      "window_months": 1
-    },
-    {
-      "confidence": "low",
-      "country_code": "CH",
-      "currency": "CHF",
-      "date": "2026-04-30",
-      "meter_color": "red",
-      "overall_stance_label": "mildly_bearish",
-      "overall_stance_score": -0.640636,
-      "rank_strongest": 7,
-      "trend_label": "improving",
-      "window_months": 1
-    },
-    {
-      "confidence": "low",
-      "country_code": "NZ",
-      "currency": "NZD",
-      "date": "2026-04-30",
-      "meter_color": "red",
-      "overall_stance_label": "bearish",
-      "overall_stance_score": -2.358557,
-      "rank_strongest": 8,
-      "trend_label": "weakening",
-      "window_months": 1
-    },
-    {
-      "confidence": "medium",
-      "country_code": "EU",
-      "currency": "EUR",
-      "date": "2026-04-30",
-      "meter_color": "green",
-      "overall_stance_label": "bullish",
-      "overall_stance_score": 1.832869,
+      "overall_stance_score": 0.893337,
       "rank_strongest": 1,
-      "trend_label": "improving",
-      "window_months": 2
-    },
-    {
-      "confidence": "high",
-      "country_code": "CA",
-      "currency": "CAD",
-      "date": "2026-04-30",
-      "meter_color": "green",
-      "overall_stance_label": "mildly_bullish",
-      "overall_stance_score": 0.469517,
-      "rank_strongest": 2,
-      "trend_label": "improving",
-      "window_months": 2
-    },
-    {
-      "confidence": "medium",
-      "country_code": "AU",
-      "currency": "AUD",
-      "date": "2026-04-30",
-      "meter_color": "green",
-      "overall_stance_label": "mildly_bullish",
-      "overall_stance_score": 0.457561,
-      "rank_strongest": 3,
-      "trend_label": "improving",
-      "window_months": 2
-    },
-    {
-      "confidence": "medium",
-      "country_code": "US",
-      "currency": "USD",
-      "date": "2026-04-30",
-      "meter_color": "orange",
-      "overall_stance_label": "neutral",
-      "overall_stance_score": 0.152556,
-      "rank_strongest": 4,
       "trend_label": "flat",
-      "window_months": 2
+      "window_months": 1
+    },
+    {
+      "confidence": "high",
+      "country_code": "CA",
+      "currency": "CAD",
+      "date": "2026-04-30",
+      "meter_color": "green",
+      "overall_stance_label": "bullish",
+      "overall_stance_score": 0.890024,
+      "rank_strongest": 2,
+      "trend_label": "improving",
+      "window_months": 1
+    },
+    {
+      "confidence": "high",
+      "country_code": "CH",
+      "currency": "CHF",
+      "date": "2026-04-30",
+      "meter_color": "green",
+      "overall_stance_label": "bullish",
+      "overall_stance_score": 0.808415,
+      "rank_strongest": 3,
+      "trend_label": "weakening",
+      "window_months": 1
     },
     {
       "confidence": "medium",
+      "country_code": "US",
+      "currency": "USD",
+      "date": "2026-04-30",
+      "meter_color": "green",
+      "overall_stance_label": "mildly_bullish",
+      "overall_stance_score": 0.625632,
+      "rank_strongest": 4,
+      "trend_label": "improving",
+      "window_months": 1
+    },
+    {
+      "confidence": "high",
       "country_code": "JP",
       "currency": "JPY",
       "date": "2026-04-30",
-      "meter_color": "red",
-      "overall_stance_label": "mildly_bearish",
-      "overall_stance_score": -0.543389,
+      "meter_color": "green",
+      "overall_stance_label": "mildly_bullish",
+      "overall_stance_score": 0.291209,
       "rank_strongest": 5,
       "trend_label": "improving",
-      "window_months": 2
+      "window_months": 1
     },
     {
       "confidence": "high",
       "country_code": "UK",
       "currency": "GBP",
       "date": "2026-04-30",
-      "meter_color": "red",
-      "overall_stance_label": "mildly_bearish",
-      "overall_stance_score": -0.602116,
+      "meter_color": "orange",
+      "overall_stance_label": "neutral",
+      "overall_stance_score": 0.055923,
       "rank_strongest": 6,
-      "trend_label": "weakening",
-      "window_months": 2
-    },
-    {
-      "confidence": "low",
-      "country_code": "CH",
-      "currency": "CHF",
-      "date": "2026-04-30",
-      "meter_color": "red",
-      "overall_stance_label": "bearish",
-      "overall_stance_score": -0.891927,
-      "rank_strongest": 7,
       "trend_label": "improving",
-      "window_months": 2
+      "window_months": 1
     },
     {
-      "confidence": "low",
+      "confidence": "medium",
+      "country_code": "AU",
+      "currency": "AUD",
+      "date": "2026-04-30",
+      "meter_color": "orange",
+      "overall_stance_label": "neutral",
+      "overall_stance_score": -0.131182,
+      "rank_strongest": 7,
+      "trend_label": "weakening",
+      "window_months": 1
+    },
+    {
+      "confidence": "medium",
       "country_code": "NZ",
       "currency": "NZD",
       "date": "2026-04-30",
       "meter_color": "red",
-      "overall_stance_label": "bearish",
-      "overall_stance_score": -1.507335,
+      "overall_stance_label": "mildly_bearish",
+      "overall_stance_score": -0.556566,
       "rank_strongest": 8,
       "trend_label": "weakening",
+      "window_months": 1
+    },
+    {
+      "confidence": "high",
+      "country_code": "CH",
+      "currency": "CHF",
+      "date": "2026-04-30",
+      "meter_color": "green",
+      "overall_stance_label": "bullish",
+      "overall_stance_score": 1.640515,
+      "rank_strongest": 1,
+      "trend_label": "improving",
+      "window_months": 2
+    },
+    {
+      "confidence": "high",
+      "country_code": "EU",
+      "currency": "EUR",
+      "date": "2026-04-30",
+      "meter_color": "green",
+      "overall_stance_label": "bullish",
+      "overall_stance_score": 1.341261,
+      "rank_strongest": 2,
+      "trend_label": "improving",
       "window_months": 2
     },
     {
@@ -247,8 +175,104 @@
       "date": "2026-04-30",
       "meter_color": "green",
       "overall_stance_label": "mildly_bullish",
-      "overall_stance_score": 0.318768,
+      "overall_stance_score": 0.728133,
+      "rank_strongest": 3,
+      "trend_label": "improving",
+      "window_months": 2
+    },
+    {
+      "confidence": "medium",
+      "country_code": "AU",
+      "currency": "AUD",
+      "date": "2026-04-30",
+      "meter_color": "green",
+      "overall_stance_label": "mildly_bullish",
+      "overall_stance_score": 0.297135,
+      "rank_strongest": 4,
+      "trend_label": "weakening",
+      "window_months": 2
+    },
+    {
+      "confidence": "medium",
+      "country_code": "US",
+      "currency": "USD",
+      "date": "2026-04-30",
+      "meter_color": "green",
+      "overall_stance_label": "mildly_bullish",
+      "overall_stance_score": 0.286833,
+      "rank_strongest": 5,
+      "trend_label": "improving",
+      "window_months": 2
+    },
+    {
+      "confidence": "high",
+      "country_code": "JP",
+      "currency": "JPY",
+      "date": "2026-04-30",
+      "meter_color": "orange",
+      "overall_stance_label": "neutral",
+      "overall_stance_score": 0.036295,
+      "rank_strongest": 6,
+      "trend_label": "improving",
+      "window_months": 2
+    },
+    {
+      "confidence": "medium",
+      "country_code": "NZ",
+      "currency": "NZD",
+      "date": "2026-04-30",
+      "meter_color": "red",
+      "overall_stance_label": "mildly_bearish",
+      "overall_stance_score": -0.413105,
+      "rank_strongest": 7,
+      "trend_label": "weakening",
+      "window_months": 2
+    },
+    {
+      "confidence": "high",
+      "country_code": "UK",
+      "currency": "GBP",
+      "date": "2026-04-30",
+      "meter_color": "red",
+      "overall_stance_label": "mildly_bearish",
+      "overall_stance_score": -0.418375,
+      "rank_strongest": 8,
+      "trend_label": "improving",
+      "window_months": 2
+    },
+    {
+      "confidence": "high",
+      "country_code": "CA",
+      "currency": "CAD",
+      "date": "2026-04-30",
+      "meter_color": "green",
+      "overall_stance_label": "mildly_bullish",
+      "overall_stance_score": 0.625449,
       "rank_strongest": 1,
+      "trend_label": "improving",
+      "window_months": 3
+    },
+    {
+      "confidence": "medium",
+      "country_code": "AU",
+      "currency": "AUD",
+      "date": "2026-04-30",
+      "meter_color": "green",
+      "overall_stance_label": "mildly_bullish",
+      "overall_stance_score": 0.382963,
+      "rank_strongest": 2,
+      "trend_label": "improving",
+      "window_months": 3
+    },
+    {
+      "confidence": "high",
+      "country_code": "CH",
+      "currency": "CHF",
+      "date": "2026-04-30",
+      "meter_color": "green",
+      "overall_stance_label": "mildly_bullish",
+      "overall_stance_score": 0.276938,
+      "rank_strongest": 3,
       "trend_label": "improving",
       "window_months": 3
     },
@@ -257,23 +281,47 @@
       "country_code": "US",
       "currency": "USD",
       "date": "2026-04-30",
+      "meter_color": "green",
+      "overall_stance_label": "mildly_bullish",
+      "overall_stance_score": 0.254197,
+      "rank_strongest": 4,
+      "trend_label": "improving",
+      "window_months": 3
+    },
+    {
+      "confidence": "high",
+      "country_code": "EU",
+      "currency": "EUR",
+      "date": "2026-04-30",
       "meter_color": "orange",
       "overall_stance_label": "neutral",
-      "overall_stance_score": 0.108152,
-      "rank_strongest": 2,
-      "trend_label": "weakening",
+      "overall_stance_score": 0.126076,
+      "rank_strongest": 5,
+      "trend_label": "improving",
+      "window_months": 3
+    },
+    {
+      "confidence": "high",
+      "country_code": "JP",
+      "currency": "JPY",
+      "date": "2026-04-30",
+      "meter_color": "orange",
+      "overall_stance_label": "neutral",
+      "overall_stance_score": -0.0994,
+      "rank_strongest": 6,
+      "trend_label": "improving",
       "window_months": 3
     },
     {
       "confidence": "medium",
-      "country_code": "AU",
-      "currency": "AUD",
+      "country_code": "NZ",
+      "currency": "NZD",
       "date": "2026-04-30",
-      "meter_color": "orange",
-      "overall_stance_label": "neutral",
-      "overall_stance_score": -0.056224,
-      "rank_strongest": 3,
-      "trend_label": "improving",
+      "meter_color": "red",
+      "overall_stance_label": "mildly_bearish",
+      "overall_stance_score": -0.302042,
+      "rank_strongest": 7,
+      "trend_label": "weakening",
       "window_months": 3
     },
     {
@@ -282,142 +330,94 @@
       "currency": "GBP",
       "date": "2026-04-30",
       "meter_color": "red",
-      "overall_stance_label": "bearish",
-      "overall_stance_score": -0.770672,
-      "rank_strongest": 4,
-      "trend_label": "weakening",
-      "window_months": 3
-    },
-    {
-      "confidence": "medium",
-      "country_code": "JP",
-      "currency": "JPY",
-      "date": "2026-04-30",
-      "meter_color": "red",
-      "overall_stance_label": "bearish",
-      "overall_stance_score": -0.987388,
-      "rank_strongest": 5,
-      "trend_label": "weakening",
-      "window_months": 3
-    },
-    {
-      "confidence": "low",
-      "country_code": "NZ",
-      "currency": "NZD",
-      "date": "2026-04-30",
-      "meter_color": "red",
-      "overall_stance_label": "bearish",
-      "overall_stance_score": -1.062189,
-      "rank_strongest": 6,
-      "trend_label": "weakening",
-      "window_months": 3
-    },
-    {
-      "confidence": "low",
-      "country_code": "CH",
-      "currency": "CHF",
-      "date": "2026-04-30",
-      "meter_color": "red",
-      "overall_stance_label": "bearish",
-      "overall_stance_score": -1.430956,
-      "rank_strongest": 7,
-      "trend_label": "improving",
-      "window_months": 3
-    },
-    {
-      "confidence": "medium",
-      "country_code": "EU",
-      "currency": "EUR",
-      "date": "2026-04-30",
-      "meter_color": "red",
-      "overall_stance_label": "bearish",
-      "overall_stance_score": -3.467992,
+      "overall_stance_label": "mildly_bearish",
+      "overall_stance_score": -0.572861,
       "rank_strongest": 8,
-      "trend_label": "weakening",
+      "trend_label": "improving",
       "window_months": 3
     }
   ],
   "stance_distribution": [
     {
       "overall_stance_label": "bearish",
-      "rows": 2006,
+      "rows": 2954,
       "window_months": 1
     },
     {
       "overall_stance_label": "bullish",
-      "rows": 2217,
+      "rows": 2209,
       "window_months": 1
     },
     {
       "overall_stance_label": "mildly_bearish",
-      "rows": 2202,
+      "rows": 2451,
       "window_months": 1
     },
     {
       "overall_stance_label": "mildly_bullish",
-      "rows": 2882,
+      "rows": 2540,
       "window_months": 1
     },
     {
       "overall_stance_label": "neutral",
-      "rows": 3166,
+      "rows": 3182,
       "window_months": 1
     },
     {
       "overall_stance_label": "bearish",
-      "rows": 2165,
+      "rows": 3146,
       "window_months": 2
     },
     {
       "overall_stance_label": "bullish",
-      "rows": 2368,
+      "rows": 2239,
       "window_months": 2
     },
     {
       "overall_stance_label": "mildly_bearish",
-      "rows": 2272,
+      "rows": 2513,
       "window_months": 2
     },
     {
       "overall_stance_label": "mildly_bullish",
-      "rows": 2914,
+      "rows": 2620,
       "window_months": 2
     },
     {
       "overall_stance_label": "neutral",
-      "rows": 2997,
+      "rows": 3076,
       "window_months": 2
     },
     {
       "overall_stance_label": "bearish",
-      "rows": 2346,
+      "rows": 3282,
       "window_months": 3
     },
     {
       "overall_stance_label": "bullish",
-      "rows": 2376,
+      "rows": 2290,
       "window_months": 3
     },
     {
       "overall_stance_label": "mildly_bearish",
-      "rows": 2296,
+      "rows": 2596,
       "window_months": 3
     },
     {
       "overall_stance_label": "mildly_bullish",
-      "rows": 3006,
+      "rows": 2565,
       "window_months": 3
     },
     {
       "overall_stance_label": "neutral",
-      "rows": 2878,
+      "rows": 3057,
       "window_months": 3
     }
   ],
   "summary": {
     "first_date": "2020-01-17",
     "last_date": "2026-04-30",
-    "ranking_rows": 38091,
-    "stance_rows": 38091
+    "ranking_rows": 40720,
+    "stance_rows": 40720
   }
 }

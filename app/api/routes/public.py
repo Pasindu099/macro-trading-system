@@ -614,7 +614,13 @@ async def get_indicator_explorer_payload(
             if release.released_at >= cutoff
         ]
 
-    series = [_release_to_series_point(release) for release in picked_releases]
+    now = _now()
+    actual_releases = [
+        release for release in picked_releases
+        if release.actual is not None and release.released_at <= now
+    ]
+
+    series = [_release_to_series_point(release) for release in actual_releases]
     recent_prints = list(reversed(series[-12:]))
 
     return IndicatorExplorerPayload(

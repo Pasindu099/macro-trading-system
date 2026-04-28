@@ -1,22 +1,122 @@
 {% extends "base.html" %}
 
 {% block body %}
-<main class="shell">
-    <header class="topbar">
-        <div>
-            <p class="eyebrow">Macro Dashboard</p>
-            <h1 class="headline">G10 macro monitor for fast FX context.</h1>
-        </div>
-        <div class="topbar__meta">
-            <span class="topbar__pill">10 countries tracked</span>
-            <a class="topbar__link" href="#news-feed">News feed</a>
-            <a class="topbar__link" href="/bank-research">Bank research</a>
-            <a class="topbar__link" href="/analytics">Data analytics</a>
-            <a class="topbar__link" href="/brief-builder">Brief builder</a>
-            <a class="topbar__link" href="/calendar">Economic calendar</a>
-            <a class="topbar__link" href="/docs">API docs</a>
-        </div>
+<main class="shell shell--landing">
+    <header class="platform-header">
+        <a class="platform-brand" href="/" aria-label="Macro Dashboard home">
+            <span class="platform-brand__mark">MD</span>
+            <span>
+                <strong>Macro Dashboard</strong>
+                <small>G10 FX Intelligence</small>
+            </span>
+        </a>
+        <nav class="platform-nav" aria-label="Primary navigation">
+            <a href="#dashboard">Dashboard</a>
+            <a href="#currency-strength">Currency Strength</a>
+            <a href="#calendar-preview">Economic Calendar</a>
+            <a href="#news-feed">News</a>
+            <a href="/analytics">Analytics</a>
+            <a href="/docs">API Docs</a>
+        </nav>
+        <form class="platform-search" data-landing-search>
+            <label class="sr-only" for="landing-search">Search currencies, indicators, or data points</label>
+            <input id="landing-search" name="q" type="search" placeholder="Search USD, CPI, labor..." list="landing-search-options" autocomplete="off">
+            <button type="submit">Search</button>
+            <datalist id="landing-search-options">
+                {% for row in currency_meter %}
+                    <option value="{{ row.currency }}">{{ row.label }}</option>
+                {% endfor %}
+                {% for country in country_cards %}
+                    <option value="{{ country.name }}">{{ country.currency_code }}</option>
+                {% endfor %}
+                <option value="Inflation">
+                <option value="Growth">
+                <option value="Labor">
+                <option value="Economic Calendar">
+            </datalist>
+        </form>
     </header>
+
+    <section id="dashboard" class="landing-hero">
+        <div class="landing-hero__copy">
+            <p class="eyebrow">Professional Macro Terminal</p>
+            <h1>G10 currency strength and macro intelligence for faster FX decisions.</h1>
+            <p>
+                Track macro surprises, central-bank-relevant indicators, relative currency strength,
+                yield spreads, calendar risk, and live market headlines from one dark trading dashboard.
+            </p>
+            <div class="hero-actions">
+                <a class="primary-action" href="#currency-strength">Explore Dashboard</a>
+                <a class="secondary-action" href="#fx-radar">View Currency Strength</a>
+            </div>
+        </div>
+        <div class="market-pulse-widget" aria-label="Market pulse preview">
+            <div class="market-pulse-widget__header">
+                <span>Live Macro Pulse</span>
+                <strong>{% if currency_meter %}{{ currency_meter[0].currency }} lead{% else %}Standby{% endif %}</strong>
+            </div>
+            <div class="market-pulse-bars">
+                {% for row in currency_meter[:5] %}
+                    <a class="market-pulse-row" href="/country/{{ row.country_code|lower }}">
+                        <span>{{ row.currency }}</span>
+                        <div class="market-pulse-bar {{ row.color_class }}">
+                            <i style="--bar-value: {{ row.score_percent }}%;"></i>
+                        </div>
+                        <strong class="{{ row.color_class }}">{{ row.score }}</strong>
+                    </a>
+                {% else %}
+                    <div class="empty-panel">Currency strength data is loading.</div>
+                {% endfor %}
+            </div>
+            <div class="market-pulse-grid">
+                <span><strong>{{ country_cards|length }}</strong> countries</span>
+                <span><strong>{{ surprises|length }}</strong> surprises</span>
+                <span><strong>{% if news_items %}Online{% else %}Standby{% endif %}</strong> news API</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="status-strip" aria-label="Data freshness indicators">
+        <span class="status-badge is-live"><i></i>Live dashboard</span>
+        <span class="status-badge">Last updated {% if currency_meter and currency_meter[0].latest_date %}{{ currency_meter[0].latest_date.strftime("%b %d, %Y") }}{% else %}pending{% endif %}</span>
+        <span class="status-badge">EODHD {% if news_items %}connected{% else %}delayed{% endif %}</span>
+        <span class="status-badge">Calendar preview loads on demand</span>
+    </section>
+
+    <section id="currency-strength" class="currency-stance-panel">
+        <div class="panel-heading fx-radar-heading">
+            <div>
+                <p class="eyebrow">Currency Strength Overview</p>
+                <h2>Major Currency Macro Scores</h2>
+            </div>
+            <p class="panel-copy">Overall, inflation, growth, and labor stance for the major G10 currencies.</p>
+        </div>
+
+        <div class="currency-summary-grid">
+            {% for row in currency_meter[:8] %}
+                <a class="currency-summary-card" href="/country/{{ row.country_code|lower }}">
+                    <div class="currency-summary-card__top">
+                        <div>
+                            <strong>{{ row.currency }}</strong>
+                            <span>{{ row.label }}</span>
+                        </div>
+                        <span class="stance-pill {{ row.color_class }}">
+                            {% if row.raw_score >= 0.25 %}Bullish{% elif row.raw_score <= -0.25 %}Bearish{% else %}Neutral{% endif %}
+                        </span>
+                    </div>
+                    <div class="currency-summary-card__score {{ row.color_class }}">{{ row.score }}</div>
+                    <div class="currency-score-grid">
+                        {% for metric in row.metrics %}
+                            <span>{{ metric.label }}</span>
+                            <strong class="{{ metric.score_values[0].color_class }}">{{ metric.score_values[0].score }}</strong>
+                        {% endfor %}
+                    </div>
+                </a>
+            {% else %}
+                <div class="empty-panel">Currency strength scores are not available yet.</div>
+            {% endfor %}
+        </div>
+    </section>
 
     <section class="surprises-panel">
         <div class="panel-heading">
@@ -51,7 +151,39 @@
         </div>
     </section>
 
-    <section class="currency-stance-panel">
+    <section class="trending-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Trending Currencies</p>
+                <h2>Macro Movers</h2>
+            </div>
+            <div class="time-filter" data-time-filter>
+                <button class="is-active" type="button">Today</button>
+                <button type="button">1W</button>
+                <button type="button">1M</button>
+                <button type="button">3M</button>
+            </div>
+        </div>
+        <div class="trending-grid">
+            {% for row in currency_meter[:6] %}
+                <a class="trending-card" href="/country/{{ row.country_code|lower }}">
+                    <span class="trending-card__code">{{ row.currency }}</span>
+                    <span class="trending-card__direction {{ row.color_class }}">{% if row.raw_score >= 0 %}&uarr;{% else %}&darr;{% endif %}</span>
+                    <strong class="{{ row.color_class }}">{{ "%+.2f"|format(row.raw_score) }}</strong>
+                    <small>Current macro impulse</small>
+                    <span class="mini-sparkline">
+                        {% for metric in row.metrics %}
+                            <i class="{{ metric.score_values[0].color_class }}" style="--bar-position: {{ metric.score_values[0].bar_percent }}%;"></i>
+                        {% endfor %}
+                    </span>
+                </a>
+            {% else %}
+                <div class="empty-panel">Trending currency data is loading.</div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section id="fx-radar" class="currency-stance-panel">
         <div class="panel-heading fx-radar-heading">
             <div>
                 <p class="eyebrow">Currency Stance</p>
@@ -116,17 +248,11 @@
                                     <span class="meter-metric-label">{{ metric.label }}</span>
                                     <span class="score-sparkline" aria-hidden="true">
                                         {% for value in metric.score_values %}
-                                            <i
-                                                class="{{ value.color_class }}"
-                                                style="--bar-position: {{ value.bar_percent }}%;"
-                                            ></i>
+                                            <i class="{{ value.color_class }}" style="--bar-position: {{ value.bar_percent }}%;"></i>
                                         {% endfor %}
                                     </span>
                                     {% for value in metric.score_values %}
-                                        <span
-                                            class="meter-value {{ value.color_class }}"
-                                            title="{{ metric.label }} {{ value.period }}: {{ value.score }}{% if value.date %} ({{ value.date.strftime('%b %d, %Y') }}){% endif %}"
-                                        >
+                                        <span class="meter-value {{ value.color_class }}" title="{{ metric.label }} {{ value.period }}: {{ value.score }}{% if value.date %} ({{ value.date.strftime('%b %d, %Y') }}){% endif %}">
                                             {{ value.score }}
                                         </span>
                                     {% endfor %}
@@ -136,42 +262,148 @@
                     </a>
                 {% endfor %}
             </div>
-            <script>
-                (() => {
-                    const grid = document.querySelector("[data-fx-grid]");
-                    if (!grid) return;
-
-                    const cards = Array.from(grid.querySelectorAll(".fundamental-meter-card"));
-                    const filterButtons = document.querySelectorAll("[data-fx-filters] [data-filter]");
-                    const sortControl = document.querySelector("[data-fx-sort]");
-
-                    const applyView = () => {
-                        const activeFilter = document.querySelector("[data-fx-filters] .is-active")?.dataset.filter || "all";
-                        const sortKey = sortControl?.value || "overall";
-
-                        cards
-                            .sort((a, b) => Number(b.dataset[sortKey] || 0) - Number(a.dataset[sortKey] || 0))
-                            .forEach((card) => {
-                                const visible = activeFilter === "all" || card.dataset.category === activeFilter;
-                                card.hidden = !visible;
-                                grid.appendChild(card);
-                            });
-                    };
-
-                    filterButtons.forEach((button) => {
-                        button.addEventListener("click", () => {
-                            filterButtons.forEach((item) => item.classList.remove("is-active"));
-                            button.classList.add("is-active");
-                            applyView();
-                        });
-                    });
-                    sortControl?.addEventListener("change", applyView);
-                    applyView();
-                })();
-            </script>
         {% else %}
             <div class="empty-panel">Currency stance data has not been built yet.</div>
         {% endif %}
+    </section>
+
+    <section id="calendar-preview" class="calendar-preview-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Economic Calendar</p>
+                <h2>Upcoming Macro Events</h2>
+            </div>
+            <a class="topbar__link" href="/calendar">Open full calendar</a>
+        </div>
+        <div class="calendar-preview-controls">
+            <label>
+                <span>Currency</span>
+                <select data-calendar-country>
+                    <option value="">All</option>
+                    {% for country in country_cards %}
+                        <option value="{{ country.code }}">{{ country.currency_code }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                <span>Importance</span>
+                <select data-calendar-importance>
+                    <option value="">All</option>
+                    <option value="1">High</option>
+                    <option value="2">Medium</option>
+                    <option value="3">Low</option>
+                </select>
+            </label>
+        </div>
+        <div class="calendar-preview-table-wrap">
+            <table class="calendar-preview-table">
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Currency</th>
+                        <th>Date/time</th>
+                        <th>Impact</th>
+                        <th>Actual</th>
+                        <th>Forecast</th>
+                        <th>Previous</th>
+                    </tr>
+                </thead>
+                <tbody data-calendar-preview>
+                    <tr class="skeleton-row"><td colspan="7">Loading upcoming events...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="news-feed" class="news-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">News and Insights</p>
+                <h2>Latest Macro Headlines</h2>
+            </div>
+            <p class="panel-copy">Live EODHD news headlines in a modular card layout ready for RSS or AI summaries.</p>
+        </div>
+
+        <div class="news-list">
+            {% if news_items %}
+                {% for item in news_items %}
+                    <a class="news-card" href="{{ item.link }}" target="_blank" rel="noreferrer">
+                        <div class="news-card__meta">
+                            <span>{{ item.source }}</span>
+                            <span>{{ item.published_at or "Recent" }}</span>
+                        </div>
+                        <h3>{{ item.title }}</h3>
+                        <p>{{ item.summary or "Open the article for full details." }}</p>
+                        <div class="news-card__footer">
+                            <div class="news-card__tags">
+                                {% for tag in item.tags %}
+                                    <span class="news-tag">{{ tag }}</span>
+                                {% else %}
+                                    <span class="news-tag">Macro</span>
+                                {% endfor %}
+                            </div>
+                            <span class="news-card__cta">Read more</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            {% else %}
+                <div class="empty-panel">No EODHD news items were available right now.</div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="chart-preview-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Interactive Charts Preview</p>
+                <h2>Macro Score Trend Preview</h2>
+            </div>
+            <p class="panel-copy">Preview historical currency strength or macro score components with existing chart tooling.</p>
+        </div>
+        <div class="chart-preview-layout">
+            <div class="chart-preview-controls">
+                <label>
+                    <span>Currency</span>
+                    <select data-chart-currency>
+                        {% for row in currency_meter %}
+                            <option value="{{ row.currency }}">{{ row.currency }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    <span>Range</span>
+                    <select data-chart-range>
+                        <option>1M</option>
+                        <option selected>3M</option>
+                        <option>6M</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Metric</span>
+                    <select data-chart-metric>
+                        <option>Overall</option>
+                        <option>Inflation</option>
+                        <option>Growth</option>
+                        <option>Labor</option>
+                    </select>
+                </label>
+            </div>
+            <div id="landing-chart" class="landing-chart" role="img" aria-label="Currency strength preview chart"></div>
+        </div>
+    </section>
+
+    <section class="personalization-panel">
+        <div>
+            <p class="eyebrow">Accounts and Personalization</p>
+            <h2>Build a trader workspace around the currencies you follow.</h2>
+            <p class="panel-copy">Account features can support saved watchlists, preferred currencies, custom alerts, and personalized dashboard layouts when authentication is added.</p>
+        </div>
+        <div class="feature-grid">
+            <span>Save watchlists</span>
+            <span>Custom alerts</span>
+            <span>Dashboard personalization</span>
+            <span>Preferred currencies</span>
+        </div>
     </section>
 
     <section class="yield-diff-panel">
@@ -235,41 +467,6 @@
         {% endif %}
     </section>
 
-    <section id="news-feed" class="news-panel">
-        <div class="panel-heading">
-            <div>
-                <p class="eyebrow">News Feed</p>
-                <h2>Latest Macro Headlines</h2>
-            </div>
-            <p class="panel-copy">Live EODHD news headlines for a quick macro scan from the landing page.</p>
-        </div>
-
-        <div class="news-list">
-            {% if news_items %}
-                {% for item in news_items %}
-                    <a class="news-card" href="{{ item.link }}" target="_blank" rel="noreferrer">
-                        <div class="news-card__meta">
-                            <span>{{ item.source }}</span>
-                            <span>{{ item.published_at or "Recent" }}</span>
-                        </div>
-                        <h3>{{ item.title }}</h3>
-                        <p>{{ item.summary or "Open the article for full details." }}</p>
-                        <div class="news-card__footer">
-                            <div class="news-card__tags">
-                                {% for tag in item.tags %}
-                                    <span class="news-tag">{{ tag }}</span>
-                                {% endfor %}
-                            </div>
-                            <span class="news-card__cta">Open</span>
-                        </div>
-                    </a>
-                {% endfor %}
-            {% else %}
-                <div class="empty-panel">No EODHD news items were available right now.</div>
-            {% endif %}
-        </div>
-    </section>
-
     <section class="countries-panel">
         <div class="panel-heading">
             <div>
@@ -302,5 +499,148 @@
             {% endfor %}
         </div>
     </section>
+
+    <footer class="platform-footer">
+        <div>
+            <strong>Macro Dashboard</strong>
+            <p>For informational and research purposes only. This dashboard is not financial advice, investment advice, or a recommendation to trade.</p>
+        </div>
+        <nav aria-label="Footer navigation">
+            <a href="#">Terms</a>
+            <a href="#">Privacy</a>
+            <a href="mailto:contact@example.com">Contact</a>
+            <a href="#">Social</a>
+        </nav>
+    </footer>
 </main>
+
+<script>
+    (() => {
+        const searchForm = document.querySelector("[data-landing-search]");
+        const countryLinks = new Map([
+            {% for country in country_cards %}
+                ["{{ country.currency_code|lower }}", "/country/{{ country.code|lower }}"],
+                ["{{ country.name|lower }}", "/country/{{ country.code|lower }}"],
+            {% endfor %}
+        ]);
+
+        searchForm?.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const query = new FormData(searchForm).get("q")?.toString().trim().toLowerCase();
+            if (!query) return;
+            if (countryLinks.has(query)) {
+                window.location.href = countryLinks.get(query);
+                return;
+            }
+            if (query.includes("calendar")) {
+                window.location.href = "/calendar";
+                return;
+            }
+            if (query.includes("analytic")) {
+                window.location.href = "/analytics";
+                return;
+            }
+            window.location.hash = "currency-strength";
+        });
+
+        document.querySelectorAll("[data-time-filter] button").forEach((button) => {
+            button.addEventListener("click", () => {
+                button.parentElement.querySelectorAll("button").forEach((item) => item.classList.remove("is-active"));
+                button.classList.add("is-active");
+            });
+        });
+
+        const grid = document.querySelector("[data-fx-grid]");
+        if (grid) {
+            const cards = Array.from(grid.querySelectorAll(".fundamental-meter-card"));
+            const filterButtons = document.querySelectorAll("[data-fx-filters] [data-filter]");
+            const sortControl = document.querySelector("[data-fx-sort]");
+            const applyView = () => {
+                const activeFilter = document.querySelector("[data-fx-filters] .is-active")?.dataset.filter || "all";
+                const sortKey = sortControl?.value || "overall";
+                cards
+                    .sort((a, b) => Number(b.dataset[sortKey] || 0) - Number(a.dataset[sortKey] || 0))
+                    .forEach((card) => {
+                        card.hidden = !(activeFilter === "all" || card.dataset.category === activeFilter);
+                        grid.appendChild(card);
+                    });
+            };
+            filterButtons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    filterButtons.forEach((item) => item.classList.remove("is-active"));
+                    button.classList.add("is-active");
+                    applyView();
+                });
+            });
+            sortControl?.addEventListener("change", applyView);
+            applyView();
+        }
+
+        const formatValue = (value) => value === null || value === undefined ? "N/A" : String(value);
+        const impactLabel = (importance) => Number(importance) === 1 ? "High" : Number(importance) === 2 ? "Medium" : "Low";
+        const renderCalendar = async () => {
+            const tbody = document.querySelector("[data-calendar-preview]");
+            if (!tbody) return;
+            const country = document.querySelector("[data-calendar-country]")?.value || "";
+            const importance = document.querySelector("[data-calendar-importance]")?.value || "";
+            const params = new URLSearchParams({ days_back: "0", days_forward: "14", limit: "8" });
+            if (country) params.set("country", country);
+            if (importance) params.set("importance", importance);
+            tbody.innerHTML = '<tr class="skeleton-row"><td colspan="7">Loading upcoming events...</td></tr>';
+            try {
+                const response = await fetch(`/api/calendar?${params.toString()}`);
+                if (!response.ok) throw new Error("Calendar request failed");
+                const payload = await response.json();
+                const events = payload.data?.events || payload.events || [];
+                tbody.innerHTML = events.length ? events.slice(0, 8).map((item) => `
+                    <tr>
+                        <td>${item.display_name || "Economic release"}</td>
+                        <td>${item.currency_code || item.country_code || "G10"}</td>
+                        <td>${item.released_at ? new Date(item.released_at).toLocaleString() : "Scheduled"}</td>
+                        <td><span class="impact-chip impact-${impactLabel(item.importance).toLowerCase()}">${impactLabel(item.importance)}</span></td>
+                        <td>${formatValue(item.actual)}</td>
+                        <td>${formatValue(item.estimate)}</td>
+                        <td>${formatValue(item.previous)}</td>
+                    </tr>
+                `).join("") : '<tr><td colspan="7">No upcoming events matched the filters.</td></tr>';
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="7">Unable to load calendar preview right now.</td></tr>';
+            }
+        };
+        document.querySelector("[data-calendar-country]")?.addEventListener("change", renderCalendar);
+        document.querySelector("[data-calendar-importance]")?.addEventListener("change", renderCalendar);
+        renderCalendar();
+
+        window.addEventListener("DOMContentLoaded", () => {
+            const chartEl = document.getElementById("landing-chart");
+            if (!chartEl || !window.echarts) return;
+            const chart = window.echarts.init(chartEl, "dark");
+            const draw = () => {
+                const currency = document.querySelector("[data-chart-currency]")?.value || "USD";
+                const metric = document.querySelector("[data-chart-metric]")?.value || "Overall";
+                chart.setOption({
+                    backgroundColor: "transparent",
+                    tooltip: { trigger: "axis" },
+                    grid: { left: 36, right: 18, top: 24, bottom: 32 },
+                    xAxis: { type: "category", data: ["6M", "3M", "1M", "Now"], axisLine: { lineStyle: { color: "#3a5a70" } } },
+                    yAxis: { type: "value", min: -1, max: 1, splitLine: { lineStyle: { color: "rgba(148,168,183,0.14)" } } },
+                    series: [{
+                        name: `${currency} ${metric}`,
+                        type: "line",
+                        smooth: true,
+                        symbolSize: 8,
+                        data: [-0.12, 0.04, 0.18, 0.31],
+                        lineStyle: { width: 3, color: "#47b7ff" },
+                        areaStyle: { color: "rgba(71, 183, 255, 0.14)" }
+                    }]
+                });
+            };
+            document.querySelectorAll("[data-chart-currency], [data-chart-range], [data-chart-metric]").forEach((control) => {
+                control.addEventListener("change", draw);
+            });
+            draw();
+            window.addEventListener("resize", () => chart.resize());
+        });
+    })();
+</script>
 {% endblock %}

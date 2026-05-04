@@ -1,0 +1,17 @@
+.git
+.pytest_cache
+.claude
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+logs
+notebooks
+research
+data
+macro_dashboard.egg-info
+tmp_db_probe.py
+test_settings.py
+.backfill_progress.json

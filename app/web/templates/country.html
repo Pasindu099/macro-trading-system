@@ -1,73 +1,133 @@
 {% extends "base.html" %}
 
 {% block body %}
-<main class="shell shell--country">
-    <header class="country-header">
-        <a class="back-link" href="/">Back to dashboard</a>
-        <div class="topbar__meta">
-            <a class="topbar__link" href="/calendar">View economic calendar</a>
+<main class="shell shell--country country-terminal">
+    <header class="country-terminal__topbar">
+        <div>
+            <a href="/">Countries</a>
+            <span>&rsaquo;</span>
+            <strong>{{ country.name }}</strong>
         </div>
-        <div class="country-header__title-row">
-            <div class="country-header__flag">{{ country_flag }}</div>
-            <div>
-                <p class="eyebrow">{{ country.code }} / {{ country.currency_code }}</p>
-                <h1>{{ country.name }}</h1>
-            </div>
-        </div>
-        <div class="country-header__stats">
-            <div class="stat-block">
-                <span class="stat-block__label">Central bank</span>
-                <strong>{{ country.central_bank }}</strong>
-            </div>
-            <div class="stat-block">
-                <span class="stat-block__label">Mandate</span>
-                <strong>{{ country.cb_mandate_type or "Not set" }}</strong>
-            </div>
-            <div class="stat-block">
-                <span class="stat-block__label">Inflation target</span>
-                <strong>
-                    {% if country.cb_inflation_target is not none %}
-                        {{ "%.2f"|format(country.cb_inflation_target) }}%
-                    {% else %}
-                        Not set
-                    {% endif %}
-                </strong>
-            </div>
-            <div class="stat-block">
-                <span class="stat-block__label">Last updated</span>
-                <strong>
-                    {% if country.latest_release_at %}
-                        {{ country.latest_release_at.strftime("%b %d %H:%M UTC") }}
-                    {% else %}
-                        No releases
-                    {% endif %}
-                </strong>
-            </div>
-            <div class="stat-block">
-                <span class="stat-block__label">Indicators tracked</span>
-                <strong>{{ country.indicator_count }}</strong>
-            </div>
+        <div>
+            <span class="country-terminal__badge">Tracked</span>
+            <span>Updated {% if country.latest_release_at %}{{ country.latest_release_at.strftime("%b %d, %Y") }}{% else %}pending{% endif %}</span>
         </div>
     </header>
 
-    <section class="tab-panel">
-        <nav class="tabs" aria-label="Country categories">
-            {% for category in category_tabs %}
-                <button
-                    class="tab-button {% if category == active_category %}is-active{% endif %}"
-                    hx-get="/country/{{ country.code|lower }}/tab/{{ category.lower() }}"
-                    hx-target="#tab-content"
-                    hx-swap="innerHTML"
-                    hx-on::after-request="document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('is-active')); this.classList.add('is-active');"
-                    type="button"
-                >
-                    {{ category }}
-                </button>
-            {% endfor %}
-        </nav>
+    <section class="country-terminal__content">
+        <div class="country-terminal__title-row">
+            <h1>{{ country.code }} {{ country.name }} &middot; {{ country.currency_code }}</h1>
+            <div>
+                <span>Indicators: <strong>{{ country.indicator_count }}</strong></span>
+                <span>Central bank: <strong>{{ country.central_bank }}</strong></span>
+            </div>
+        </div>
 
-        <section id="tab-content" class="tab-content" aria-live="polite">
-            {% include "_country_tab.html" %}
+        <section class="country-kpi-grid">
+            {% for card in country_profile_cards %}
+                <article class="country-kpi-card {{ card.state }}">
+                    <span>{{ card.label }}</span>
+                    <strong>{{ card.value }}</strong>
+                    <small>{{ card.detail }}</small>
+                </article>
+            {% endfor %}
+        </section>
+
+        <section class="country-terminal-grid">
+            <article class="country-terminal-card country-terminal-card--signals">
+                <header>
+                    <strong>Macro signal breakdown</strong>
+                    <span>{{ active_category }} focus</span>
+                </header>
+                <div class="country-signal-grid">
+                    {% for row in rows[:9] %}
+                        {% set positive = row.trend_symbol == "â†‘" %}
+                        {% set negative = row.trend_symbol == "â†“" %}
+                        <a class="country-signal-box {{ 'is-positive' if positive else 'is-negative' if negative else 'is-neutral' }}" href="{{ row.detail_href }}">
+                            <span>{{ row.display_label }}</span>
+                            <strong>{{ row.latest_value }}</strong>
+                            <i><b style="width: {{ 72 if positive else 40 if negative else 52 }}%;"></b></i>
+                        </a>
+                    {% else %}
+                        <div class="empty-panel">No indicators were available for this category yet.</div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <aside class="country-terminal-card country-terminal-card--yield">
+                <header>
+                    <strong>Policy lens</strong>
+                    <span>Current</span>
+                </header>
+                <div class="country-policy-list">
+                    <div><span>Mandate</span><strong>{{ country.cb_mandate_type or "Not set" }}</strong></div>
+                    <div><span>Inflation target</span><strong>{% if country.cb_inflation_target is not none %}{{ "%.2f"|format(country.cb_inflation_target) }}%{% else %}N/A{% endif %}</strong></div>
+                    <div><span>Indicator coverage</span><strong>{{ country.indicator_count }}</strong></div>
+                    <div><span>Currency</span><strong>{{ country.currency_code }}</strong></div>
+                </div>
+            </aside>
+
+            <article class="country-terminal-card">
+                <header>
+                    <strong>Recent macro events</strong>
+                    <span>{{ active_category }}</span>
+                </header>
+                <div class="country-event-list">
+                    {% for row in rows[:4] %}
+                        <a class="{{ 'is-positive' if row.trend_symbol == 'â†‘' else 'is-negative' if row.trend_symbol == 'â†“' else 'is-neutral' }}" href="{{ row.detail_href }}">
+                            <i></i>
+                            <strong>{{ row.display_label }}<small>{{ row.previous_value }} prev</small></strong>
+                            <span>{{ row.latest_value }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="country-terminal-card">
+                <header>
+                    <strong>Category watchlist</strong>
+                    <span>{{ category_tabs|length }} buckets</span>
+                </header>
+                <div class="country-release-list">
+                    {% for category in category_tabs[:6] %}
+                        <button
+                            class="{% if category == active_category %}is-active{% endif %}"
+                            hx-get="/country/{{ country.code|lower }}/tab/{{ category.lower() }}"
+                            hx-target="#country-history-content"
+                            hx-swap="innerHTML"
+                            hx-on::after-request="document.querySelectorAll('.country-release-list button, .country-history-tabs button').forEach(btn => btn.classList.remove('is-active')); this.classList.add('is-active');"
+                            type="button"
+                        >
+                            <span>{{ category }}</span>
+                            <em>{{ "High" if loop.index <= 2 else "Med" if loop.index <= 4 else "Low" }}</em>
+                        </button>
+                    {% endfor %}
+                </div>
+            </article>
+        </section>
+
+        <section class="country-terminal-card country-history-card">
+            <header>
+                <strong>Key indicators history</strong>
+                <span>Latest prints</span>
+            </header>
+            <nav class="country-history-tabs" aria-label="Country categories">
+                {% for category in category_tabs %}
+                    <button
+                        class="{% if category == active_category %}is-active{% endif %}"
+                        hx-get="/country/{{ country.code|lower }}/tab/{{ category.lower() }}"
+                        hx-target="#country-history-content"
+                        hx-swap="innerHTML"
+                        hx-on::after-request="document.querySelectorAll('.country-release-list button, .country-history-tabs button').forEach(btn => btn.classList.remove('is-active')); this.classList.add('is-active');"
+                        type="button"
+                    >
+                        {{ category }}
+                    </button>
+                {% endfor %}
+            </nav>
+            <section id="country-history-content" aria-live="polite">
+                {% include "_country_tab.html" %}
+            </section>
         </section>
     </section>
 </main>

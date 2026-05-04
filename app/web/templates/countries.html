@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block body %}
+<main class="shell countries-directory">
+    <header class="countries-directory__hero">
+        <div>
+            <a href="/">Dashboard</a>
+            <span>/</span>
+            <strong>Countries</strong>
+        </div>
+        <h1>Countries</h1>
+        <p>Tracked G10 markets with direct access to each country profile, macro signal breakdown, policy lens, and indicator history.</p>
+    </header>
+
+    <section class="countries-directory__stats" aria-label="Country coverage">
+        <article>
+            <span>Tracked Countries</span>
+            <strong>{{ country_total }}</strong>
+            <small>G10 market profiles</small>
+        </article>
+        <article>
+            <span>Indicators</span>
+            <strong>{{ total_indicators }}</strong>
+            <small>Mapped releases</small>
+        </article>
+        <article>
+            <span>Latest Update</span>
+            <strong>{% if latest_release %}{{ latest_release.strftime("%b %d") }}{% else %}N/A{% endif %}</strong>
+            <small>{% if latest_release %}{{ latest_release.strftime("%H:%M UTC") }}{% else %}Awaiting data{% endif %}</small>
+        </article>
+    </section>
+
+    <section class="countries-directory__panel">
+        <header>
+            <span>Country Matrix</span>
+            <em>Open a profile</em>
+        </header>
+        <div class="countries-directory__grid">
+            {% for country in country_cards %}
+                <a class="countries-directory__card" href="/country/{{ country.code|lower }}">
+                    <div>
+                        <strong>{{ country.currency_code }}</strong>
+                        <span>{{ country.name }}</span>
+                    </div>
+                    <dl>
+                        <div>
+                            <dt>Central Bank</dt>
+                            <dd>{{ country.central_bank }}</dd>
+                        </div>
+                        <div>
+                            <dt>Mandate</dt>
+                            <dd>{{ country.cb_mandate_type or "Not set" }}</dd>
+                        </div>
+                        <div>
+                            <dt>Inflation Target</dt>
+                            <dd>{% if country.cb_inflation_target is not none %}{{ "%.2f"|format(country.cb_inflation_target) }}%{% else %}N/A{% endif %}</dd>
+                        </div>
+                        <div>
+                            <dt>Indicators</dt>
+                            <dd>{{ country.indicator_count }}</dd>
+                        </div>
+                    </dl>
+                    <footer>
+                        <span>{% if country.latest_release_at %}Updated {{ country.latest_release_at.strftime("%b %d %H:%M") }}{% else %}No releases{% endif %}</span>
+                        <b>Open Profile</b>
+                    </footer>
+                </a>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+{% endblock %}

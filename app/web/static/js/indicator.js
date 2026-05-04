@@ -48,7 +48,7 @@
             {
                 name: "Actual",
                 data: points.map((point) => [point.released_at, point.actual]),
-                color: "#50b5ff",
+                color: "#4a9fe0",
             },
         ];
 
@@ -56,7 +56,7 @@
             series.push({
                 name: "Consensus",
                 data: points.map((point) => [point.released_at, point.estimate]),
-                color: "#f3ba63",
+                color: "#f5a623",
             });
         }
 
@@ -64,7 +64,7 @@
             series.push({
                 name: "Previous",
                 data: points.map((point) => [point.released_at, point.previous]),
-                color: "#8fa5b5",
+                color: "#8892a0",
             });
         }
 
@@ -72,7 +72,7 @@
             series.push({
                 name: "CB Target",
                 data: points.map((point) => [point.released_at, payload.cb_target]),
-                color: "#23c483",
+                color: "#00c896",
                 dashed: true,
             });
         }
@@ -127,7 +127,7 @@
                 {
                     name: "Actual",
                     data: points.map((point) => [point.released_at, point.actual]),
-                    color: "#50b5ff",
+                    color: "#4a9fe0",
                 },
             ];
             window.MacroCharts.renderBarChart(

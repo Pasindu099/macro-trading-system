@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block body %}
+<main class="shell shell--settings">
+    <header class="settings-hero">
+        <div>
+            <a class="back-link" href="/">Back to dashboard</a>
+            <p class="eyebrow">Settings</p>
+            <h1>Terminal preferences</h1>
+            <p class="calendar-hero__copy">
+                Configure local profile details, workspace defaults, and notification preferences for the macro dashboard.
+            </p>
+        </div>
+        <div class="settings-status-card">
+            <span>Profile mode</span>
+            <strong>Local</strong>
+            <small>Saved in this browser until authentication is added.</small>
+        </div>
+    </header>
+
+    <section class="settings-grid">
+        <article class="settings-panel">
+            <p class="eyebrow">Profile</p>
+            <label>
+                <span>Display name</span>
+                <input data-setting="display_name" placeholder="Macro desk">
+            </label>
+            <label>
+                <span>Default timezone</span>
+                <select data-setting="timezone">
+                    <option value="browser">Browser local</option>
+                    <option value="UTC">UTC</option>
+                    <option value="Europe/London">London</option>
+                    <option value="Europe/Berlin">Berlin</option>
+                    <option value="America/New_York">New York</option>
+                    <option value="Asia/Tokyo">Tokyo</option>
+                </select>
+            </label>
+        </article>
+
+        <article class="settings-panel">
+            <p class="eyebrow">Workspace</p>
+            <label>
+                <span>Default landing module</span>
+                <select data-setting="default_module">
+                    <option value="signals">Macro signals</option>
+                    <option value="calendar">Economic calendar</option>
+                    <option value="research">Bank research</option>
+                    <option value="analytics">Analytics</option>
+                </select>
+            </label>
+            <div class="currency-toggle-grid">
+                {% for currency in ["USD", "EUR", "GBP", "JPY", "CHF", "CAD", "AUD", "NZD"] %}
+                    <label class="currency-toggle">
+                        <input type="checkbox" value="{{ currency }}" data-setting-currency checked>
+                        <span>{{ currency }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="settings-panel">
+            <p class="eyebrow">Notifications</p>
+            <label class="settings-switch">
+                <input type="checkbox" data-setting="notify_high_impact">
+                <span>High-impact calendar alerts</span>
+            </label>
+            <label class="settings-switch">
+                <input type="checkbox" data-setting="notify_research">
+                <span>New research report alerts</span>
+            </label>
+            <label class="settings-switch">
+                <input type="checkbox" data-setting="notify_yields">
+                <span>Yield differential threshold alerts</span>
+            </label>
+        </article>
+
+        <article class="settings-panel">
+            <p class="eyebrow">Accessibility</p>
+            <label class="settings-switch">
+                <input type="checkbox" data-setting="reduced_motion">
+                <span>Reduce motion</span>
+            </label>
+            <label class="settings-switch">
+                <input type="checkbox" data-setting="high_contrast">
+                <span>Increase contrast</span>
+            </label>
+            <button class="primary-action" type="button" data-save-settings>Save Preferences</button>
+            <p class="settings-save-state" data-settings-state aria-live="polite">Ready.</p>
+        </article>
+    </section>
+</main>
+
+<script>
+    (() => {
+        const key = "macro_dashboard.settings";
+        const fields = Array.from(document.querySelectorAll("[data-setting]"));
+        const currencyInputs = Array.from(document.querySelectorAll("[data-setting-currency]"));
+        const state = document.querySelector("[data-settings-state]");
+        const saved = JSON.parse(localStorage.getItem(key) || "{}");
+        fields.forEach((field) => {
+            const value = saved[field.dataset.setting];
+            if (field.type === "checkbox") {
+                field.checked = Boolean(value);
+            } else if (value !== undefined) {
+                field.value = value;
+            }
+        });
+        if (Array.isArray(saved.currencies)) {
+            currencyInputs.forEach((input) => {
+                input.checked = saved.currencies.includes(input.value);
+            });
+        }
+        document.querySelector("[data-save-settings]")?.addEventListener("click", () => {
+            const payload = {};
+            fields.forEach((field) => {
+                payload[field.dataset.setting] = field.type === "checkbox" ? field.checked : field.value;
+            });
+            payload.currencies = currencyInputs.filter((input) => input.checked).map((input) => input.value);
+            localStorage.setItem(key, JSON.stringify(payload));
+            if (state) {
+                state.textContent = "Preferences saved locally.";
+            }
+        });
+    })();
+</script>
+{% endblock %}

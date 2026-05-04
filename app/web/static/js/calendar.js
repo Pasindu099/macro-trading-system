@@ -334,6 +334,97 @@
         });
     }
 
+    function calendarTimestamp(value) {
+        return new Date(value).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+    }
+
+    function escapeCalendarText(value) {
+        return String(value || "")
+            .replace(/\\/g, "\\\\")
+            .replace(/;/g, "\\;")
+            .replace(/,/g, "\\,")
+            .replace(/\n/g, "\\n");
+    }
+
+    function downloadFile(fileName, mimeType, content) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function bindExportActions() {
+        document.getElementById("calendar-export-ics")?.addEventListener("click", function () {
+            const events = currentPayload?.events || [];
+            if (!events.length) {
+                return;
+            }
+            const lines = [
+                "BEGIN:VCALENDAR",
+                "VERSION:2.0",
+                "PRODID:-//Macro Dashboard//Economic Calendar//EN",
+            ];
+            events.forEach((event) => {
+                const start = new Date(event.released_at);
+                const end = new Date(start.getTime() + 30 * 60 * 1000);
+                lines.push(
+                    "BEGIN:VEVENT",
+                    `UID:${event.id || `${event.country_code}-${event.released_at}-${event.display_name}`}@macro-dashboard`,
+                    `DTSTAMP:${calendarTimestamp(new Date())}`,
+                    `DTSTART:${calendarTimestamp(start)}`,
+                    `DTEND:${calendarTimestamp(end)}`,
+                    `SUMMARY:${escapeCalendarText(`${event.country_code} ${event.display_name}`)}`,
+                    `DESCRIPTION:${escapeCalendarText(`Estimate: ${formatNumber(event.estimate)} | Previous: ${formatNumber(event.previous)} | Actual: ${formatNumber(event.actual)} | Importance: ${event.importance}`)}`,
+                    "END:VEVENT",
+                );
+            });
+            lines.push("END:VCALENDAR");
+            downloadFile("macro-calendar.ics", "text/calendar;charset=utf-8", lines.join("\r\n"));
+        });
+
+        document.getElementById("calendar-export-csv")?.addEventListener("click", function () {
+            const events = currentPayload?.events || [];
+            const headers = ["time", "country", "currency", "indicator", "category", "importance", "estimate", "previous", "actual", "status"];
+            const rows = events.map((event) => [
+                event.released_at,
+                event.country_code,
+                event.currency_code,
+                event.display_name,
+                event.primary_category,
+                event.importance,
+                event.estimate,
+                event.previous,
+                event.actual,
+                event.status,
+            ]);
+            const csv = [headers, ...rows]
+                .map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(","))
+                .join("\n");
+            downloadFile("macro-calendar.csv", "text/csv;charset=utf-8", csv);
+        });
+
+        document.getElementById("calendar-open-google")?.addEventListener("click", function () {
+            const event = (currentPayload?.events || []).find((item) => item.status === "upcoming") || currentPayload?.events?.[0];
+            if (!event) {
+                return;
+            }
+            const start = new Date(event.released_at);
+            const end = new Date(start.getTime() + 30 * 60 * 1000);
+            const params = new URLSearchParams({
+                action: "TEMPLATE",
+                text: `${event.country_code} ${event.display_name}`,
+                dates: `${calendarTimestamp(start)}/${calendarTimestamp(end)}`,
+                details: `Estimate: ${formatNumber(event.estimate)} | Previous: ${formatNumber(event.previous)} | Actual: ${formatNumber(event.actual)}`,
+            });
+            window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, "_blank", "noopener,noreferrer");
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         initializeTimeZoneSelect();
         bindWindowButtons();
@@ -342,6 +433,7 @@
         bindSelect("calendar-importance");
         bindTimeZoneSelect();
         bindResetFilters();
+        bindExportActions();
         updateFilterSummary();
 
         loadCalendar().catch((error) => {

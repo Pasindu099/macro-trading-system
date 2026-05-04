@@ -100,7 +100,12 @@
 
         <div class="calendar-filter-bar">
             <p id="calendar-active-filters" class="calendar-filter-summary">Showing all events.</p>
-            <button id="calendar-reset-filters" class="control-button" type="button">Reset filters</button>
+            <div class="calendar-export-actions">
+                <button id="calendar-export-ics" class="control-button" type="button">Export ICS</button>
+                <button id="calendar-export-csv" class="control-button" type="button">Export CSV</button>
+                <button id="calendar-open-google" class="control-button" type="button">Sync first event</button>
+                <button id="calendar-reset-filters" class="control-button" type="button">Reset filters</button>
+            </div>
         </div>
     </section>
 
@@ -119,5 +124,5 @@
     </section>
 </main>
 
-<script src="{{ url_for('static', path='js/calendar.js') }}?v=20260421a" defer></script>
+<script src="{{ url_for('static', path='js/calendar.js') }}?v=20260429b" defer></script>
 {% endblock %}

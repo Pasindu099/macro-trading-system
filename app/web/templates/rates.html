@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block body %}
+<main class="shell rates-research">
+    <header class="rates-research__hero">
+        <div>
+            <a href="/">Dashboard</a>
+            <span>/</span>
+            <strong>Rates</strong>
+        </div>
+        <section>
+            <div>
+                <h1>Yield Differentials</h1>
+                <p>Research workspace for comparing G10 yield spreads, curve maturities, and currency-pair performance.</p>
+            </div>
+            <label>
+                <span>Pair focus</span>
+                <select data-rates-pair>
+                    <option value="all">All pairs</option>
+                    {% for pair in pair_research %}
+                        <option value="{{ pair.label }}">{{ pair.label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </section>
+    </header>
+
+    <section class="rates-research__maturities" aria-label="Yield maturity coverage">
+        {% for maturity in maturity_panels %}
+            <button
+                class="{% if maturity.key == active_maturity %}is-active{% endif %} {% if not maturity.available %}is-muted{% endif %}"
+                type="button"
+                data-maturity="{{ maturity.key }}"
+                {% if not maturity.available %}disabled{% endif %}
+            >
+                <strong>{{ maturity.label }}</strong>
+                <span>{{ maturity.summary }}</span>
+            </button>
+        {% endfor %}
+    </section>
+
+    <section class="rates-research__stats">
+        {% for stat in yield_differentials.stats %}
+            <article>
+                <span>{{ stat.label }}</span>
+                <strong class="{{ stat.class }}">{{ stat.value }}</strong>
+                <small>{{ stat.detail }}</small>
+            </article>
+        {% else %}
+            <article>
+                <span>Status</span>
+                <strong>N/A</strong>
+                <small>{{ yield_differentials.message or "No rates data available" }}</small>
+            </article>
+        {% endfor %}
+    </section>
+
+    <section class="rates-research__grid">
+        <article class="rates-card rates-card--wide">
+            <header>
+                <span>10Y Yield Differential vs FX Performance</span>
+                <em>dual scale</em>
+            </header>
+            <div id="rates-fx-spread-chart" class="rates-chart" role="img" aria-label="Yield differential compared to currency performance"></div>
+        </article>
+
+        <article class="rates-card">
+            <header>
+                <span>Yield Spread Ranking</span>
+                <em>bp</em>
+            </header>
+            <div id="rates-spread-rank-chart" class="rates-chart rates-chart--compact" role="img" aria-label="Yield spread ranking"></div>
+        </article>
+
+        <article class="rates-card rates-card--wide">
+            <header>
+                <span>Country Yield Lines</span>
+                <em>separate scale enabled</em>
+            </header>
+            <div id="rates-yield-chart" class="rates-chart" role="img" aria-label="Country yield history"></div>
+        </article>
+
+        <article class="rates-card">
+            <header>
+                <span>Research Pair Matrix</span>
+                <em>FX vs rates</em>
+            </header>
+            <div class="rates-pair-list">
+                {% for pair in pair_research %}
+                    <button type="button" data-pair-row="{{ pair.label }}">
+                        <strong>{{ pair.label }}</strong>
+                        <span class="{{ pair.spread_class }}">{{ pair.spread_display }}</span>
+                        <span class="{{ pair.fx_class }}">{{ pair.fx_performance }}</span>
+                    </button>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+
+    {% if yield_differentials.message or fx_errors %}
+        <section class="rates-research__diagnostics">
+            <strong>Data notes</strong>
+            {% if yield_differentials.message %}<p>{{ yield_differentials.message }}</p>{% endif %}
+            {% for error in fx_errors[:4] %}
+                <p>{{ error.label }}: {{ error.error }}</p>
+            {% endfor %}
+        </section>
+    {% endif %}
+</main>
+
+<script>
+    window.addEventListener("DOMContentLoaded", () => {
+        const yieldByMaturity = {{ yield_chart_by_maturity|tojson }};
+        let activeMaturity = {{ active_maturity|tojson }};
+        let yieldData = yieldByMaturity?.[activeMaturity] || {{ yield_differentials.chart_data|tojson }};
+        const fxSeries = {{ fx_series|tojson }};
+        if (!window.echarts) return;
+
+        const colors = ["#3b82f6", "#f97316", "#ef4444", "#f59e0b", "#8b5cf6", "#14b8a6", "#94a3b8", "#22c55e"];
+        const baseGrid = { left: 48, right: 52, top: 44, bottom: 34, containLabel: true };
+        const axis = {
+            axisLine: { lineStyle: { color: "#2a2a2a" } },
+            axisLabel: { color: "#888888" },
+            splitLine: { lineStyle: { color: "rgba(255,255,255,.08)" } }
+        };
+        const mk = (id) => {
+            const el = document.getElementById(id);
+            return el ? window.echarts.init(el, "dark") : null;
+        };
+        const spreadChart = mk("rates-fx-spread-chart");
+        const rankChart = mk("rates-spread-rank-chart");
+        const yieldChart = mk("rates-yield-chart");
+        const pairSelect = document.querySelector("[data-rates-pair]");
+
+        const baseOpts = {
+            backgroundColor: "transparent",
+            animationDuration: 220,
+            tooltip: { trigger: "axis", backgroundColor: "#0a0a0a", borderColor: "#2a2a2a", textStyle: { color: "#e8e8e8" } },
+            legend: { type: "scroll", top: 0, textStyle: { color: "#888888" } },
+            grid: baseGrid,
+            xAxis: { type: "time", ...axis },
+        };
+
+        const drawPair = () => {
+            const selected = pairSelect?.value || "all";
+            const spreadSeries = (yieldData.spread_series || []).filter((s) => selected === "all" || s.name === selected);
+            const selectedFx = (fxSeries || []).filter((s) => selected === "all" || s.name === selected);
+            spreadChart?.setOption({
+                ...baseOpts,
+                yAxis: [
+                    { type: "value", name: "bp", scale: true, ...axis },
+                    { type: "value", name: "FX %", scale: true, ...axis }
+                ],
+                series: [
+                    ...spreadSeries.map((s, i) => ({
+                        name: `${s.name} spread`,
+                        type: "line",
+                        showSymbol: false,
+                        smooth: true,
+                        data: s.data,
+                        yAxisIndex: 0,
+                        lineStyle: { width: 2, color: colors[i % colors.length] },
+                        itemStyle: { color: colors[i % colors.length] }
+                    })),
+                    ...selectedFx.map((s, i) => ({
+                        name: `${s.name} FX`,
+                        type: "line",
+                        showSymbol: false,
+                        smooth: true,
+                        data: s.data,
+                        yAxisIndex: 1,
+                        lineStyle: { width: 2, type: "dashed", color: colors[(i + 2) % colors.length] },
+                        itemStyle: { color: colors[(i + 2) % colors.length] }
+                    }))
+                ]
+            }, true);
+        };
+
+        const drawRank = () => {
+            const latest = yieldData.latest_spreads || [];
+            rankChart?.setOption({
+                backgroundColor: "transparent",
+                animationDuration: 220,
+                tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, backgroundColor: "#0a0a0a", borderColor: "#2a2a2a", textStyle: { color: "#e8e8e8" } },
+                grid: { left: 42, right: 18, top: 18, bottom: 34, containLabel: true },
+                xAxis: { type: "category", data: latest.map((r) => r.label), ...axis },
+                yAxis: { type: "value", ...axis },
+                series: [{
+                    name: "Differential",
+                    type: "bar",
+                    barMaxWidth: 28,
+                    data: latest.map((r) => ({ value: r.value, itemStyle: { color: r.value >= 0 ? "#f97316" : "#ef4444" } }))
+                }]
+            }, true);
+        };
+
+        const drawYields = () => {
+            yieldChart?.setOption({
+                ...baseOpts,
+                yAxis: { type: "value", scale: true, ...axis },
+                series: (yieldData.yield_series || []).map((s, i) => ({
+                    name: s.name,
+                    type: "line",
+                    showSymbol: false,
+                    smooth: true,
+                    data: s.data,
+                    lineStyle: { width: 2, color: colors[i % colors.length] },
+                    itemStyle: { color: colors[i % colors.length] }
+                }))
+            }, true);
+        };
+
+        pairSelect?.addEventListener("change", drawPair);
+        document.querySelectorAll("[data-pair-row]").forEach((button) => {
+            button.addEventListener("click", () => {
+                if (pairSelect) pairSelect.value = button.dataset.pairRow || "all";
+                drawPair();
+            });
+        });
+        document.querySelectorAll("[data-maturity]").forEach((button) => {
+            button.addEventListener("click", () => {
+                if (button.disabled) return;
+                document.querySelectorAll("[data-maturity]").forEach((item) => item.classList.remove("is-active"));
+                button.classList.add("is-active");
+                activeMaturity = button.dataset.maturity || activeMaturity;
+                yieldData = yieldByMaturity?.[activeMaturity] || yieldData;
+                drawRank();
+                drawYields();
+                drawPair();
+            });
+        });
+        drawRank();
+        drawYields();
+        drawPair();
+        window.addEventListener("resize", () => {
+            spreadChart?.resize();
+            rankChart?.resize();
+            yieldChart?.resize();
+        });
+    });
+</script>
+{% endblock %}

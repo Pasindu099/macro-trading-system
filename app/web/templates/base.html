@@ -4,12 +4,56 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ page_title }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}?v=20260429b">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}?v=20260504s">
     <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js" defer></script>
     <script src="{{ url_for('static', path='js/charts.js') }}?v=20260424f" defer></script>
 </head>
-<body>
+<body class="{% if request is defined and request.url.path != '/' %}has-black-global-sidebar{% endif %}">
+    {% if request is defined and request.url.path != "/" %}
+        <aside class="black-sidebar black-sidebar--global" aria-label="Application navigation">
+            <a class="black-sidebar__logo" href="/" aria-label="Macro Dashboard home">Macro Dashboard</a>
+            <nav class="black-sidebar__nav">
+                <a class="black-nav-item" href="/">
+                    <span class="black-nav-icon" aria-hidden="true">D</span>
+                    <span>Dashboard</span>
+                </a>
+                <a class="black-nav-item" href="/#fx-strength">
+                    <span class="black-nav-icon" aria-hidden="true">FX</span>
+                    <span>Macro Signals</span>
+                </a>
+                <a class="black-nav-item {% if request is defined and request.url.path.startswith('/rates') %}is-active{% endif %}" href="/rates">
+                    <span class="black-nav-icon" aria-hidden="true">RT</span>
+                    <span>Rates</span>
+                </a>
+                <a class="black-nav-item" href="/calendar">
+                    <span class="black-nav-icon" aria-hidden="true">CA</span>
+                    <span>Calendar</span>
+                </a>
+                <a class="black-nav-item {% if request is defined and (request.url.path.startswith('/countries') or request.url.path.startswith('/country/')) %}is-active{% endif %}" href="/countries">
+                    <span class="black-nav-icon" aria-hidden="true">G10</span>
+                    <span>Countries</span>
+                </a>
+                <a class="black-nav-item {% if request is defined and request.url.path.startswith('/bank-research') %}is-active{% endif %}" href="/bank-research">
+                    <span class="black-nav-icon" aria-hidden="true">BR</span>
+                    <span>Research</span>
+                </a>
+                <a class="black-nav-item" href="/analytics">
+                    <span class="black-nav-icon" aria-hidden="true">AN</span>
+                    <span>Analytics</span>
+                </a>
+                <a class="black-nav-item" href="/brief-builder">
+                    <span class="black-nav-icon" aria-hidden="true">BB</span>
+                    <span>Brief Builder</span>
+                </a>
+                <span class="black-nav-divider"></span>
+                <a class="black-nav-item" href="/settings">
+                    <span class="black-nav-icon" aria-hidden="true">ST</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+    {% endif %}
     {% block body %}{% endblock %}
 </body>
 </html>

@@ -1,45 +1,27 @@
 {% extends "base.html" %}
 
 {% block body %}
-<main class="shell shell--research">
-    <header class="research-hero">
-        <div>
-            <a class="back-link" href="/">Back to dashboard</a>
-            <p class="eyebrow">Bank Research</p>
-            <h1>Research Signal Desk</h1>
-            <p class="calendar-hero__copy">
-                Cached bank reports from the latest Google Drive folder, summarized into assets, outlooks, reasons, and geopolitical market impact.
-            </p>
-        </div>
-        <div class="research-hero-card">
-            <span>Reports</span>
-            <strong>{{ research.reports|length }}</strong>
-            <span>
-                {% if research.generated_at %}
-                    Updated {{ research.generated_at[:16].replace("T", " ") }} UTC
-                {% else %}
-                    No cache built yet
-                {% endif %}
-            </span>
+<main class="shell shell--research research-workbench">
+    <header class="research-workbench__topbar">
+        <strong>Bank Research</strong>
+        <span>{{ research.reports|length }} notes{% if research.generated_at %} &middot; Updated {{ research.generated_at[:16].replace("T", " ") }} UTC{% endif %}</span>
+        <div class="research-workbench__top-actions">
+            <a href="/bank-research/admin">Manage</a>
+            {% if folder_url %}
+                <form method="post" action="/bank-research/refresh">
+                    <button type="submit">Refresh</button>
+                </form>
+            {% endif %}
         </div>
     </header>
 
-    <section class="research-controls">
-        <label class="research-search">
-            <span>Search reports</span>
-            <input type="search" placeholder="Search bank, asset, outlook, geopolitics..." data-research-search>
-        </label>
-        <label class="research-search">
-            <span>Outlook</span>
-            <select data-research-outlook>
-                <option value="">All outlooks</option>
-                <option value="bullish">Bullish</option>
-                <option value="bearish">Bearish</option>
-                <option value="neutral">Neutral</option>
-                <option value="mixed">Mixed</option>
-                <option value="watch">Watch</option>
-            </select>
-        </label>
+    <section class="research-compare-dock" data-research-compare-dock hidden>
+        <div>
+            <p class="eyebrow">Side-by-side Compare</p>
+            <h2>Selected asset calls</h2>
+        </div>
+        <div class="research-compare-list" data-research-compare-list></div>
+        <button class="secondary-action" type="button" data-clear-compare>Clear</button>
     </section>
 
     {% if research.errors %}
@@ -52,64 +34,130 @@
     {% endif %}
 
     {% if research.reports %}
-        <section class="research-layout" data-research-list>
-            <div class="research-list">
+        <section class="research-terminal-layout" data-research-list>
+            <aside class="research-terminal-filters">
+                <div class="research-terminal-filters__head">Sources &amp; filters</div>
+                <label class="research-terminal-search">
+                    <span class="sr-only">Search reports</span>
+                    <input type="search" placeholder="Search research..." data-research-search>
+                </label>
+
+                <div class="research-filter-block">
+                    <span>Currency</span>
+                    <div class="research-chip-row">
+                        {% for currency in ["USD", "EUR", "GBP", "JPY", "AUD"] %}
+                            <button type="button" data-research-currency="{{ currency|lower }}">{{ currency }}</button>
+                        {% endfor %}
+                        <button type="button" class="is-active" data-research-currency="">All</button>
+                    </div>
+                </div>
+
+                <div class="research-filter-block">
+                    <span>Stance</span>
+                    <select data-research-outlook>
+                        <option value="">All outlooks</option>
+                        <option value="bullish">Bullish</option>
+                        <option value="bearish">Bearish</option>
+                        <option value="neutral">Neutral</option>
+                        <option value="mixed">Mixed</option>
+                        <option value="watch">Watch</option>
+                    </select>
+                </div>
+
+                <div class="research-filter-block">
+                    <span>Theme</span>
+                    <select data-research-asset-class>
+                        <option value="">All asset classes</option>
+                        <option value="fx">FX</option>
+                        <option value="rates">Rates</option>
+                        <option value="equity">Equity</option>
+                        <option value="commodity">Commodity</option>
+                        <option value="credit">Credit</option>
+                    </select>
+                </div>
+
+                <div class="research-filter-block">
+                    <span>Saved</span>
+                    <select data-research-saved>
+                        <option value="">All reports</option>
+                        <option value="saved">Bookmarked only</option>
+                    </select>
+                </div>
+
+                <div class="research-filter-block research-bank-list">
+                    <span>Banks</span>
+                    {% for report in research.reports[:14] %}
+                        {% set analysis = report.analysis %}
+                        {% set first_asset = analysis.assets[0] if analysis.assets else none %}
+                        <button class="research-bank-item" type="button" data-research-bank="{{ (analysis.bank or 'Unknown bank')|lower }}">
+                            <strong>{{ analysis.bank or "Unknown bank" }}</strong>
+                            <small>{{ analysis.assets|length }} calls{% if analysis.report_date %} &middot; {{ analysis.report_date }}{% endif %}</small>
+                            {% if first_asset %}
+                                <em class="research-outlook research-outlook--{{ first_asset.outlook|lower }}">{{ first_asset.outlook }}</em>
+                            {% endif %}
+                        </button>
+                    {% endfor %}
+                </div>
+            </aside>
+
+            <div class="research-report-feed">
                 {% for report in research.reports %}
                     {% set analysis = report.analysis %}
                     {% set assets_text = analysis.assets|map(attribute="asset")|join(" ") if analysis.assets else "" %}
                     {% set outlook_text = analysis.assets|map(attribute="outlook")|join(" ") if analysis.assets else "" %}
+                    {% set asset_class_text = analysis.assets|map(attribute="asset_class")|join(" ") if analysis.assets else "" %}
+                    {% set bank_text = (analysis.bank or "Unknown bank")|lower %}
+                    {% set first_asset = analysis.assets[0] if analysis.assets else none %}
                     <article
-                        class="research-card"
+                        class="research-card research-terminal-card"
+                        data-report-id="{{ report.file_id or report.file_name }}"
                         data-search="{{ (analysis.title ~ ' ' ~ analysis.bank ~ ' ' ~ analysis.executive_summary ~ ' ' ~ assets_text ~ ' ' ~ outlook_text)|lower }}"
+                        data-bank="{{ bank_text }}"
+                        data-currencies="{{ assets_text|lower }}"
                         data-outlooks="{{ outlook_text|lower }}"
+                        data-asset-classes="{{ asset_class_text|lower }}"
                     >
-                        <div class="research-card__header">
-                            <div>
-                                <h2>{{ analysis.title or report.file_name }}</h2>
-                                <span>{{ analysis.bank or "Unknown bank" }}{% if analysis.report_date %} | {{ analysis.report_date }}{% endif %}</span>
-                            </div>
-                            {% if report.drive_web_link %}
-                                <a href="{{ report.drive_web_link }}" target="_blank" rel="noreferrer">Open Drive</a>
+                        <div class="research-terminal-card__top">
+                            <div class="research-bank-badge">{{ (analysis.bank or "??")[:2].upper() }}</div>
+                            <strong>{{ analysis.bank or "Unknown bank" }}</strong>
+                            {% if first_asset %}
+                                <span class="research-outlook research-outlook--{{ first_asset.outlook|lower }}">{{ first_asset.outlook }}{% if first_asset.asset %} {{ first_asset.asset }}{% endif %}</span>
                             {% endif %}
+                            <small>{{ analysis.report_date or "Recent" }}</small>
                         </div>
 
+                        <h2>{{ analysis.title or report.file_name }}</h2>
                         <p>{{ analysis.executive_summary }}</p>
 
-                        {% if analysis.assets %}
-                            <div class="research-assets">
-                                {% for asset in analysis.assets %}
-                                    <div class="research-asset">
-                                        <div>
-                                            <strong>{{ asset.asset }}</strong>
-                                            <span>{{ asset.asset_class or "Market" }}</span>
-                                        </div>
-                                        <span class="research-outlook research-outlook--{{ asset.outlook|lower }}">{{ asset.outlook }}</span>
-                                        <p>{{ asset.reasons|join("; ") if asset.reasons is iterable and asset.reasons is not string else asset.reasons }}</p>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="empty-panel">No asset calls were extracted yet.</div>
-                        {% endif %}
+                        <div class="research-terminal-tags">
+                            {% for asset in analysis.assets[:6] %}
+                                <span>{{ asset.asset }}</span>
+                            {% else %}
+                                <span>Macro</span>
+                            {% endfor %}
+                        </div>
 
-                        {% if analysis.geopolitical and analysis.geopolitical.discussed %}
-                            <div class="research-geo">
-                                <strong>Geopolitical read-through</strong>
-                                <p>{{ analysis.geopolitical.summary }}</p>
-                                <div class="research-geo__grid">
-                                    <span>Global economy: {{ analysis.geopolitical.bank_view_global_economy }}</span>
-                                    <span>Financial markets: {{ analysis.geopolitical.bank_view_financial_markets }}</span>
-                                </div>
+                        <div class="research-terminal-card__footer">
+                            <span>{{ analysis.bank or "Unknown bank" }}{% if first_asset and first_asset.asset_class %} &middot; {{ first_asset.asset_class }}{% endif %}</span>
+                            <div>
+                                <button class="research-bookmark" type="button" data-bookmark-report aria-pressed="false">Save</button>
+                                {% if first_asset %}
+                                    <button
+                                        class="research-compare-button"
+                                        type="button"
+                                        data-compare-toggle
+                                        data-compare-asset="{{ first_asset.asset }}"
+                                        data-compare-bank="{{ analysis.bank or 'Unknown bank' }}"
+                                        data-compare-outlook="{{ first_asset.outlook }}"
+                                        data-compare-class="{{ first_asset.asset_class or 'Market' }}"
+                                        data-compare-reason="{{ first_asset.reasons|join('; ') if first_asset.reasons is iterable and first_asset.reasons is not string else first_asset.reasons }}"
+                                    >Add to brief</button>
+                                {% endif %}
+                                {% if report.drive_web_link %}
+                                    <a href="{{ report.drive_web_link }}" target="_blank" rel="noreferrer">View source</a>
+                                {% endif %}
                             </div>
-                        {% endif %}
-
-                        {% if analysis.key_risks %}
-                            <div class="research-risks">
-                                {% for risk in analysis.key_risks %}
-                                    <span>{{ risk }}</span>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
+                        </div>
                     </article>
                 {% endfor %}
             </div>
@@ -128,17 +176,122 @@
         const cards = Array.from(document.querySelectorAll(".research-card"));
         const search = document.querySelector("[data-research-search]");
         const outlook = document.querySelector("[data-research-outlook]");
+        const assetClass = document.querySelector("[data-research-asset-class]");
+        const savedFilter = document.querySelector("[data-research-saved]");
+        const currencyButtons = Array.from(document.querySelectorAll("[data-research-currency]"));
+        const bankButtons = Array.from(document.querySelectorAll("[data-research-bank]"));
+        const bookmarkKey = "macro_dashboard.research_bookmarks";
+        const compareDock = document.querySelector("[data-research-compare-dock]");
+        const compareList = document.querySelector("[data-research-compare-list]");
+        const selectedCompare = new Map();
+        let selectedCurrency = "";
+        let selectedBank = "";
+        const readBookmarks = () => {
+            try {
+                return new Set(JSON.parse(localStorage.getItem(bookmarkKey) || "[]"));
+            } catch {
+                return new Set();
+            }
+        };
+        const writeBookmarks = (items) => localStorage.setItem(bookmarkKey, JSON.stringify(Array.from(items)));
+        let bookmarks = readBookmarks();
+        const updateBookmarks = () => {
+            cards.forEach((card) => {
+                const saved = bookmarks.has(card.dataset.reportId);
+                card.dataset.saved = saved ? "true" : "false";
+                const button = card.querySelector("[data-bookmark-report]");
+                if (button) {
+                    button.textContent = saved ? "Saved" : "Save";
+                    button.setAttribute("aria-pressed", saved ? "true" : "false");
+                }
+            });
+        };
         const applyFilters = () => {
             const query = (search?.value || "").trim().toLowerCase();
             const selectedOutlook = (outlook?.value || "").toLowerCase();
+            const selectedAssetClass = (assetClass?.value || "").toLowerCase();
+            const savedOnly = savedFilter?.value === "saved";
             cards.forEach((card) => {
                 const matchesQuery = !query || card.dataset.search.includes(query);
+                const matchesCurrency = !selectedCurrency || card.dataset.currencies.includes(selectedCurrency);
+                const matchesBank = !selectedBank || card.dataset.bank === selectedBank;
                 const matchesOutlook = !selectedOutlook || card.dataset.outlooks.includes(selectedOutlook);
-                card.hidden = !(matchesQuery && matchesOutlook);
+                const matchesAssetClass = !selectedAssetClass || card.dataset.assetClasses.includes(selectedAssetClass);
+                const matchesSaved = !savedOnly || card.dataset.saved === "true";
+                card.hidden = !(matchesQuery && matchesCurrency && matchesBank && matchesOutlook && matchesAssetClass && matchesSaved);
             });
+        };
+        const renderCompare = () => {
+            const items = Array.from(selectedCompare.values());
+            compareDock.hidden = !items.length;
+            compareList.innerHTML = items.map((item) => `
+                <article class="research-compare-card">
+                    <span>${item.bank} / ${item.assetClass}</span>
+                    <strong>${item.asset}</strong>
+                    <em class="research-outlook research-outlook--${item.outlook.toLowerCase()}">${item.outlook}</em>
+                    <p>${item.reason}</p>
+                </article>
+            `).join("");
         };
         search?.addEventListener("input", applyFilters);
         outlook?.addEventListener("change", applyFilters);
+        assetClass?.addEventListener("change", applyFilters);
+        savedFilter?.addEventListener("change", applyFilters);
+        currencyButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                selectedCurrency = button.dataset.researchCurrency || "";
+                currencyButtons.forEach((item) => item.classList.toggle("is-active", item === button));
+                applyFilters();
+            });
+        });
+        bankButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                const nextBank = button.dataset.researchBank || "";
+                selectedBank = selectedBank === nextBank ? "" : nextBank;
+                bankButtons.forEach((item) => item.classList.toggle("is-active", item.dataset.researchBank === selectedBank));
+                applyFilters();
+            });
+        });
+        document.querySelectorAll("[data-bookmark-report]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const card = button.closest(".research-card");
+                const id = card?.dataset.reportId;
+                if (!id) return;
+                if (bookmarks.has(id)) bookmarks.delete(id);
+                else bookmarks.add(id);
+                writeBookmarks(bookmarks);
+                updateBookmarks();
+                applyFilters();
+            });
+        });
+        document.querySelectorAll("[data-compare-toggle]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const key = `${button.dataset.compareBank}:${button.dataset.compareAsset}:${button.dataset.compareOutlook}`;
+                if (selectedCompare.has(key)) {
+                    selectedCompare.delete(key);
+                    button.textContent = "Add to brief";
+                } else {
+                    selectedCompare.set(key, {
+                        bank: button.dataset.compareBank,
+                        asset: button.dataset.compareAsset,
+                        outlook: button.dataset.compareOutlook,
+                        assetClass: button.dataset.compareClass,
+                        reason: button.dataset.compareReason,
+                    });
+                    button.textContent = "Remove";
+                }
+                renderCompare();
+            });
+        });
+        document.querySelector("[data-clear-compare]")?.addEventListener("click", () => {
+            selectedCompare.clear();
+            document.querySelectorAll("[data-compare-toggle]").forEach((button) => {
+                button.textContent = "Add to brief";
+            });
+            renderCompare();
+        });
+        updateBookmarks();
+        applyFilters();
     })();
 </script>
 {% endblock %}

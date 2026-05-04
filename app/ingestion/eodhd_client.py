@@ -276,6 +276,25 @@ class EODHDClient:
         logger.info("Fetched %d EOD rows for symbol=%s", len(data), symbol)
         return data
 
+    async def fetch_exchange_symbols(
+        self,
+        exchange: str,
+    ) -> list[dict[str, Any]]:
+        """Fetch the symbol list for one EODHD exchange."""
+        if not exchange:
+            raise ValueError("exchange is required")
+
+        url = f"{self._base_url}/exchange-symbol-list/{exchange}"
+        params: dict[str, Any] = {
+            "api_token": self._api_key,
+            "fmt": "json",
+        }
+
+        logger.info("Fetching EODHD exchange symbols: exchange=%s", exchange)
+        data = await self._request_with_retries(url, params)
+        logger.info("Fetched %d symbols for exchange=%s", len(data), exchange)
+        return data
+
     async def _request_with_retries(
         self,
         url: str,
@@ -302,9 +321,10 @@ class EODHDClient:
                 response = await self._client.get(url, params=params)
 
                 if response.status_code in (401, 403):
+                    detail = _extract_error_message(response)
                     raise EODHDAuthError(
                         f"EODHD auth failed (HTTP {response.status_code}). "
-                        f"Check your EODHD_API_KEY."
+                        f"{detail or 'Check your EODHD_API_KEY.'}"
                     )
 
                 if response.status_code == 429:
@@ -328,6 +348,17 @@ class EODHDClient:
                     response.raise_for_status()
 
                     data = response.json()
+                    if isinstance(data, dict):
+                        detail = _extract_payload_error(data)
+                        if _looks_like_entitlement_error(detail):
+                            raise EODHDAuthError(
+                                "EODHD subscription does not include this dataset. "
+                                f"{detail}"
+                            )
+                        raise EODHDError(
+                            f"Unexpected EODHD response shape: expected list, "
+                            f"got object: {detail or data}"
+                        )
                     if not isinstance(data, list):
                         raise EODHDError(
                             f"Unexpected EODHD response shape: expected list, "
@@ -365,3 +396,29 @@ class EODHDClient:
         if last_exception is not None:
             raise last_exception
         raise EODHDError("All retry attempts exhausted with no specific error")
+
+
+def _extract_payload_error(data: dict[str, Any]) -> str:
+    for key in ("message", "error", "errors", "detail"):
+        value = data.get(key)
+        if value:
+            return str(value)
+    return str(data)
+
+
+def _extract_error_message(response: httpx.Response) -> str:
+    try:
+        data = response.json()
+    except ValueError:
+        return response.text.strip()
+    if isinstance(data, dict):
+        return _extract_payload_error(data)
+    return response.text.strip()
+
+
+def _looks_like_entitlement_error(message: str) -> bool:
+    normalized = message.lower()
+    return (
+        "subscription" in normalized
+        and any(term in normalized for term in ("doesn't cover", "does not cover", "not include"))
+    ) or "no access" in normalized

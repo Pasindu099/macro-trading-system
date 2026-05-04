@@ -1,24 +1,27 @@
-﻿const { useState, useEffect, useRef } = React;
+const { useState, useEffect, useRef } = React;
 
-// ── Fonts via Google ──────────────────────────────────────────
+// -- Fonts via Google ------------------------------------------
 const fontLink = document.createElement("link");
 fontLink.rel = "stylesheet";
 fontLink.href = "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap";
 document.head.appendChild(fontLink);
 
-// ── Theme ─────────────────────────────────────────────────────
+// -- Theme -----------------------------------------------------
 const T = {
-  navy:    "#0D1F3C",
-  navyMid: "#1A3A6B",
-  gold:    "#C9A84C",
-  goldLight:"#E8C97A",
-  cream:   "#F5F0E8",
-  offWhite:"#FAFAF7",
-  grey:    "#6B7280",
-  greyLt:  "#D1D5DB",
-  red:     "#C0392B",
-  green:   "#1A7A4A",
-  orange:  "#D97706",
+  navy:    "#000000",
+  navyMid: "#1A1D24",
+  gold:    "#F5A623",
+  goldLight:"#F7C35F",
+  cream:   "#E8EAF0",
+  offWhite:"#F6F7FA",
+  grey:    "#8892A0",
+  greyLt:  "#C3CBD6",
+  red:     "#E84040",
+  green:   "#00C896",
+  orange:  "#F9735B",
+  blue:    "#4A9FE0",
+  teal:    "#2AA6A1",
+  purple:  "#9B8CFF",
   white:   "#FFFFFF",
 };
 
@@ -31,13 +34,13 @@ const css = `
   /* Sidebar */
   .sidebar {
     position: fixed; top: 0; left: 0; bottom: 0; width: 240px;
-    background: #080F1E; border-right: 1px solid rgba(201,168,76,0.15);
+    background: #111318; border-right: 1px solid rgba(61,70,86,0.56);
     display: flex; flex-direction: column; z-index: 100;
     padding: 0;
   }
   .sidebar-logo {
     padding: 28px 24px 20px;
-    border-bottom: 1px solid rgba(201,168,76,0.12);
+    border-bottom: 1px solid rgba(61,70,86,0.52);
   }
   .sidebar-logo-text {
     font-family: 'Playfair Display', serif; font-weight: 900;
@@ -57,21 +60,21 @@ const css = `
   .nav-item {
     display: flex; align-items: center; gap: 10px;
     padding: 9px 12px; border-radius: 6px; cursor: pointer;
-    font-size: 13px; font-weight: 500; color: #8899BB;
+    font-size: 13px; font-weight: 500; color: ${T.grey};
     transition: all 0.15s ease; margin-bottom: 2px;
     border: 1px solid transparent;
   }
-  .nav-item:hover { background: rgba(201,168,76,0.06); color: ${T.cream}; }
+  .nav-item:hover { background: rgba(74,159,224,0.08); color: ${T.cream}; }
   .nav-item.active {
-    background: rgba(201,168,76,0.12); color: ${T.goldLight};
-    border-color: rgba(201,168,76,0.2);
+    background: rgba(74,159,224,0.14); color: ${T.blue};
+    border-color: rgba(74,159,224,0.28);
   }
   .nav-link { text-decoration: none; }
   .nav-item .nav-dot {
     width: 6px; height: 6px; border-radius: 50%;
     background: currentColor; opacity: 0.5; flex-shrink: 0;
   }
-  .nav-item.active .nav-dot { opacity: 1; background: ${T.gold}; }
+  .nav-item.active .nav-dot { opacity: 1; background: ${T.green}; }
 
   /* Main content */
   .main { margin-left: 240px; min-height: 100vh; padding: 32px 40px; max-width: 1100px; }
@@ -116,11 +119,11 @@ const css = `
     resize: vertical;
   }
   input:focus, textarea:focus, select:focus {
-    border-color: rgba(201,168,76,0.4);
-    background: rgba(201,168,76,0.04);
+    border-color: rgba(74,159,224,0.48);
+    background: rgba(74,159,224,0.05);
   }
-  input::placeholder, textarea::placeholder { color: rgba(107,114,128,0.7); }
-  select option { background: #0D1F3C; }
+  input::placeholder, textarea::placeholder { color: rgba(136,146,160,0.7); }
+  select option { background: #111318; }
 
   .form-grid { display: grid; gap: 14px; }
   .form-grid.cols-2 { grid-template-columns: 1fr 1fr; }
@@ -136,20 +139,20 @@ const css = `
     letter-spacing: 0.02em;
   }
   .btn-primary {
-    background: ${T.gold}; color: ${T.navy};
+    background: ${T.blue}; color: ${T.white};
   }
-  .btn-primary:hover { background: ${T.goldLight}; transform: translateY(-1px); }
+  .btn-primary:hover { background: #62AFE8; transform: translateY(-1px); }
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   .btn-ghost {
     background: transparent; color: ${T.grey};
     border: 1px solid rgba(255,255,255,0.1);
   }
-  .btn-ghost:hover { border-color: rgba(201,168,76,0.3); color: ${T.goldLight}; }
+  .btn-ghost:hover { border-color: rgba(74,159,224,0.36); color: ${T.blue}; }
   .btn-danger {
-    background: rgba(192,57,43,0.15); color: #E57373;
-    border: 1px solid rgba(192,57,43,0.3);
+    background: rgba(232,64,64,0.15); color: ${T.red};
+    border: 1px solid rgba(232,64,64,0.3);
   }
-  .btn-danger:hover { background: rgba(192,57,43,0.25); }
+  .btn-danger:hover { background: rgba(232,64,64,0.25); }
   .btn-sm { padding: 6px 12px; font-size: 11px; }
 
   /* Event table */
@@ -170,9 +173,9 @@ const css = `
 
   .brief-builder-table { width: 100%; border-collapse: collapse; }
   .brief-builder-table th {
-    background: rgba(8,15,30,0.78); color: ${T.cream}; font-size: 10px;
+    background: rgba(17,19,24,0.82); color: ${T.cream}; font-size: 10px;
     font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
-    padding: 9px 8px; border: 1px solid rgba(201,168,76,0.22);
+    padding: 9px 8px; border: 1px solid rgba(61,70,86,0.62);
   }
   .brief-builder-table td {
     padding: 8px; border: 1px solid rgba(255,255,255,0.07);
@@ -195,13 +198,13 @@ const css = `
     padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700;
     letter-spacing: 0.06em; text-transform: uppercase;
   }
-  .badge-high { background: rgba(192,57,43,0.15); color: #E57373; border: 1px solid rgba(192,57,43,0.3); }
-  .badge-med  { background: rgba(217,119,6,0.15); color: #FBB040; border: 1px solid rgba(217,119,6,0.3); }
-  .badge-low  { background: rgba(107,114,128,0.15); color: #9CA3AF; border: 1px solid rgba(107,114,128,0.3); }
+  .badge-high { background: rgba(232,64,64,0.15); color: ${T.red}; border: 1px solid rgba(232,64,64,0.3); }
+  .badge-med  { background: rgba(245,166,35,0.15); color: ${T.gold}; border: 1px solid rgba(245,166,35,0.3); }
+  .badge-low  { background: rgba(136,146,160,0.15); color: ${T.grey}; border: 1px solid rgba(136,146,160,0.3); }
 
   /* Status / progress */
   .status-bar {
-    background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2);
+    background: rgba(74,159,224,0.08); border: 1px solid rgba(74,159,224,0.22);
     border-radius: 8px; padding: 14px 18px;
     display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
   }
@@ -215,13 +218,13 @@ const css = `
 
   /* Output preview */
   .output-box {
-    background: #050C1A; border: 1px solid rgba(201,168,76,0.15);
+    background: #111318; border: 1px solid rgba(61,70,86,0.56);
     border-radius: 8px; padding: 20px; font-family: 'DM Mono', monospace;
-    font-size: 11.5px; color: #8899BB; max-height: 360px; overflow-y: auto;
+    font-size: 11.5px; color: ${T.grey}; max-height: 360px; overflow-y: auto;
     line-height: 1.7; white-space: pre-wrap; word-break: break-word;
   }
   .output-box .line-gold { color: ${T.gold}; }
-  .output-box .line-green { color: #4ADE80; }
+  .output-box .line-green { color: ${T.green}; }
   .output-box .line-grey { color: ${T.grey}; }
 
   /* Tab switcher */
@@ -244,7 +247,7 @@ const css = `
   /* Scrollbar */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb { background: rgba(74,159,224,0.24); border-radius: 3px; }
 
   /* Action row */
   .action-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -257,7 +260,7 @@ const css = `
     background: rgba(255,255,255,0.04); color: ${T.grey};
     border: 1px solid rgba(255,255,255,0.07);
   }
-  .week-day.has-events { background: rgba(201,168,76,0.08); color: ${T.goldLight}; border-color: rgba(201,168,76,0.2); }
+  .week-day.has-events { background: rgba(245,166,35,0.10); color: ${T.gold}; border-color: rgba(245,166,35,0.28); }
 
   /* Fetch bar */
   .fetch-bar {
@@ -274,47 +277,47 @@ const css = `
     text-transform: uppercase; color: ${T.gold}; margin-bottom: 14px;
     display: flex; align-items: center; gap: 8px;
   }
-  .section-label::after { content:''; flex:1; height:1px; background:rgba(201,168,76,0.15); }
+  .section-label::after { content:''; flex:1; height:1px; background:rgba(61,70,86,0.62); }
 
   .info-chip {
     display: inline-flex; align-items: center; gap: 5px;
-    background: rgba(26,122,74,0.1); border: 1px solid rgba(26,122,74,0.25);
-    border-radius: 5px; padding: 4px 10px; font-size: 11px; color: #4ADE80;
+    background: rgba(0,200,150,0.10); border: 1px solid rgba(0,200,150,0.28);
+    border-radius: 5px; padding: 4px 10px; font-size: 11px; color: ${T.green};
   }
 
   .copy-btn {
     float: right; margin-top: -4px;
-    background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.2);
-    color: ${T.gold}; border-radius: 4px; padding: 3px 8px; font-size: 10px;
+    background: rgba(74,159,224,0.10); border: 1px solid rgba(74,159,224,0.24);
+    color: ${T.blue}; border-radius: 4px; padding: 3px 8px; font-size: 10px;
     cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 600;
   }
 `;
 
-// ── Helpers ───────────────────────────────────────────────────
+// -- Helpers ---------------------------------------------------
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-const REGIONS = ["🇺🇸 US", "🇪🇺 EU", "🇬🇧 UK", "🇯🇵 JP", "🇩🇪 DE", "🇨🇦 CA", "🇨🇭 CH", "🇦🇺 AU", "🇳🇿 NZ", "🇨🇳 CN"];
+const REGIONS = ["US", "EU", "UK", "JP", "DE", "CA", "CH", "AU", "NZ", "CN"];
 const IMPACTS = ["HIGH", "MED", "LOW"];
 
 const DEFAULT_CONSENSUS_ROWS = [
-  { id: 1, metric: "[Headline figure — e.g. NFP]", consensus: "[+XXXk]", prior: "[+XXXk]", range: "[+XXk to +XXXk]", why: "[Below 100k would suggest cooling; above 250k would challenge cut expectations]" },
-  { id: 2, metric: "[Sub-component 1 — e.g. Avg Hourly Earnings m/m]", consensus: "[+X.X%]", prior: "[+X.X%]", range: "[X.X%–X.X%]", why: "[Wages above +0.4% m/m would reignite inflation concerns]" },
-  { id: 3, metric: "[Sub-component 2 — e.g. Unemployment Rate]", consensus: "[X.X%]", prior: "[X.X%]", range: "[X.X%–X.X%]", why: "[Shows whether labour slack is building or tightening]" },
+  { id: 1, metric: "[Headline figure - e.g. NFP]", consensus: "[+XXXk]", prior: "[+XXXk]", range: "[+XXk to +XXXk]", why: "[Below 100k would suggest cooling; above 250k would challenge cut expectations]" },
+  { id: 2, metric: "[Sub-component 1 - e.g. Avg Hourly Earnings m/m]", consensus: "[+X.X%]", prior: "[+X.X%]", range: "[X.X%-X.X%]", why: "[Wages above +0.4% m/m would reignite inflation concerns]" },
+  { id: 3, metric: "[Sub-component 2 - e.g. Unemployment Rate]", consensus: "[X.X%]", prior: "[X.X%]", range: "[X.X%-X.X%]", why: "[Shows whether labour slack is building or tightening]" },
 ];
 
 const DEFAULT_SCENARIO_ROWS = [
   { id: 1, outcome: "MUCH HOTTER", dataPrint: "[e.g. >+275k / >0.5% wages]", marketReaction: "[USD rallies sharply, UST yields spike, equities sell off, gold falls]", policyImplication: "[Market reprices cuts lower. Hawkish reassessment. Higher-for-longer narrative strengthens]", probability: "[X%]" },
-  { id: 2, outcome: "SLIGHTLY HOT", dataPrint: "[e.g. +200k–+275k / wages inline]", marketReaction: "[Mild USD strength, yields edge higher, equities mixed. Growth stocks underperform]", policyImplication: "[Delays cut expectations by 1–2 meetings. Central bank likely stays data dependent]", probability: "[X%]" },
-  { id: 3, outcome: "IN-LINE", dataPrint: "[e.g. +175k–+200k / wages as expected]", marketReaction: "[Muted immediate reaction. USD flat, yields unchanged, equities stable]", policyImplication: "[Consistent with base case. No change to rate path. Soft landing narrative intact]", probability: "[X%]" },
-  { id: 4, outcome: "SLIGHTLY SOFT", dataPrint: "[e.g. +100k–+175k / wages miss]", marketReaction: "[USD softens, yields fall, equities initially rally, gold supported]", policyImplication: "[Adds to case for earlier cut. Market may re-price one additional cut]", probability: "[X%]" },
+  { id: 2, outcome: "SLIGHTLY HOT", dataPrint: "[e.g. +200k-+275k / wages inline]", marketReaction: "[Mild USD strength, yields edge higher, equities mixed. Growth stocks underperform]", policyImplication: "[Delays cut expectations by 1-2 meetings. Central bank likely stays data dependent]", probability: "[X%]" },
+  { id: 3, outcome: "IN-LINE", dataPrint: "[e.g. +175k-+200k / wages as expected]", marketReaction: "[Muted immediate reaction. USD flat, yields unchanged, equities stable]", policyImplication: "[Consistent with base case. No change to rate path. Soft landing narrative intact]", probability: "[X%]" },
+  { id: 4, outcome: "SLIGHTLY SOFT", dataPrint: "[e.g. +100k-+175k / wages miss]", marketReaction: "[USD softens, yields fall, equities initially rally, gold supported]", policyImplication: "[Adds to case for earlier cut. Market may re-price one additional cut]", probability: "[X%]" },
   { id: 5, outcome: "MUCH WEAKER", dataPrint: "[e.g. <+100k / rising unemployment]", marketReaction: "[USD sells off, yields fall sharply, equities volatile, gold rallies]", policyImplication: "[Emergency cut concerns surface. Market may price more aggressive easing]", probability: "[X%]" },
 ];
 
 const DEFAULT_ASSET_ROWS = [
-  { id: 1, assetClass: "USD (Dollar Index)", beat: "↑↑ Strong", miss: "↓↓ Strong", watch: "[DXY most sensitive. Real yield differentials drive USD. Watch EUR/USD and USD/JPY first]", tickers: "DXY, EUR/USD, GBP/USD, USD/JPY" },
-  { id: 2, assetClass: "US Treasuries / Yields", beat: "↑ Yields", miss: "↓ Yields", watch: "[2Y most sensitive to policy expectations; 10Y to growth/inflation path]", tickers: "US02Y, US10Y, TLT" },
-  { id: 3, assetClass: "US Equities", beat: "↓ Initially", miss: "↑ Initially", watch: "[Strong data can hit equities if it removes cut expectations. Weak data can rally equities on cut hopes]", tickers: "SPX, NDX, RTY" },
-  { id: 4, assetClass: "Gold (XAU/USD)", beat: "↓ Moderate", miss: "↑ Strong", watch: "[Gold is inversely correlated to real yields and USD. Watch safe-haven demand in extreme misses]", tickers: "XAU/USD, GDX" },
-  { id: 5, assetClass: "Crude Oil", beat: "↑ Mild", miss: "↓ Mild", watch: "[Demand-side effect: strong growth supports oil, but USD inverse correlation also matters]", tickers: "WTI, Brent, XLE" },
+  { id: 1, assetClass: "USD (Dollar Index)", beat: "Up Strong", miss: "Down Strong", watch: "[DXY most sensitive. Real yield differentials drive USD. Watch EUR/USD and USD/JPY first]", tickers: "DXY, EUR/USD, GBP/USD, USD/JPY" },
+  { id: 2, assetClass: "US Treasuries / Yields", beat: "Up Yields", miss: "Down Yields", watch: "[2Y most sensitive to policy expectations; 10Y to growth/inflation path]", tickers: "US02Y, US10Y, TLT" },
+  { id: 3, assetClass: "US Equities", beat: "Down Initially", miss: "Up Initially", watch: "[Strong data can hit equities if it removes cut expectations. Weak data can rally equities on cut hopes]", tickers: "SPX, NDX, RTY" },
+  { id: 4, assetClass: "Gold (XAU/USD)", beat: "Down Moderate", miss: "Up Strong", watch: "[Gold is inversely correlated to real yields and USD. Watch safe-haven demand in extreme misses]", tickers: "XAU/USD, GDX" },
+  { id: 5, assetClass: "Crude Oil", beat: "Up Mild", miss: "Down Mild", watch: "[Demand-side effect: strong growth supports oil, but USD inverse correlation also matters]", tickers: "WTI, Brent, XLE" },
 ];
 
 function getWeekDates() {
@@ -329,32 +332,32 @@ function getWeekDates() {
 }
 
 function blankEvent(weekDates) {
-  return { id: Date.now() + Math.random(), day: "Monday", date: weekDates[0], region: "🇺🇸 US", event: "", forecast: "", prior: "", impact: "MED" };
+  return { id: Date.now() + Math.random(), day: "Monday", date: weekDates[0], region: "US", event: "", forecast: "", prior: "", impact: "MED" };
 }
 
 function ImpactBadge({ level }) {
   const cls = level === "HIGH" ? "badge-high" : level === "MED" ? "badge-med" : "badge-low";
-  const icon = level === "HIGH" ? "▲" : level === "MED" ? "●" : "▼";
+  const icon = level === "HIGH" ? "!" : level === "MED" ? "~" : ".";
   return <span className={`badge ${cls}`}>{icon} {level}</span>;
 }
 
-// ── Fetch calendar from the dashboard API ─────────────────────
+// -- Fetch calendar from the dashboard API ---------------------
 async function fetchCalendarFromWeb(weekLabel, onStatus) {
   onStatus("Loading high-impact economic events from the dashboard for " + weekLabel + "...");
   const res = await fetch("/api/calendar?days_back=0&days_forward=7&importance=1&limit=120");
   if (!res.ok) throw new Error(`Calendar API error ${res.status}`);
   const data = await res.json();
   const countryFlags = {
-    US: "🇺🇸 US",
-    EU: "🇪🇺 EU",
-    UK: "🇬🇧 UK",
-    JP: "🇯🇵 JP",
-    DE: "🇩🇪 DE",
-    CA: "🇨🇦 CA",
-    CH: "🇨🇭 CH",
-    AU: "🇦🇺 AU",
-    NZ: "🇳🇿 NZ",
-    CN: "🇨🇳 CN",
+    US: "US",
+    EU: "EU",
+    UK: "UK",
+    JP: "JP",
+    DE: "DE",
+    CA: "CA",
+    CH: "CH",
+    AU: "AU",
+    NZ: "NZ",
+    CN: "CN",
   };
   return (data.data?.events || [])
     .filter((event) => {
@@ -368,10 +371,10 @@ async function fetchCalendarFromWeb(weekLabel, onStatus) {
         id: event.release_id || Date.now() + Math.random(),
         day: releasedAt.toLocaleDateString("en-US", { weekday: "long" }),
         date: releasedAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short" }),
-        region: countryFlags[event.country_code] || event.country_code || "🇺🇸 US",
+        region: countryFlags[event.country_code] || event.country_code || "US",
         event: event.display_name || "Economic release",
-        forecast: event.estimate ?? "—",
-        prior: event.previous ?? "—",
+        forecast: event.estimate ?? "-",
+        prior: event.previous ?? "-",
         impact: importance === 1 ? "HIGH" : importance === 2 ? "MED" : "LOW",
       };
     });
@@ -380,15 +383,15 @@ async function fetchCalendarFromWeb(weekLabel, onStatus) {
 function cleanPdfText(text) {
   return String(text)
     .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, "")
-    .replace(/[═─]/g, "-")
+    .replace(/[--]/g, "-")
     .replace(/[–—]/g, "-")
     .replace(/[•]/g, "-")
-    .replace(/[✓✕⚡⏳✦📋▲●▼]/g, "")
+
     .replace(/\s+\n/g, "\n")
     .trim();
 }
 
-// ── Generate editable starter copy locally ────────────────────
+// -- Generate editable starter copy locally --------------------
 async function generateNarrative(type, context, onChunk) {
   const highImpactEvents = String(context)
     .split("\n")
@@ -416,14 +419,14 @@ async function generateNarrative(type, context, onChunk) {
   return text;
 }
 
-// ── Main App ──────────────────────────────────────────────────
+// -- Main App --------------------------------------------------
 function MacroDashboardApp() {
   const [page, setPage] = useState("weekly");
   const [weekDates, setWeekDates] = useState(getWeekDates());
   const [events, setEvents] = useState([]);
   const [fetchStatus, setFetchStatus] = useState({ state: "idle", msg: "Ready to fetch high-impact calendar data", sub: "" });
   const [weeklyForm, setWeeklyForm] = useState({ weekLabel: "", instructor: "", course: "", theme: "", risks: "" });
-  const [eventForm, setEventForm] = useState({ date: "", eventName: "", region: "🇺🇸 US", time: "", impact: "HIGH", instructor: "", course: "", overview: "", scenarios: "" });
+  const [eventForm, setEventForm] = useState({ date: "", eventName: "", region: "US", time: "", impact: "HIGH", instructor: "", course: "", overview: "", scenarios: "" });
   const [consensusRows, setConsensusRows] = useState(DEFAULT_CONSENSUS_ROWS);
   const [scenarioRows, setScenarioRows] = useState(DEFAULT_SCENARIO_ROWS);
   const [assetRows, setAssetRows] = useState(DEFAULT_ASSET_ROWS);
@@ -442,7 +445,7 @@ function MacroDashboardApp() {
     try {
       const data = await fetchCalendarFromWeb(weekLabel, msg => setFetchStatus({ state: "loading", msg, sub: "" }));
       setEvents(data.map(e => ({ ...e, id: Date.now() + Math.random() })));
-      setFetchStatus({ state: "success", msg: `✓ Loaded ${data.length} high-impact events for week of ${weekLabel}`, sub: "Review, edit, or add lower-impact events manually before exporting" });
+      setFetchStatus({ state: "success", msg: `? Loaded ${data.length} high-impact events for week of ${weekLabel}`, sub: "Review, edit, or add lower-impact events manually before exporting" });
     } catch (e) {
       setFetchStatus({ state: "idle", msg: "Fetch failed — " + e.message, sub: "Try again or add events manually" });
     }
@@ -561,7 +564,7 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
     return `
   <style:style style:name="DocMainTitle" style:family="paragraph">
     <style:paragraph-properties fo:text-align="center" fo:margin-bottom="3pt" fo:margin-top="2pt"/>
-    <style:text-properties fo:font-size="22pt" fo:font-weight="bold" fo:color="#C9A84C" fo:font-family="Times New Roman" fo:font-family-generic="roman"/>
+    <style:text-properties fo:font-size="22pt" fo:font-weight="bold" fo:color="#F5A623" fo:font-family="Times New Roman" fo:font-family-generic="roman"/>
   </style:style>
   <style:style style:name="DocSubtitle" style:family="paragraph">
     <style:paragraph-properties fo:text-align="center" fo:margin-bottom="3pt" fo:margin-top="0pt"/>
@@ -589,7 +592,7 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
   </style:style>
   <style:style style:name="Heading2" style:family="paragraph">
     <style:paragraph-properties fo:margin-top="8pt" fo:margin-bottom="4pt"/>
-    <style:text-properties fo:font-size="11pt" fo:font-weight="bold" fo:color="#1A3A6B" fo:font-family="Arial" fo:font-family-generic="swiss"/>
+    <style:text-properties fo:font-size="11pt" fo:font-weight="bold" fo:color="#4A9FE0" fo:font-family="Arial" fo:font-family-generic="swiss"/>
   </style:style>
   <style:style style:name="TableHeader" style:family="paragraph">
     <style:paragraph-properties fo:margin-left="4pt" fo:margin-right="4pt" fo:margin-top="3pt" fo:margin-bottom="3pt"/>
@@ -601,7 +604,7 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
   </style:style>
   <style:style style:name="TableCellGreen" style:family="paragraph">
     <style:paragraph-properties fo:margin-left="4pt" fo:margin-right="4pt" fo:margin-top="2pt" fo:margin-bottom="2pt"/>
-    <style:text-properties fo:font-size="9pt" fo:color="#1A7A4A" fo:font-weight="bold" fo:font-family="Arial" fo:font-family-generic="swiss"/>
+    <style:text-properties fo:font-size="9pt" fo:color="#00C896" fo:font-weight="bold" fo:font-family="Arial" fo:font-family-generic="swiss"/>
   </style:style>
   <style:style style:name="TitleBlockTable" style:family="table">
     <style:table-properties style:width="17cm" table:align="margins" fo:margin-bottom="10pt"/>
@@ -637,25 +640,25 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
     <style:table-column-properties style:column-width="2.35cm"/>
   </style:style>
   <style:style style:name="TitleBlockCell" style:family="table-cell">
-    <style:table-cell-properties fo:background-color="#0D1F3C" fo:padding="14pt" fo:border="none"/>
+    <style:table-cell-properties fo:background-color="#0D0F14" fo:padding="14pt" fo:border="none"/>
   </style:style>
   <style:style style:name="SectionHeaderCell" style:family="table-cell">
-    <style:table-cell-properties fo:background-color="#0D1F3C" fo:padding-left="10pt" fo:padding-top="6pt" fo:padding-bottom="6pt" fo:padding-right="8pt" fo:border="none"/>
+    <style:table-cell-properties fo:background-color="#0D0F14" fo:padding-left="10pt" fo:padding-top="6pt" fo:padding-bottom="6pt" fo:padding-right="8pt" fo:border="none"/>
   </style:style>
   <style:style style:name="DisclaimerCell" style:family="table-cell">
     <style:table-cell-properties fo:background-color="#FFFBEB" fo:border="1pt solid #F59E0B" fo:padding="8pt"/>
   </style:style>
   <style:style style:name="DataHeaderCell" style:family="table-cell">
-    <style:table-cell-properties fo:background-color="#0D1F3C" fo:border="0.5pt solid #374151" fo:padding-left="5pt" fo:padding-right="5pt" fo:padding-top="4pt" fo:padding-bottom="4pt"/>
+    <style:table-cell-properties fo:background-color="#0D0F14" fo:border="0.5pt solid #3D4656" fo:padding-left="5pt" fo:padding-right="5pt" fo:padding-top="4pt" fo:padding-bottom="4pt"/>
   </style:style>
   <style:style style:name="DataCell" style:family="table-cell">
-    <style:table-cell-properties fo:background-color="#FFFFFF" fo:border="0.5pt solid #D1D5DB" fo:padding-left="5pt" fo:padding-right="5pt" fo:padding-top="3pt" fo:padding-bottom="3pt"/>
+    <style:table-cell-properties fo:background-color="#FFFFFF" fo:border="0.5pt solid #C3CBD6" fo:padding-left="5pt" fo:padding-right="5pt" fo:padding-top="3pt" fo:padding-bottom="3pt"/>
   </style:style>
   <style:style style:name="DataCellAlt" style:family="table-cell">
-    <style:table-cell-properties fo:background-color="#F9FAFB" fo:border="0.5pt solid #D1D5DB" fo:padding-left="5pt" fo:padding-right="5pt" fo:padding-top="3pt" fo:padding-bottom="3pt"/>
+    <style:table-cell-properties fo:background-color="#F9FAFB" fo:border="0.5pt solid #C3CBD6" fo:padding-left="5pt" fo:padding-right="5pt" fo:padding-top="3pt" fo:padding-bottom="3pt"/>
   </style:style>
   <style:style style:name="DataCellGreen" style:family="table-cell">
-    <style:table-cell-properties fo:background-color="#FFFFFF" fo:border="0.5pt solid #D1D5DB" fo:padding-left="5pt" fo:padding-right="5pt" fo:padding-top="3pt" fo:padding-bottom="3pt"/>
+    <style:table-cell-properties fo:background-color="#FFFFFF" fo:border="0.5pt solid #C3CBD6" fo:padding-left="5pt" fo:padding-right="5pt" fo:padding-top="3pt" fo:padding-bottom="3pt"/>
   </style:style>
   <text:list-style style:name="BulletList">
     <text:list-level-style-bullet text:level="1" text:bullet-char="&#x2022;">
@@ -709,15 +712,15 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
       </style:footer-style>
     </style:page-layout>
     <style:style style:name="HdrLeft" style:family="paragraph">
-      <style:paragraph-properties fo:border-bottom="0.5pt solid #C9A84C" fo:padding-bottom="3pt"/>
+      <style:paragraph-properties fo:border-bottom="0.5pt solid #F5A623" fo:padding-bottom="3pt"/>
       <style:text-properties fo:font-size="8pt" fo:color="#374151" fo:font-weight="bold" fo:font-family="Arial"/>
     </style:style>
     <style:style style:name="HdrRight" style:family="paragraph">
-      <style:paragraph-properties fo:text-align="right" fo:border-bottom="0.5pt solid #C9A84C" fo:padding-bottom="3pt"/>
+      <style:paragraph-properties fo:text-align="right" fo:border-bottom="0.5pt solid #F5A623" fo:padding-bottom="3pt"/>
       <style:text-properties fo:font-size="8pt" fo:color="#374151" fo:font-family="Arial"/>
     </style:style>
     <style:style style:name="FtrCenter" style:family="paragraph">
-      <style:paragraph-properties fo:text-align="center" fo:border-top="0.5pt solid #D1D5DB" fo:padding-top="3pt"/>
+      <style:paragraph-properties fo:text-align="center" fo:border-top="0.5pt solid #C3CBD6" fo:padding-top="3pt"/>
       <style:text-properties fo:font-size="8pt" fo:color="#9CA3AF" fo:font-family="Arial"/>
     </style:style>
   </office:automatic-styles>
@@ -773,7 +776,7 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
       e.event,
       e.forecast || "—",
       e.prior || "—",
-      (e.impact === "HIGH" ? "▲ HIGH" : e.impact === "MED" ? "● MED" : "▼ LOW"),
+      (e.impact === "HIGH" ? "? HIGH" : e.impact === "MED" ? "? MED" : "? LOW"),
     ]);
     const riskLines = (weeklyForm.risks || [
       "Geopolitical / Political: [any weekend developments, elections, policy announcements]",
@@ -804,24 +807,24 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
         odtSectionHeader("02", "ECONOMIC CALENDAR"),
         odtParagraph("All times shown in UTC. Impact rating reflects potential volatility, not direction. Events are illustrative — update each week with live consensus data.", "BodySmall"),
         odtTable("EconomicCalendar", ["Day", "Date", "Region", "Event", "Forecast", "Prior", "Impact"], eventRows, [4]),
-        odtParagraph("▲ HIGH — major market mover | ● MED — moderate volatility potential | ▼ LOW — minor or localized impact", "BodySmall"),
+        odtParagraph("? HIGH — major market mover | ? MED — moderate volatility potential | ? LOW — minor or localized impact", "BodySmall"),
 
         odtSectionHeader("03", "PRIOR WEEK MARKET SNAPSHOT"),
         odtParagraph("Update with Friday closing prices. DMA = Day Moving Average. Bias reflects technical posture only — not a trade recommendation.", "BodySmall"),
         odtTable("MarketSnapshot", ["Asset / Index", "Weekly Close", "Wk Change", "50-DMA", "200-DMA", "Bias"], [
-          ["S&P 500 (SPX)",    "[X,XXX.XX]", "[+X.X%]", "[X,XXX]",  "[X,XXX]",  "↑ Bullish"],
-          ["Nasdaq 100 (NDX)", "[X,XXX.XX]", "[-X.X%]", "[XX,XXX]", "[XX,XXX]", "↓ Bearish"],
-          ["Dow Jones (DJIA)", "[XX,XXX.X]", "[+X.X%]", "[XX,XXX]", "[XX,XXX]", "↑ Bullish"],
-          ["FTSE 100",         "[X,XXX.X]",  "[+X.X%]", "[X,XXX]",  "[X,XXX]",  "→ Neutral"],
-          ["DAX 40",           "[XX,XXX.X]", "[+X.X%]", "[XX,XXX]", "[XX,XXX]", "↑ Bullish"],
-          ["Nikkei 225",       "[XX,XXX.X]", "[-X.X%]", "[XX,XXX]", "[XX,XXX]", "↓ Bearish"],
-          ["EUR/USD",          "[X.XXXX]",   "[+X.X%]", "[X.XXXX]", "[X.XXXX]", "↑ Bullish"],
-          ["GBP/USD",          "[X.XXXX]",   "[+X.X%]", "[X.XXXX]", "[X.XXXX]", "→ Neutral"],
-          ["USD/JPY",          "[XXX.XX]",   "[-X.X%]", "[XXX.XX]", "[XXX.XX]", "↓ Bearish"],
-          ["Gold (XAU/USD)",   "[X,XXX.XX]", "[+X.X%]", "[X,XXX]",  "[X,XXX]",  "↑ Bullish"],
-          ["WTI Crude Oil",    "[XX.XX]",    "[-X.X%]", "[XX.XX]",  "[XX.XX]",  "↓ Bearish"],
-          ["US 10Y Yield",     "[X.XX%]",    "[+Xbp]",  "—",        "—",        "→ Neutral"],
-          ["VIX (Fear Index)", "[XX.XX]",    "[-X.X]",  "—",        "—",        "→ Neutral"],
+          ["S&P 500 (SPX)",    "[X,XXX.XX]", "[+X.X%]", "[X,XXX]",  "[X,XXX]",  "? Bullish"],
+          ["Nasdaq 100 (NDX)", "[X,XXX.XX]", "[-X.X%]", "[XX,XXX]", "[XX,XXX]", "? Bearish"],
+          ["Dow Jones (DJIA)", "[XX,XXX.X]", "[+X.X%]", "[XX,XXX]", "[XX,XXX]", "? Bullish"],
+          ["FTSE 100",         "[X,XXX.X]",  "[+X.X%]", "[X,XXX]",  "[X,XXX]",  "? Neutral"],
+          ["DAX 40",           "[XX,XXX.X]", "[+X.X%]", "[XX,XXX]", "[XX,XXX]", "? Bullish"],
+          ["Nikkei 225",       "[XX,XXX.X]", "[-X.X%]", "[XX,XXX]", "[XX,XXX]", "? Bearish"],
+          ["EUR/USD",          "[X.XXXX]",   "[+X.X%]", "[X.XXXX]", "[X.XXXX]", "? Bullish"],
+          ["GBP/USD",          "[X.XXXX]",   "[+X.X%]", "[X.XXXX]", "[X.XXXX]", "? Neutral"],
+          ["USD/JPY",          "[XXX.XX]",   "[-X.X%]", "[XXX.XX]", "[XXX.XX]", "? Bearish"],
+          ["Gold (XAU/USD)",   "[X,XXX.XX]", "[+X.X%]", "[X,XXX]",  "[X,XXX]",  "? Bullish"],
+          ["WTI Crude Oil",    "[XX.XX]",    "[-X.X%]", "[XX.XX]",  "[XX.XX]",  "? Bearish"],
+          ["US 10Y Yield",     "[X.XX%]",    "[+Xbp]",  "—",        "—",        "? Neutral"],
+          ["VIX (Fear Index)", "[XX.XX]",    "[-X.X]",  "—",        "—",        "? Neutral"],
         ]),
 
         odtSectionHeader("04", "CENTRAL BANK POLICY TRACKER"),
@@ -887,7 +890,7 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
 
         odtSectionHeader("01", "WHAT IS THIS DATA? — EVENT OVERVIEW"),
         odtTable("QuickRef", ["Release Date", "Release Time", "Region", "Frequency", "Market Impact", "Revision Risk"], [
-          [eventForm.date || "[DD Month YYYY]", eventForm.time || "[HH:MM UTC]", regionClean, "[Monthly/Qtly]", eventForm.impact === "HIGH" ? "▲ HIGH" : eventForm.impact === "MED" ? "● MED" : "▼ LOW", "[Low/Med/High]"],
+          [eventForm.date || "[DD Month YYYY]", eventForm.time || "[HH:MM UTC]", regionClean, "[Monthly/Qtly]", eventForm.impact === "HIGH" ? "? HIGH" : eventForm.impact === "MED" ? "? MED" : "? LOW", "[Low/Med/High]"],
         ]),
         odtHeading2("Definition & Purpose"),
         ...overviewLines.map(line => odtParagraph(line)),
@@ -1037,7 +1040,7 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
     <>
       <style>{css}</style>
       <div className="app">
-        {/* ── Sidebar ── */}
+        {/* -- Sidebar -- */}
         <nav className="sidebar">
           <div className="sidebar-logo">
             <div className="sidebar-logo-text">Macro Market<br/>Intelligence</div>
@@ -1080,10 +1083,10 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
           </div>
         </nav>
 
-        {/* ── Main ── */}
+        {/* -- Main -- */}
         <main className="main">
 
-          {/* ══ WEEKLY PAGE ══════════════════════════════════════ */}
+          {/* -- WEEKLY PAGE -------------------------------------- */}
           {page === "weekly" && (
             <>
               <div className="page-header">
@@ -1115,7 +1118,7 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
                     <input value={weeklyForm.course} onChange={e => setWeeklyForm(f => ({...f, course: e.target.value}))} placeholder="e.g. Macro Trading Fundamentals" />
                   </div>
                   <button className="btn btn-primary" onClick={handleFetch} disabled={fetchStatus.state === "loading"}>
-                    {fetchStatus.state === "loading" ? "⏳ Fetching…" : "⚡ Fetch High Impact"}
+                    {fetchStatus.state === "loading" ? "? Fetching…" : "? Fetch High Impact"}
                   </button>
                 </div>
 
@@ -1171,7 +1174,7 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
                                 </select>
                               </td>
                               <td>
-                                <button className="btn btn-danger btn-sm" onClick={() => removeEvent(e.id)}>✕</button>
+                                <button className="btn btn-danger btn-sm" onClick={() => removeEvent(e.id)}>?</button>
                               </td>
                             </tr>
                           ))}
@@ -1185,7 +1188,7 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
                 )}
                 {events.length === 0 && (
                   <div style={{textAlign:"center", padding:"24px 0", color: T.grey}}>
-                    <div style={{fontSize:28, marginBottom:8}}>📅</div>
+                    <div style={{fontSize:28, marginBottom:8}}>PDF</div>
                     <div style={{fontSize:13}}>No events yet — fetch high-impact releases or add any event manually</div>
                     <button className="btn btn-ghost btn-sm" style={{marginTop:12}} onClick={addEvent}>+ Add Event Manually</button>
                   </div>
@@ -1210,11 +1213,11 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
                     <div style={{marginTop:8}}>
                       <button className="btn btn-ghost btn-sm" disabled={events.length===0 || aiLoading}
                         onClick={() => handleAI("theme", eventsSummary)}>
-                        {activeAI==="theme" && aiLoading ? "⏳ Writing…" : "✦ Draft Text"}
+                        {activeAI==="theme" && aiLoading ? "? Writing…" : "? Draft Text"}
                       </button>
                       {activeAI==="theme" && aiOutput && !aiLoading && (
                         <button className="btn btn-ghost btn-sm" style={{marginLeft:6}}
-                          onClick={() => setWeeklyForm(f=>({...f, theme: aiOutput}))}>← Use this</button>
+                          onClick={() => setWeeklyForm(f=>({...f, theme: aiOutput}))}>? Use this</button>
                       )}
                     </div>
                   </div>
@@ -1225,11 +1228,11 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
                     <div style={{marginTop:8}}>
                       <button className="btn btn-ghost btn-sm" disabled={events.length===0 || aiLoading}
                         onClick={() => handleAI("risks", eventsSummary)}>
-                        {activeAI==="risks" && aiLoading ? "⏳ Writing…" : "✦ Draft Text"}
+                        {activeAI==="risks" && aiLoading ? "? Writing…" : "? Draft Text"}
                       </button>
                       {activeAI==="risks" && aiOutput && !aiLoading && (
                         <button className="btn btn-ghost btn-sm" style={{marginLeft:6}}
-                          onClick={() => setWeeklyForm(f=>({...f, risks: aiOutput}))}>← Use this</button>
+                          onClick={() => setWeeklyForm(f=>({...f, risks: aiOutput}))}>? Use this</button>
                       )}
                     </div>
                   </div>
@@ -1249,7 +1252,7 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
               </div>
 
               {/* Step 3 — Export report summary */}
-              <div className="card" style={{background:"rgba(201,168,76,0.04)", borderColor:"rgba(201,168,76,0.15)"}}>
+              <div className="card" style={{background:"rgba(74,159,224,0.05)", borderColor:"rgba(74,159,224,0.20)"}}>
                 <div className="card-header">
                   <span className="card-number">03</span>
                   <div>
@@ -1258,21 +1261,21 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
                   </div>
                 </div>
                 <div className="output-box" style={{maxHeight:280}}>
-                  <span className="line-gold">══ WEEKLY PREVIEW — Week of {weeklyForm.weekLabel || weekLabel} ══{"\n"}</span>
+                  <span className="line-gold">-- WEEKLY PREVIEW — Week of {weeklyForm.weekLabel || weekLabel} --{"\n"}</span>
                   <span className="line-gold">Instructor: </span>{weeklyForm.instructor || "[Your name]"}{"\n"}
                   <span className="line-gold">Course: </span>{weeklyForm.course || "[Course name]"}{"\n\n"}
-                  <span className="line-gold">── ECONOMIC CALENDAR ({events.length} events) ──{"\n"}</span>
+                  <span className="line-gold">-- ECONOMIC CALENDAR ({events.length} events) --{"\n"}</span>
                   {events.map(e => `${e.day.slice(0,3).toUpperCase()}  ${e.date}  ${e.region}  ${e.event}  Forecast: ${e.forecast}  Prior: ${e.prior}  [${e.impact}]\n`).join("")}
-                  {"\n"}<span className="line-gold">── MACRO THEME ──{"\n"}</span>
+                  {"\n"}<span className="line-gold">-- MACRO THEME --{"\n"}</span>
                   {weeklyForm.theme || "[Fill in your macro theme]"}{"\n\n"}
-                  <span className="line-gold">── TAIL RISKS ──{"\n"}</span>
+                  <span className="line-gold">-- TAIL RISKS --{"\n"}</span>
                   {weeklyForm.risks || "[Fill in tail risks]"}
                 </div>
                 <div style={{marginTop:12}}>
                   <button className="btn btn-primary" onClick={() => {
                     navigator.clipboard?.writeText(weeklyReportText());
                   }}>
-                    📋 Copy All to Clipboard
+                    Copy All to Clipboard
                   </button>
                   <button className="btn btn-primary" style={{marginLeft:10}} onClick={exportWeeklyOdt}>
                     Export ODT
@@ -1285,7 +1288,7 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
             </>
           )}
 
-          {/* ══ EVENT PREP PAGE ══════════════════════════════════ */}
+          {/* -- EVENT PREP PAGE ---------------------------------- */}
           {page === "event" && (
             <>
               <div className="page-header">
@@ -1368,11 +1371,11 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
                     <div style={{marginTop:8}}>
                       <button className="btn btn-ghost btn-sm" disabled={!eventForm.eventName || aiLoading}
                         onClick={() => handleAI("event_overview", eventForm.eventName + " " + eventForm.region)}>
-                        {activeAI==="event_overview" && aiLoading ? "⏳ Writing…" : "✦ Draft Text"}
+                        {activeAI==="event_overview" && aiLoading ? "? Writing…" : "? Draft Text"}
                       </button>
                       {activeAI==="event_overview" && aiOutput && !aiLoading && (
                         <button className="btn btn-ghost btn-sm" style={{marginLeft:6}}
-                          onClick={() => setEventForm(f=>({...f, overview: aiOutput}))}>← Use this</button>
+                          onClick={() => setEventForm(f=>({...f, overview: aiOutput}))}>? Use this</button>
                       )}
                     </div>
                   </div>
@@ -1383,11 +1386,11 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
                     <div style={{marginTop:8}}>
                       <button className="btn btn-ghost btn-sm" disabled={!eventForm.eventName || aiLoading}
                         onClick={() => handleAI("scenarios", eventForm.eventName)}>
-                        {activeAI==="scenarios" && aiLoading ? "⏳ Writing…" : "✦ Draft Text"}
+                        {activeAI==="scenarios" && aiLoading ? "? Writing…" : "? Draft Text"}
                       </button>
                       {activeAI==="scenarios" && aiOutput && !aiLoading && (
                         <button className="btn btn-ghost btn-sm" style={{marginLeft:6}}
-                          onClick={() => setEventForm(f=>({...f, scenarios: aiOutput}))}>← Use this</button>
+                          onClick={() => setEventForm(f=>({...f, scenarios: aiOutput}))}>? Use this</button>
                       )}
                     </div>
                   </div>
@@ -1527,7 +1530,7 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
               </div>
 
               {/* Copy summary */}
-              <div className="card" style={{background:"rgba(201,168,76,0.04)", borderColor:"rgba(201,168,76,0.15)"}}>
+              <div className="card" style={{background:"rgba(74,159,224,0.05)", borderColor:"rgba(74,159,224,0.20)"}}>
                 <div className="card-header">
                   <span className="card-number">06</span>
                   <div>
@@ -1536,27 +1539,27 @@ ${assetRows.map(row => `${row.assetClass} | Beat: ${row.beat} | Miss: ${row.miss
                   </div>
                 </div>
                 <div className="output-box" style={{maxHeight:260}}>
-                  <span className="line-gold">══ EVENT PREP BRIEF ══{"\n"}</span>
+                  <span className="line-gold">-- EVENT PREP BRIEF --{"\n"}</span>
                   <span className="line-gold">Event: </span>{eventForm.eventName || "[Event name]"}{"\n"}
                   <span className="line-gold">Date: </span>{eventForm.date || "[Date]"}{"  "}<span className="line-gold">Time: </span>{eventForm.time || "[Time UTC]"}{"\n"}
                   <span className="line-gold">Region: </span>{eventForm.region}{"  "}<span className="line-gold">Impact: </span>{eventForm.impact}{"\n"}
                   <span className="line-gold">Instructor: </span>{eventForm.instructor || "[Name]"}{"\n\n"}
-                  <span className="line-gold">── EVENT OVERVIEW ──{"\n"}</span>
+                  <span className="line-gold">-- EVENT OVERVIEW --{"\n"}</span>
                   {eventForm.overview || "[Fill in event overview]"}{"\n\n"}
-                  <span className="line-gold">── CONSENSUS & KEY LEVELS ──{"\n"}</span>
+                  <span className="line-gold">-- CONSENSUS & KEY LEVELS --{"\n"}</span>
                   {consensusRows.map(row => `${row.metric} | ${row.consensus} | Prior ${row.prior} | Range ${row.range}\n`).join("")}{"\n"}
-                  <span className="line-gold">── SCENARIO MATRIX ──{"\n"}</span>
+                  <span className="line-gold">-- SCENARIO MATRIX --{"\n"}</span>
                   {scenarioRows.map(row => `${row.outcome}: ${row.dataPrint} | ${row.marketReaction}\n`).join("")}{"\n"}
-                  <span className="line-gold">── SCENARIO NOTES ──{"\n"}</span>
+                  <span className="line-gold">-- SCENARIO NOTES --{"\n"}</span>
                   {eventForm.scenarios || "[Fill in scenario summary notes]"}{"\n\n"}
-                  <span className="line-gold">── ASSET CLASS SENSITIVITY ──{"\n"}</span>
+                  <span className="line-gold">-- ASSET CLASS SENSITIVITY --{"\n"}</span>
                   {assetRows.map(row => `${row.assetClass}: Beat ${row.beat}; Miss ${row.miss}; Watch ${row.tickers}\n`).join("")}
                 </div>
                 <div style={{marginTop:12}}>
                   <button className="btn btn-primary" onClick={() => {
                     navigator.clipboard?.writeText(eventReportText());
                   }}>
-                    📋 Copy All to Clipboard
+                    Copy All to Clipboard
                   </button>
                   <button className="btn btn-primary" style={{marginLeft:10}} onClick={exportEventOdt}>
                     Export ODT

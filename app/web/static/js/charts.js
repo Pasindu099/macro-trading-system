@@ -36,7 +36,7 @@
             animationDuration: 180,
             backgroundColor: "transparent",
             textStyle: {
-                color: "#d4d4d4",
+                color: "#e8eaf0",
                 fontFamily: "'IBM Plex Mono', 'Courier New', Courier, monospace",
                 fontSize: 11,
             },
@@ -49,25 +49,25 @@
             },
             legend: {
                 top: 10,
-                textStyle: { color: "#888888", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 },
+                textStyle: { color: "#8892a0", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 },
             },
             tooltip: {
                 trigger: "axis",
-                backgroundColor: "#111111",
-                borderColor: "#333333",
+                backgroundColor: "#111318",
+                borderColor: "#3d4656",
                 borderWidth: 1,
-                textStyle: { color: "#d4d4d4", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 },
+                textStyle: { color: "#e8eaf0", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 },
                 valueFormatter: options.unit ? (value) => `${value ?? "N/A"} ${options.unit}` : undefined,
             },
             xAxis: {
-                axisLine: { lineStyle: { color: "#1e1e1e" } },
-                axisLabel: { color: "#555555", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10 },
+                axisLine: { lineStyle: { color: "#3d4656" } },
+                axisLabel: { color: "#8892a0", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10 },
                 splitLine: { show: false },
             },
             yAxis: {
                 axisLine: { show: false },
-                axisLabel: { color: "#555555", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10 },
-                splitLine: { lineStyle: { color: "#1a1a1a" } },
+                axisLabel: { color: "#8892a0", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10 },
+                splitLine: { lineStyle: { color: "#2b3340" } },
                 scale: true,
             },
         };
@@ -89,8 +89,8 @@
                         type: "rect",
                         shape: { x: 0, y: 0, width: 140, height: 26, r: 13 },
                         style: {
-                            fill: "rgba(35, 196, 131, 0.12)",
-                            stroke: "#23c483",
+                            fill: "rgba(0, 200, 150, 0.12)",
+                            stroke: "#00c896",
                             lineWidth: 1,
                         },
                     },
@@ -100,7 +100,7 @@
                             x: 12,
                             y: 17,
                             text: options.referenceBadgeText,
-                            fill: "#23c483",
+                            fill: "#00c896",
                             font: "12px 'IBM Plex Mono', monospace",
                         },
                     },
@@ -119,16 +119,16 @@
             data: item.data || [],
             lineStyle: {
                 width: 2,
-                color: item.color || "#50b5ff",
+                color: item.color || "#4a9fe0",
                 type: item.dashed ? "dashed" : "solid",
             },
             itemStyle: {
-                color: item.color || "#50b5ff",
+                color: item.color || "#4a9fe0",
             },
             areaStyle: item.area
                 ? {
                     opacity: 0.08,
-                    color: item.color || "#50b5ff",
+                    color: item.color || "#4a9fe0",
                 }
                 : undefined,
         }));
@@ -168,7 +168,7 @@
             type: "bar",
             barMaxWidth: 24,
             data: (item.data || []).map((point) => point[1]),
-            itemStyle: { color: item.color || "#50b5ff" },
+            itemStyle: { color: item.color || "#4a9fe0" },
         }));
 
         if (options.referenceLineValue !== null && options.referenceLineValue !== undefined) {
@@ -181,10 +181,10 @@
                 connectNulls: true,
                 lineStyle: {
                     width: 2,
-                    color: "#23c483",
+                    color: "#00c896",
                     type: "dashed",
                 },
-                itemStyle: { color: "#23c483" },
+                itemStyle: { color: "#00c896" },
             });
         }
 
@@ -195,7 +195,7 @@
                 type: "category",
                 data: categories,
                 axisLabel: {
-                    color: "#555555",
+                    color: "#8892a0",
                     formatter: (value) => String(value).slice(0, 10),
                 },
             },
@@ -261,25 +261,25 @@
             },
             tooltip: {
                 trigger: "item",
-                backgroundColor: "#111111",
-                borderColor: "#333333",
-                textStyle: { color: "#d4d4d4" },
+                backgroundColor: "#111318",
+                borderColor: "#3d4656",
+                textStyle: { color: "#e8eaf0" },
             },
             series: [
                 {
                     type: "bar",
                     barWidth: "85%",
                     data: bins.map((bin) => bin.count),
-                    itemStyle: { color: "#50b5ff" },
+                    itemStyle: { color: "#4a9fe0" },
                     markLine: targetBinLabel ? {
                         symbol: "none",
                         label: {
                             show: true,
                             formatter: options.referenceLineLabel || "CB Target",
-                            color: "#23c483",
+                            color: "#00c896",
                         },
                         lineStyle: {
-                            color: "#23c483",
+                            color: "#00c896",
                             type: "dashed",
                             width: 2,
                         },
@@ -309,7 +309,7 @@
                 type: "category",
                 data: cleanPoints.map((point) => point[0]),
                 axisLabel: {
-                    color: "#555555",
+                    color: "#8892a0",
                     formatter: (value) => String(value).slice(0, 10),
                 },
             },
@@ -324,7 +324,7 @@
                     type: "bar",
                     data: cleanPoints.map((point) => ({
                         value: point[1],
-                        itemStyle: { color: point[1] >= 0 ? "#00cc44" : "#ff3333" },
+                        itemStyle: { color: point[1] >= 0 ? "#00c896" : "#e84040" },
                     })),
                     barMaxWidth: 28,
                 },
@@ -344,9 +344,9 @@
             backgroundColor: "transparent",
             tooltip: {
                 position: "top",
-                backgroundColor: "#111111",
-                borderColor: "#333333",
-                textStyle: { color: "#d4d4d4" },
+                backgroundColor: "#111318",
+                borderColor: "#3d4656",
+                textStyle: { color: "#e8eaf0" },
             },
             grid: {
                 left: 64,
@@ -358,9 +358,9 @@
             xAxis: {
                 type: "category",
                 data: options.xLabels || [],
-                axisLine: { lineStyle: { color: "#333333" } },
+                axisLine: { lineStyle: { color: "#3d4656" } },
                 axisLabel: {
-                    color: "#555555",
+                    color: "#8892a0",
                     interval: 0,
                     rotate: options.xLabels && options.xLabels.length > 8 ? 35 : 0,
                 },
@@ -369,8 +369,8 @@
             yAxis: {
                 type: "category",
                 data: options.yLabels || [],
-                axisLine: { lineStyle: { color: "#333333" } },
-                axisLabel: { color: "#555555" },
+                axisLine: { lineStyle: { color: "#3d4656" } },
+                axisLabel: { color: "#8892a0" },
                 splitArea: { show: false },
             },
             visualMap: {
@@ -380,9 +380,9 @@
                 orient: "horizontal",
                 left: "center",
                 bottom: 0,
-                textStyle: { color: "#555555" },
+                textStyle: { color: "#8892a0" },
                 inRange: {
-                    color: ["#5f1515", "#0a0a0a", "#0d4020"],
+                    color: ["#7f2222", "#1a1d24", "#00664c"],
                 },
             },
             series: [
@@ -392,7 +392,7 @@
                     label: { show: false },
                     emphasis: {
                         itemStyle: {
-                            borderColor: "#d4d4d4",
+                            borderColor: "#e8eaf0",
                             borderWidth: 1,
                         },
                     },
@@ -438,11 +438,11 @@
                     connectNulls: true,
                     lineStyle: {
                         width: 2,
-                        color: options.color || "#50b5ff",
+                        color: options.color || "#4a9fe0",
                     },
                     areaStyle: {
                         opacity: 0.08,
-                        color: options.color || "#50b5ff",
+                        color: options.color || "#4a9fe0",
                     },
                 },
             ],

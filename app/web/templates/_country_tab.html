@@ -1,29 +1,34 @@
 {% if rows %}
-    <div class="indicator-table">
-        <div class="indicator-table__header">
+    <div class="ind-table">
+        <div class="ind-header">
             <span>Indicator</span>
             <span>Latest</span>
             <span>Previous</span>
-            <span>Sparkline</span>
             <span>Trend</span>
+            <span></span>
             <span>Detail</span>
         </div>
         {% for row in rows %}
-            <article class="indicator-row">
-                <div class="indicator-row__name">
-                    <span>{{ row.display_label }}</span>
-                </div>
-                <div class="indicator-row__value">{{ row.latest_value }}</div>
-                <div class="indicator-row__value">{{ row.previous_value }}</div>
-                <div class="indicator-row__spark">
+            {% if row.trend_symbol == "↑" %}
+                {% set trend_cls = "is-positive" %}
+            {% elif row.trend_symbol == "↓" %}
+                {% set trend_cls = "is-negative" %}
+            {% else %}
+                {% set trend_cls = "is-neutral" %}
+            {% endif %}
+            <article class="ind-row {{ trend_cls }}">
+                <div class="ind-row__name">{{ row.display_label }}</div>
+                <div class="ind-row__val">{{ row.latest_value }}</div>
+                <div class="ind-row__prev">{{ row.previous_value }}</div>
+                <div class="ind-row__spark">
                     <div
-                        class="sparkline"
+                        class="sparkline ind-sparkline"
                         id="spark-{{ row.id }}"
                         data-values='{{ row.sparkline_values|tojson }}'
                     ></div>
                 </div>
-                <div class="indicator-row__trend">{{ row.trend_symbol }}</div>
-                <div class="indicator-row__detail">
+                <div class="ind-row__trend">{{ row.trend_symbol }}</div>
+                <div class="ind-row__detail">
                     <a href="{{ row.detail_href }}">Open</a>
                 </div>
             </article>

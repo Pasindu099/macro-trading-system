@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block body %}
+<main class="shell shell--research">
+    <header class="research-hero">
+        <div>
+            <a class="back-link" href="/bank-research">Back to bank research</a>
+            <p class="eyebrow">Internal Research Admin</p>
+            <h1>Update Bank Research Reports</h1>
+            <p class="calendar-hero__copy">
+                Paste the latest Google Drive folder link, save it, and rebuild the cached research analysis from the browser.
+            </p>
+        </div>
+        <div class="research-hero-card">
+            <span>Cache</span>
+            <strong>{{ research.reports|length }}</strong>
+            <span>
+                {% if research.generated_at %}
+                    Updated {{ research.generated_at[:16].replace("T", " ") }} UTC
+                {% else %}
+                    No cache built yet
+                {% endif %}
+            </span>
+        </div>
+    </header>
+
+    <section class="research-admin-panel">
+        <div class="research-admin-status research-admin-status--{{ state.status or 'idle' }}">
+            <strong>{{ state.status|default("idle", true)|title }}</strong>
+            <span>{{ state.message or "Ready to update the research folder." }}</span>
+            {% if state.started_at %}
+                <small>Started {{ state.started_at[:16].replace("T", " ") }} UTC</small>
+            {% endif %}
+            {% if state.finished_at %}
+                <small>Finished {{ state.finished_at[:16].replace("T", " ") }} UTC</small>
+            {% endif %}
+        </div>
+
+        {% if message %}
+            <div class="research-warning">
+                <strong>Check the folder link</strong>
+                <span>{{ message }}</span>
+            </div>
+        {% endif %}
+
+        <form class="research-admin-form" method="post" action="/bank-research/admin">
+            <label>
+                <span>Google Drive research folder URL</span>
+                <input
+                    type="url"
+                    name="folder_url"
+                    value="{{ folder_url }}"
+                    placeholder="https://drive.google.com/drive/folders/..."
+                    required
+                >
+            </label>
+            <div class="research-admin-actions">
+                <button class="secondary-action" type="submit" name="action" value="save">Save Link</button>
+                <button class="primary-action" type="submit" name="action" value="rebuild">Save and Refresh Reports</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="research-admin-grid">
+        <div class="research-admin-card">
+            <span>Google Drive API</span>
+            <strong class="{% if has_google_drive_key %}is-positive{% else %}is-negative{% endif %}">
+                {% if has_google_drive_key %}Configured{% else %}Missing{% endif %}
+            </strong>
+            <small>Required to list and download files from the folder.</small>
+        </div>
+        <div class="research-admin-card">
+            <span>OpenAI Analysis</span>
+            <strong class="{% if has_openai_key %}is-positive{% else %}is-warning{% endif %}">
+                {% if has_openai_key %}{{ openai_model }}{% else %}Fallback mode{% endif %}
+            </strong>
+            <small>When missing, reports use basic fallback summaries.</small>
+        </div>
+        <div class="research-admin-card">
+            <span>Retention</span>
+            <strong>{{ retention_days }} days</strong>
+            <small>Downloaded files older than this are cleaned on refresh.</small>
+        </div>
+        <div class="research-admin-card">
+            <span>Current Folder</span>
+            <strong>{{ "Saved" if folder_url else "Not set" }}</strong>
+            {% if folder_url %}
+                <a href="{{ folder_url }}" target="_blank" rel="noreferrer">Open Drive folder</a>
+            {% else %}
+                <small>No Drive folder link saved.</small>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="research-admin-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Macro Signal Preferences</p>
+                <h2>Coverage watchlist</h2>
+            </div>
+            <p class="panel-copy">Choose the currencies you want highlighted while reviewing bank research. Saved locally in this browser.</p>
+        </div>
+        <div class="currency-toggle-grid" data-admin-currency-toggles>
+            {% for currency in ["USD", "EUR", "GBP", "JPY", "CHF", "CAD", "AUD", "NZD"] %}
+                <label class="currency-toggle">
+                    <input type="checkbox" value="{{ currency }}" checked>
+                    <span>{{ currency }}</span>
+                </label>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% if state.errors %}
+        <section class="research-warning">
+            <strong>Latest refresh warnings</strong>
+            {% for error in state.errors %}
+                <span>{{ error }}</span>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <section class="research-controls">
+        <label class="research-search">
+            <span>Manual command fallback</span>
+            <input readonly value="python -m scripts.build_bank_research --folder-url &quot;{{ folder_url or '<drive-folder-url>' }}&quot;">
+        </label>
+    </section>
+</main>
+
+<script>
+    (() => {
+        const key = "macro_dashboard.admin_currency_watchlist";
+        const inputs = Array.from(document.querySelectorAll("[data-admin-currency-toggles] input"));
+        const saved = JSON.parse(localStorage.getItem(key) || "null");
+        if (Array.isArray(saved)) {
+            inputs.forEach((input) => {
+                input.checked = saved.includes(input.value);
+            });
+        }
+        inputs.forEach((input) => {
+            input.addEventListener("change", () => {
+                localStorage.setItem(key, JSON.stringify(inputs.filter((item) => item.checked).map((item) => item.value)));
+            });
+        });
+    })();
+</script>
+{% endblock %}

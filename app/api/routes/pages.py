@@ -5,14 +5,16 @@ from __future__ import annotations
 import asyncio
 import csv
 import calendar
-from datetime import date, timedelta, timezone
+import json
+from datetime import date, datetime, timedelta, timezone
 from io import BytesIO
 from io import StringIO
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import desc, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,7 +29,14 @@ from app.api.routes.public import (
 from app.db.models import Country, Indicator, IndicatorRelease, IngestionRun
 from app.db.session import get_session
 from app.ingestion.eodhd_client import EODHDAuthError, EODHDClient, EODHDError
-from app.processing.bank_research import load_bank_research_index
+from app.processing.bank_research import (
+    BANK_RESEARCH_DIR,
+    BankResearchConfig,
+    build_bank_research_cache,
+    load_bank_research_index,
+    parse_drive_folder_id,
+)
+from app.settings import get_settings
 
 router = APIRouter(tags=["pages"])
 templates = Jinja2Templates(directory=str(Path("app/web/templates")))
@@ -72,6 +81,34 @@ YIELD_PAIR_DEFS = (
     ("USD/CHF", "USD", "CHF"),
     ("NZD/USD", "NZD", "USD"),
 )
+FX_PAIR_DEFS = (
+    {"label": "EUR/USD", "symbol": "EURUSD.FOREX", "left_currency": "EUR", "right_currency": "USD"},
+    {"label": "GBP/USD", "symbol": "GBPUSD.FOREX", "left_currency": "GBP", "right_currency": "USD"},
+    {"label": "USD/JPY", "symbol": "USDJPY.FOREX", "left_currency": "USD", "right_currency": "JPY"},
+    {"label": "AUD/USD", "symbol": "AUDUSD.FOREX", "left_currency": "AUD", "right_currency": "USD"},
+    {"label": "USD/CAD", "symbol": "USDCAD.FOREX", "left_currency": "USD", "right_currency": "CAD"},
+    {"label": "USD/CHF", "symbol": "USDCHF.FOREX", "left_currency": "USD", "right_currency": "CHF"},
+    {"label": "NZD/USD", "symbol": "NZDUSD.FOREX", "left_currency": "NZD", "right_currency": "USD"},
+)
+YIELD_MATURITIES = (
+    {"key": "1m", "label": "1M", "name": "1 month"},
+    {"key": "3m", "label": "3M", "name": "3 months"},
+    {"key": "6m", "label": "6M", "name": "6 months"},
+    {"key": "1y", "label": "1Y", "name": "1 year"},
+    {"key": "3y", "label": "3Y", "name": "3 years"},
+    {"key": "5y", "label": "5Y", "name": "5 years"},
+    {"key": "10y", "label": "10Y", "name": "10 years"},
+)
+YIELD_MATURITY_SUFFIXES = {
+    "1m": "1M",
+    "3m": "3M",
+    "6m": "6M",
+    "1y": "1Y",
+    "3y": "3Y",
+    "5y": "5Y",
+    "10y": "10Y",
+}
+BANK_RESEARCH_ADMIN_STATE_PATH = BANK_RESEARCH_DIR / "admin_state.json"
 COUNTRY_FLAGS = {
     "US": "🇺🇸",
     "EU": "🇪🇺",
@@ -708,84 +745,78 @@ async def _build_currency_stance_dashboard(
             text(
                 """
                 WITH latest AS (
-                    SELECT window_months, max(date) AS date
-                    FROM processed.currency_stance
-                    GROUP BY window_months
+                    SELECT max(date) AS date FROM processed.cb_preferred_score
                 )
                 SELECT
                     s.date,
                     s.country_code,
                     s.currency,
-                    s.window_months,
                     s.inflation_score,
                     s.labor_score,
                     s.growth_score,
-                    s.overall_stance_score,
-                    s.overall_stance_label,
+                    s.cb_strength_score,
+                    s.strength_label,
                     s.trend_label,
                     s.confidence,
-                    s.meter_color,
-                    s.inflation_meter_color,
-                    s.labor_meter_color,
-                    s.growth_meter_color,
                     r.rank_strongest
-                FROM processed.currency_stance s
-                JOIN processed.currency_stance_rankings r
-                    ON r.date = s.date
-                    AND r.currency = s.currency
-                    AND r.window_months = s.window_months
-                JOIN latest l
-                    ON l.date = s.date
-                    AND l.window_months = s.window_months
-                ORDER BY s.window_months, r.rank_strongest
+                FROM processed.cb_preferred_score s
+                JOIN processed.cb_preferred_rankings r
+                    ON r.date = s.date AND r.currency = s.currency
+                JOIN latest l ON l.date = s.date
+                ORDER BY r.rank_strongest
                 """
             )
         )
     except Exception:
         return {}
 
-    rows_by_window: dict[int, list[dict[str, Any]]] = {}
+    rows: list[dict[str, Any]] = []
     for row in result.mappings().all():
+        infl  = row["inflation_score"]
+        labor = row["labor_score"]
+        growth = row["growth_score"]
+        score = row["cb_strength_score"]
         category_meters = [
             {
                 "label": "Inflation",
                 "short_label": "I",
-                "score": _format_score(row["inflation_score"]),
-                "percent": _meter_percent(row["inflation_score"]),
-                "color_class": _meter_color_class(row["inflation_meter_color"]),
+                "score": _format_score(infl),
+                "percent": _meter_percent(infl),
+                "color_class": _score_color_class(infl),
             },
             {
                 "label": "Labor",
                 "short_label": "L",
-                "score": _format_score(row["labor_score"]),
-                "percent": _meter_percent(row["labor_score"]),
-                "color_class": _meter_color_class(row["labor_meter_color"]),
+                "score": _format_score(labor),
+                "percent": _meter_percent(labor),
+                "color_class": _score_color_class(labor),
             },
             {
                 "label": "Growth",
                 "short_label": "G",
-                "score": _format_score(row["growth_score"]),
-                "percent": _meter_percent(row["growth_score"]),
-                "color_class": _meter_color_class(row["growth_meter_color"]),
+                "score": _format_score(growth),
+                "percent": _meter_percent(growth),
+                "color_class": _score_color_class(growth),
             },
         ]
-        window = int(row["window_months"])
-        rows_by_window.setdefault(window, []).append(
+        rows.append(
             {
                 "date": row["date"],
                 "country_code": row["country_code"],
                 "currency": row["currency"],
                 "rank": row["rank_strongest"],
-                "score": _format_score(row["overall_stance_score"]),
-                "score_percent": _meter_percent(row["overall_stance_score"]),
-                "label": str(row["overall_stance_label"]).replace("_", " ").title(),
+                "score": _format_score(score),
+                "score_percent": _meter_percent(score),
+                "label": str(row["strength_label"]).replace("_", " ").title(),
                 "trend": str(row["trend_label"]).title(),
                 "confidence": str(row["confidence"]).title(),
-                "color_class": _meter_color_class(row["meter_color"]),
+                "color_class": _score_color_class(score),
                 "category_meters": category_meters,
             }
         )
-    return rows_by_window
+    # cb_preferred_score has no window dimension — expose under all three keys
+    # so existing template tabs continue to work
+    return {1: rows, 2: rows, 3: rows}
 
 
 async def _build_fundamental_currency_meter(
@@ -803,14 +834,10 @@ async def _build_fundamental_currency_meter(
                     inflation_score,
                     labor_score,
                     growth_score,
-                    inflation_direction,
-                    labor_direction,
-                    growth_direction,
-                    overall_stance_score,
-                    overall_stance_label
-                FROM processed.currency_stance
-                WHERE window_months = 3
-                    AND currency IN ({currency_list})
+                    cb_strength_score,
+                    strength_label
+                FROM processed.cb_preferred_score
+                WHERE currency IN ({currency_list})
                 ORDER BY currency, date
                 """
             )
@@ -823,10 +850,10 @@ async def _build_fundamental_currency_meter(
         rows_by_currency.setdefault(str(row["currency"]), []).append(dict(row))
 
     metrics = (
-        ("Inflation", "inflation_score", "inflation_direction"),
-        ("Growth", "growth_score", "growth_direction"),
-        ("Labor", "labor_score", "labor_direction"),
-        ("Overall", "overall_stance_score", None),
+        ("Inflation", "inflation_score", None),
+        ("Growth", "growth_score", None),
+        ("Labor", "labor_score", None),
+        ("Overall", "cb_strength_score", None),
     )
 
     meter_rows: list[dict[str, Any]] = []
@@ -883,12 +910,12 @@ async def _build_fundamental_currency_meter(
                 "score_values": score_values,
             })
 
-        overall_score = latest_row["overall_stance_score"]
+        overall_score = latest_row["cb_strength_score"]
         meter_rows.append({
             "currency": currency,
             "country_code": latest_row["country_code"],
             "latest_date": latest_date,
-            "label": str(latest_row["overall_stance_label"]).replace("_", " ").title(),
+            "label": str(latest_row["strength_label"]).replace("_", " ").title(),
             "score": _format_score(overall_score),
             "raw_score": overall_score,
             "score_percent": _meter_percent(overall_score),
@@ -928,7 +955,294 @@ def _yield_history_point(
     return parsed_date, None
 
 
-async def _build_yield_differentials() -> dict[str, Any]:
+def _parse_yield_history(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    points: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict) or not row.get("date"):
+            continue
+        parsed_date, value = _yield_history_point([row], 0)
+        if parsed_date is None or value is None:
+            continue
+        points.append({
+            "date": parsed_date,
+            "date_key": parsed_date.isoformat(),
+            "yield": value,
+        })
+    points.sort(key=lambda point: point["date"])
+    return points
+
+
+def _build_yield_chart_data(
+    histories_by_currency: dict[str, list[dict[str, Any]]],
+) -> dict[str, Any]:
+    yield_series: list[dict[str, Any]] = []
+    history_maps: dict[str, dict[str, float]] = {}
+
+    for benchmark in YIELD_BENCHMARKS:
+        currency = str(benchmark["currency"])
+        points = histories_by_currency.get(currency, [])
+        history_maps[currency] = {
+            str(point["date_key"]): float(point["yield"])
+            for point in points
+        }
+        yield_series.append({
+            "name": f"{currency} 10Y",
+            "currency": currency,
+            "label": str(benchmark["label"]),
+            "symbol": str(benchmark["symbol"]),
+            "data": [
+                [str(point["date_key"]), round(float(point["yield"]), 4)]
+                for point in points
+            ],
+        })
+
+    spread_series: list[dict[str, Any]] = []
+    latest_spreads: list[dict[str, Any]] = []
+    for label, left_currency, right_currency in YIELD_PAIR_DEFS:
+        left_history = history_maps.get(left_currency, {})
+        right_history = history_maps.get(right_currency, {})
+        dates = sorted(set(left_history).intersection(right_history))
+        data = [
+            [
+                point_date,
+                round((left_history[point_date] - right_history[point_date]) * 100, 1),
+            ]
+            for point_date in dates
+        ]
+        spread_series.append({
+            "name": label,
+            "left_currency": left_currency,
+            "right_currency": right_currency,
+            "data": data,
+        })
+        if data:
+            latest_spreads.append({
+                "label": label,
+                "value": data[-1][1],
+                "date": data[-1][0],
+            })
+
+    latest_spreads.sort(key=lambda point: float(point["value"]), reverse=True)
+    return {
+        "yield_series": yield_series,
+        "spread_series": spread_series,
+        "latest_spreads": latest_spreads,
+        "base_currency": YIELD_BASE_CURRENCY,
+        "unit": "%",
+        "spread_unit": "bp",
+    }
+
+
+def _gbond_symbol_code(row: dict[str, Any]) -> str | None:
+    for key in ("Code", "code", "Symbol", "symbol"):
+        value = row.get(key)
+        if value:
+            return str(value).split(".")[0].upper()
+    return None
+
+
+async def _fetch_gbond_symbol_set() -> set[str]:
+    try:
+        async with EODHDClient() as client:
+            symbols = await client.fetch_exchange_symbols("GBOND")
+    except (EODHDError, ValueError):
+        return set()
+    return {
+        code
+        for row in symbols
+        if isinstance(row, dict)
+        if (code := _gbond_symbol_code(row))
+    }
+
+
+def _yield_symbol_prefix(benchmark: dict[str, Any]) -> str:
+    symbol = str(benchmark["symbol"]).split(".", 1)[0]
+    return symbol.removesuffix("10Y")
+
+
+def _build_maturity_benchmarks(
+    maturity_key: str,
+    available_symbols: set[str],
+) -> list[dict[str, Any]]:
+    suffix = YIELD_MATURITY_SUFFIXES[maturity_key]
+    benchmarks: list[dict[str, Any]] = []
+    for benchmark in YIELD_BENCHMARKS:
+        symbol_code = f"{_yield_symbol_prefix(benchmark)}{suffix}"
+        if available_symbols and symbol_code not in available_symbols:
+            continue
+        benchmarks.append({
+            **benchmark,
+            "label": str(benchmark["label"]).replace("10Y", suffix),
+            "symbol": f"{symbol_code}.GBOND",
+            "maturity_key": maturity_key,
+            "maturity_label": suffix,
+        })
+    return benchmarks
+
+
+def _build_fx_chart_data(
+    histories_by_pair: dict[str, list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    series: list[dict[str, Any]] = []
+    for pair in FX_PAIR_DEFS:
+        label = str(pair["label"])
+        points = _parse_yield_history(histories_by_pair.get(label, []))
+        if not points:
+            series.append({
+                "name": label,
+                "symbol": pair["symbol"],
+                "data": [],
+            })
+            continue
+        base = float(points[0]["yield"])
+        data = []
+        for point in points:
+            value = float(point["yield"])
+            performance = ((value - base) / base) * 100 if base else 0
+            data.append([str(point["date_key"]), round(performance, 3)])
+        series.append({
+            "name": label,
+            "symbol": pair["symbol"],
+            "data": data,
+        })
+    return series
+
+
+def _build_maturity_panels(
+    yield_by_maturity: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    def available_for(key: str) -> bool:
+        return bool(yield_by_maturity.get(key, {}).get("rows"))
+
+    return [
+        {
+            "key": maturity["key"],
+            "label": maturity["label"],
+            "name": maturity["name"],
+            "available": available_for(str(maturity["key"])),
+            "summary": (
+                "Live government-bond feed"
+                if available_for(str(maturity["key"]))
+                else "Awaiting feed"
+            ),
+        }
+        for maturity in YIELD_MATURITIES
+    ]
+
+
+async def _build_rates_research_context() -> dict[str, Any]:
+    available_symbols = await _fetch_gbond_symbol_set()
+    yield_by_maturity: dict[str, dict[str, Any]] = {}
+    for maturity in YIELD_MATURITIES:
+        maturity_key = str(maturity["key"])
+        benchmarks = _build_maturity_benchmarks(maturity_key, available_symbols)
+        if not benchmarks:
+            yield_by_maturity[maturity_key] = {
+                "rows": [],
+                "pairs": [],
+                "stats": [],
+                "base_currency": YIELD_BASE_CURRENCY,
+                "symbols": [],
+                "errors": [],
+                "chart_data": _build_yield_chart_data({}),
+                "message": "No EODHD GBOND symbols were found for this maturity.",
+            }
+            continue
+        yield_by_maturity[maturity_key] = await _build_yield_differentials(
+            benchmarks,
+            maturity_label=str(maturity["label"]),
+        )
+
+    active_maturity = next(
+        (
+            str(maturity["key"])
+            for maturity in YIELD_MATURITIES
+            if yield_by_maturity.get(str(maturity["key"]), {}).get("rows")
+        ),
+        "10y",
+    )
+    yield_differentials = yield_by_maturity.get(active_maturity, yield_by_maturity["10y"])
+    today = _now().date()
+    from_date = today - timedelta(days=YIELD_HISTORY_DAYS)
+    histories_by_pair: dict[str, list[dict[str, Any]]] = {}
+    fx_errors: list[dict[str, Any]] = []
+
+    try:
+        async with EODHDClient() as client:
+            histories = await asyncio.gather(
+                *(
+                    client.fetch_eod_history(
+                        str(pair["symbol"]),
+                        from_date=from_date,
+                        to_date=today,
+                    )
+                    for pair in FX_PAIR_DEFS
+                ),
+                return_exceptions=True,
+            )
+    except (EODHDError, ValueError):
+        histories = []
+        fx_errors.append({
+            "symbol": "FOREX",
+            "label": "FX comparison",
+            "error": "FX pair history is unavailable right now.",
+        })
+
+    for pair, history in zip(FX_PAIR_DEFS, histories, strict=False):
+        if isinstance(history, Exception):
+            fx_errors.append({
+                "symbol": pair["symbol"],
+                "label": pair["label"],
+                "error": str(history),
+            })
+            continue
+        histories_by_pair[str(pair["label"])] = [
+            row for row in history
+            if isinstance(row, dict) and row.get("date") and row.get("close") is not None
+        ]
+
+    fx_series = _build_fx_chart_data(histories_by_pair)
+    pair_research = []
+    spread_lookup = {
+        str(pair["label"]): pair
+        for pair in yield_differentials.get("pairs", [])
+    }
+    for pair in FX_PAIR_DEFS:
+        fx_points = next(
+            (series["data"] for series in fx_series if series["name"] == pair["label"]),
+            [],
+        )
+        spread = spread_lookup.get(str(pair["label"]))
+        performance = fx_points[-1][1] if fx_points else None
+        pair_research.append({
+            "label": pair["label"],
+            "symbol": pair["symbol"],
+            "spread_display": spread["spread_display"] if spread else "N/A",
+            "spread_class": spread["spread_class"] if spread else "is-neutral",
+            "fx_performance": f"{performance:+.2f}%" if performance is not None else "N/A",
+            "fx_class": _spread_color_class(performance) if performance is not None else "is-neutral",
+        })
+
+    return {
+        "yield_differentials": yield_differentials,
+        "yield_by_maturity": yield_by_maturity,
+        "yield_chart_by_maturity": {
+            key: value.get("chart_data", _build_yield_chart_data({}))
+            for key, value in yield_by_maturity.items()
+        },
+        "active_maturity": active_maturity,
+        "maturity_panels": _build_maturity_panels(yield_by_maturity),
+        "fx_series": fx_series,
+        "pair_research": pair_research,
+        "fx_errors": fx_errors,
+    }
+
+
+async def _build_yield_differentials(
+    benchmarks: list[dict[str, Any]] | None = None,
+    maturity_label: str = "10Y",
+) -> dict[str, Any]:
+    benchmarks = benchmarks or list(YIELD_BENCHMARKS)
     today = _now().date()
     from_date = today - timedelta(days=YIELD_HISTORY_DAYS)
 
@@ -941,7 +1255,7 @@ async def _build_yield_differentials() -> dict[str, Any]:
                         from_date=from_date,
                         to_date=today,
                     )
-                    for benchmark in YIELD_BENCHMARKS
+                    for benchmark in benchmarks
                 ),
                 return_exceptions=True,
             )
@@ -951,13 +1265,34 @@ async def _build_yield_differentials() -> dict[str, Any]:
             "pairs": [],
             "stats": [],
             "base_currency": YIELD_BASE_CURRENCY,
+            "symbols": [benchmark["symbol"] for benchmark in benchmarks],
+            "errors": [],
+            "chart_data": {
+                "yield_series": [],
+                "spread_series": [],
+                "latest_spreads": [],
+                "base_currency": YIELD_BASE_CURRENCY,
+                "unit": "%",
+                "spread_unit": "bp",
+            },
             "message": "Bond yield data is unavailable from EODHD right now.",
         }
 
     auth_blocked = any(isinstance(history, EODHDAuthError) for history in histories)
+    failed_symbols = [
+        {
+            "symbol": str(benchmark["symbol"]),
+            "label": str(benchmark["label"]),
+            "error": str(history),
+            "is_access_error": isinstance(history, EODHDAuthError),
+        }
+        for benchmark, history in zip(benchmarks, histories, strict=True)
+        if isinstance(history, Exception)
+    ]
 
     rows: list[dict[str, Any]] = []
-    for benchmark, history in zip(YIELD_BENCHMARKS, histories, strict=True):
+    histories_by_currency: dict[str, list[dict[str, Any]]] = {}
+    for benchmark, history in zip(benchmarks, histories, strict=True):
         if isinstance(history, Exception):
             continue
         clean_history = [
@@ -965,6 +1300,7 @@ async def _build_yield_differentials() -> dict[str, Any]:
             if isinstance(row, dict) and row.get("date") and row.get("close") is not None
         ]
         clean_history.sort(key=lambda row: str(row.get("date")))
+        histories_by_currency[str(benchmark["currency"])] = _parse_yield_history(clean_history)
         latest_date, latest_yield = _yield_history_point(clean_history, 0)
         _, yield_5d = _yield_history_point(clean_history, 5)
         _, yield_1m = _yield_history_point(clean_history, 21)
@@ -1000,7 +1336,8 @@ async def _build_yield_differentials() -> dict[str, Any]:
 
     if not rows:
         message = (
-            "The current EODHD key does not include GBOND yield access."
+            "EODHD rejected the GBOND yield requests for the current subscription. "
+            "The symbols are valid, but this API key needs GBOND/government-bond access."
             if auth_blocked
             else "Bond yield data is unavailable from EODHD right now."
         )
@@ -1009,6 +1346,9 @@ async def _build_yield_differentials() -> dict[str, Any]:
             "pairs": [],
             "stats": [],
             "base_currency": YIELD_BASE_CURRENCY,
+            "symbols": [benchmark["symbol"] for benchmark in benchmarks],
+            "errors": failed_symbols,
+            "chart_data": _build_yield_chart_data(histories_by_currency),
             "message": message,
         }
 
@@ -1051,7 +1391,7 @@ async def _build_yield_differentials() -> dict[str, Any]:
     base = rows_by_currency.get(YIELD_BASE_CURRENCY)
     stats = [
         {
-            "label": "US 10Y",
+            "label": f"US {maturity_label}",
             "value": base["yield_display"] if base else "N/A",
             "detail": "base benchmark",
             "class": "is-neutral",
@@ -1087,6 +1427,9 @@ async def _build_yield_differentials() -> dict[str, Any]:
         "pairs": pairs,
         "stats": stats,
         "base_currency": YIELD_BASE_CURRENCY,
+        "symbols": [benchmark["symbol"] for benchmark in benchmarks],
+        "errors": failed_symbols,
+        "chart_data": _build_yield_chart_data(histories_by_currency),
         "message": "",
     }
 
@@ -1178,6 +1521,131 @@ async def _build_country_rows(
     return rows
 
 
+def _row_trend_state(row: dict[str, Any]) -> str:
+    values = [value for value in row.get("sparkline_values", []) if value is not None]
+    if len(values) < 2:
+        return "is-neutral"
+    if values[-1] > values[-2]:
+        return "is-positive"
+    if values[-1] < values[-2]:
+        return "is-negative"
+    return "is-neutral"
+
+
+def _profile_card_from_row(label: str, row: dict[str, Any]) -> dict[str, Any]:
+    previous_value = row.get("previous_value") or "N/A"
+    detail = "No prior print" if previous_value == "N/A" else f"{previous_value} prior"
+    card_label = row.get("display_name") if label == "Policy Rate" else label
+    if label == "Policy Rate" and "fed interest rate" in str(card_label or "").lower():
+        card_label = "Fed Funds Rate"
+    return {
+        "label": card_label or label,
+        "value": row.get("latest_value") or "N/A",
+        "detail": detail,
+        "state": _row_trend_state(row),
+    }
+
+
+def _pick_profile_indicator(
+    rows_by_category: dict[str, list[dict[str, Any]]],
+    category: str,
+    label: str,
+    terms: tuple[str, ...],
+    allow_fallback: bool = False,
+) -> dict[str, Any]:
+    rows = rows_by_category.get(category, [])
+    for term in terms:
+        for row in rows:
+            haystack = " ".join(
+                str(row.get(key) or "")
+                for key in ("display_name", "display_label", "canonical_name")
+            ).lower()
+            if term in haystack:
+                return _profile_card_from_row(label, row)
+    if allow_fallback and rows:
+        return _profile_card_from_row(label, rows[0])
+    return {
+        "label": label,
+        "value": "N/A",
+        "detail": "Awaiting data",
+        "state": "is-neutral",
+    }
+
+
+def _build_country_profile_cards(
+    rows_by_category: dict[str, list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    cards = [
+        _pick_profile_indicator(
+            rows_by_category,
+            "Monetary Policy",
+            "Policy Rate",
+            (
+                "fed funds",
+                "policy rate",
+                "target rate",
+                "interest rate",
+                "cash rate",
+                "bank rate",
+                "deposit rate",
+                "overnight rate",
+                "main refinancing",
+            ),
+            allow_fallback=True,
+        ),
+        _pick_profile_indicator(
+            rows_by_category,
+            "Inflation",
+            "CPI YoY",
+            (
+                "cpi yoy",
+                "cpi (yoy)",
+                "headline cpi",
+                "consumer price index",
+                "hicp (yoy)",
+                "hicp yoy",
+            ),
+        ),
+        _pick_profile_indicator(
+            rows_by_category,
+            "Labor",
+            "Unemployment",
+            ("unemployment", "jobless"),
+        ),
+        _pick_profile_indicator(
+            rows_by_category,
+            "Growth",
+            "GDP QoQ",
+            (
+                "gdp qoq",
+                "gdp (qoq)",
+                "gross domestic product",
+                "gdp mom",
+                "gdp (mom)",
+                "gdp yoy",
+                "gdp (yoy)",
+            ),
+        ),
+    ]
+
+    tracked_rows = [
+        row
+        for rows in rows_by_category.values()
+        for row in rows[:3]
+        if row.get("latest_value") and row.get("latest_value") != "N/A"
+    ]
+    moved_count = sum(
+        1 for row in tracked_rows if _row_trend_state(row) != "is-neutral"
+    )
+    cards.append({
+        "label": "Macro Surprise",
+        "value": f"+{moved_count}" if moved_count else "0",
+        "detail": "Recent moved indicators",
+        "state": "is-positive" if moved_count else "is-neutral",
+    })
+    return cards
+
+
 async def _render_country_template(
     request: Request,
     session: AsyncSession,
@@ -1189,7 +1657,14 @@ async def _render_country_template(
         raise HTTPException(status_code=404, detail="Country not found")
 
     country = country_payload.country
-    rows = await _build_country_rows(session, country.code, active_category)
+    profile_categories = ("Monetary Policy", "Inflation", "Labor", "Growth")
+    rows_by_category = {
+        category: await _build_country_rows(session, country.code, category)
+        for category in profile_categories
+    }
+    rows = rows_by_category.get(active_category)
+    if rows is None:
+        rows = await _build_country_rows(session, country.code, active_category)
     category_tabs = _category_tabs_for_country(country_payload.indicators)
     return templates.TemplateResponse(
         request,
@@ -1202,6 +1677,7 @@ async def _render_country_template(
             "active_category": active_category,
             "category_tabs": category_tabs,
             "rows": rows,
+            "country_profile_cards": _build_country_profile_cards(rows_by_category),
             "show_footnote": any(row["is_multi_category"] for row in rows),
         },
     )
@@ -1272,6 +1748,89 @@ def _normalize_news_item(item: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+def _read_bank_research_admin_state() -> dict[str, Any]:
+    if not BANK_RESEARCH_ADMIN_STATE_PATH.exists():
+        return {}
+    try:
+        with BANK_RESEARCH_ADMIN_STATE_PATH.open("r", encoding="utf-8") as file:
+            data = json.load(file)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _write_bank_research_admin_state(state: dict[str, Any]) -> None:
+    BANK_RESEARCH_ADMIN_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with BANK_RESEARCH_ADMIN_STATE_PATH.open("w", encoding="utf-8") as file:
+        json.dump(state, file, indent=2, ensure_ascii=False)
+        file.write("\n")
+
+
+def _bank_research_admin_context(message: str | None = None) -> dict[str, Any]:
+    settings = get_settings()
+    research = load_bank_research_index()
+    state = _read_bank_research_admin_state()
+    folder_url = (
+        state.get("folder_url")
+        or research.get("folder_url")
+        or settings.bank_research_drive_folder_url
+        or ""
+    )
+    return {
+        "folder_url": folder_url,
+        "state": state,
+        "research": research,
+        "message": message,
+        "has_google_drive_key": bool(settings.google_drive_api_key),
+        "has_openai_key": bool(settings.openai_api_key),
+        "openai_model": settings.openai_model,
+        "retention_days": settings.bank_research_retention_days,
+    }
+
+
+async def _refresh_bank_research_from_admin(folder_url: str) -> None:
+    settings = get_settings()
+    state = {
+        **_read_bank_research_admin_state(),
+        "folder_url": folder_url,
+        "status": "running",
+        "message": "Refreshing bank research reports from Google Drive.",
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "finished_at": None,
+        "errors": [],
+    }
+    _write_bank_research_admin_state(state)
+
+    try:
+        if not settings.google_drive_api_key:
+            raise ValueError("GOOGLE_DRIVE_API_KEY is not configured.")
+
+        config = BankResearchConfig(
+            folder_url=folder_url,
+            google_drive_api_key=settings.google_drive_api_key,
+            openai_api_key=settings.openai_api_key,
+            openai_model=settings.openai_model,
+            retention_days=settings.bank_research_retention_days,
+        )
+        result = await build_bank_research_cache(config)
+        state.update({
+            "status": "success",
+            "message": f"Refresh complete: {len(result.get('reports', []))} reports cached.",
+            "finished_at": datetime.now(timezone.utc).isoformat(),
+            "reports_count": len(result.get("reports", [])),
+            "errors": result.get("errors", []),
+        })
+    except Exception as exc:  # noqa: BLE001 - surface operational failure on admin page
+        state.update({
+            "status": "failed",
+            "message": f"Refresh failed: {exc}",
+            "finished_at": datetime.now(timezone.utc).isoformat(),
+            "errors": [str(exc)],
+        })
+
+    _write_bank_research_admin_state(state)
+
+
 @router.get("/", response_class=HTMLResponse)
 async def landing_page(
     request: Request,
@@ -1323,6 +1882,66 @@ async def landing_page(
     )
 
 
+@router.get("/rates", response_class=HTMLResponse)
+async def rates_page(request: Request) -> HTMLResponse:
+    """Render the rates and FX/yield differential research page."""
+    context = await _build_rates_research_context()
+    return templates.TemplateResponse(
+        request,
+        "rates.html",
+        {
+            "request": request,
+            "page_title": "Rates | Macro Dashboard",
+            **context,
+        },
+    )
+
+
+@router.get("/countries", response_class=HTMLResponse)
+async def countries_page(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+) -> HTMLResponse:
+    """Render a country directory with links to country profiles."""
+    countries = await list_country_summaries(session)
+    country_cards = [
+        {
+            "code": country.code,
+            "flag": _flag_for_country(country.code),
+            "name": country.name,
+            "currency_code": country.currency_code,
+            "central_bank": country.central_bank,
+            "cb_mandate_type": country.cb_mandate_type,
+            "cb_inflation_target": country.cb_inflation_target,
+            "indicator_count": country.indicator_count,
+            "latest_release_at": country.latest_release_at,
+        }
+        for country in countries
+    ]
+    total_indicators = sum(country["indicator_count"] for country in country_cards)
+    latest_release = max(
+        (
+            country["latest_release_at"]
+            for country in country_cards
+            if country["latest_release_at"] is not None
+        ),
+        default=None,
+    )
+
+    return templates.TemplateResponse(
+        request,
+        "countries.html",
+        {
+            "request": request,
+            "page_title": "Countries | Macro Dashboard",
+            "country_cards": country_cards,
+            "country_total": len(country_cards),
+            "total_indicators": total_indicators,
+            "latest_release": latest_release,
+        },
+    )
+
+
 @router.get("/analytics", response_class=HTMLResponse)
 async def analytics_page(
     request: Request,
@@ -1345,6 +1964,7 @@ async def analytics_page(
 async def bank_research_page(request: Request) -> HTMLResponse:
     """Render cached bank research summaries."""
     research = load_bank_research_index()
+    admin_ctx = _bank_research_admin_context()
     return templates.TemplateResponse(
         request,
         "bank_research.html",
@@ -1352,8 +1972,101 @@ async def bank_research_page(request: Request) -> HTMLResponse:
             "request": request,
             "page_title": "Bank Research | Macro Dashboard",
             "research": research,
+            "folder_url": admin_ctx.get("folder_url", ""),
+            "admin_state": admin_ctx.get("state", {}),
+            "refresh_message": request.query_params.get("msg", ""),
         },
     )
+
+
+@router.post("/bank-research/refresh", response_class=HTMLResponse)
+async def refresh_bank_research(
+    request: Request,
+    background_tasks: BackgroundTasks,
+) -> Response:
+    """Trigger a Drive refresh and redirect back to the research page."""
+    state = _read_bank_research_admin_state()
+    folder_url = state.get("folder_url", "")
+    if not folder_url:
+        return RedirectResponse("/bank-research/admin", status_code=303)
+    updated = {
+        **state,
+        "status": "queued",
+        "message": "Refresh queued from research page.",
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    _write_bank_research_admin_state(updated)
+    background_tasks.add_task(_refresh_bank_research_from_admin, folder_url)
+    return RedirectResponse("/bank-research?msg=refresh_queued", status_code=303)
+
+
+@router.get("/bank-research/admin", response_class=HTMLResponse)
+async def bank_research_admin_page(request: Request) -> HTMLResponse:
+    """Internal page for updating the bank research Drive source."""
+    return templates.TemplateResponse(
+        request,
+        "bank_research_admin.html",
+        {
+            "request": request,
+            "page_title": "Manage Bank Research | Macro Dashboard",
+            **_bank_research_admin_context(),
+        },
+    )
+
+
+@router.post("/bank-research/admin", response_class=HTMLResponse)
+async def update_bank_research_admin_page(
+    request: Request,
+    background_tasks: BackgroundTasks,
+) -> Response:
+    """Save the research Drive folder link and optionally rebuild the cache."""
+    form = parse_qs((await request.body()).decode("utf-8"), keep_blank_values=True)
+    folder_url = (form.get("folder_url") or [""])[0].strip()
+    action = (form.get("action") or ["save"])[0]
+
+    if not folder_url:
+        return templates.TemplateResponse(
+            request,
+            "bank_research_admin.html",
+            {
+                "request": request,
+                "page_title": "Manage Bank Research | Macro Dashboard",
+                **_bank_research_admin_context("Paste a Google Drive folder URL before saving."),
+            },
+            status_code=400,
+        )
+
+    try:
+        parse_drive_folder_id(folder_url)
+    except ValueError as exc:
+        return templates.TemplateResponse(
+            request,
+            "bank_research_admin.html",
+            {
+                "request": request,
+                "page_title": "Manage Bank Research | Macro Dashboard",
+                **_bank_research_admin_context(str(exc)),
+            },
+            status_code=400,
+        )
+
+    state = {
+        **_read_bank_research_admin_state(),
+        "folder_url": folder_url,
+        "status": "queued" if action == "rebuild" else "saved",
+        "message": (
+            "Refresh queued. Reload this page in a moment to check progress."
+            if action == "rebuild"
+            else "Drive folder link saved."
+        ),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    _write_bank_research_admin_state(state)
+
+    if action == "rebuild":
+        background_tasks.add_task(_refresh_bank_research_from_admin, folder_url)
+
+    return RedirectResponse("/bank-research/admin", status_code=303)
 
 
 @router.get("/brief-builder", response_class=HTMLResponse)
@@ -1365,6 +2078,19 @@ async def brief_builder_page(request: Request) -> HTMLResponse:
         {
             "request": request,
             "page_title": "Brief Builder | Macro Dashboard",
+        },
+    )
+
+
+@router.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request) -> HTMLResponse:
+    """Render local dashboard preferences and notification settings."""
+    return templates.TemplateResponse(
+        request,
+        "settings.html",
+        {
+            "request": request,
+            "page_title": "Settings | Macro Dashboard",
         },
     )
 

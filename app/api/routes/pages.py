@@ -740,6 +740,7 @@ async def _build_analytics_snapshot(session: AsyncSession) -> dict[str, Any]:
 async def _build_currency_stance_dashboard(
     session: AsyncSession,
 ) -> dict[int, list[dict[str, Any]]]:
+    use_legacy_stance = False
     try:
         result = await session.execute(
             text(
@@ -768,7 +769,90 @@ async def _build_currency_stance_dashboard(
             )
         )
     except Exception:
-        return {}
+        await session.rollback()
+        use_legacy_stance = True
+        try:
+            result = await session.execute(
+                text(
+                    """
+                    WITH latest AS (
+                        SELECT window_months, max(date) AS date
+                        FROM processed.currency_stance
+                        GROUP BY window_months
+                    )
+                    SELECT
+                        s.date,
+                        s.country_code,
+                        s.currency,
+                        s.window_months,
+                        s.inflation_score,
+                        s.labor_score,
+                        s.growth_score,
+                        s.overall_stance_score,
+                        s.overall_stance_label,
+                        s.trend_label,
+                        s.confidence,
+                        s.meter_color,
+                        s.inflation_meter_color,
+                        s.labor_meter_color,
+                        s.growth_meter_color,
+                        r.rank_strongest
+                    FROM processed.currency_stance s
+                    JOIN processed.currency_stance_rankings r
+                        ON r.date = s.date
+                        AND r.currency = s.currency
+                        AND r.window_months = s.window_months
+                    JOIN latest l
+                        ON l.date = s.date
+                        AND l.window_months = s.window_months
+                    ORDER BY s.window_months, r.rank_strongest
+                    """
+                )
+            )
+        except Exception:
+            return {}
+
+    if use_legacy_stance:
+        rows_by_window: dict[int, list[dict[str, Any]]] = {}
+        for row in result.mappings().all():
+            category_meters = [
+                {
+                    "label": "Inflation",
+                    "short_label": "I",
+                    "score": _format_score(row["inflation_score"]),
+                    "percent": _meter_percent(row["inflation_score"]),
+                    "color_class": _meter_color_class(row["inflation_meter_color"]),
+                },
+                {
+                    "label": "Labor",
+                    "short_label": "L",
+                    "score": _format_score(row["labor_score"]),
+                    "percent": _meter_percent(row["labor_score"]),
+                    "color_class": _meter_color_class(row["labor_meter_color"]),
+                },
+                {
+                    "label": "Growth",
+                    "short_label": "G",
+                    "score": _format_score(row["growth_score"]),
+                    "percent": _meter_percent(row["growth_score"]),
+                    "color_class": _meter_color_class(row["growth_meter_color"]),
+                },
+            ]
+            window = int(row["window_months"])
+            rows_by_window.setdefault(window, []).append({
+                "date": row["date"],
+                "country_code": row["country_code"],
+                "currency": row["currency"],
+                "rank": row["rank_strongest"],
+                "score": _format_score(row["overall_stance_score"]),
+                "score_percent": _meter_percent(row["overall_stance_score"]),
+                "label": str(row["overall_stance_label"]).replace("_", " ").title(),
+                "trend": str(row["trend_label"]).title(),
+                "confidence": str(row["confidence"]).title(),
+                "color_class": _meter_color_class(row["meter_color"]),
+                "category_meters": category_meters,
+            })
+        return rows_by_window
 
     rows: list[dict[str, Any]] = []
     for row in result.mappings().all():
@@ -823,6 +907,7 @@ async def _build_fundamental_currency_meter(
     session: AsyncSession,
 ) -> list[dict[str, Any]]:
     currency_list = ", ".join(f"'{currency}'" for currency in CURRENCY_METER_ORDER)
+    use_legacy_stance = False
     try:
         result = await session.execute(
             text(
@@ -843,17 +928,43 @@ async def _build_fundamental_currency_meter(
             )
         )
     except Exception:
-        return []
+        await session.rollback()
+        use_legacy_stance = True
+        try:
+            result = await session.execute(
+                text(
+                    f"""
+                    SELECT
+                        date,
+                        country_code,
+                        currency,
+                        inflation_score,
+                        labor_score,
+                        growth_score,
+                        inflation_direction,
+                        labor_direction,
+                        growth_direction,
+                        overall_stance_score,
+                        overall_stance_label
+                    FROM processed.currency_stance
+                    WHERE window_months = 3
+                        AND currency IN ({currency_list})
+                    ORDER BY currency, date
+                    """
+                )
+            )
+        except Exception:
+            return []
 
     rows_by_currency: dict[str, list[dict[str, Any]]] = {}
     for row in result.mappings().all():
         rows_by_currency.setdefault(str(row["currency"]), []).append(dict(row))
 
     metrics = (
-        ("Inflation", "inflation_score", None),
-        ("Growth", "growth_score", None),
-        ("Labor", "labor_score", None),
-        ("Overall", "cb_strength_score", None),
+        ("Inflation", "inflation_score", "inflation_direction" if use_legacy_stance else None),
+        ("Growth", "growth_score", "growth_direction" if use_legacy_stance else None),
+        ("Labor", "labor_score", "labor_direction" if use_legacy_stance else None),
+        ("Overall", "overall_stance_score" if use_legacy_stance else "cb_strength_score", None),
     )
 
     meter_rows: list[dict[str, Any]] = []
@@ -910,12 +1021,12 @@ async def _build_fundamental_currency_meter(
                 "score_values": score_values,
             })
 
-        overall_score = latest_row["cb_strength_score"]
+        overall_score = latest_row["overall_stance_score" if use_legacy_stance else "cb_strength_score"]
         meter_rows.append({
             "currency": currency,
             "country_code": latest_row["country_code"],
             "latest_date": latest_date,
-            "label": str(latest_row["strength_label"]).replace("_", " ").title(),
+            "label": str(latest_row["overall_stance_label" if use_legacy_stance else "strength_label"]).replace("_", " ").title(),
             "score": _format_score(overall_score),
             "raw_score": overall_score,
             "score_percent": _meter_percent(overall_score),

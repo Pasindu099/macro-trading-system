@@ -15,17 +15,17 @@
         <aside class="black-sidebar black-sidebar--global" aria-label="Application navigation">
             <a class="black-sidebar__logo" href="/" aria-label="Macro Dashboard home">Macro Dashboard</a>
             <nav class="black-sidebar__nav">
-                <a class="black-nav-item" href="/">
+                <a class="black-nav-item {% if request is defined and request.url.path == '/' %}is-active{% endif %}" href="/">
                     <span class="black-nav-icon" aria-hidden="true">D</span>
                     <span>Dashboard</span>
                 </a>
                 <a class="black-nav-item" href="/#fx-strength">
                     <span class="black-nav-icon" aria-hidden="true">FX</span>
-                    <span>Macro Signals</span>
+                    <span>FX Strength</span>
                 </a>
-                <a class="black-nav-item {% if request is defined and request.url.path.startswith('/rates') %}is-active{% endif %}" href="/rates">
-                    <span class="black-nav-icon" aria-hidden="true">RT</span>
-                    <span>Rates</span>
+                <a class="black-nav-item" href="/#macro-prints">
+                    <span class="black-nav-icon" aria-hidden="true">MP</span>
+                    <span>Macro Prints</span>
                 </a>
                 <a class="black-nav-item {% if request is defined and request.url.path.startswith('/news-feed') %}is-active{% endif %}" href="/news-feed">
                     <span class="black-nav-icon" aria-hidden="true">NW</span>
@@ -35,21 +35,30 @@
                     <span class="black-nav-icon" aria-hidden="true">CT</span>
                     <span>COT</span>
                 </a>
+                <a class="black-nav-item" href="/#cb-terminal">
+                    <span class="black-nav-icon" aria-hidden="true">CB</span>
+                    <span>CB Terminal</span>
+                </a>
                 <a class="black-nav-item {% if request is defined and request.url.path.startswith('/trade-planner') %}is-active{% endif %}" href="/trade-planner">
                     <span class="black-nav-icon" aria-hidden="true">TP</span>
-                    <span>Planner</span>
+                    <span>Trade Planner</span>
+                </a>
+                <a class="black-nav-item {% if request is defined and request.url.path.startswith('/rates') %}is-active{% endif %}" href="/rates">
+                    <span class="black-nav-icon" aria-hidden="true">RT</span>
+                    <span>Rates</span>
                 </a>
                 <a class="black-nav-item" href="/calendar">
                     <span class="black-nav-icon" aria-hidden="true">CA</span>
                     <span>Calendar</span>
                 </a>
+                <span class="black-nav-divider"></span>
                 <a class="black-nav-item {% if request is defined and (request.url.path.startswith('/countries') or request.url.path.startswith('/country/')) %}is-active{% endif %}" href="/countries">
                     <span class="black-nav-icon" aria-hidden="true">G10</span>
                     <span>Countries</span>
                 </a>
                 <a class="black-nav-item {% if request is defined and request.url.path.startswith('/bank-research') %}is-active{% endif %}" href="/bank-research">
                     <span class="black-nav-icon" aria-hidden="true">BR</span>
-                    <span>Research</span>
+                    <span>Bank Research</span>
                 </a>
                 <a class="black-nav-item" href="/analytics">
                     <span class="black-nav-icon" aria-hidden="true">AN</span>

@@ -33,6 +33,22 @@
                 <span class="black-nav-icon" aria-hidden="true">MP</span>
                 <span>Macro Prints</span>
             </a>
+            <a class="black-nav-item" href="/news-feed">
+                <span class="black-nav-icon" aria-hidden="true">NW</span>
+                <span>News Feed</span>
+            </a>
+            <a class="black-nav-item" href="/cot">
+                <span class="black-nav-icon" aria-hidden="true">CT</span>
+                <span>COT</span>
+            </a>
+            <a class="black-nav-item" href="#cb-terminal">
+                <span class="black-nav-icon" aria-hidden="true">CB</span>
+                <span>CB Terminal</span>
+            </a>
+            <a class="black-nav-item" href="/trade-planner">
+                <span class="black-nav-icon" aria-hidden="true">TP</span>
+                <span>Trade Planner</span>
+            </a>
             <a class="black-nav-item" href="/rates">
                 <span class="black-nav-icon" aria-hidden="true">RT</span>
                 <span>Rates</span>
@@ -93,6 +109,38 @@
         </header>
 
         <div class="black-content">
+            <section id="live-news-feed" class="black-panel black-panel--news-feed" data-news-feed-section>
+                <div class="news-feed-layout">
+                    <article class="news-feed-column">
+                        <header class="black-panel__head">
+                            <span>Live News Feed</span>
+                            <em data-news-refresh-state>investinglive.com</em>
+                        </header>
+                        <div class="news-filter" data-news-filter>
+                            <button class="is-active" type="button" data-category="All">All</button>
+                            <button type="button" data-category="Macro">Macro</button>
+                            <button type="button" data-category="FX">FX</button>
+                            <button type="button" data-category="Equities">Equities</button>
+                            <button type="button" data-category="Central banks">Central banks</button>
+                            <button type="button" data-category="Geopolitical">Geopolitical</button>
+                        </div>
+                        <div class="news-list-scroll" data-news-list>
+                            <div class="black-empty">Loading investinglive.com feed...</div>
+                        </div>
+                    </article>
+
+                    <aside class="sentiment-panel" data-sentiment-panel>
+                        <header class="black-panel__head">
+                            <span>AI Sentiment</span>
+                            <em>OpenAI</em>
+                        </header>
+                        <div class="sentiment-panel__body" data-sentiment-body>
+                            <div class="black-empty">Select a headline to analyze market impact.</div>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
             <section class="black-kpi-row" aria-label="Dashboard summary">
                 <article class="black-kpi-card">
                     <span>Top Currency</span>
@@ -119,6 +167,132 @@
                     <strong class="{{ focus_growth.color_class if focus_growth else '' }}">{{ focus_growth.score if focus_growth else "N/A" }}</strong>
                     <small>{{ focus_meter.currency if focus_meter else "G10" }} growth score</small>
                 </article>
+            </section>
+
+            <section id="cot-positioning" class="black-panel black-panel--cot" data-cot-section>
+                <header class="black-panel__head">
+                    <span>Commitment of traders</span>
+                    <em>CFTC legacy futures positioning</em>
+                </header>
+
+                <div class="cot-pair-selector" data-cot-pairs>
+                    <button class="is-active" type="button" data-pair="EURUSD">EUR/USD</button>
+                    <button type="button" data-pair="GBPUSD">GBP/USD</button>
+                    <button type="button" data-pair="USDJPY">USD/JPY</button>
+                    <button type="button" data-pair="AUDUSD">AUD/USD</button>
+                    <button type="button" data-pair="USDCAD">USD/CAD</button>
+                    <button type="button" data-pair="GOLD">Gold</button>
+                </div>
+
+                <div class="cot-error" data-cot-error hidden>
+                    <span>Unable to load CFTC positioning.</span>
+                    <button type="button" data-cot-retry>Retry</button>
+                </div>
+
+                <div class="cot-metric-grid" data-cot-metrics>
+                    <article class="black-kpi-card"><span>Non-commercial longs</span><strong>Loading</strong><small>Waiting for CFTC</small></article>
+                    <article class="black-kpi-card"><span>Non-commercial shorts</span><strong>Loading</strong><small>Waiting for CFTC</small></article>
+                    <article class="black-kpi-card"><span>Net position</span><strong>Loading</strong><small>Waiting for CFTC</small></article>
+                    <article class="black-kpi-card"><span>Sentiment index</span><strong>Loading</strong><small>Waiting for CFTC</small></article>
+                </div>
+
+                <div class="cot-chart-grid">
+                    <article class="cot-card cot-card--history">
+                        <header>
+                            <span>Net positioning history</span>
+                            <div class="cot-legend">
+                                <i class="cot-legend-long"></i><em>Longs</em>
+                                <i class="cot-legend-short"></i><em>Shorts</em>
+                                <b></b><em>Net</em>
+                            </div>
+                        </header>
+                        <div class="cot-chart-wrap"><canvas data-cot-history-chart></canvas></div>
+                    </article>
+
+                    <article class="cot-card cot-card--gauge">
+                        <header>
+                            <span>Sentiment gauge</span>
+                            <em data-cot-active-label>EUR/USD</em>
+                        </header>
+                        <div class="cot-gauge-wrap">
+                            <canvas width="260" height="150" data-cot-gauge></canvas>
+                            <strong data-cot-gauge-value>--%</strong>
+                            <span data-cot-gauge-label>Loading positioning</span>
+                            <small data-cot-gauge-subtitle>Waiting for CFTC data.</small>
+                        </div>
+                        <div class="cot-bias-strip" data-cot-bias-strip>
+                            <div class="black-empty">Loading all-pairs bias...</div>
+                        </div>
+                    </article>
+                </div>
+
+                <article class="cot-card cot-card--breakdown">
+                    <header>
+                        <span>Positioning breakdown — current vs prior week</span>
+                        <div class="cot-legend">
+                            <i class="cot-legend-current"></i><em>Current</em>
+                            <i class="cot-legend-prior"></i><em>Prior</em>
+                        </div>
+                    </header>
+                    <div class="cot-chart-wrap cot-chart-wrap--breakdown"><canvas data-cot-breakdown-chart></canvas></div>
+                </article>
+            </section>
+
+            <section id="cb-terminal" class="black-panel black-panel--cb-terminal" data-cb-terminal>
+                <header class="black-panel__head">
+                    <span>CB sentiment terminal</span>
+                    <em>hawk / dove dashboard</em>
+                </header>
+                <div class="terminal-tabs" data-cb-tabs></div>
+                <div class="cb-spectrum">
+                    <span>Dovish</span><b><i data-cb-spectrum-fill></i></b><span>Hawkish</span>
+                </div>
+                <div class="cb-terminal-grid">
+                    <article class="cot-card"><header><span>Hawk / Dove Sentiment</span><em data-cb-active-label>All banks</em></header><div data-cb-sentiment></div></article>
+                    <article class="cot-card"><header><span>Latest policy headlines</span><em data-cb-news-label>All</em></header><div data-cb-news></div></article>
+                    <article class="cot-card"><header><span>Rate decisions timeline</span><em>Past + upcoming</em></header><div data-cb-timeline></div></article>
+                    <article class="cot-card"><header><span>FX impact matrix</span><em data-cb-fx-label>All pairs</em></header><div data-cb-fx></div></article>
+                </div>
+                <article class="cot-card">
+                    <header><span>Historical sentiment trend</span><em>relative hawkishness</em></header>
+                    <div class="cot-chart-wrap"><canvas data-cb-trend-chart></canvas></div>
+                </article>
+            </section>
+
+            <section id="trade-planner" class="black-panel black-panel--trade-planner" data-trade-planner>
+                <header class="black-panel__head">
+                    <span>CFD swing trade planner</span>
+                    <em data-planner-clock>--:-- UTC</em>
+                </header>
+                <div class="terminal-tabs" data-planner-tabs>
+                    <button class="is-active" type="button" data-planner-tab="checklist">Checklist</button>
+                    <button type="button" data-planner-tab="setup">Setup builder</button>
+                    <button type="button" data-planner-tab="journal">Journal</button>
+                </div>
+                <div class="planner-scorebar">
+                    <div><span>Score</span><strong data-planner-score>0/9</strong></div>
+                    <div><span>Readiness</span><strong data-planner-verdict>Not ready</strong><b><i data-planner-progress></i></b></div>
+                    <div><span>Differentials</span><strong data-planner-diff>0/7</strong></div>
+                </div>
+                <div class="planner-panel is-active" data-planner-panel="checklist">
+                    <div class="planner-checklist" data-planner-checklist></div>
+                    <textarea class="planner-notes" data-planner-notes placeholder="Planner notes"></textarea>
+                </div>
+                <div class="planner-panel" data-planner-panel="setup">
+                    <div class="planner-setup-grid">
+                        <label>Pair<input data-setup-field="pair" placeholder="Select from rates/COT view"></label>
+                        <label>Direction<select data-setup-field="direction"><option>Long</option><option>Short</option></select></label>
+                        <label>Entry<input type="number" step="0.0001" data-setup-field="entry"></label>
+                        <label>Stop<input type="number" step="0.0001" data-setup-field="stop"></label>
+                        <label>Target<input type="number" step="0.0001" data-setup-field="target"></label>
+                        <label>Risk %<input type="number" step="0.1" data-setup-field="risk" value="1"></label>
+                    </div>
+                    <div class="planner-rr" data-planner-rr>R:R --</div>
+                    <button class="terminal-action" type="button" data-save-plan>Save setup</button>
+                </div>
+                <div class="planner-panel" data-planner-panel="journal">
+                    <div class="journal-list" data-planner-journal><div class="black-empty">No saved setups yet.</div></div>
+                </div>
             </section>
 
             <section class="black-dashboard-grid">
@@ -255,7 +429,7 @@
             </section>
 
             <section class="black-lower-grid">
-                <article id="currency-strength" class="black-panel black-panel--meter">
+                <article id="currency-strength" class="black-panel black-panel--meter black-panel--full">
                     <header class="black-panel__head">
                         <span>Fundamental Meter</span>
                         <div class="black-panel-tools">
@@ -295,23 +469,6 @@
                     </div>
                 </article>
 
-                <article class="black-panel black-panel--headlines">
-                    <header class="black-panel__head">
-                        <span>Research & Headlines</span>
-                        <a href="/bank-research">Research</a>
-                    </header>
-                    <div class="black-headline-list">
-                        {% for item in news_items[:5] %}
-                            <a class="black-headline" href="{{ item.link }}" target="_blank" rel="noreferrer">
-                                <span>{{ item.source }}</span>
-                                <strong>{{ item.title }}</strong>
-                                <small>{{ item.published_at or "Recent" }}</small>
-                            </a>
-                        {% else %}
-                            <div class="black-empty">No market headlines are available.</div>
-                        {% endfor %}
-                    </div>
-                </article>
             </section>
 
             <section id="countries" class="black-panel black-panel--countries">
@@ -372,6 +529,106 @@
 </main>
 
 <script>
+    window.__macroDashboardData = {
+        currencyMeter: [
+            {% for row in currency_meter %}
+                {
+                    currency: {{ row.currency|tojson }},
+                    countryCode: {{ row.country_code|tojson }},
+                    latestDate: {{ row.latest_date.isoformat()|tojson if row.latest_date else "null" }},
+                    label: {{ row.label|tojson }},
+                    score: {{ row.score|tojson }},
+                    rawScore: {{ row.raw_score if row.raw_score is not none else "null" }},
+                    scorePercent: {{ row.score_percent if row.score_percent is not none else 50 }},
+                    metrics: [
+                        {% for metric in row.metrics %}
+                            {
+                                label: {{ metric.label|tojson }},
+                                slug: {{ metric.slug|tojson }},
+                                values: [
+                                    {% for value in metric.score_values %}
+                                        {
+                                            period: {{ value.period|tojson }},
+                                            date: {{ value.date.isoformat()|tojson if value.date else "null" }},
+                                            score: {{ value.score|tojson }},
+                                            rawScore: {{ value.raw_score if value.raw_score is not none else "null" }},
+                                            barPercent: {{ value.bar_percent if value.bar_percent is not none else 50 }},
+                                            colorClass: {{ value.color_class|tojson }}
+                                        }{% if not loop.last %},{% endif %}
+                                    {% endfor %}
+                                ]
+                            }{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ]
+                }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        surprises: [
+            {% for s in surprises %}
+                {
+                    countryCode: {{ s.country_code|tojson }},
+                    currencyCode: {{ s.currency_code|tojson }},
+                    displayName: {{ s.display_name|tojson }},
+                    releasedAt: {{ s.released_at.isoformat()|tojson if s.released_at else "null" }},
+                    actual: {{ s.actual if s.actual is defined and s.actual is not none else "null" }},
+                    estimate: {{ s.estimate if s.estimate is defined and s.estimate is not none else "null" }},
+                    surprise: {{ s.surprise if s.surprise is defined and s.surprise is not none else "null" }},
+                    unit: {{ s.unit|default("", true)|tojson }}
+                }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        yieldDifferentials: {
+            baseCurrency: {{ yield_differentials.base_currency|tojson if yield_differentials.base_currency else "null" }},
+            rows: [
+                {% for row in yield_differentials.rows %}
+                    {
+                        currency: {{ row.currency|tojson }},
+                        countryCode: {{ row.country_code|tojson }},
+                        label: {{ row.label|tojson }},
+                        symbol: {{ row.symbol|tojson }},
+                        yieldDisplay: {{ row.yield_display|tojson }},
+                        spreadBp: {{ row.spread_vs_base_bp if row.spread_vs_base_bp is defined and row.spread_vs_base_bp is not none else "null" }},
+                        spreadDisplay: {{ row.spread_display|tojson }},
+                        change5dBp: {{ row.change_5d_bp if row.change_5d_bp is defined and row.change_5d_bp is not none else "null" }},
+                        change1mBp: {{ row.change_1m_bp if row.change_1m_bp is defined and row.change_1m_bp is not none else "null" }}
+                    }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            pairs: [
+                {% for pair in yield_differentials.pairs %}
+                    {
+                        label: {{ pair.label|tojson }},
+                        leftCurrency: {{ pair.left_currency|tojson }},
+                        rightCurrency: {{ pair.right_currency|tojson }},
+                        spreadBp: {{ pair.spread_bp if pair.spread_bp is defined and pair.spread_bp is not none else "null" }},
+                        spreadDisplay: {{ pair.spread_display|tojson }}
+                    }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ]
+        }
+    };
+</script>
+<script src="{{ url_for('static', path='js/news_feed.js') }}?v=20260506c" defer></script>
+<script src="{{ url_for('static', path='js/cot.js') }}?v=20260506c" defer></script>
+<script src="{{ url_for('static', path='js/cb_terminal.js') }}?v=20260506c" defer></script>
+<script src="{{ url_for('static', path='js/trade_planner.js') }}?v=20260506c" defer></script>
+<script>
+    window.__macroDebugErrors = [];
+    window.addEventListener("error", (event) => {
+        window.__macroDebugErrors.push({
+            message: event.message,
+            source: event.filename,
+            line: event.lineno,
+            column: event.colno,
+        });
+    });
+    window.addEventListener("unhandledrejection", (event) => {
+        window.__macroDebugErrors.push({
+            message: String(event.reason?.message || event.reason || "Unhandled promise rejection"),
+            source: "promise",
+        });
+    });
+
     (() => {
         const sidebar = document.querySelector("[data-sidebar]");
         document.querySelector("[data-sidebar-toggle]")?.addEventListener("click", () => {
@@ -494,6 +751,33 @@
             spreadSel?.addEventListener("change", drawSpreads);
             drawSpreads();
             window.addEventListener("resize", () => { yc?.resize(); sc?.resize(); bc?.resize(); });
+        });
+    })();
+</script>
+<script>
+    (() => {
+        const loadComponent = (name, path) => new Promise((resolve) => {
+            const script = document.createElement("script");
+            script.src = `${path}?v=20260506c&retry=${Date.now()}`;
+            script.onload = resolve;
+            script.onerror = resolve;
+            document.body.appendChild(script);
+        });
+
+        const checkAndRetry = async () => {
+            if (document.querySelector("[data-cot-section]") && document.querySelectorAll("[data-cot-tab]").length === 0) {
+                await loadComponent("cot", "{{ url_for('static', path='js/cot.js') }}");
+            }
+            if (document.querySelector("[data-cb-terminal]") && document.querySelectorAll("[data-bank]").length === 0) {
+                await loadComponent("cbTerminal", "{{ url_for('static', path='js/cb_terminal.js') }}");
+            }
+            if (document.querySelector("[data-trade-planner]") && document.querySelectorAll(".planner-row").length === 0) {
+                await loadComponent("tradePlanner", "{{ url_for('static', path='js/trade_planner.js') }}");
+            }
+        };
+
+        window.addEventListener("load", () => {
+            window.setTimeout(checkAndRetry, 1200);
         });
     })();
 </script>

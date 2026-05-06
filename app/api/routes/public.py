@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
+import json
 import re
+from typing import Any
+from xml.etree import ElementTree
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 from sqlalchemy import and_, asc, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,6 +33,8 @@ from app.api.schemas import (
 )
 from app.db.models import Country, Indicator, IndicatorRelease, IngestionRun
 from app.db.session import get_session
+from app.processing.cot import COT_PAIRS, get_cot_payload, normalize_cot_pair
+from app.settings import get_settings
 
 router = APIRouter(prefix="/api", tags=["public"])
 RANGE_LOOKBACK_DAYS = {
@@ -46,6 +53,155 @@ CALENDAR_CATEGORIES = (
     "Housing",
     "Other",
 )
+OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
+NEWS_SENTIMENT_MODEL = "gpt-4.1"
+INVESTINGLIVE_RSS_URL = "https://investinglive.com/feed/"
+
+
+class NewsSentimentRequest(BaseModel):
+    headline: str = Field(..., min_length=1, max_length=500)
+    description: str = Field(default="", max_length=6000)
+
+
+def _rss_node_text(node: ElementTree.Element, name: str) -> str:
+    child = node.find(name)
+    if child is None or child.text is None:
+        return ""
+    return child.text.strip()
+
+
+def _strip_html(value: str) -> str:
+    text = re.sub(r"<[^>]+>", " ", value or "")
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _news_category(categories: list[str], title: str, description: str) -> str:
+    haystack = " ".join([*categories, title, description]).lower()
+    if re.search(
+        r"war|sanction|conflict|military|nato|\bun\b|treaty|tariff|trade war|election"
+        r"|government|ministry|president|prime minister|diplomacy|geopolit|invasion"
+        r"|coup|protest|border|embargo",
+        haystack,
+    ):
+        return "Geopolitical"
+    if re.search(
+        r"\bfed\b|ecb|boj|boe|rba|rbnz|snb|central bank|rate decision|interest rate"
+        r"|monetary policy|powell|lagarde|inflation|taper|\bqe\b|\bqt\b",
+        haystack,
+    ):
+        return "Central banks"
+    if re.search(
+        r"\beur\b|\bgbp\b|\bjpy\b|\baud\b|\bcad\b|\bchf\b|\bnzd\b|forex|currency"
+        r"|\busd\b|dollar|pound|yen|euro",
+        haystack,
+    ):
+        return "FX"
+    if re.search(
+        r"stock|shares|earnings|s&p|nasdaq|dow|ftse|dax|\bipo\b|dividend|equity|market cap",
+        haystack,
+    ):
+        return "Equities"
+    return "Macro"
+
+
+def _parse_rss_articles(xml_body: str, *, limit: int = 40) -> list[dict[str, Any]]:
+    root = ElementTree.fromstring(xml_body)
+    articles: list[dict[str, Any]] = []
+
+    for item in root.findall(".//item"):
+        title = _rss_node_text(item, "title") or "Untitled headline"
+        link = _rss_node_text(item, "link")
+        if not link:
+            continue
+
+        raw_description = _rss_node_text(item, "description")
+        description = _strip_html(raw_description)
+        categories = [
+            (category.text or "").strip()
+            for category in item.findall("category")
+            if (category.text or "").strip()
+        ]
+        articles.append({
+            "title": title,
+            "link": link,
+            "pubDate": _rss_node_text(item, "pubDate"),
+            "description": description,
+            "category": _news_category(categories, title, description),
+            "source": "investinglive.com",
+        })
+        if len(articles) >= limit:
+            break
+
+    return articles
+
+
+def _extract_response_text(payload: dict[str, Any]) -> str:
+    output_text = payload.get("output_text")
+    if isinstance(output_text, str) and output_text.strip():
+        return output_text.strip()
+
+    chunks: list[str] = []
+    for item in payload.get("output", []):
+        if not isinstance(item, dict):
+            continue
+        for content in item.get("content", []):
+            if not isinstance(content, dict):
+                continue
+            text = content.get("text")
+            if isinstance(text, str):
+                chunks.append(text)
+    return "".join(chunks).strip()
+
+
+def _normalize_sentiment_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    sentiment = str(payload.get("sentiment", "neutral")).lower()
+    if sentiment not in {"bullish", "bearish", "neutral"}:
+        sentiment = "neutral"
+
+    def pct(key: str) -> int:
+        value = payload.get(key, 0)
+        try:
+            return max(0, min(100, int(round(float(value)))))
+        except (TypeError, ValueError):
+            return 0
+
+    assets = []
+    for asset in payload.get("assets", []):
+        if not isinstance(asset, dict):
+            continue
+        direction = str(asset.get("direction", "mixed")).lower()
+        if direction not in {"up", "down", "mixed"}:
+            direction = "mixed"
+        assets.append({
+            "symbol": str(asset.get("symbol", "Market"))[:60],
+            "impact": pct_from(asset.get("impact")),
+            "direction": direction,
+            "label": str(asset.get("label", "~ Mixed"))[:80],
+        })
+
+    themes = [
+        str(theme)[:50]
+        for theme in payload.get("themes", [])
+        if isinstance(theme, str) and theme.strip()
+    ][:8]
+
+    return {
+        "sentiment": sentiment,
+        "confidence": pct("confidence"),
+        "bearish_pct": pct("bearish_pct"),
+        "neutral_pct": pct("neutral_pct"),
+        "bullish_pct": pct("bullish_pct"),
+        "summary": str(payload.get("summary", ""))[:1000],
+        "assets": assets[:8],
+        "themes": themes,
+    }
+
+
+def pct_from(value: Any) -> int:
+    try:
+        return max(0, min(100, int(round(float(value)))))
+    except (TypeError, ValueError):
+        return 0
 
 
 def _now() -> datetime:
@@ -763,6 +919,120 @@ async def get_economic_calendar(
         events=events,
     )
     return Envelope(data=payload, meta=await _meta(session))
+
+
+@router.get("/cot")
+async def get_cot_positioning(
+    pair: str = Query(default="EURUSD", min_length=3, max_length=12),
+) -> dict[str, Any]:
+    """Return current and trailing CFTC COT positioning for a supported market."""
+    pair_key = normalize_cot_pair(pair)
+    if pair_key not in COT_PAIRS:
+        raise HTTPException(status_code=404, detail="Unsupported COT pair.")
+    try:
+        return await get_cot_payload(pair_key)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=502, detail="CFTC COT download failed.") from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail="CFTC COT data is unavailable.") from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.get("/news/feed")
+async def get_news_feed(
+    limit: int = Query(default=40, ge=1, le=80),
+) -> dict[str, Any]:
+    """Return normalized InvestingLive RSS headlines for the dashboard feed."""
+    try:
+        async with httpx.AsyncClient(
+            timeout=get_settings().http_timeout_seconds,
+            follow_redirects=True,
+        ) as client:
+            response = await client.get(
+                INVESTINGLIVE_RSS_URL,
+                headers={"User-Agent": "MacroDashboard/0.1 RSS reader"},
+            )
+            response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=502, detail="InvestingLive feed returned an error.") from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail="InvestingLive feed is unavailable.") from exc
+
+    try:
+        articles = _parse_rss_articles(response.text, limit=limit)
+    except ElementTree.ParseError as exc:
+        raise HTTPException(status_code=502, detail="InvestingLive feed returned invalid RSS.") from exc
+
+    return {
+        "source": "investinglive.com",
+        "articles": articles,
+        "fetched_at": _now().isoformat(),
+    }
+
+
+@router.post("/news/sentiment")
+async def analyze_news_sentiment(
+    request: NewsSentimentRequest,
+) -> dict[str, Any]:
+    """Analyze a selected headline server-side so the OpenAI key never reaches the browser."""
+    settings = get_settings()
+    if not settings.openai_api_key:
+        raise HTTPException(status_code=503, detail="OPENAI_API_KEY is not configured.")
+
+    user_input = (
+        f"Headline: {request.headline.strip()}\n\n"
+        f"Body: {request.description.strip()}"
+    )
+    try:
+        async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as client:
+            response = await client.post(
+                OPENAI_RESPONSES_URL,
+                headers={
+                    "Authorization": f"Bearer {settings.openai_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": NEWS_SENTIMENT_MODEL,
+                    "instructions": (
+                        "You are a financial market analyst. Analyse the news headline and body "
+                        "provided. Return ONLY valid JSON, no markdown fences, no explanation, "
+                        "no preamble. Return this exact JSON shape: "
+                        '{"sentiment":"bullish"|"bearish"|"neutral","confidence":<integer 0-100>,'
+                        '"bearish_pct":<integer 0-100>,"neutral_pct":<integer 0-100>,'
+                        '"bullish_pct":<integer 0-100>,'
+                        '"summary":"<2-3 sentence plain-English trader summary>",'
+                        '"assets":[{"symbol":"<e.g. DXY, EUR/USD, Gold, S&P 500>",'
+                        '"impact":<integer 0-100>,"direction":"up"|"down"|"mixed",'
+                        '"label":"<e.g. \\u2191 Bullish, \\u2193 Bearish, ~ Mixed>"}],'
+                        '"themes":["<theme1>","<theme2>"]} '
+                        "bearish_pct + neutral_pct + bullish_pct must sum to 100."
+                    ),
+                    "input": user_input,
+                    "max_output_tokens": 1000,
+                },
+            )
+            response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        detail = "OpenAI sentiment analysis failed."
+        try:
+            error_payload = exc.response.json()
+            detail = error_payload.get("error", {}).get("message", detail)
+        except ValueError:
+            pass
+        raise HTTPException(status_code=502, detail=detail) from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail="OpenAI sentiment analysis is unavailable.") from exc
+
+    text = _extract_response_text(response.json())
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=502, detail="OpenAI returned invalid sentiment JSON.") from exc
+
+    if not isinstance(parsed, dict):
+        raise HTTPException(status_code=502, detail="OpenAI returned an invalid sentiment payload.")
+    return _normalize_sentiment_payload(parsed)
 
 
 @router.get("/countries/{country_code}", response_model=Envelope[CountryDetailPayload])

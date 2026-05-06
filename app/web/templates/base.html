@@ -4,8 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ page_title }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}?v=20260504s">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}?v=20260506a">
     <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js" defer></script>
     <script src="{{ url_for('static', path='js/charts.js') }}?v=20260424f" defer></script>
 </head>
@@ -25,6 +26,18 @@
                 <a class="black-nav-item {% if request is defined and request.url.path.startswith('/rates') %}is-active{% endif %}" href="/rates">
                     <span class="black-nav-icon" aria-hidden="true">RT</span>
                     <span>Rates</span>
+                </a>
+                <a class="black-nav-item {% if request is defined and request.url.path.startswith('/news-feed') %}is-active{% endif %}" href="/news-feed">
+                    <span class="black-nav-icon" aria-hidden="true">NW</span>
+                    <span>News Feed</span>
+                </a>
+                <a class="black-nav-item {% if request is defined and request.url.path.startswith('/cot') %}is-active{% endif %}" href="/cot">
+                    <span class="black-nav-icon" aria-hidden="true">CT</span>
+                    <span>COT</span>
+                </a>
+                <a class="black-nav-item {% if request is defined and request.url.path.startswith('/trade-planner') %}is-active{% endif %}" href="/trade-planner">
+                    <span class="black-nav-icon" aria-hidden="true">TP</span>
+                    <span>Planner</span>
                 </a>
                 <a class="black-nav-item" href="/calendar">
                     <span class="black-nav-icon" aria-hidden="true">CA</span>

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block body %}
+<main class="shell dashboard-tool-shell">
+    <header class="tool-hero">
+        <div>
+            <a href="/">Dashboard</a>
+            <span>/</span>
+            <strong>COT</strong>
+        </div>
+        <section>
+            <div>
+                <h1>COT Positioning</h1>
+                <p>CFTC futures positioning across major FX contracts, split by speculative, commercial, and non-reportable trader groups.</p>
+            </div>
+            <a href="/rates">Rates</a>
+        </section>
+    </header>
+
+    <section id="cot-positioning" class="black-panel black-panel--cot" data-cot-section>
+        <header class="black-panel__head">
+            <span>COT live dashboard</span>
+            <em>CFTC legacy futures positioning</em>
+        </header>
+        <div class="black-empty">Loading CFTC positioning...</div>
+    </section>
+</main>
+
+<script src="{{ url_for('static', path='js/cot.js') }}?v=20260506d" defer></script>
+{% endblock %}

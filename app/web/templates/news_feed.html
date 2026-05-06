@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block body %}
+<main class="shell dashboard-tool-shell">
+    <header class="tool-hero">
+        <div>
+            <a href="/">Dashboard</a>
+            <span>/</span>
+            <strong>News Feed</strong>
+        </div>
+        <section>
+            <div>
+                <h1>Live News Feed</h1>
+                <p>InvestingLive macro headlines with category filters and server-side AI sentiment analysis for selected stories.</p>
+            </div>
+            <a href="/calendar">Calendar</a>
+        </section>
+    </header>
+
+    <section id="live-news-feed" class="black-panel black-panel--news-feed" data-news-feed-section>
+        <div class="news-feed-layout">
+            <article class="news-feed-column">
+                <header class="black-panel__head">
+                    <span>Live News Feed</span>
+                    <em data-news-refresh-state>investinglive.com</em>
+                </header>
+                <div class="news-filter" data-news-filter>
+                    <button class="is-active" type="button" data-category="All">All</button>
+                    <button type="button" data-category="Macro">Macro</button>
+                    <button type="button" data-category="FX">FX</button>
+                    <button type="button" data-category="Equities">Equities</button>
+                    <button type="button" data-category="Central banks">Central banks</button>
+                    <button type="button" data-category="Geopolitical">Geopolitical</button>
+                </div>
+                <div class="news-list-scroll" data-news-list>
+                    <div class="black-empty">Loading investinglive.com feed...</div>
+                </div>
+            </article>
+
+            <aside class="sentiment-panel" data-sentiment-panel>
+                <header class="black-panel__head">
+                    <span>AI Sentiment</span>
+                    <em>OpenAI</em>
+                </header>
+                <div class="sentiment-panel__body" data-sentiment-body>
+                    <div class="black-empty">Select a headline to analyze market impact.</div>
+                </div>
+            </aside>
+        </div>
+    </section>
+</main>
+
+<script src="{{ url_for('static', path='js/news_feed.js') }}?v=20260506d" defer></script>
+{% endblock %}

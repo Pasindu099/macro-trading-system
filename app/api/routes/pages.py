@@ -2008,6 +2008,52 @@ async def rates_page(request: Request) -> HTMLResponse:
     )
 
 
+@router.get("/cot", response_class=HTMLResponse)
+async def cot_page(request: Request) -> HTMLResponse:
+    """Render the CFTC COT visualization workspace."""
+    return templates.TemplateResponse(
+        request,
+        "cot.html",
+        {
+            "request": request,
+            "page_title": "COT Positioning | Macro Dashboard",
+        },
+    )
+
+
+@router.get("/news-feed", response_class=HTMLResponse)
+async def news_feed_page(request: Request) -> HTMLResponse:
+    """Render the live macro news feed workspace."""
+    return templates.TemplateResponse(
+        request,
+        "news_feed.html",
+        {
+            "request": request,
+            "page_title": "Live News Feed | Macro Dashboard",
+        },
+    )
+
+
+@router.get("/trade-planner", response_class=HTMLResponse)
+async def trade_planner_page(request: Request) -> HTMLResponse:
+    """Render the swing-trade planning workflow."""
+    yield_differentials = await _build_yield_differentials()
+    planner_pairs = [
+        pair.get("label")
+        for pair in yield_differentials.get("pairs", [])
+        if pair.get("label")
+    ]
+    return templates.TemplateResponse(
+        request,
+        "trade_planner.html",
+        {
+            "request": request,
+            "page_title": "Trade Planner | Macro Dashboard",
+            "planner_pairs": planner_pairs,
+        },
+    )
+
+
 @router.get("/countries", response_class=HTMLResponse)
 async def countries_page(
     request: Request,

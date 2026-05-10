@@ -20,6 +20,7 @@ from sqlalchemy import desc, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.routes.public import (
+    fetch_investinglive_articles,
     get_country,
     get_country_detail_payload,
     get_indicator_by_country_and_name,
@@ -27,6 +28,13 @@ from app.api.routes.public import (
     list_country_summaries,
 )
 from app.db.models import Country, Indicator, IndicatorRelease, IngestionRun
+from app.services.meeting_calendar import SUPPORTED_BANKS, normalize_bank, get_upcoming_meetings
+from app.services.rate_probability import (
+    _bank_config,
+    compute_meeting_probabilities,
+    get_next_meeting_summary,
+    get_twelve_month_outlook,
+)
 from app.db.session import get_session
 from app.ingestion.eodhd_client import EODHDAuthError, EODHDClient, EODHDError
 from app.processing.bank_research import (
@@ -1845,9 +1853,12 @@ def _normalize_news_item(item: dict[str, Any]) -> dict[str, Any] | None:
     if len(summary_text) > 180:
         summary_text = summary_text[:177].rstrip() + "..."
 
+    category = str(item.get("category") or "Macro").strip()
     tags = item.get("tags") or item.get("symbols") or []
     if isinstance(tags, str):
         tags = [part.strip() for part in tags.split(",") if part.strip()]
+    if not tags and category:
+        tags = [category]
 
     return {
         "title": str(title).strip(),
@@ -1855,6 +1866,7 @@ def _normalize_news_item(item: dict[str, Any]) -> dict[str, Any] | None:
         "source": str(source).strip(),
         "published_at": published_at,
         "summary": summary_text,
+        "category": category,
         "tags": list(tags)[:3] if isinstance(tags, list) else [],
     }
 
@@ -1956,14 +1968,13 @@ async def landing_page(
     news_items: list[dict[str, Any]] = []
 
     try:
-        async with EODHDClient() as client:
-            raw_news = await client.fetch_financial_news(topic="economy", limit=6)
+        raw_news = await fetch_investinglive_articles(limit=12)
         news_items = [
             normalized
             for item in raw_news
             if (normalized := _normalize_news_item(item)) is not None
-        ][:6]
-    except (EODHDError, ValueError):
+        ][:12]
+    except (HTTPException, ValueError):
         news_items = []
 
     country_cards = [
@@ -2002,7 +2013,7 @@ async def rates_page(request: Request) -> HTMLResponse:
         "rates.html",
         {
             "request": request,
-            "page_title": "Rates | Macro Dashboard",
+            "page_title": "Yields | Macro Dashboard",
             **context,
         },
     )
@@ -2034,6 +2045,28 @@ async def news_feed_page(request: Request) -> HTMLResponse:
     )
 
 
+@router.get("/cb-news", response_class=HTMLResponse)
+async def cb_news_page(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+) -> HTMLResponse:
+    """Render the CB news terminal with live feeds, scoring, and AI analysis."""
+    currency_meter = await _build_fundamental_currency_meter(session)
+    surprises = await list_biggest_surprises(session, days=14, limit=12)
+    yield_differentials = await _build_yield_differentials()
+    return templates.TemplateResponse(
+        request,
+        "cb_news.html",
+        {
+            "request": request,
+            "page_title": "CB News | Macro Dashboard",
+            "currency_meter": currency_meter,
+            "surprises": surprises,
+            "yield_differentials": yield_differentials,
+        },
+    )
+
+
 @router.get("/trade-planner", response_class=HTMLResponse)
 async def trade_planner_page(request: Request) -> HTMLResponse:
     """Render the swing-trade planning workflow."""
@@ -2050,6 +2083,19 @@ async def trade_planner_page(request: Request) -> HTMLResponse:
             "request": request,
             "page_title": "Trade Planner | Macro Dashboard",
             "planner_pairs": planner_pairs,
+        },
+    )
+
+
+@router.get("/fx-outlook", response_class=HTMLResponse)
+async def fx_outlook_page(request: Request) -> HTMLResponse:
+    """Render the Myfxbook retail FX outlook widget."""
+    return templates.TemplateResponse(
+        request,
+        "fx_outlook.html",
+        {
+            "request": request,
+            "page_title": "FX Outlook | Macro Dashboard",
         },
     )
 
@@ -2235,6 +2281,251 @@ async def brief_builder_page(request: Request) -> HTMLResponse:
         {
             "request": request,
             "page_title": "Brief Builder | Macro Dashboard",
+        },
+    )
+
+
+@router.get("/research-lab", response_class=HTMLResponse)
+async def research_lab_page(request: Request) -> HTMLResponse:
+    """Render the currency research lab workspace."""
+    return templates.TemplateResponse(
+        request,
+        "research_lab.html",
+        {
+            "request": request,
+            "page_title": "Currency Research Lab | Macro Dashboard",
+        },
+    )
+
+
+@router.get("/rate-prob/{bank}", response_class=HTMLResponse)
+async def rate_probability_page(
+    bank: str,
+    request: Request,
+    db=Depends(get_session),
+) -> HTMLResponse:
+    bank = bank.upper()
+    if bank not in SUPPORTED_BANKS:
+        raise HTTPException(404)
+
+    _bank_names = {
+        "FED":  "Federal Reserve",
+        "ECB":  "European Central Bank",
+        "BOE":  "Bank of England",
+        "BOJ":  "Bank of Japan",
+        "RBA":  "Reserve Bank of Australia",
+        "BOC":  "Bank of Canada",
+        "RBNZ": "Reserve Bank of New Zealand",
+        "SNB":  "Swiss National Bank",
+    }
+    _rate_labels = {
+        "FED":  "Fed Funds Rate",
+        "ECB":  "Deposit Facility Rate",
+        "BOE":  "Bank Rate",
+        "BOJ":  "Policy Rate",
+        "RBA":  "Cash Rate",
+        "BOC":  "Overnight Rate",
+        "RBNZ": "OCR",
+        "SNB":  "SNB Policy Rate",
+    }
+
+    config = _bank_config(bank)
+    current_rate: float = config["current_rate"]
+    step_bps: int = int(config.get("step_bps") or 25)
+
+    # Probability data — may be unavailable if OIS cache is empty.
+    summary_raw: dict = {}
+    outlook_raw: dict = {}
+    next_meeting_dt: datetime | None = None
+    no_data = False
+
+    try:
+        summary_raw = await get_next_meeting_summary(bank, db_session=db)
+        next_meeting_dt = summary_raw.get("meeting_dt")
+    except ValueError:
+        no_data = True
+
+    try:
+        outlook_raw = await get_twelve_month_outlook(bank, db_session=db)
+    except Exception:
+        pass
+
+    meetings_meta = await get_upcoming_meetings(bank, n=12, db_session=db)
+
+    probabilities_list = []
+    if not no_data:
+        try:
+            probabilities_list = await compute_meeting_probabilities(
+                bank, step_bps=float(step_bps), n_meetings=12, db_session=db
+            )
+        except Exception:
+            pass
+
+    # Fall back to first calendar entry if we have no OIS summary.
+    if next_meeting_dt is None and meetings_meta:
+        try:
+            next_meeting_dt = datetime.fromisoformat(str(meetings_meta[0]["meeting_dt"]))
+        except (ValueError, TypeError):
+            pass
+
+    # Format next meeting strings for the template.
+    next_meeting_datetime_str = "—"
+    next_meeting_dt_iso = ""
+    if next_meeting_dt is not None:
+        try:
+            from datetime import UTC as _UTC
+            if next_meeting_dt.tzinfo is None:
+                next_meeting_dt = next_meeting_dt.replace(tzinfo=_UTC)
+            next_meeting_datetime_str = next_meeting_dt.astimezone(_UTC).strftime(
+                "%B %d, %Y at %H:%M UTC"
+            )
+            next_meeting_dt_iso = next_meeting_dt.isoformat()
+        except Exception:
+            pass
+
+    # as_of_date from OIS cache.
+    market_data = {
+        "available": False,
+        "label": "Calendar only",
+        "source": None,
+        "as_of_date": None,
+        "is_proxy": False,
+    }
+    try:
+        _aod = await db.execute(
+            text(
+                """
+                SELECT source, MAX(curve_date) AS curve_date, COUNT(*) AS rows
+                FROM ois_cache
+                WHERE bank = :bank
+                GROUP BY source
+                ORDER BY curve_date DESC, rows DESC
+                LIMIT 1
+                """
+            ),
+            {"bank": bank},
+        )
+        _aod_row = _aod.first()
+        if _aod_row:
+            _source = str(_aod_row.source)
+            _labels = {
+                "yfinance_ZQ": "Live futures",
+                "ecb_estr_ois": "Live OIS",
+                "ecb_yc_proxy": "ECB yield-curve proxy",
+                "boe_sonia": "Live OIS",
+                "rba_f17": "Live OIS",
+                "tradingview_IB": "ASX cash-rate futures",
+                "tradingview_CORRA_proxy": "CORRA futures proxy",
+                "tfx_TONA_proxy": "TFX TONA futures proxy",
+                "rbnz_wholesale_proxy": "RBNZ wholesale proxy",
+                "tradingview_SARON_proxy": "SARON futures proxy",
+            }
+            market_data = {
+                "available": True,
+                "label": _labels.get(_source, _source),
+                "source": _source,
+                "as_of_date": _aod_row.curve_date.strftime("%Y-%m-%d"),
+                "is_proxy": _source.endswith("_proxy"),
+            }
+        as_of_date = market_data["as_of_date"] or date.today().strftime("%Y-%m-%d")
+    except Exception:
+        as_of_date = date.today().strftime("%Y-%m-%d")
+
+    # Outlook formatting.
+    total_bps: float = float(outlook_raw.get("total_bps") or 0.0)
+    outlook_direction = "up" if total_bps > 3 else "down" if total_bps < -3 else "hold"
+    outlook_delta_bps = f"{total_bps:+.1f} bps" if total_bps != 0 else "±0 bps"
+    outlook_description: str = outlook_raw.get("description") or "Hold"
+
+    # Build combined meetings list.
+    meetings: list[dict] = []
+    if probabilities_list:
+        for prob, meta in zip(probabilities_list, meetings_meta, strict=False):
+            outcomes = {"HIKE": prob.hike_prob, "HOLD": prob.hold_prob, "CUT": prob.cut_prob}
+            dom = max(outcomes, key=lambda k: outcomes[k])
+            meetings.append(
+                {
+                    "meeting_date": prob.meeting_dt.strftime("%b %d, %Y"),
+                    "implied_rate": prob.implied_rate,
+                    "cut_prob": prob.cut_prob,
+                    "hold_prob": prob.hold_prob,
+                    "hike_prob": prob.hike_prob,
+                    "dominant_outcome": dom,
+                    "dominant_prob": outcomes[dom],
+                    "num_moves": prob.num_moves,
+                    "cumulative_num_moves": (
+                        round(prob.cumulative_delta_bps / float(step_bps), 4) if step_bps else 0.0
+                    ),
+                    "delta_bps": prob.delta_bps,
+                    "cumulative_delta_bps": prob.cumulative_delta_bps,
+                    "is_official": bool(meta.get("is_official", True)),
+                    "market_data_available": True,
+                }
+            )
+    else:
+        for meta in meetings_meta:
+            meeting_dt = datetime.fromisoformat(str(meta["meeting_dt"]))
+            meetings.append(
+                {
+                    "meeting_date": meeting_dt.strftime("%b %d, %Y"),
+                    "implied_rate": current_rate,
+                    "cut_prob": 0.0,
+                    "hold_prob": 0.0,
+                    "hike_prob": 0.0,
+                    "dominant_outcome": "N/A",
+                    "dominant_prob": 0.0,
+                    "num_moves": 0.0,
+                    "cumulative_num_moves": 0.0,
+                    "delta_bps": 0.0,
+                    "cumulative_delta_bps": 0.0,
+                    "is_official": bool(meta.get("is_official", True)),
+                    "market_data_available": False,
+                }
+            )
+
+    # Calculate rate components based on bank
+    if bank == "ECB":
+        deposit_rate = current_rate - 0.50
+        main_rate = current_rate
+        lending_rate = current_rate + 0.50
+    else:
+        deposit_rate = current_rate
+        main_rate = current_rate
+        lending_rate = current_rate
+
+    summary_data = {
+        "bank": bank,
+        "bank_full_name": _bank_names.get(bank, bank),
+        "rate_label": _rate_labels.get(bank, "Policy Rate"),
+        "current_rate": current_rate,
+        "deposit_rate": deposit_rate,
+        "main_rate": main_rate,
+        "lending_rate": lending_rate,
+        "last_ois_rate": float(summary_raw.get("last_ois_rate") or current_rate),
+        "as_of_date": as_of_date,
+        "step_bps": step_bps,
+        "next_meeting_dt_iso": next_meeting_dt_iso,
+        "next_meeting_datetime": next_meeting_datetime_str,
+        "dominant_outcome": summary_raw.get("dominant_outcome", "HOLD"),
+        "dominant_prob": float(summary_raw.get("dominant_prob_pct") or 0.0),
+        "implied_delta_bps": float(summary_raw.get("implied_delta_bps") or 0.0),
+        "outlook_direction": outlook_direction,
+        "outlook_delta_bps": outlook_delta_bps,
+        "outlook_description": outlook_description,
+        "no_data": no_data,
+        "market_data": market_data,
+    }
+
+    return templates.TemplateResponse(
+        request,
+        "rate_probability.html",
+        {
+            "request": request,
+            "page_title": f"Rate Probability — {bank} | Macro Dashboard",
+            "bank": bank,
+            "summary": summary_data,
+            "meetings": meetings,
+            "valid_banks": SUPPORTED_BANKS,
         },
     )
 

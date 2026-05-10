@@ -1,221 +1,480 @@
 (() => {
-    window.__macroComponents = window.__macroComponents || {};
-    window.__macroComponents.cot = "booting";
-    const pairs = [
-        { key: "EUR", label: "EUR", pair: "EUR/USD" },
-        { key: "GBP", label: "GBP", pair: "GBP/USD" },
-        { key: "JPY", label: "JPY", pair: "USD/JPY" },
-        { key: "CAD", label: "CAD", pair: "USD/CAD" },
-        { key: "CHF", label: "CHF", pair: "USD/CHF" },
-        { key: "AUD", label: "AUD", pair: "AUD/USD" },
-        { key: "NZD", label: "NZD", pair: "NZD/USD" },
-        { key: "MXN", label: "MXN", pair: "USD/MXN" },
-    ];
-    const section = document.querySelector("[data-cot-section]");
-    if (!section) return;
+    const CACHE_KEY = "macro_cftc_cot_dashboard_v2";
+    const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+    const BULL = "#1D9E75";
+    const BEAR = "#D85A30";
+    const NEUTRAL = "#888780";
+    const FX_SYMBOLS = ["EUR", "GBP", "JPY", "CHF", "CAD", "AUD", "NZD"];
+    const ALL_SYMBOLS = [...FX_SYMBOLS, "USD", "GOLD", "OIL"];
+    const root = document.querySelector("[data-cot-dashboard]");
+    if (!root) return;
 
     let active = "EUR";
-    let rows = [];
+    let cotRows = {};
+    let priceSeriesBySymbol = {};
     const charts = {};
 
-    const css = getComputedStyle(document.documentElement);
-    const text = css.getPropertyValue("--bt-text").trim() || "#e8e8e8";
-    const muted = css.getPropertyValue("--bt-muted").trim() || "#888888";
-    const green = css.getPropertyValue("--bt-green").trim() || "#22c55e";
-    const red = css.getPropertyValue("--bt-red").trim() || "#ef4444";
-    const amber = css.getPropertyValue("--bt-amber").trim() || "#f59e0b";
-    const blue = css.getPropertyValue("--bt-blue").trim() || "#3b82f6";
+    const $ = (selector) => root.querySelector(selector);
+    const $$ = (selector) => Array.from(root.querySelectorAll(selector));
+    const fmt = (value) => Number(value || 0).toLocaleString();
+    const signed = (value) => `${Number(value || 0) >= 0 ? "+" : ""}${fmt(Math.round(Number(value || 0)))}`;
+    const pct = (value) => `${Math.round(Number(value || 0))}`;
+    const colorForIndex = (value) => value > 60 ? BULL : value < 40 ? BEAR : NEUTRAL;
+    const escapeHtml = (value) => String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
 
-    const fmt = (n) => `${Number(n || 0) >= 0 ? "+" : ""}${Number(n || 0).toLocaleString()}k`;
-    const raw = (row, key) => Number(row?.[key] || 0);
-    const cls = (value) => Number(value || 0) > 0 ? "is-positive" : Number(value || 0) < 0 ? "is-negative" : "is-neutral";
-    const esc = (value) => String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
-
-    const mount = () => {
-        section.innerHTML = `
-            <header class="black-panel__head">
-                <span>COT live dashboard</span>
-                <em data-cot-status>Fetching CFTC data...</em>
-            </header>
-            <div class="terminal-tabs" data-cot-tabs>
-                <button class="is-active" type="button" data-cot-tab="overview">Overview</button>
-                <button type="button" data-cot-tab="history">History</button>
-                <button type="button" data-cot-tab="groups">3-group breakdown</button>
-                <button type="button" data-cot-tab="signals">Signals</button>
-            </div>
-            <div class="cot-error" data-cot-error hidden><span>Unable to load CFTC positioning.</span><button type="button" data-cot-retry>Retry</button></div>
-            <div class="cot-metric-grid" data-cot-metrics></div>
-            <div class="cot-tab-panel is-active" data-cot-panel="overview">
-                <article class="cot-card"><header><span>Net speculative positions</span><em>Non-commercial futures</em></header><div class="cot-chart-wrap"><canvas data-cot-net-chart></canvas></div></article>
-                <article class="cot-card"><header><span>Commercials vs non-commercials</span><em>Divergence map</em></header><div class="cot-chart-wrap"><canvas data-cot-divergence-chart></canvas></div></article>
-            </div>
-            <div class="cot-tab-panel" data-cot-panel="history">
-                <div class="cot-pair-selector" data-cot-pairs>${pairs.map((p) => `<button class="${p.key === active ? "is-active" : ""}" type="button" data-pair="${p.key}">${p.pair}</button>`).join("")}</div>
-                <div class="cot-chart-grid">
-                    <article class="cot-card"><header><span data-cot-history-title>EUR - 16-week positioning history</span><em>All trader groups</em></header><div class="cot-chart-wrap"><canvas data-cot-history-chart></canvas></div></article>
-                    <article class="cot-card"><header><span>Gross long/short positions</span><em data-cot-gross-label>Current week</em></header><div class="cot-chart-wrap"><canvas data-cot-gross-chart></canvas></div></article>
-                </div>
-            </div>
-            <div class="cot-tab-panel" data-cot-panel="groups">
-                <div class="cot-chart-grid cot-chart-grid--three">
-                    <article class="cot-card"><header><span>Non-commercial net</span><em>Large speculators</em></header><div class="cot-chart-wrap"><canvas data-cot-nc-chart></canvas></div></article>
-                    <article class="cot-card"><header><span>Commercial net</span><em>Hedgers</em></header><div class="cot-chart-wrap"><canvas data-cot-cm-chart></canvas></div></article>
-                    <article class="cot-card"><header><span>Non-reportable net</span><em>Small traders</em></header><div class="cot-chart-wrap"><canvas data-cot-nr-chart></canvas></div></article>
-                </div>
-            </div>
-            <div class="cot-tab-panel" data-cot-panel="signals">
-                <article class="cot-card cot-card--breakdown"><header><span>COT signal table</span><em>Momentum, extremes, divergence</em></header>
-                    <div class="black-table-wrap"><table class="black-fx-table cot-signal-table"><thead><tr><th>Pair</th><th>NC net</th><th>WoW</th><th>Comm net</th><th>Retail net</th><th>Divergence</th><th>Signal</th></tr></thead><tbody data-cot-signals></tbody></table></div>
-                </article>
-            </div>`;
+    const number = (value) => {
+        if (value === null || value === undefined || value === "") return 0;
+        const parsed = Number(String(value).replaceAll(",", ""));
+        return Number.isFinite(parsed) ? parsed : 0;
     };
 
-    const options = () => ({
+    const getTextColor = () => getComputedStyle(root).getPropertyValue("--cot-text").trim() || "#f3f4f6";
+    const getMutedColor = () => getComputedStyle(root).getPropertyValue("--cot-muted").trim() || "#9ca3af";
+    const getGridColor = () => getComputedStyle(root).getPropertyValue("--cot-grid").trim() || "rgba(148,163,184,.18)";
+
+    const destroyChart = (key) => {
+        if (charts[key]) {
+            charts[key].destroy();
+            delete charts[key];
+        }
+    };
+
+    const chartOptions = (extra = {}) => ({
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
         plugins: {
-            legend: { labels: { color: muted, boxWidth: 10 } },
-            tooltip: { backgroundColor: "#0a0a0a", borderColor: "#2a2a2a", borderWidth: 1, titleColor: text, bodyColor: text },
+            legend: { labels: { color: getMutedColor(), boxWidth: 12 } },
+            tooltip: {
+                backgroundColor: root.classList.contains("cot-light") ? "#ffffff" : "#101318",
+                borderColor: getGridColor(),
+                borderWidth: 1,
+                titleColor: getTextColor(),
+                bodyColor: getTextColor(),
+            },
         },
         scales: {
-            x: { ticks: { color: muted }, grid: { color: "rgba(255,255,255,.06)" } },
-            y: { ticks: { color: muted, callback: (v) => `${v}k` }, grid: { color: "rgba(255,255,255,.06)" } },
+            x: { ticks: { color: getMutedColor(), maxTicksLimit: 8 }, grid: { color: getGridColor() } },
+            y: { ticks: { color: getMutedColor() }, grid: { color: getGridColor() } },
+            y1: { display: false, position: "right", grid: { drawOnChartArea: false }, ticks: { color: getMutedColor() } },
         },
+        ...extra,
     });
 
-    const draw = (name, canvas, config) => {
+    const drawChart = (key, canvas, config) => {
         if (!window.Chart || !canvas) return;
-        if (charts[name]) charts[name].destroy();
-        charts[name] = new Chart(canvas, config);
+        destroyChart(key);
+        charts[key] = new Chart(canvas, config);
     };
 
-    const renderMetrics = () => {
-        const totalNet = rows.reduce((sum, row) => sum + raw(row, "net_position"), 0);
-        const strongest = [...rows].sort((a, b) => raw(b, "net_position") - raw(a, "net_position"))[0];
-        const weakest = [...rows].sort((a, b) => raw(a, "net_position") - raw(b, "net_position"))[0];
-        const crowded = [...rows].sort((a, b) => Math.abs(Number(b.signal?.divergence || 0)) - Math.abs(Number(a.signal?.divergence || 0)))[0] || strongest;
-        section.querySelector("[data-cot-metrics]").innerHTML = `
-            <article class="black-kpi-card"><span>Tracked markets</span><strong>${rows.length}</strong><small>CFTC legacy futures</small></article>
-            <article class="black-kpi-card"><span>Strongest spec net</span><strong class="${cls(raw(strongest, "net_position"))}">${esc(strongest?.label)}</strong><small>${fmt(raw(strongest, "net_position"))}</small></article>
-            <article class="black-kpi-card"><span>Weakest spec net</span><strong class="${cls(raw(weakest, "net_position"))}">${esc(weakest?.label)}</strong><small>${fmt(raw(weakest, "net_position"))}</small></article>
-            <article class="black-kpi-card"><span>Aggregate net</span><strong class="${cls(totalNet)}">${fmt(totalNet)}</strong><small>Non-commercial total</small></article>`;
-        if (crowded) section.querySelector("[data-cot-status]").textContent = `${crowded.label} ${crowded.signal?.tone || "updated"}`;
+    const waitForChart = () => {
+        if (window.Chart) return Promise.resolve();
+        return Promise.reject(new Error("Chart.js is not loaded. Check the static asset."));
     };
 
-    const renderOverview = () => {
-        const labels = rows.map((r) => r.label);
-        draw("net", section.querySelector("[data-cot-net-chart]"), {
-            type: "bar",
-            data: { labels, datasets: [
-                { type: "bar", label: "NC net", data: rows.map((r) => raw(r, "net_position")), backgroundColor: rows.map((r) => raw(r, "net_position") >= 0 ? green : red) },
-                { type: "line", label: "WoW delta", data: rows.map((r) => raw(r, "chg_net")), borderColor: blue, pointRadius: 3, tension: 0.25 },
-            ] },
-            options: options(),
-        });
-        draw("div", section.querySelector("[data-cot-divergence-chart]"), {
-            type: "bar",
-            data: { labels, datasets: [
-                { label: "Non-commercial", data: rows.map((r) => raw(r, "net_position")), backgroundColor: blue },
-                { label: "Commercial", data: rows.map((r) => raw(r, "commercial_net_current")), backgroundColor: red },
-            ] },
-            options: options(),
-        });
+    const loadFromApi = async () => {
+        const response = await fetch("/api/cot/rows", { cache: "no-store" });
+        if (!response.ok) throw new Error(`COT rows endpoint returned ${response.status}`);
+        const data = await response.json();
+        const result = {};
+        for (const [symbol, rows] of Object.entries(data)) {
+            result[symbol] = Array.isArray(rows)
+                ? rows.sort((a, b) => a.date.localeCompare(b.date))
+                : [];
+        }
+        return result;
     };
 
-    const renderHistory = () => {
-        const row = rows.find((item) => item.pair === active) || rows[0];
-        if (!row) return;
-        section.querySelector("[data-cot-history-title]").textContent = `${row.label} - 16-week positioning history`;
-        section.querySelector("[data-cot-gross-label]").textContent = row.pair_label || row.label;
-        draw("hist", section.querySelector("[data-cot-history-chart]"), {
-            type: "line",
-            data: { labels: row.weeks, datasets: [
-                { label: "Non-commercial", data: row.net, borderColor: blue, tension: 0.3 },
-                { label: "Commercial", data: row.commercial_net, borderColor: red, borderDash: [5, 4], tension: 0.3 },
-                { label: "Non-reportable", data: row.nonreportable_net, borderColor: amber, tension: 0.3 },
-            ] },
-            options: options(),
-        });
-        draw("gross", section.querySelector("[data-cot-gross-chart]"), {
-            type: "bar",
-            data: { labels: ["Non-commercial", "Commercial", "Non-reportable"], datasets: [
-                { label: "Longs", data: [row.noncom_long, row.com_long, row.nonrept_long], backgroundColor: green },
-                { label: "Shorts", data: [row.noncom_short, row.com_short, row.nonrept_short], backgroundColor: red },
-            ] },
-            options: options(),
-        });
-    };
-
-    const renderGroups = () => {
-        const mk = (name, selector, key) => draw(name, section.querySelector(selector), {
-            type: "bar",
-            data: { labels: rows.map((r) => r.label), datasets: [{ label: key, data: rows.map((r) => raw(r, key)), backgroundColor: rows.map((r) => raw(r, key) >= 0 ? green : red) }] },
-            options: options(),
-        });
-        mk("nc", "[data-cot-nc-chart]", "net_position");
-        mk("cm", "[data-cot-cm-chart]", "commercial_net_current");
-        mk("nr", "[data-cot-nr-chart]", "nonreportable_net_current");
-    };
-
-    const renderSignals = () => {
-        section.querySelector("[data-cot-signals]").innerHTML = rows.map((row) => {
-            const signal = row.signal || {};
-            const sCls = signal.bias === "Bullish" ? "is-positive" : signal.bias === "Bearish" ? "is-negative" : "is-neutral";
-            return `<tr><td>${esc(row.pair_label)}</td><td class="${cls(row.net_position)}">${fmt(row.net_position)}</td><td class="${cls(row.chg_net)}">${fmt(row.chg_net)}</td><td class="${cls(row.commercial_net_current)}">${fmt(row.commercial_net_current)}</td><td class="${cls(row.nonreportable_net_current)}">${fmt(row.nonreportable_net_current)}</td><td>${fmt(signal.divergence)}</td><td><span class="${sCls}">${esc(signal.bias || "Neutral")}</span><small>${esc(signal.tone || "")}</small></td></tr>`;
-        }).join("");
-    };
-
-    const renderAll = () => {
-        renderMetrics();
-        renderOverview();
-        renderSignals();
-    };
-
-    const renderPanel = (key) => {
-        if (key === "overview") renderOverview();
-        if (key === "history") renderHistory();
-        if (key === "groups") renderGroups();
-        if (key === "signals") renderSignals();
-        Object.values(charts).forEach((chart) => chart?.resize?.());
-    };
-
-    const load = async () => {
-        section.querySelector("[data-cot-error]").hidden = true;
-        section.querySelector("[data-cot-status]").textContent = "Fetching CFTC data...";
+    const readCache = () => {
         try {
-            const settled = await Promise.allSettled(pairs.map((p) => fetch(`/api/cot?pair=${p.key}`, { cache: "no-store" }).then((r) => {
-                if (!r.ok) throw new Error(`${p.label} failed`);
-                return r.json();
-            })));
-            rows = settled.filter((r) => r.status === "fulfilled").map((r) => r.value);
-            if (!rows.length) throw new Error("CFTC COT data is unavailable.");
-            section.querySelector("[data-cot-status]").textContent = "CFTC legacy futures";
-            renderAll();
-        } catch (error) {
-            section.querySelector("[data-cot-status]").textContent = "feed error";
-            const err = section.querySelector("[data-cot-error]");
-            err.hidden = false;
-            err.querySelector("span").textContent = error.message || "Unable to load CFTC positioning.";
+            const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+            if (!cached || !cached.fetchedAt || Date.now() - cached.fetchedAt > CACHE_TTL_MS) return null;
+            return cached;
+        } catch {
+            return null;
         }
     };
 
-    mount();
-    section.addEventListener("click", (event) => {
-        const tab = event.target.closest("[data-cot-tab]");
+    const writeCache = (data) => {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ fetchedAt: Date.now(), rows: data }));
+    };
+
+    const setLoading = (isLoading) => {
+        $("[data-cot-loading]").hidden = !isLoading;
+    };
+
+    const showError = (message) => {
+        const box = $("[data-cot-error]");
+        box.hidden = false;
+        box.textContent = message;
+    };
+
+    const clearError = () => {
+        $("[data-cot-error]").hidden = true;
+        $("[data-cot-error]").textContent = "";
+    };
+
+    const latest = (symbol) => {
+        const rows = cotRows[symbol] || [];
+        return rows[rows.length - 1];
+    };
+
+    const netSeries = (symbol) => (cotRows[symbol] || []).map((row) => row.specNet);
+    const commercialSeries = (symbol) => (cotRows[symbol] || []).map((row) => row.commercialNet);
+    const labelSeries = (symbol) => (cotRows[symbol] || []).map((row) => row.date);
+
+    const extremeStats = (symbol) => {
+        const rows = cotRows[symbol] || [];
+        const last = rows[rows.length - 1];
+        const windowRows = rows.slice(-52);
+        const values = windowRows.map((row) => row.specNet);
+        const high = Math.max(...values);
+        const low = Math.min(...values);
+        const index = high === low ? 50 : ((last.specNet - low) / (high - low)) * 100;
+        return { symbol, current: last?.specNet || 0, high, low, index: Math.max(0, Math.min(100, index)) };
+    };
+
+    const deltas = (symbol) => {
+        const values = netSeries(symbol);
+        return values.map((value, index) => index === 0 ? 0 : value - values[index - 1]);
+    };
+
+    const mean = (values) => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+    const stdev = (values) => {
+        const avg = mean(values);
+        return Math.sqrt(mean(values.map((value) => (value - avg) ** 2)));
+    };
+
+    const parsePriceInput = () => {
+        const lines = ($("[data-cot-price-input]").value || "")
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter(Boolean);
+        return lines.map((line) => {
+            const parts = line.split(/[,\t ]+/).filter(Boolean);
+            const value = number(parts.length > 1 ? parts[parts.length - 1] : parts[0]);
+            return value || null;
+        }).filter((value) => value !== null);
+    };
+
+    const alignedPrice = (symbol) => {
+        const prices = priceSeriesBySymbol[symbol] || [];
+        const rows = cotRows[symbol] || [];
+        if (!prices.length || !rows.length) return [];
+        const clipped = prices.slice(-rows.length);
+        const missing = Array(Math.max(0, rows.length - clipped.length)).fill(null);
+        return [...missing, ...clipped];
+    };
+
+    const priceDirection = (symbol, weeks = 8) => {
+        const prices = alignedPrice(symbol).filter((value) => value !== null);
+        if (prices.length > weeks) return prices[prices.length - 1] - prices[prices.length - 1 - weeks];
+        const rows = cotRows[symbol] || [];
+        if (rows.length <= weeks) return 0;
+        return rows[rows.length - 1].specNet - rows[rows.length - 1 - weeks].specNet;
+    };
+
+    const divergenceSignalAt = (symbol, endIndex) => {
+        const rows = cotRows[symbol] || [];
+        if (endIndex < 8) return null;
+        const priceMove = priceDirection(symbol, 8);
+        const netMove = rows[endIndex].specNet - rows[endIndex - 8].specNet;
+        let signal = "No divergence";
+        if (priceMove < 0 && netMove > 0) signal = "Bullish divergence";
+        if (priceMove > 0 && netMove < 0) signal = "Bearish divergence";
+        return { date: rows[endIndex].date, signal, priceMove, netMove };
+    };
+
+    const divergenceHistory = (symbol) => {
+        const rows = cotRows[symbol] || [];
+        const signals = [];
+        for (let index = rows.length - 1; index >= 8 && signals.length < 3; index -= 1) {
+            const signal = divergenceSignalAt(symbol, index);
+            if (signal && signal.signal !== "No divergence") signals.push(signal);
+        }
+        return signals;
+    };
+
+    const signalForIndex = (index) => {
+        if (index > 80) return "Extreme long";
+        if (index > 60) return "Bullish";
+        if (index < 20) return "Extreme short";
+        if (index < 40) return "Bearish";
+        return "Neutral";
+    };
+
+    const renderNetChart = (symbol) => {
+        const rows = cotRows[symbol] || [];
+        const labels = labelSeries(symbol);
+        const nets = netSeries(symbol);
+        const price = alignedPrice(symbol);
+        const pointColors = nets.map((value, index) => {
+            const prev = index > 0 ? nets[index - 1] : value;
+            return (prev <= 0 && value > 0) || (prev >= 0 && value < 0) ? "#F2B84B" : (value >= 0 ? BULL : BEAR);
+        });
+        drawChart("net", $("[data-chart='net']"), {
+            type: "line",
+            data: {
+                labels,
+                datasets: [
+                    { label: "Non-commercial net", data: nets, borderColor: BULL, backgroundColor: "rgba(29,158,117,.12)", pointBackgroundColor: pointColors, pointRadius: pointColors.map((color) => color === "#F2B84B" ? 5 : 2), tension: 0.25 },
+                    { label: "Zero line", data: rows.map(() => 0), borderColor: NEUTRAL, borderDash: [5, 4], pointRadius: 0 },
+                    { label: "Price overlay", data: price, yAxisID: "y1", borderColor: "#6DA9FF", pointRadius: 0, tension: 0.25, hidden: !price.length },
+                ],
+            },
+            options: chartOptions({ scales: { ...chartOptions().scales, y1: { display: price.length > 0, position: "right", grid: { drawOnChartArea: false }, ticks: { color: getMutedColor() } } } }),
+        });
+    };
+
+    const renderExtremeBars = () => {
+        const stats = ALL_SYMBOLS
+            .filter((symbol) => (cotRows[symbol] || []).length)
+            .map(extremeStats)
+            .sort((a, b) => b.index - a.index);
+        $("[data-extreme-bars]").innerHTML = stats.map((item) => `
+            <div class="cot-extreme-row">
+                <strong>${item.symbol}</strong>
+                <span><i style="width:${pct(item.index)}%;background:${colorForIndex(item.index)}"></i></span>
+                <em style="color:${colorForIndex(item.index)}">${pct(item.index)}</em>
+            </div>
+        `).join("");
+        const current = extremeStats(active);
+        $("[data-current-extreme]").innerHTML = `
+            <strong style="color:${colorForIndex(current.index)}">${active} ${pct(current.index)}/100</strong>
+            <span>${signed(current.current)} net contracts</span>
+        `;
+    };
+
+    const renderSpreadChart = (symbol) => {
+        const labels = labelSeries(symbol);
+        const spec = netSeries(symbol);
+        const comm = commercialSeries(symbol);
+        const gap = spec.map((value, index) => value - comm[index]);
+        drawChart("spread", $("[data-chart='spread']"), {
+            type: "line",
+            data: {
+                labels,
+                datasets: [
+                    { label: "Spec net", data: spec, borderColor: BULL, backgroundColor: "rgba(29,158,117,.16)", fill: "origin", tension: 0.25 },
+                    { label: "Commercial net", data: comm, borderColor: BEAR, backgroundColor: "rgba(216,90,48,.14)", fill: "origin", tension: 0.25 },
+                    { label: "Gap", data: gap, borderColor: "#F2B84B", pointRadius: 0, borderDash: [5, 4] },
+                ],
+            },
+            options: chartOptions(),
+        });
+    };
+
+    const renderOpenInterestChart = (symbol) => {
+        const rows = cotRows[symbol] || [];
+        const prices = alignedPrice(symbol);
+        const colors = rows.map((row, index) => {
+            if (index === 0) return NEUTRAL;
+            const oiRising = row.openInterest > rows[index - 1].openInterest;
+            const priceMove = prices.length ? (prices[index] || 0) - (prices[index - 1] || 0) : row.specNet - rows[index - 1].specNet;
+            if (oiRising && priceMove > 0) return BULL;
+            if (oiRising && priceMove < 0) return BEAR;
+            return NEUTRAL;
+        });
+        drawChart("oi", $("[data-chart='oi']"), {
+            type: "bar",
+            data: { labels: labelSeries(symbol), datasets: [{ label: "Open interest", data: rows.map((row) => row.openInterest), backgroundColor: colors }] },
+            options: chartOptions(),
+        });
+    };
+
+    const renderDeltaChart = (symbol) => {
+        const values = deltas(symbol);
+        const threshold = stdev(values.slice(1));
+        drawChart("delta", $("[data-chart='delta']"), {
+            type: "bar",
+            data: {
+                labels: labelSeries(symbol),
+                datasets: [{
+                    label: "Weekly spec net change",
+                    data: values,
+                    backgroundColor: values.map((value) => Math.abs(value) > threshold ? (value > 0 ? BULL : BEAR) : NEUTRAL),
+                }],
+            },
+            options: chartOptions(),
+        });
+    };
+
+    const renderDivergence = (symbol) => {
+        const rows = cotRows[symbol] || [];
+        const current = divergenceSignalAt(symbol, rows.length - 1) || { signal: "No divergence", priceMove: 0, netMove: 0 };
+        const cls = current.signal.startsWith("Bullish") ? "bullish" : current.signal.startsWith("Bearish") ? "bearish" : "neutral";
+        $("[data-divergence-card]").innerHTML = `
+            <span class="${cls}">${escapeHtml(current.signal)}</span>
+            <strong>${symbol} 8-week check</strong>
+            <p>Price direction: ${signed(current.priceMove)} | Spec net direction: ${signed(current.netMove)}</p>
+        `;
+        const history = divergenceHistory(symbol);
+        $("[data-divergence-history]").innerHTML = history.length
+            ? history.map((item) => `<div><strong>${escapeHtml(item.signal)}</strong><span>${item.date}</span></div>`).join("")
+            : "<div><strong>No recent divergence signals</strong><span>Last 8-week windows aligned</span></div>";
+    };
+
+    const renderStrengthTable = () => {
+        const rows = FX_SYMBOLS
+            .filter((symbol) => (cotRows[symbol] || []).length)
+            .map(extremeStats)
+            .sort((a, b) => b.index - a.index);
+        $("[data-strength-table]").innerHTML = rows.map((item, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong>${item.symbol}</strong></td>
+                <td>${signed(item.current)}</td>
+                <td>${signed(item.high)}</td>
+                <td>${signed(item.low)}</td>
+                <td><span style="color:${colorForIndex(item.index)}">${pct(item.index)}</span></td>
+                <td>${signalForIndex(item.index)}</td>
+            </tr>
+        `).join("");
+    };
+
+    const usdComposite = () => {
+        const available = FX_SYMBOLS.map((symbol) => cotRows[symbol] || []).filter((rows) => rows.length);
+        const minLength = Math.min(...available.map((rows) => rows.length));
+        if (!Number.isFinite(minLength) || minLength <= 0) return { labels: [], values: [] };
+        const labels = available[0].slice(-minLength).map((row) => row.date);
+        const values = Array.from({ length: minLength }, (_, index) => {
+            return FX_SYMBOLS.reduce((sum, symbol) => {
+                const rows = cotRows[symbol] || [];
+                const row = rows[rows.length - minLength + index];
+                const net = row ? row.specNet : 0;
+                return sum - net;
+            }, 0);
+        });
+        return { labels, values };
+    };
+
+    const renderUsdChart = () => {
+        const composite = usdComposite();
+        drawChart("usd", $("[data-chart='usd']"), {
+            type: "line",
+            data: { labels: composite.labels, datasets: [{ label: "USD composite net", data: composite.values, borderColor: "#6DA9FF", backgroundColor: "rgba(109,169,255,.14)", fill: true, tension: 0.25 }] },
+            options: chartOptions(),
+        });
+    };
+
+    const renderInsights = (symbol) => {
+        const stats = extremeStats(symbol);
+        const current = latest(symbol);
+        const deltaValues = deltas(symbol);
+        const latestDelta = deltaValues[deltaValues.length - 1] || 0;
+        const spread = current ? current.specNet - current.commercialNet : 0;
+        const oiDelta = (cotRows[symbol] || []).length > 1 ? latest(symbol).openInterest - (cotRows[symbol] || [])[cotRows[symbol].length - 2].openInterest : 0;
+        const composite = usdComposite().values;
+        const usdMove = composite.length > 8 ? composite[composite.length - 1] - composite[composite.length - 9] : 0;
+
+        $("[data-insight='net']").textContent = current?.specNet > 0
+            ? `Speculators are net long ${symbol}; zero-line crosses are highlighted in amber for regime changes.`
+            : `Speculators are net short ${symbol}; watch for a move back through zero as a sentiment reset.`;
+        $("[data-insight='extreme']").textContent = stats.index > 80
+            ? "Speculators are near historically extreme longs, which can become a contrarian bearish signal."
+            : stats.index < 20
+                ? "Speculators are near historically extreme shorts, which can become a contrarian bullish signal."
+                : "Positioning is away from the 52-week extremes, so the signal is less crowded.";
+        $("[data-insight='spread']").textContent = `Commercials and speculators are separated by ${signed(spread)} contracts; a wider gap means the market is more stretched.`;
+        $("[data-insight='oi']").textContent = oiDelta > 0
+            ? "Open interest rose this week, meaning fresh participation is entering the contract."
+            : "Open interest fell this week, meaning participation is cooling or positions are being closed.";
+        $("[data-insight='delta']").textContent = latestDelta > 0
+            ? `Speculators added ${signed(latestDelta)} net contracts this week.`
+            : `Speculators reduced net exposure by ${signed(Math.abs(latestDelta))} contracts this week.`;
+        $("[data-insight='divergence']").textContent = "Divergence compares the 8-week price direction with the 8-week non-commercial net direction.";
+        $("[data-insight='table']").textContent = "The table ranks FX contracts by where current speculative net sits inside its 52-week range.";
+        $("[data-insight='usd']").textContent = usdMove > 0
+            ? "USD composite sentiment is improving across the major currency futures basket."
+            : usdMove < 0
+                ? "USD composite sentiment is deteriorating across the major currency futures basket."
+                : "USD composite sentiment is broadly flat over the recent window.";
+    };
+
+    const renderSelected = () => {
+        const rows = cotRows[active] || [];
+        if (!rows.length) {
+            showError(`No CFTC rows were returned for ${active}. Try refresh or choose another symbol.`);
+            return;
+        }
+        $("[data-cot-active-label]").textContent = active;
+        renderNetChart(active);
+        renderExtremeBars();
+        renderSpreadChart(active);
+        renderOpenInterestChart(active);
+        renderDeltaChart(active);
+        renderDivergence(active);
+        renderStrengthTable();
+        renderUsdChart();
+        renderInsights(active);
+    };
+
+    const setUpdated = (timestamp) => {
+        const date = new Date(timestamp);
+        $("[data-cot-updated]").textContent = `Last updated: ${Number.isNaN(date.getTime()) ? "unknown" : date.toLocaleString()}`;
+    };
+
+    const loadData = async ({ force = false } = {}) => {
+        setLoading(true);
+        clearError();
+        try {
+            await waitForChart();
+            const cached = force ? null : readCache();
+            if (cached) {
+                cotRows = cached.rows || {};
+                setUpdated(cached.fetchedAt);
+            } else {
+                cotRows = await loadFromApi();
+                writeCache(cotRows);
+                setUpdated(Date.now());
+            }
+            renderSelected();
+            window.requestAnimationFrame(() => {
+                Object.values(charts).forEach((chart) => chart?.resize?.());
+                window.scrollTo({ top: 0, left: 0 });
+            });
+        } catch (error) {
+            showError(`Unable to load CFTC data. ${error.message || "Please try again later."}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const applyTheme = (mode) => {
+        root.classList.toggle("cot-light", mode === "light");
+        $("[data-cot-theme-toggle]").textContent = mode === "light" ? "Dark mode" : "Light mode";
+        localStorage.setItem("macro_cot_theme", mode);
+        Object.keys(charts).forEach((key) => destroyChart(key));
+        if (Object.keys(cotRows).length) renderSelected();
+    };
+
+    root.addEventListener("click", (event) => {
+        const tab = event.target.closest("[data-cot-symbol]");
         if (tab) {
-            const key = tab.dataset.cotTab;
-            section.querySelectorAll("[data-cot-tab]").forEach((btn) => btn.classList.toggle("is-active", btn === tab));
-            section.querySelectorAll("[data-cot-panel]").forEach((panel) => panel.classList.toggle("is-active", panel.dataset.cotPanel === key));
-            renderPanel(key);
+            active = tab.dataset.cotSymbol || "EUR";
+            $$("[data-cot-symbol]").forEach((button) => button.classList.toggle("is-active", button === tab));
+            renderSelected();
         }
-        const pair = event.target.closest("[data-pair]");
-        if (pair) {
-            active = pair.dataset.pair || "EUR";
-            section.querySelectorAll("[data-pair]").forEach((btn) => btn.classList.toggle("is-active", btn.dataset.pair === active));
-            renderHistory();
+
+        if (event.target.closest("[data-cot-refresh]")) {
+            localStorage.removeItem(CACHE_KEY);
+            loadData({ force: true });
         }
-        if (event.target.closest("[data-cot-retry]")) load();
+
+        if (event.target.closest("[data-cot-apply-price]")) {
+            priceSeriesBySymbol[active] = parsePriceInput();
+            renderSelected();
+        }
+
+        if (event.target.closest("[data-cot-theme-toggle]")) {
+            applyTheme(root.classList.contains("cot-light") ? "dark" : "light");
+        }
     });
-    load();
-    window.__macroComponents.cot = "loaded";
+
+    applyTheme(localStorage.getItem("macro_cot_theme") || "dark");
+    loadData();
 })();

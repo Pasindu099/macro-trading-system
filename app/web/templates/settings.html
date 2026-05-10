@@ -13,8 +13,8 @@
         </div>
         <div class="settings-status-card">
             <span>Profile mode</span>
-            <strong>Local</strong>
-            <small>Saved in this browser until authentication is added.</small>
+            <strong>{{ request.state.current_user.role.title() if request.state.current_user else "Local" }}</strong>
+            <small>{{ request.state.current_user.email if request.state.current_user else "Authentication disabled." }}</small>
         </div>
     </header>
 

@@ -1,0 +1,230 @@
+FED:
+  current_rate: 3.75
+  step_bps: 25
+  meetings:
+    - dt: "2026-06-17T14:00:00-04:00"
+      official: true
+    - dt: "2026-07-29T14:00:00-04:00"
+      official: true
+    - dt: "2026-09-16T14:00:00-04:00"
+      official: true
+    - dt: "2026-10-28T14:00:00-04:00"
+      official: true
+    - dt: "2026-12-09T14:00:00-05:00"
+      official: true
+    - dt: "2027-01-27T14:00:00-05:00"
+      official: true
+    - dt: "2027-03-17T14:00:00-04:00"
+      official: true
+    - dt: "2027-04-28T14:00:00-04:00"
+      official: true
+    - dt: "2027-06-16T14:00:00-04:00"
+      official: true
+    - dt: "2027-07-28T14:00:00-04:00"
+      official: true
+    - dt: "2027-09-15T14:00:00-04:00"
+      official: true
+    - dt: "2027-10-27T14:00:00-04:00"
+      official: true
+    - dt: "2027-12-08T14:00:00-05:00"
+      official: true
+ECB:
+  current_rate: 3.00
+  step_bps: 25
+  meetings:
+    - dt: "2026-06-11T14:15:00+02:00"
+      official: true
+    - dt: "2026-07-23T14:15:00+02:00"
+      official: true
+    - dt: "2026-09-10T14:15:00+02:00"
+      official: true
+    - dt: "2026-10-29T14:15:00+01:00"
+      official: true
+    - dt: "2026-12-17T14:15:00+01:00"
+      official: true
+    - dt: "2027-02-04T14:15:00+01:00"
+      official: true
+    - dt: "2027-03-18T14:15:00+01:00"
+      official: true
+    - dt: "2027-04-29T14:15:00+02:00"
+      official: true
+    - dt: "2027-06-10T14:15:00+02:00"
+      official: true
+    - dt: "2027-07-22T14:15:00+02:00"
+      official: true
+    - dt: "2027-09-09T14:15:00+02:00"
+      official: true
+    - dt: "2027-10-28T14:15:00+02:00"
+      official: true
+    - dt: "2027-12-16T14:15:00+01:00"
+      official: true
+BOE:
+  current_rate: 3.75
+  step_bps: 25
+  meetings:
+    - dt: "2026-06-18T12:00:00+01:00"
+      official: true
+    - dt: "2026-08-06T12:00:00+01:00"
+      official: true
+    - dt: "2026-09-17T12:00:00+01:00"
+      official: true
+    - dt: "2026-11-05T12:00:00+00:00"
+      official: true
+    - dt: "2026-12-17T12:00:00+00:00"
+      official: true
+    - dt: "2027-02-04T12:00:00+00:00"
+      official: false
+    - dt: "2027-03-18T12:00:00+00:00"
+      official: false
+    - dt: "2027-05-06T12:00:00+01:00"
+      official: false
+    - dt: "2027-06-17T12:00:00+01:00"
+      official: false
+    - dt: "2027-08-05T12:00:00+01:00"
+      official: false
+    - dt: "2027-09-16T12:00:00+01:00"
+      official: false
+    - dt: "2027-11-04T12:00:00+00:00"
+      official: false
+    - dt: "2027-12-16T12:00:00+00:00"
+      official: false
+BOJ:
+  current_rate: 0.75
+  step_bps: 25
+  meetings:
+    - dt: "2026-06-16T12:00:00+09:00"
+      official: true
+    - dt: "2026-07-31T12:00:00+09:00"
+      official: true
+    - dt: "2026-09-18T12:00:00+09:00"
+      official: true
+    - dt: "2026-10-30T12:00:00+09:00"
+      official: true
+    - dt: "2026-12-18T12:00:00+09:00"
+      official: true
+    - dt: "2027-01-22T12:00:00+09:00"
+      official: false
+    - dt: "2027-03-19T12:00:00+09:00"
+      official: false
+    - dt: "2027-04-30T12:00:00+09:00"
+      official: false
+    - dt: "2027-06-18T12:00:00+09:00"
+      official: false
+    - dt: "2027-07-30T12:00:00+09:00"
+      official: false
+    - dt: "2027-09-17T12:00:00+09:00"
+      official: false
+    - dt: "2027-10-29T12:00:00+09:00"
+      official: false
+    - dt: "2027-12-17T12:00:00+09:00"
+      official: false
+RBA:
+  current_rate: 3.60
+  step_bps: 25
+  meetings:
+    - dt: "2026-06-16T14:30:00+10:00"
+      official: true
+    - dt: "2026-07-07T14:30:00+10:00"
+      official: true
+    - dt: "2026-08-11T14:30:00+10:00"
+      official: true
+    - dt: "2026-09-22T14:30:00+10:00"
+      official: true
+    - dt: "2026-11-03T14:30:00+11:00"
+      official: true
+    - dt: "2026-12-08T14:30:00+11:00"
+      official: true
+    - dt: "2027-02-02T14:30:00+11:00"
+      official: false
+    - dt: "2027-03-16T14:30:00+11:00"
+      official: false
+    - dt: "2027-05-04T14:30:00+10:00"
+      official: false
+    - dt: "2027-06-15T14:30:00+10:00"
+      official: false
+    - dt: "2027-07-06T14:30:00+10:00"
+      official: false
+    - dt: "2027-08-10T14:30:00+10:00"
+      official: false
+    - dt: "2027-09-21T14:30:00+10:00"
+      official: false
+    - dt: "2027-11-02T14:30:00+11:00"
+      official: false
+    - dt: "2027-12-07T14:30:00+11:00"
+      official: false
+BOC:
+  current_rate: 2.25
+  step_bps: 25
+  meetings:
+    - dt: "2026-06-03T09:45:00-04:00"
+      official: true
+    - dt: "2026-07-29T09:45:00-04:00"
+      official: true
+    - dt: "2026-09-16T09:45:00-04:00"
+      official: true
+    - dt: "2026-10-28T09:45:00-04:00"
+      official: true
+    - dt: "2026-12-09T09:45:00-05:00"
+      official: true
+    - dt: "2027-01-27T09:45:00-05:00"
+      official: false
+    - dt: "2027-03-10T09:45:00-05:00"
+      official: false
+    - dt: "2027-04-21T09:45:00-04:00"
+      official: false
+    - dt: "2027-06-02T09:45:00-04:00"
+      official: false
+    - dt: "2027-07-28T09:45:00-04:00"
+      official: false
+    - dt: "2027-09-15T09:45:00-04:00"
+      official: false
+    - dt: "2027-10-27T09:45:00-04:00"
+      official: false
+    - dt: "2027-12-08T09:45:00-05:00"
+      official: false
+RBNZ:
+  current_rate: 2.25
+  step_bps: 25
+  meetings:
+    - dt: "2026-05-27T14:00:00+12:00"
+      official: true
+    - dt: "2026-07-08T14:00:00+12:00"
+      official: true
+    - dt: "2026-08-12T14:00:00+12:00"
+      official: true
+    - dt: "2026-10-07T14:00:00+13:00"
+      official: true
+    - dt: "2026-11-25T14:00:00+13:00"
+      official: true
+    - dt: "2027-02-24T14:00:00+13:00"
+      official: false
+    - dt: "2027-04-07T14:00:00+12:00"
+      official: false
+    - dt: "2027-05-26T14:00:00+12:00"
+      official: false
+    - dt: "2027-07-07T14:00:00+12:00"
+      official: false
+    - dt: "2027-08-11T14:00:00+12:00"
+      official: false
+    - dt: "2027-10-06T14:00:00+13:00"
+      official: false
+    - dt: "2027-11-24T14:00:00+13:00"
+      official: false
+SNB:
+  current_rate: 0.00
+  step_bps: 25
+  meetings:
+    - dt: "2026-06-18T09:30:00+02:00"
+      official: true
+    - dt: "2026-09-24T09:30:00+02:00"
+      official: true
+    - dt: "2026-12-17T09:30:00+01:00"
+      official: true
+    - dt: "2027-03-25T09:30:00+01:00"
+      official: false
+    - dt: "2027-06-24T09:30:00+02:00"
+      official: false
+    - dt: "2027-09-23T09:30:00+02:00"
+      official: false
+    - dt: "2027-12-16T09:30:00+01:00"
+      official: false

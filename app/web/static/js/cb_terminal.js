@@ -13,17 +13,17 @@
     const yieldPairs = Array.isArray(yieldDiffs.pairs) ? yieldDiffs.pairs : [];
     const colors = ["#f59e0b", "#3b82f6", "#a3e635", "#22c55e", "#f97316", "#ef4444", "#38bdf8", "#eab308"];
     const cbNames = {
-        USD: "Fed",
-        EUR: "ECB",
-        GBP: "BoE",
-        JPY: "BoJ",
-        AUD: "RBA",
-        CAD: "BoC",
-        CHF: "SNB",
-        NZD: "RBNZ",
+        USD: "Fed", EUR: "ECB", GBP: "BoE", JPY: "BoJ",
+        AUD: "RBA", CAD: "BoC", CHF: "SNB", NZD: "RBNZ",
     };
+    // reverse map: "Fed" -> "USD" etc., used for API calls
+    const bankToCurrency = Object.fromEntries(Object.entries(cbNames).map(([ccy, name]) => [name, ccy]));
+
     let active = null;
     let chart = null;
+    let feedsData = [];
+    let analysisData = null;
+    let feedRefreshTimer = null;
 
     const esc = (value) => String(value || "")
         .replaceAll("&", "&amp;")
@@ -42,6 +42,11 @@
         if (!value) return "Recent";
         const date = new Date(value);
         return Number.isNaN(date.getTime()) ? "Recent" : date.toLocaleDateString([], { month: "short", day: "numeric" });
+    };
+    const shortDate = (value) => {
+        if (!value) return "";
+        const d = new Date(value);
+        return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString([], { month: "short", day: "numeric" });
     };
 
     const banks = meter.map((row) => ({
@@ -90,6 +95,106 @@
             }));
         return [...pairRows, ...spreadRows].slice(0, 8);
     };
+
+    // --- Feed fetching ---
+
+    const fetchFeeds = async () => {
+        const ccy = active ? bankToCurrency[active] : null;
+        const url = ccy ? `/api/cb/feeds?bank=${encodeURIComponent(ccy)}` : "/api/cb/feeds";
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("feed error");
+            const data = await res.json();
+            feedsData = data.feeds || [];
+        } catch {
+            feedsData = [];
+        }
+        renderFeeds();
+    };
+
+    const fetchAnalysis = async () => {
+        const el = root.querySelector("[data-cb-ai]");
+        const btn = root.querySelector("[data-cb-analyze]");
+        if (!el) return;
+        if (btn) btn.disabled = true;
+        el.innerHTML = '<div class="cb-ai-loading">Analyzing CB communications…</div>';
+        const ccy = active ? bankToCurrency[active] : null;
+        const url = ccy ? `/api/cb/analysis?bank=${encodeURIComponent(ccy)}` : "/api/cb/analysis";
+        try {
+            const res = await fetch(url, { method: "POST" });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || "analysis error");
+            }
+            analysisData = await res.json();
+        } catch (e) {
+            analysisData = null;
+            el.innerHTML = `<div class="black-empty">${esc(e.message || "Analysis failed. Please try again.")}</div>`;
+            if (btn) btn.disabled = false;
+            return;
+        }
+        if (btn) btn.disabled = false;
+        renderAI();
+    };
+
+    const scheduleRefresh = () => {
+        if (feedRefreshTimer) clearInterval(feedRefreshTimer);
+        feedRefreshTimer = setInterval(fetchFeeds, 15 * 60 * 1000);
+    };
+
+    // --- Render helpers ---
+
+    const renderFeeds = () => {
+        const el = root.querySelector("[data-cb-feeds]");
+        if (!el) return;
+        const label = root.querySelector("[data-cb-feeds-label]");
+        if (label) label.textContent = active || "All banks";
+
+        const articles = feedsData
+            .flatMap((feed) => (feed.articles || []).map((a) => ({ ...a, bankName: feed.name, currency: feed.currency })))
+            .slice(0, 12);
+
+        if (!articles.length) {
+            el.innerHTML = '<div class="black-empty">No feed articles available.</div>';
+            return;
+        }
+        el.innerHTML = articles.map((a) => {
+            const ds = shortDate(a.pubDate);
+            return `<div class="cb-feed-item">
+                <a href="${esc(a.link)}" target="_blank" rel="noopener noreferrer">${esc(a.title)}</a>
+                <div class="cb-feed-item__meta">
+                    <span class="cb-feed-item__tag">${esc(a.bankName || a.currency)}</span>
+                    ${ds ? `<span>${esc(ds)}</span>` : ""}
+                    ${a.description ? `<span class="cb-feed-item__desc">${esc(a.description.slice(0, 90))}…</span>` : ""}
+                </div>
+            </div>`;
+        }).join("");
+    };
+
+    const renderAI = () => {
+        const el = root.querySelector("[data-cb-ai]");
+        if (!el) return;
+        if (!analysisData) {
+            el.innerHTML = '<div class="black-empty">Click Analyze to generate AI insights.</div>';
+            return;
+        }
+        const sc = analysisData.stance === "hawkish" ? "hawkish" : analysisData.stance === "dovish" ? "dovish" : "neutral";
+        const biasMap = { cut: "↓ Cut", hold: "⊙ Hold", hike: "↑ Hike" };
+        const bias = biasMap[analysisData.rate_bias] || analysisData.rate_bias || "";
+        const ts = analysisData.generated_at
+            ? new Date(analysisData.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+            : "";
+        el.innerHTML = `<div class="cb-ai-box">
+            <div class="cb-ai-stance ${sc}">${esc(analysisData.stance)}${bias ? ` \xb7 ${esc(bias)}` : ""} \xb7 ${analysisData.confidence || 0}% confidence</div>
+            <p class="cb-ai-summary">${esc(analysisData.summary)}</p>
+            ${analysisData.fx_implication ? `<div class="cb-ai-fx">${esc(analysisData.fx_implication)}</div>` : ""}
+            ${analysisData.key_themes?.length ? `<div class="cb-ai-themes">${analysisData.key_themes.map((t) => `<span class="cb-ai-theme">${esc(t)}</span>`).join("")}</div>` : ""}
+            ${analysisData.risk_factors?.length ? `<div class="cb-ai-risks">Risks: ${esc(analysisData.risk_factors.join(" \xb7 "))}</div>` : ""}
+            ${ts ? `<span class="cb-ai-ts">Generated ${ts}</span>` : ""}
+        </div>`;
+    };
+
+    // --- Main render ---
 
     const render = () => {
         if (!banks.length) {
@@ -154,6 +259,7 @@
         `).join("") : '<div class="black-empty">No rates differential rows matched this bank.</div>';
 
         drawTrend();
+        fetchFeeds();
     };
 
     const drawTrend = () => {
@@ -191,12 +297,19 @@
     };
 
     root.addEventListener("click", (event) => {
-        const button = event.target.closest("[data-bank]");
-        if (!button) return;
-        active = button.dataset.bank || null;
-        render();
+        const bankBtn = event.target.closest("[data-bank]");
+        if (bankBtn) {
+            active = bankBtn.dataset.bank || null;
+            analysisData = null;
+            render();
+            return;
+        }
+        if (event.target.closest("[data-cb-analyze]")) {
+            fetchAnalysis();
+        }
     });
 
     render();
+    scheduleRefresh();
     window.__macroComponents.cbTerminal = "loaded";
 })();

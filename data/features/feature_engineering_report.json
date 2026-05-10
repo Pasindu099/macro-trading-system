@@ -1,58 +1,71 @@
 {
   "feature_coverage": [
     {
-      "feature_rows": 9812,
+      "feature_rows": 10005,
       "macro_theme": "Growth",
-      "mom_change_rows": 9623,
-      "surprise_score_rows": 9425,
-      "yoy_change_rows": 7995,
-      "z_score_rows": 9425
+      "mom_change_rows": 9816,
+      "surprise_score_rows": 9617,
+      "yoy_change_rows": 8152,
+      "z_score_rows": 9617
     },
     {
-      "feature_rows": 5038,
+      "feature_rows": 5376,
       "macro_theme": "Inflation",
-      "mom_change_rows": 4921,
-      "surprise_score_rows": 4785,
-      "yoy_change_rows": 3986,
-      "z_score_rows": 4785
+      "mom_change_rows": 5256,
+      "surprise_score_rows": 5120,
+      "yoy_change_rows": 4268,
+      "z_score_rows": 5120
     },
     {
-      "feature_rows": 2126,
+      "feature_rows": 2299,
       "macro_theme": "Labor",
-      "mom_change_rows": 2086,
-      "surprise_score_rows": 2047,
-      "yoy_change_rows": 1619,
-      "z_score_rows": 2047
+      "mom_change_rows": 2259,
+      "surprise_score_rows": 2218,
+      "yoy_change_rows": 1787,
+      "z_score_rows": 2218
     },
     {
-      "feature_rows": 174,
+      "feature_rows": 207,
       "macro_theme": "Other",
-      "mom_change_rows": 165,
-      "surprise_score_rows": 105,
-      "yoy_change_rows": 73,
-      "z_score_rows": 105
+      "mom_change_rows": 198,
+      "surprise_score_rows": 139,
+      "yoy_change_rows": 94,
+      "z_score_rows": 139
     }
   ],
   "feature_limitations": [
     {
       "flag": "insufficient_seasonal_history",
-      "rows": 3477
+      "rows": 3586
     },
     {
       "flag": "z_score_unavailable",
-      "rows": 788
+      "rows": 793
     },
     {
       "flag": "surprise_proxy_short_history",
-      "rows": 355
+      "rows": 358
     },
     {
       "flag": "insufficient_prior_history",
-      "rows": 355
+      "rows": 358
     }
   ],
-  "generated_at": "2026-04-24T07:53:07.907893Z",
+  "generated_at": "2026-04-25T22:25:39.301314Z",
   "strongest_predictor_relationships": [
+    {
+      "abs_correlation": 0.941691,
+      "candidate_indicator_key": "private_house_approvals_mom",
+      "candidate_indicator_name": "Private House Approvals (MoM)",
+      "candidate_macro_theme": "Growth",
+      "correlation": 0.941691,
+      "country_code": "AU",
+      "headline_indicator_key": "cpi_headline_mom",
+      "headline_target_type": "CPI",
+      "lag_months": 6,
+      "observation_pairs": 8,
+      "relationship_strength": "strong"
+    },
     {
       "abs_correlation": 0.938885,
       "candidate_indicator_key": "retail_sales_yoy",
@@ -90,19 +103,6 @@
       "headline_target_type": "GDP",
       "lag_months": 2,
       "observation_pairs": 19,
-      "relationship_strength": "strong"
-    },
-    {
-      "abs_correlation": 0.929056,
-      "candidate_indicator_key": "sp_global_manufacturing_pmi",
-      "candidate_indicator_name": "S&P Global Manufacturing PMI",
-      "candidate_macro_theme": "Growth",
-      "correlation": -0.929056,
-      "country_code": "US",
-      "headline_indicator_key": "cpi_headline_yoy",
-      "headline_target_type": "CPI",
-      "lag_months": 2,
-      "observation_pairs": 10,
       "relationship_strength": "strong"
     },
     {
@@ -171,55 +171,42 @@
       "relationship_strength": "strong"
     },
     {
-      "abs_correlation": 0.863456,
-      "candidate_indicator_key": "core_rpi_mom",
-      "candidate_indicator_name": "Core RPI (MoM)",
-      "candidate_macro_theme": "Inflation",
-      "correlation": 0.863456,
-      "country_code": "UK",
-      "headline_indicator_key": "cpi_headline_mom",
-      "headline_target_type": "CPI",
-      "lag_months": 0,
-      "observation_pairs": 19,
-      "relationship_strength": "strong"
-    },
-    {
-      "abs_correlation": 0.863404,
+      "abs_correlation": 0.860789,
       "candidate_indicator_key": "manufacturing_payrolls",
       "candidate_indicator_name": "Manufacturing Payrolls",
       "candidate_macro_theme": "Labor",
-      "correlation": -0.863404,
+      "correlation": -0.860789,
       "country_code": "US",
       "headline_indicator_key": "unemployment_rate",
       "headline_target_type": "UNEMPLOYMENT",
       "lag_months": 1,
-      "observation_pairs": 21,
+      "observation_pairs": 30,
       "relationship_strength": "strong"
     },
     {
-      "abs_correlation": 0.863066,
-      "candidate_indicator_key": "average_weekly_hours",
-      "candidate_indicator_name": "Average Weekly Hours",
+      "abs_correlation": 0.85907,
+      "candidate_indicator_key": "core_rpi_mom",
+      "candidate_indicator_name": "Core RPI (MoM)",
+      "candidate_macro_theme": "Inflation",
+      "correlation": 0.85907,
+      "country_code": "UK",
+      "headline_indicator_key": "cpi_headline_mom",
+      "headline_target_type": "CPI",
+      "lag_months": 0,
+      "observation_pairs": 20,
+      "relationship_strength": "strong"
+    },
+    {
+      "abs_correlation": 0.858664,
+      "candidate_indicator_key": "government_payrolls",
+      "candidate_indicator_name": "Government Payrolls",
       "candidate_macro_theme": "Labor",
-      "correlation": 0.863066,
+      "correlation": -0.858664,
       "country_code": "US",
       "headline_indicator_key": "unemployment_rate",
       "headline_target_type": "UNEMPLOYMENT",
-      "lag_months": 4,
-      "observation_pairs": 11,
-      "relationship_strength": "strong"
-    },
-    {
-      "abs_correlation": 0.855723,
-      "candidate_indicator_key": "philly_fed_mfg",
-      "candidate_indicator_name": "Philadelphia Fed Manufacturing Index",
-      "candidate_macro_theme": "Growth",
-      "correlation": 0.855723,
-      "country_code": "US",
-      "headline_indicator_key": "unemployment_rate",
-      "headline_target_type": "UNEMPLOYMENT",
-      "lag_months": 3,
-      "observation_pairs": 10,
+      "lag_months": 1,
+      "observation_pairs": 30,
       "relationship_strength": "strong"
     },
     {
@@ -236,19 +223,6 @@
       "relationship_strength": "strong"
     },
     {
-      "abs_correlation": 0.851757,
-      "candidate_indicator_key": "pce_price_index_yoy",
-      "candidate_indicator_name": "PCE Price Index (YoY)",
-      "candidate_macro_theme": "Inflation",
-      "correlation": 0.851757,
-      "country_code": "US",
-      "headline_indicator_key": "cpi_headline_mom",
-      "headline_target_type": "CPI",
-      "lag_months": 3,
-      "observation_pairs": 10,
-      "relationship_strength": "strong"
-    },
-    {
       "abs_correlation": 0.850999,
       "candidate_indicator_key": "construction_output_mom",
       "candidate_indicator_name": "Construction Output (MoM)",
@@ -259,32 +233,6 @@
       "headline_target_type": "GDP",
       "lag_months": 1,
       "observation_pairs": 10,
-      "relationship_strength": "strong"
-    },
-    {
-      "abs_correlation": 0.845975,
-      "candidate_indicator_key": "government_payrolls",
-      "candidate_indicator_name": "Government Payrolls",
-      "candidate_macro_theme": "Labor",
-      "correlation": -0.845975,
-      "country_code": "US",
-      "headline_indicator_key": "unemployment_rate",
-      "headline_target_type": "UNEMPLOYMENT",
-      "lag_months": 1,
-      "observation_pairs": 21,
-      "relationship_strength": "strong"
-    },
-    {
-      "abs_correlation": 0.844036,
-      "candidate_indicator_key": "nfp",
-      "candidate_indicator_name": "Non-Farm Payrolls",
-      "candidate_macro_theme": "Labor",
-      "correlation": -0.844036,
-      "country_code": "US",
-      "headline_indicator_key": "unemployment_rate",
-      "headline_target_type": "UNEMPLOYMENT",
-      "lag_months": 1,
-      "observation_pairs": 21,
       "relationship_strength": "strong"
     },
     {
@@ -314,16 +262,16 @@
       "relationship_strength": "strong"
     },
     {
-      "abs_correlation": 0.83792,
-      "candidate_indicator_key": "core_ppi_yoy",
-      "candidate_indicator_name": "Core PPI (YoY)",
-      "candidate_macro_theme": "Inflation",
-      "correlation": 0.83792,
+      "abs_correlation": 0.838916,
+      "candidate_indicator_key": "nfp",
+      "candidate_indicator_name": "Non-Farm Payrolls",
+      "candidate_macro_theme": "Labor",
+      "correlation": -0.838916,
       "country_code": "US",
-      "headline_indicator_key": "cpi_headline_mom",
-      "headline_target_type": "CPI",
-      "lag_months": 2,
-      "observation_pairs": 10,
+      "headline_indicator_key": "unemployment_rate",
+      "headline_target_type": "UNEMPLOYMENT",
+      "lag_months": 1,
+      "observation_pairs": 30,
       "relationship_strength": "strong"
     },
     {
@@ -337,19 +285,6 @@
       "headline_target_type": "CPI",
       "lag_months": 0,
       "observation_pairs": 22,
-      "relationship_strength": "strong"
-    },
-    {
-      "abs_correlation": 0.828767,
-      "candidate_indicator_key": "private_nonfarm_payrolls",
-      "candidate_indicator_name": "Private Nonfarm Payrolls",
-      "candidate_macro_theme": "Labor",
-      "correlation": -0.828767,
-      "country_code": "US",
-      "headline_indicator_key": "unemployment_rate",
-      "headline_target_type": "UNEMPLOYMENT",
-      "lag_months": 1,
-      "observation_pairs": 21,
       "relationship_strength": "strong"
     },
     {
@@ -392,6 +327,19 @@
       "relationship_strength": "strong"
     },
     {
+      "abs_correlation": 0.816133,
+      "candidate_indicator_key": "private_nonfarm_payrolls",
+      "candidate_indicator_name": "Private Nonfarm Payrolls",
+      "candidate_macro_theme": "Labor",
+      "correlation": -0.816133,
+      "country_code": "US",
+      "headline_indicator_key": "unemployment_rate",
+      "headline_target_type": "UNEMPLOYMENT",
+      "lag_months": 1,
+      "observation_pairs": 29,
+      "relationship_strength": "strong"
+    },
+    {
       "abs_correlation": 0.812022,
       "candidate_indicator_key": "retail_sales_mom",
       "candidate_indicator_name": "Retail Sales (MoM)",
@@ -405,11 +353,11 @@
       "relationship_strength": "strong"
     },
     {
-      "abs_correlation": 0.810942,
+      "abs_correlation": 0.801678,
       "candidate_indicator_key": "employment_cost_benefits_qoq",
       "candidate_indicator_name": "Employment Cost - Benefits (QoQ)",
       "candidate_macro_theme": "Inflation",
-      "correlation": 0.810942,
+      "correlation": 0.801678,
       "country_code": "US",
       "headline_indicator_key": "cpi_headline_yoy",
       "headline_target_type": "CPI",
@@ -418,40 +366,92 @@
       "relationship_strength": "strong"
     },
     {
-      "abs_correlation": 0.80328,
-      "candidate_indicator_key": "adp_employment_change",
-      "candidate_indicator_name": "ADP Employment Change",
-      "candidate_macro_theme": "Labor",
-      "correlation": 0.80328,
-      "country_code": "US",
-      "headline_indicator_key": "unemployment_rate",
-      "headline_target_type": "UNEMPLOYMENT",
-      "lag_months": 2,
-      "observation_pairs": 9,
-      "relationship_strength": "strong"
-    },
-    {
-      "abs_correlation": 0.790748,
+      "abs_correlation": 0.790038,
       "candidate_indicator_key": "retail_price_index_mom",
       "candidate_indicator_name": "Retail Price Index (MoM)",
       "candidate_macro_theme": "Inflation",
-      "correlation": 0.790748,
+      "correlation": 0.790038,
       "country_code": "UK",
       "headline_indicator_key": "cpi_headline_mom",
       "headline_target_type": "CPI",
       "lag_months": 0,
-      "observation_pairs": 66,
+      "observation_pairs": 67,
+      "relationship_strength": "strong"
+    },
+    {
+      "abs_correlation": 0.786881,
+      "candidate_indicator_key": "sp_global_manufacturing_pmi",
+      "candidate_indicator_name": "S&P Global Manufacturing PMI",
+      "candidate_macro_theme": "Growth",
+      "correlation": 0.786881,
+      "country_code": "US",
+      "headline_indicator_key": "unemployment_rate",
+      "headline_target_type": "UNEMPLOYMENT",
+      "lag_months": 3,
+      "observation_pairs": 20,
+      "relationship_strength": "strong"
+    },
+    {
+      "abs_correlation": 0.783451,
+      "candidate_indicator_key": "labour_cost_index_qoq",
+      "candidate_indicator_name": "Labour Cost Index (QoQ)",
+      "candidate_macro_theme": "Inflation",
+      "correlation": 0.783451,
+      "country_code": "NZ",
+      "headline_indicator_key": "cpi_headline_qoq",
+      "headline_target_type": "CPI",
+      "lag_months": 3,
+      "observation_pairs": 23,
+      "relationship_strength": "strong"
+    },
+    {
+      "abs_correlation": 0.774757,
+      "candidate_indicator_key": "capacity_utilization",
+      "candidate_indicator_name": "Capacity Utilization",
+      "candidate_macro_theme": "Growth",
+      "correlation": -0.774757,
+      "country_code": "JP",
+      "headline_indicator_key": "gdp_qoq",
+      "headline_target_type": "GDP",
+      "lag_months": 3,
+      "observation_pairs": 41,
+      "relationship_strength": "strong"
+    },
+    {
+      "abs_correlation": 0.773669,
+      "candidate_indicator_key": "employment_cost_index_qoq",
+      "candidate_indicator_name": "Employment Cost Index (QoQ)",
+      "candidate_macro_theme": "Inflation",
+      "correlation": 0.773669,
+      "country_code": "US",
+      "headline_indicator_key": "cpi_headline_yoy",
+      "headline_target_type": "CPI",
+      "lag_months": 4,
+      "observation_pairs": 11,
+      "relationship_strength": "strong"
+    },
+    {
+      "abs_correlation": 0.773093,
+      "candidate_indicator_key": "retail_sales_mom",
+      "candidate_indicator_name": "Retail Sales (MoM)",
+      "candidate_macro_theme": "Growth",
+      "correlation": -0.773093,
+      "country_code": "CH",
+      "headline_indicator_key": "gdp_qoq",
+      "headline_target_type": "GDP",
+      "lag_months": 4,
+      "observation_pairs": 20,
       "relationship_strength": "strong"
     }
   ],
   "summary": {
-    "best_lag_rows": 773,
-    "headline_target_rows": 2010,
-    "indicator_feature_rows": 17150,
-    "lag_result_rows": 4728,
+    "best_lag_rows": 792,
+    "headline_target_rows": 2043,
+    "indicator_feature_rows": 17887,
+    "lag_result_rows": 4978,
     "mapped_indicators": 369,
-    "modeling_feature_rows": 41972,
-    "multicollinearity_flags": 51
+    "modeling_feature_rows": 43654,
+    "multicollinearity_flags": 50
   },
   "theme_counts": [
     {

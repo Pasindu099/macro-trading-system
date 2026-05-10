@@ -1,324 +1,324 @@
 {
   "best_macro_outcome_metrics": [
     {
-      "correlation": 0.21199,
-      "country_code": "US",
-      "directional_accuracy": 0.643836,
-      "headline_target_type": "CPI",
-      "horizon_months": 3,
-      "performance_rating": "promising",
-      "sample_count": 511,
-      "theme": "Inflation"
-    },
-    {
-      "correlation": 0.261684,
-      "country_code": "US",
-      "directional_accuracy": 0.636161,
-      "headline_target_type": "CPI",
-      "horizon_months": 1,
-      "performance_rating": "promising",
-      "sample_count": 448,
-      "theme": "Inflation"
-    },
-    {
-      "correlation": 0.182427,
-      "country_code": "US",
-      "directional_accuracy": 0.631579,
-      "headline_target_type": "UNEMPLOYMENT",
-      "horizon_months": 2,
-      "performance_rating": "promising",
-      "sample_count": 418,
-      "theme": "Labor"
-    },
-    {
-      "correlation": 0.184668,
-      "country_code": "US",
-      "directional_accuracy": 0.62578,
+      "correlation": 0.010959,
+      "country_code": "NZ",
+      "directional_accuracy": 0.702479,
       "headline_target_type": "UNEMPLOYMENT",
       "horizon_months": 3,
       "performance_rating": "promising",
-      "sample_count": 481,
+      "sample_count": 242,
       "theme": "Labor"
     },
     {
-      "correlation": 0.18136,
-      "country_code": "US",
-      "directional_accuracy": 0.625641,
+      "correlation": 0.010959,
+      "country_code": "NZ",
+      "directional_accuracy": 0.702479,
       "headline_target_type": "UNEMPLOYMENT",
-      "horizon_months": 1,
-      "performance_rating": "promising",
-      "sample_count": 390,
-      "theme": "Labor"
-    },
-    {
-      "correlation": 0.30807,
-      "country_code": "US",
-      "directional_accuracy": 0.616842,
-      "headline_target_type": "CPI",
       "horizon_months": 2,
       "performance_rating": "promising",
-      "sample_count": 475,
+      "sample_count": 242,
+      "theme": "Labor"
+    },
+    {
+      "correlation": 0.134668,
+      "country_code": "NZ",
+      "directional_accuracy": 0.696262,
+      "headline_target_type": "CPI",
+      "horizon_months": 1,
+      "performance_rating": "promising",
+      "sample_count": 214,
       "theme": "Inflation"
     },
     {
-      "correlation": 0.107,
+      "correlation": 0.023131,
+      "country_code": "NZ",
+      "directional_accuracy": 0.688889,
+      "headline_target_type": "UNEMPLOYMENT",
+      "horizon_months": 1,
+      "performance_rating": "promising",
+      "sample_count": 225,
+      "theme": "Labor"
+    },
+    {
+      "correlation": 0.336948,
       "country_code": "UK",
-      "directional_accuracy": 0.600701,
-      "headline_target_type": "CPI",
+      "directional_accuracy": 0.673203,
+      "headline_target_type": "UNEMPLOYMENT",
       "horizon_months": 1,
       "performance_rating": "promising",
-      "sample_count": 571,
+      "sample_count": 459,
+      "theme": "Labor"
+    },
+    {
+      "correlation": 0.336948,
+      "country_code": "UK",
+      "directional_accuracy": 0.673203,
+      "headline_target_type": "UNEMPLOYMENT",
+      "horizon_months": 2,
+      "performance_rating": "promising",
+      "sample_count": 459,
+      "theme": "Labor"
+    },
+    {
+      "correlation": 0.336948,
+      "country_code": "UK",
+      "directional_accuracy": 0.673203,
+      "headline_target_type": "UNEMPLOYMENT",
+      "horizon_months": 3,
+      "performance_rating": "promising",
+      "sample_count": 459,
+      "theme": "Labor"
+    },
+    {
+      "correlation": 0.174375,
+      "country_code": "NZ",
+      "directional_accuracy": 0.672727,
+      "headline_target_type": "CPI",
+      "horizon_months": 3,
+      "performance_rating": "promising",
+      "sample_count": 275,
       "theme": "Inflation"
     },
     {
-      "correlation": 0.70248,
-      "country_code": "CA",
-      "directional_accuracy": 0.59725,
-      "headline_target_type": "UNEMPLOYMENT",
-      "horizon_months": 1,
-      "performance_rating": "strong",
-      "sample_count": 509,
-      "theme": "Labor"
-    },
-    {
-      "correlation": 0.70248,
-      "country_code": "CA",
-      "directional_accuracy": 0.59725,
-      "headline_target_type": "UNEMPLOYMENT",
-      "horizon_months": 2,
-      "performance_rating": "strong",
-      "sample_count": 509,
-      "theme": "Labor"
-    },
-    {
-      "correlation": 0.70248,
-      "country_code": "CA",
-      "directional_accuracy": 0.59725,
+      "correlation": 0.779929,
+      "country_code": "US",
+      "directional_accuracy": 0.636778,
       "headline_target_type": "UNEMPLOYMENT",
       "horizon_months": 3,
       "performance_rating": "strong",
-      "sample_count": 509,
+      "sample_count": 658,
       "theme": "Labor"
     },
     {
-      "correlation": 0.153604,
-      "country_code": "UK",
-      "directional_accuracy": 0.588441,
-      "headline_target_type": "CPI",
-      "horizon_months": 2,
-      "performance_rating": "promising",
-      "sample_count": 571,
-      "theme": "Inflation"
-    },
-    {
-      "correlation": 0.051876,
-      "country_code": "UK",
-      "directional_accuracy": 0.584939,
-      "headline_target_type": "CPI",
-      "horizon_months": 3,
-      "performance_rating": "promising",
-      "sample_count": 571,
-      "theme": "Inflation"
-    },
-    {
-      "correlation": 0.11917,
-      "country_code": "CA",
-      "directional_accuracy": 0.578498,
-      "headline_target_type": "CPI",
-      "horizon_months": 3,
-      "performance_rating": "promising",
-      "sample_count": 586,
-      "theme": "Inflation"
-    },
-    {
-      "correlation": 0.231801,
-      "country_code": "AU",
-      "directional_accuracy": 0.569316,
-      "headline_target_type": "CPI",
-      "horizon_months": 3,
-      "performance_rating": "promising",
-      "sample_count": 541,
-      "theme": "Inflation"
-    },
-    {
-      "correlation": 0.18392,
-      "country_code": "UK",
-      "directional_accuracy": 0.565702,
-      "headline_target_type": "UNEMPLOYMENT",
-      "horizon_months": 1,
-      "performance_rating": "promising",
-      "sample_count": 449,
-      "theme": "Labor"
-    },
-    {
-      "correlation": 0.18392,
-      "country_code": "UK",
-      "directional_accuracy": 0.565702,
-      "headline_target_type": "UNEMPLOYMENT",
-      "horizon_months": 3,
-      "performance_rating": "promising",
-      "sample_count": 449,
-      "theme": "Labor"
-    },
-    {
-      "correlation": 0.18392,
-      "country_code": "UK",
-      "directional_accuracy": 0.565702,
+      "correlation": 0.501009,
+      "country_code": "CH",
+      "directional_accuracy": 0.634069,
       "headline_target_type": "UNEMPLOYMENT",
       "horizon_months": 2,
-      "performance_rating": "promising",
-      "sample_count": 449,
+      "performance_rating": "strong",
+      "sample_count": 317,
       "theme": "Labor"
     },
     {
-      "correlation": 0.210386,
+      "correlation": 0.501009,
       "country_code": "CH",
-      "directional_accuracy": 0.562963,
-      "headline_target_type": "CPI",
-      "horizon_months": 2,
-      "performance_rating": "promising",
-      "sample_count": 270,
-      "theme": "Inflation"
-    },
-    {
-      "correlation": 0.210386,
-      "country_code": "CH",
-      "directional_accuracy": 0.562963,
-      "headline_target_type": "CPI",
+      "directional_accuracy": 0.634069,
+      "headline_target_type": "UNEMPLOYMENT",
       "horizon_months": 3,
-      "performance_rating": "promising",
-      "sample_count": 270,
-      "theme": "Inflation"
+      "performance_rating": "strong",
+      "sample_count": 317,
+      "theme": "Labor"
     },
     {
-      "correlation": 0.210386,
+      "correlation": 0.501009,
       "country_code": "CH",
-      "directional_accuracy": 0.562963,
-      "headline_target_type": "CPI",
+      "directional_accuracy": 0.634069,
+      "headline_target_type": "UNEMPLOYMENT",
       "horizon_months": 1,
-      "performance_rating": "promising",
-      "sample_count": 270,
-      "theme": "Inflation"
+      "performance_rating": "strong",
+      "sample_count": 317,
+      "theme": "Labor"
     },
     {
-      "correlation": 0.231916,
-      "country_code": "AU",
-      "directional_accuracy": 0.554479,
-      "headline_target_type": "CPI",
-      "horizon_months": 1,
-      "performance_rating": "promising",
-      "sample_count": 413,
-      "theme": "Inflation"
-    },
-    {
-      "correlation": 0.0971,
-      "country_code": "JP",
-      "directional_accuracy": 0.553591,
-      "headline_target_type": "GDP",
-      "horizon_months": 3,
-      "performance_rating": "promising",
-      "sample_count": 905,
-      "theme": "Growth"
-    },
-    {
-      "correlation": 0.0971,
-      "country_code": "JP",
-      "directional_accuracy": 0.553591,
-      "headline_target_type": "GDP",
-      "horizon_months": 2,
-      "performance_rating": "promising",
-      "sample_count": 905,
-      "theme": "Growth"
-    },
-    {
-      "correlation": 0.133096,
-      "country_code": "CA",
-      "directional_accuracy": 0.552941,
-      "headline_target_type": "CPI",
-      "horizon_months": 1,
-      "performance_rating": "promising",
-      "sample_count": 595,
-      "theme": "Inflation"
-    },
-    {
-      "correlation": 0.246578,
-      "country_code": "AU",
-      "directional_accuracy": 0.551724,
+      "correlation": 0.11332,
+      "country_code": "NZ",
+      "directional_accuracy": 0.632867,
       "headline_target_type": "CPI",
       "horizon_months": 2,
       "performance_rating": "promising",
-      "sample_count": 522,
+      "sample_count": 286,
       "theme": "Inflation"
     },
     {
-      "correlation": 0.096022,
-      "country_code": "JP",
-      "directional_accuracy": 0.55079,
-      "headline_target_type": "GDP",
-      "horizon_months": 1,
-      "performance_rating": "promising",
-      "sample_count": 886,
-      "theme": "Growth"
-    },
-    {
-      "correlation": 0.131144,
-      "country_code": "CA",
-      "directional_accuracy": 0.534923,
-      "headline_target_type": "CPI",
+      "correlation": 0.809769,
+      "country_code": "US",
+      "directional_accuracy": 0.62415,
+      "headline_target_type": "UNEMPLOYMENT",
       "horizon_months": 2,
-      "performance_rating": "promising",
-      "sample_count": 587,
-      "theme": "Inflation"
+      "performance_rating": "strong",
+      "sample_count": 588,
+      "theme": "Labor"
     },
     {
-      "correlation": -0.144835,
-      "country_code": "CA",
-      "directional_accuracy": 0.517691,
-      "headline_target_type": "GDP",
+      "correlation": 0.826394,
+      "country_code": "US",
+      "directional_accuracy": 0.61828,
+      "headline_target_type": "UNEMPLOYMENT",
       "horizon_months": 1,
-      "performance_rating": "weak",
-      "sample_count": 537,
-      "theme": "Growth"
+      "performance_rating": "strong",
+      "sample_count": 558,
+      "theme": "Labor"
     },
     {
-      "correlation": -0.143742,
-      "country_code": "CA",
-      "directional_accuracy": 0.517495,
-      "headline_target_type": "GDP",
-      "horizon_months": 2,
-      "performance_rating": "weak",
-      "sample_count": 543,
-      "theme": "Growth"
-    },
-    {
-      "correlation": -0.014107,
+      "correlation": 0.302273,
       "country_code": "EU",
-      "directional_accuracy": 0.502703,
+      "directional_accuracy": 0.612813,
+      "headline_target_type": "UNEMPLOYMENT",
+      "horizon_months": 2,
+      "performance_rating": "promising",
+      "sample_count": 359,
+      "theme": "Labor"
+    },
+    {
+      "correlation": 0.302273,
+      "country_code": "EU",
+      "directional_accuracy": 0.612813,
+      "headline_target_type": "UNEMPLOYMENT",
+      "horizon_months": 1,
+      "performance_rating": "promising",
+      "sample_count": 359,
+      "theme": "Labor"
+    },
+    {
+      "correlation": 0.302273,
+      "country_code": "EU",
+      "directional_accuracy": 0.612813,
+      "headline_target_type": "UNEMPLOYMENT",
+      "horizon_months": 3,
+      "performance_rating": "promising",
+      "sample_count": 359,
+      "theme": "Labor"
+    },
+    {
+      "correlation": 0.712134,
+      "country_code": "CA",
+      "directional_accuracy": 0.608696,
+      "headline_target_type": "UNEMPLOYMENT",
+      "horizon_months": 1,
+      "performance_rating": "strong",
+      "sample_count": 621,
+      "theme": "Labor"
+    },
+    {
+      "correlation": 0.712134,
+      "country_code": "CA",
+      "directional_accuracy": 0.608696,
+      "headline_target_type": "UNEMPLOYMENT",
+      "horizon_months": 3,
+      "performance_rating": "strong",
+      "sample_count": 621,
+      "theme": "Labor"
+    },
+    {
+      "correlation": 0.712134,
+      "country_code": "CA",
+      "directional_accuracy": 0.608696,
+      "headline_target_type": "UNEMPLOYMENT",
+      "horizon_months": 2,
+      "performance_rating": "strong",
+      "sample_count": 621,
+      "theme": "Labor"
+    },
+    {
+      "correlation": 0.220602,
+      "country_code": "US",
+      "directional_accuracy": 0.579779,
+      "headline_target_type": "CPI",
+      "horizon_months": 2,
+      "performance_rating": "promising",
+      "sample_count": 633,
+      "theme": "Inflation"
+    },
+    {
+      "correlation": 0.101079,
+      "country_code": "CH",
+      "directional_accuracy": 0.577957,
       "headline_target_type": "CPI",
       "horizon_months": 3,
-      "performance_rating": "weak",
-      "sample_count": 370,
+      "performance_rating": "promising",
+      "sample_count": 372,
+      "theme": "Inflation"
+    },
+    {
+      "correlation": 0.397553,
+      "country_code": "AU",
+      "directional_accuracy": 0.575617,
+      "headline_target_type": "UNEMPLOYMENT",
+      "horizon_months": 1,
+      "performance_rating": "strong",
+      "sample_count": 648,
+      "theme": "Labor"
+    },
+    {
+      "correlation": 0.397553,
+      "country_code": "AU",
+      "directional_accuracy": 0.575617,
+      "headline_target_type": "UNEMPLOYMENT",
+      "horizon_months": 2,
+      "performance_rating": "strong",
+      "sample_count": 648,
+      "theme": "Labor"
+    },
+    {
+      "correlation": 0.397553,
+      "country_code": "AU",
+      "directional_accuracy": 0.575617,
+      "headline_target_type": "UNEMPLOYMENT",
+      "horizon_months": 3,
+      "performance_rating": "strong",
+      "sample_count": 648,
+      "theme": "Labor"
+    },
+    {
+      "correlation": -0.105878,
+      "country_code": "AU",
+      "directional_accuracy": 0.575163,
+      "headline_target_type": "CPI",
+      "horizon_months": 2,
+      "performance_rating": "promising",
+      "sample_count": 765,
+      "theme": "Inflation"
+    },
+    {
+      "correlation": 0.1871,
+      "country_code": "US",
+      "directional_accuracy": 0.568421,
+      "headline_target_type": "CPI",
+      "horizon_months": 3,
+      "performance_rating": "promising",
+      "sample_count": 665,
+      "theme": "Inflation"
+    },
+    {
+      "correlation": 0.097179,
+      "country_code": "EU",
+      "directional_accuracy": 0.563739,
+      "headline_target_type": "CPI",
+      "horizon_months": 1,
+      "performance_rating": "promising",
+      "sample_count": 353,
+      "theme": "Inflation"
+    },
+    {
+      "correlation": 0.152721,
+      "country_code": "CH",
+      "directional_accuracy": 0.557065,
+      "headline_target_type": "CPI",
+      "horizon_months": 1,
+      "performance_rating": "promising",
+      "sample_count": 368,
       "theme": "Inflation"
     }
   ],
   "confidence_vs_performance": [
     {
       "confidence_bucket": "high",
-      "macro_directional_accuracy": 0.5525179856115108,
-      "policy_directional_accuracy": 0.5445015416238438,
-      "samples": 4865
+      "macro_directional_accuracy": 0.4893828798938288,
+      "policy_directional_accuracy": 0.5291970802919708,
+      "samples": 6028
     },
     {
       "confidence_bucket": "low",
-      "macro_directional_accuracy": 0.5131463628396143,
-      "policy_directional_accuracy": 0.5105170902716915,
-      "samples": 2282
+      "macro_directional_accuracy": 0.506649778340722,
+      "policy_directional_accuracy": 0.5250158328055732,
+      "samples": 3158
     },
     {
       "confidence_bucket": "medium",
-      "macro_directional_accuracy": 0.5322040095058193,
-      "policy_directional_accuracy": 0.5060020717811224,
-      "samples": 16411
+      "macro_directional_accuracy": 0.4969011048234977,
+      "policy_directional_accuracy": 0.5460984717249875,
+      "samples": 25977
     }
   ],
   "fx_validation_status": [
@@ -379,287 +379,287 @@
       "status": "blocked_missing_fx_returns"
     }
   ],
-  "generated_at": "2026-04-21T08:33:33.579040Z",
+  "generated_at": "2026-04-25T22:26:38.295810Z",
   "policy_signal_metrics": [
     {
-      "confidence_alignment": 0.254668,
-      "correlation": 0.795329,
-      "country_code": "US",
-      "directional_accuracy": 0.711618,
-      "dovish_precision": 0.663415,
-      "hawkish_precision": 0.747292,
-      "horizon_months": 2,
-      "performance_rating": "strong",
-      "sample_count": 482
-    },
-    {
-      "confidence_alignment": 0.239286,
-      "correlation": 0.760184,
-      "country_code": "US",
-      "directional_accuracy": 0.698842,
-      "dovish_precision": 0.651584,
-      "hawkish_precision": 0.734007,
-      "horizon_months": 3,
-      "performance_rating": "strong",
-      "sample_count": 518
-    },
-    {
-      "confidence_alignment": 0.213164,
-      "correlation": 0.813038,
-      "country_code": "US",
-      "directional_accuracy": 0.676991,
-      "dovish_precision": 0.60396,
-      "hawkish_precision": 0.736,
-      "horizon_months": 1,
-      "performance_rating": "strong",
-      "sample_count": 452
-    },
-    {
-      "confidence_alignment": 0.031481,
-      "correlation": 0.210386,
-      "country_code": "CH",
-      "directional_accuracy": 0.562963,
-      "dovish_precision": 0.575342,
-      "hawkish_precision": 0.548387,
-      "horizon_months": 3,
-      "performance_rating": "promising",
-      "sample_count": 270
-    },
-    {
-      "confidence_alignment": 0.031481,
-      "correlation": 0.210386,
-      "country_code": "CH",
-      "directional_accuracy": 0.562963,
-      "dovish_precision": 0.575342,
-      "hawkish_precision": 0.548387,
-      "horizon_months": 1,
-      "performance_rating": "promising",
-      "sample_count": 270
-    },
-    {
-      "confidence_alignment": 0.031481,
-      "correlation": 0.210386,
-      "country_code": "CH",
-      "directional_accuracy": 0.562963,
-      "dovish_precision": 0.575342,
-      "hawkish_precision": 0.548387,
-      "horizon_months": 2,
-      "performance_rating": "promising",
-      "sample_count": 270
-    },
-    {
-      "confidence_alignment": 0.065933,
-      "correlation": -0.059257,
-      "country_code": "EU",
-      "directional_accuracy": 0.555556,
-      "dovish_precision": 0.507389,
-      "hawkish_precision": 0.591241,
-      "horizon_months": 3,
-      "performance_rating": "promising",
-      "sample_count": 477
-    },
-    {
-      "confidence_alignment": 0.068308,
-      "correlation": 0.011807,
-      "country_code": "JP",
-      "directional_accuracy": 0.55531,
-      "dovish_precision": 0.5138,
-      "hawkish_precision": 0.600462,
-      "horizon_months": 2,
-      "performance_rating": "promising",
-      "sample_count": 904
-    },
-    {
-      "confidence_alignment": 0.067569,
-      "correlation": 0.000516,
-      "country_code": "JP",
-      "directional_accuracy": 0.554696,
-      "dovish_precision": 0.519068,
-      "hawkish_precision": 0.593533,
-      "horizon_months": 1,
-      "performance_rating": "promising",
-      "sample_count": 905
-    },
-    {
-      "confidence_alignment": 0.113694,
-      "correlation": 0.519573,
-      "country_code": "CA",
-      "directional_accuracy": 0.55414,
-      "dovish_precision": 0.592233,
-      "hawkish_precision": 0.517241,
-      "horizon_months": 1,
-      "performance_rating": "strong",
-      "sample_count": 628
-    },
-    {
-      "confidence_alignment": 0.104092,
-      "correlation": 0.517409,
-      "country_code": "CA",
-      "directional_accuracy": 0.549918,
-      "dovish_precision": 0.584718,
-      "hawkish_precision": 0.516129,
-      "horizon_months": 3,
-      "performance_rating": "promising",
-      "sample_count": 611
-    },
-    {
-      "confidence_alignment": 0.053337,
-      "correlation": -0.004672,
-      "country_code": "JP",
-      "directional_accuracy": 0.542825,
-      "dovish_precision": 0.497872,
-      "hawkish_precision": 0.592075,
-      "horizon_months": 3,
-      "performance_rating": "promising",
-      "sample_count": 899
-    },
-    {
-      "confidence_alignment": 0.045616,
-      "correlation": -0.06623,
-      "country_code": "EU",
-      "directional_accuracy": 0.538622,
-      "dovish_precision": 0.507538,
-      "hawkish_precision": 0.560714,
-      "horizon_months": 2,
-      "performance_rating": "promising",
-      "sample_count": 479
-    },
-    {
-      "confidence_alignment": 0.074718,
-      "correlation": 0.517248,
-      "country_code": "CA",
-      "directional_accuracy": 0.534622,
-      "dovish_precision": 0.591362,
-      "hawkish_precision": 0.48125,
-      "horizon_months": 2,
-      "performance_rating": "promising",
-      "sample_count": 621
-    },
-    {
-      "confidence_alignment": 0.015817,
-      "correlation": -0.073111,
-      "country_code": "EU",
-      "directional_accuracy": 0.5138,
-      "dovish_precision": 0.497462,
-      "hawkish_precision": 0.525547,
-      "horizon_months": 1,
-      "performance_rating": "weak",
-      "sample_count": 471
-    },
-    {
-      "confidence_alignment": -0.04507,
-      "correlation": 0.214237,
-      "country_code": "AU",
-      "directional_accuracy": 0.478873,
-      "dovish_precision": 0.435233,
-      "hawkish_precision": 0.501333,
-      "horizon_months": 2,
-      "performance_rating": "weak",
-      "sample_count": 568
-    },
-    {
-      "confidence_alignment": -0.062377,
-      "correlation": 0.183729,
-      "country_code": "AU",
-      "directional_accuracy": 0.471513,
-      "dovish_precision": 0.414634,
-      "hawkish_precision": 0.498551,
-      "horizon_months": 1,
-      "performance_rating": "weak",
-      "sample_count": 509
-    },
-    {
-      "confidence_alignment": -0.078893,
-      "correlation": 0.192311,
-      "country_code": "AU",
-      "directional_accuracy": 0.458478,
-      "dovish_precision": 0.4,
-      "hawkish_precision": 0.489418,
-      "horizon_months": 3,
-      "performance_rating": "weak",
-      "sample_count": 578
-    },
-    {
-      "confidence_alignment": -0.070534,
-      "correlation": -0.284168,
-      "country_code": "UK",
-      "directional_accuracy": 0.440735,
-      "dovish_precision": 0.51,
-      "hawkish_precision": 0.371237,
-      "horizon_months": 1,
-      "performance_rating": "weak",
-      "sample_count": 599
-    },
-    {
-      "confidence_alignment": -0.076904,
-      "correlation": -0.32507,
-      "country_code": "UK",
-      "directional_accuracy": 0.43543,
-      "dovish_precision": 0.495017,
-      "hawkish_precision": 0.376238,
-      "horizon_months": 3,
-      "performance_rating": "weak",
-      "sample_count": 604
-    },
-    {
-      "confidence_alignment": -0.037719,
-      "correlation": -0.129513,
+      "confidence_alignment": 0.201282,
+      "correlation": 0.201537,
       "country_code": "NZ",
-      "directional_accuracy": 0.424561,
-      "dovish_precision": 0.413534,
-      "hawkish_precision": 0.434211,
+      "directional_accuracy": 0.666667,
+      "dovish_precision": 0.656085,
+      "hawkish_precision": 0.690476,
+      "horizon_months": 1,
+      "performance_rating": "promising",
+      "sample_count": 273
+    },
+    {
+      "confidence_alignment": 0.195645,
+      "correlation": 0.207727,
+      "country_code": "NZ",
+      "directional_accuracy": 0.662021,
+      "dovish_precision": 0.673684,
+      "hawkish_precision": 0.639175,
       "horizon_months": 3,
-      "performance_rating": "weak",
+      "performance_rating": "promising",
+      "sample_count": 287
+    },
+    {
+      "confidence_alignment": 0.145235,
+      "correlation": 0.713382,
+      "country_code": "US",
+      "directional_accuracy": 0.620199,
+      "dovish_precision": 0.57398,
+      "hawkish_precision": 0.678457,
+      "horizon_months": 3,
+      "performance_rating": "strong",
+      "sample_count": 703
+    },
+    {
+      "confidence_alignment": 0.141719,
+      "correlation": 0.752135,
+      "country_code": "US",
+      "directional_accuracy": 0.617188,
+      "dovish_precision": 0.585434,
+      "hawkish_precision": 0.657244,
+      "horizon_months": 2,
+      "performance_rating": "strong",
+      "sample_count": 640
+    },
+    {
+      "confidence_alignment": 0.13386,
+      "correlation": 0.176544,
+      "country_code": "NZ",
+      "directional_accuracy": 0.610526,
+      "dovish_precision": 0.601064,
+      "hawkish_precision": 0.628866,
+      "horizon_months": 2,
+      "performance_rating": "promising",
       "sample_count": 285
     },
     {
-      "confidence_alignment": -0.090753,
-      "correlation": -0.320902,
-      "country_code": "UK",
-      "directional_accuracy": 0.423895,
-      "dovish_precision": 0.465798,
-      "hawkish_precision": 0.381579,
+      "confidence_alignment": 0.131987,
+      "correlation": 0.770565,
+      "country_code": "US",
+      "directional_accuracy": 0.609047,
+      "dovish_precision": 0.58046,
+      "hawkish_precision": 0.645756,
+      "horizon_months": 1,
+      "performance_rating": "strong",
+      "sample_count": 619
+    },
+    {
+      "confidence_alignment": 0.130025,
+      "correlation": 0.266651,
+      "country_code": "AU",
+      "directional_accuracy": 0.60799,
+      "dovish_precision": 0.61596,
+      "hawkish_precision": 0.6,
+      "horizon_months": 1,
+      "performance_rating": "promising",
+      "sample_count": 801
+    },
+    {
+      "confidence_alignment": 0.093818,
+      "correlation": 0.253442,
+      "country_code": "AU",
+      "directional_accuracy": 0.578182,
+      "dovish_precision": 0.578692,
+      "hawkish_precision": 0.57767,
+      "horizon_months": 3,
+      "performance_rating": "promising",
+      "sample_count": 825
+    },
+    {
+      "confidence_alignment": 0.085096,
+      "correlation": 0.222708,
+      "country_code": "AU",
+      "directional_accuracy": 0.570913,
+      "dovish_precision": 0.579327,
+      "hawkish_precision": 0.5625,
       "horizon_months": 2,
-      "performance_rating": "weak",
+      "performance_rating": "promising",
+      "sample_count": 832
+    },
+    {
+      "confidence_alignment": 0.036842,
+      "correlation": 0.087523,
+      "country_code": "CH",
+      "directional_accuracy": 0.556064,
+      "dovish_precision": 0.650376,
+      "hawkish_precision": 0.409357,
+      "horizon_months": 1,
+      "performance_rating": "promising",
+      "sample_count": 437
+    },
+    {
+      "confidence_alignment": 0.032308,
+      "correlation": 0.051885,
+      "country_code": "CH",
+      "directional_accuracy": 0.553846,
+      "dovish_precision": 0.647687,
+      "hawkish_precision": 0.402299,
+      "horizon_months": 3,
+      "performance_rating": "promising",
+      "sample_count": 455
+    },
+    {
+      "confidence_alignment": 0.106366,
+      "correlation": 0.468765,
+      "country_code": "CA",
+      "directional_accuracy": 0.550398,
+      "dovish_precision": 0.604278,
+      "hawkish_precision": 0.497368,
+      "horizon_months": 3,
+      "performance_rating": "strong",
+      "sample_count": 754
+    },
+    {
+      "confidence_alignment": 0.048118,
+      "correlation": 0.02937,
+      "country_code": "UK",
+      "directional_accuracy": 0.540098,
+      "dovish_precision": 0.573684,
+      "hawkish_precision": 0.484848,
+      "horizon_months": 1,
+      "performance_rating": "promising",
       "sample_count": 611
     },
     {
-      "confidence_alignment": -0.03972,
-      "correlation": -0.170861,
-      "country_code": "NZ",
-      "directional_accuracy": 0.420561,
-      "dovish_precision": 0.402062,
-      "hawkish_precision": 0.435897,
+      "confidence_alignment": 0.074352,
+      "correlation": 0.483443,
+      "country_code": "CA",
+      "directional_accuracy": 0.534974,
+      "dovish_precision": 0.579082,
+      "hawkish_precision": 0.489474,
       "horizon_months": 1,
-      "performance_rating": "weak",
-      "sample_count": 214
+      "performance_rating": "promising",
+      "sample_count": 772
     },
     {
-      "confidence_alignment": -0.043103,
-      "correlation": -0.080379,
-      "country_code": "NZ",
-      "directional_accuracy": 0.413793,
-      "dovish_precision": 0.353383,
-      "hawkish_precision": 0.464968,
+      "confidence_alignment": 0.022517,
+      "correlation": 0.046259,
+      "country_code": "CH",
+      "directional_accuracy": 0.534216,
+      "dovish_precision": 0.615108,
+      "hawkish_precision": 0.405714,
+      "horizon_months": 2,
+      "performance_rating": "promising",
+      "sample_count": 453
+    },
+    {
+      "confidence_alignment": 0.073368,
+      "correlation": 0.462726,
+      "country_code": "CA",
+      "directional_accuracy": 0.533943,
+      "dovish_precision": 0.586118,
+      "hawkish_precision": 0.480106,
+      "horizon_months": 2,
+      "performance_rating": "promising",
+      "sample_count": 766
+    },
+    {
+      "confidence_alignment": 0.037062,
+      "correlation": 0.061013,
+      "country_code": "UK",
+      "directional_accuracy": 0.530885,
+      "dovish_precision": 0.548649,
+      "hawkish_precision": 0.502183,
+      "horizon_months": 3,
+      "performance_rating": "promising",
+      "sample_count": 599
+    },
+    {
+      "confidence_alignment": 0.02447,
+      "correlation": 0.043286,
+      "country_code": "UK",
+      "directional_accuracy": 0.520392,
+      "dovish_precision": 0.547368,
+      "hawkish_precision": 0.476395,
+      "horizon_months": 2,
+      "performance_rating": "promising",
+      "sample_count": 613
+    },
+    {
+      "confidence_alignment": -0.002335,
+      "correlation": -0.081352,
+      "country_code": "EU",
+      "directional_accuracy": 0.498054,
+      "dovish_precision": 0.405172,
+      "hawkish_precision": 0.574468,
+      "horizon_months": 3,
+      "performance_rating": "weak",
+      "sample_count": 514
+    },
+    {
+      "confidence_alignment": -0.024184,
+      "correlation": -0.081321,
+      "country_code": "EU",
+      "directional_accuracy": 0.479846,
+      "dovish_precision": 0.382979,
+      "hawkish_precision": 0.559441,
+      "horizon_months": 1,
+      "performance_rating": "weak",
+      "sample_count": 521
+    },
+    {
+      "confidence_alignment": -0.027907,
+      "correlation": -0.082772,
+      "country_code": "EU",
+      "directional_accuracy": 0.476744,
+      "dovish_precision": 0.404255,
+      "hawkish_precision": 0.537367,
       "horizon_months": 2,
       "performance_rating": "weak",
-      "sample_count": 290
+      "sample_count": 516
+    },
+    {
+      "confidence_alignment": -0.060473,
+      "correlation": -0.112568,
+      "country_code": "JP",
+      "directional_accuracy": 0.447635,
+      "dovish_precision": 0.415027,
+      "hawkish_precision": 0.4768,
+      "horizon_months": 1,
+      "performance_rating": "weak",
+      "sample_count": 1184
+    },
+    {
+      "confidence_alignment": -0.084797,
+      "correlation": -0.111717,
+      "country_code": "JP",
+      "directional_accuracy": 0.427365,
+      "dovish_precision": 0.391771,
+      "hawkish_precision": 0.4592,
+      "horizon_months": 3,
+      "performance_rating": "weak",
+      "sample_count": 1184
+    },
+    {
+      "confidence_alignment": -0.096334,
+      "correlation": -0.113701,
+      "country_code": "JP",
+      "directional_accuracy": 0.417732,
+      "dovish_precision": 0.375451,
+      "hawkish_precision": 0.455574,
+      "horizon_months": 2,
+      "performance_rating": "weak",
+      "sample_count": 1173
     }
   ],
   "recommendation": {
-    "avg_policy_accuracy": 0.5268195,
+    "avg_policy_accuracy": 0.5477052083333334,
     "fx_blockers": 8,
     "pre_2020_gaps": 72,
     "ready_for_trading_layer": false,
     "reason": "FX return history is missing and pre-2020 stability cannot be tested from the current dataset.",
     "status": "needs_improvement_before_trading",
     "total_policy_metrics": 24,
-    "usable_policy_metrics": 14
+    "usable_policy_metrics": 18
   },
   "stability_summary": [
     {
       "period_bucket": "post_2020",
-      "rows": 48,
+      "rows": 63,
       "stability_flag": "available"
     },
     {
@@ -670,9 +670,9 @@
   ],
   "summary": {
     "fx_blocked_rows": 8,
-    "macro_metric_rows": 48,
+    "macro_metric_rows": 63,
     "policy_metric_rows": 24,
-    "policy_rate_metric_rows": 6,
-    "validation_samples": 23558
+    "policy_rate_metric_rows": 12,
+    "validation_samples": 35163
   }
 }

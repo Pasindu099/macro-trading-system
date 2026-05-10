@@ -32,7 +32,7 @@ we call shutdown().
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +45,9 @@ from app.ingestion.canonicalizer import Canonicalizer
 from app.ingestion.eodhd_client import ALLOWED_COUNTRIES, EODHDClient, EODHDError
 from app.ingestion.ingest_service import IngestService
 from app.ingestion.run_logger import run_logger
+from app.services.meeting_calendar import SUPPORTED_BANKS
+from app.services.rate_fetchers import fetch_all, should_fetch_on_startup
+from app.services.rate_probability import save_snapshot
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +111,18 @@ class Scheduler:
         triggers_added = self._register_post_release_triggers()
         logger.info("  Registered %d post-release triggers", triggers_added)
 
+        self._scheduler.add_job(
+            self._run_rate_probability_fetch,
+            trigger=CronTrigger(hour=6, minute=0, timezone="UTC"),
+            id="rate_probability_ois_fetch",
+            name="Daily rate probability OIS/futures fetch",
+            replace_existing=True,
+            misfire_grace_time=60 * 60,
+        )
+        logger.info("  Registered rate probability OIS/futures fetch at 06:00 UTC")
+
         self._scheduler.start()
+        await self._run_rate_probability_fetch_if_empty()
         logger.info("Scheduler started.")
 
     async def shutdown(self) -> None:
@@ -187,6 +201,19 @@ class Scheduler:
                     "Post-release %s: fetched=%d inserted=%d updated=%d",
                     trigger_name, len(events), stats.inserted, stats.updated,
                 )
+
+    async def _run_rate_probability_fetch_if_empty(self) -> None:
+        async with session_scope() as session:
+            if not await should_fetch_on_startup(session):
+                return
+        await self._run_rate_probability_fetch()
+
+    async def _run_rate_probability_fetch(self) -> None:
+        async with session_scope() as session:
+            statuses = await fetch_all(session)
+            for bank in SUPPORTED_BANKS:
+                await save_snapshot(bank, session)
+        logger.info("Rate probability fetch statuses: %s", statuses)
 
     # ── Config loading ──────────────────────────────────────────────
 

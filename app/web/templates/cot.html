@@ -1,30 +1,127 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/cot.css') }}?v=20260509fix">
+{% endblock %}
+
 {% block body %}
-<main class="shell dashboard-tool-shell">
-    <header class="tool-hero">
+<main class="cot-dashboard" data-cot-dashboard>
+    <header class="cot-dashboard__header">
         <div>
-            <a href="/">Dashboard</a>
-            <span>/</span>
-            <strong>COT</strong>
+            <span class="cot-kicker">CFTC Commitment of Traders</span>
+            <h1>COT Analysis Dashboard</h1>
+            <p>Disaggregated futures-only positioning for retail forex traders, with extremes, deltas, divergence, open interest, and USD composite sentiment.</p>
         </div>
-        <section>
-            <div>
-                <h1>COT Positioning</h1>
-                <p>CFTC futures positioning across major FX contracts, split by speculative, commercial, and non-reportable trader groups.</p>
-            </div>
-            <a href="/rates">Rates</a>
-        </section>
+        <div class="cot-actions">
+            <button class="cot-mode-toggle" type="button" data-cot-theme-toggle>Light mode</button>
+            <button class="cot-refresh" type="button" data-cot-refresh>Refresh data</button>
+        </div>
     </header>
 
-    <section id="cot-positioning" class="black-panel black-panel--cot" data-cot-section>
-        <header class="black-panel__head">
-            <span>COT live dashboard</span>
-            <em>CFTC legacy futures positioning</em>
-        </header>
-        <div class="black-empty">Loading CFTC positioning...</div>
+    <section class="cot-status-panel">
+        <div class="cot-loading" data-cot-loading>
+            <span></span>
+            <strong>Fetching CFTC public data...</strong>
+        </div>
+        <div class="cot-error-box" data-cot-error hidden></div>
+        <div class="cot-meta-row">
+            <span data-cot-updated>Last updated: pending</span>
+            <span data-cot-source>Source: CFTC Legacy Futures Only public API</span>
+        </div>
+    </section>
+
+    <nav class="cot-tabs" aria-label="COT market selector" data-cot-tabs>
+        <button class="is-active" type="button" data-cot-symbol="EUR">EUR</button>
+        <button type="button" data-cot-symbol="GBP">GBP</button>
+        <button type="button" data-cot-symbol="JPY">JPY</button>
+        <button type="button" data-cot-symbol="CHF">CHF</button>
+        <button type="button" data-cot-symbol="CAD">CAD</button>
+        <button type="button" data-cot-symbol="AUD">AUD</button>
+        <button type="button" data-cot-symbol="NZD">NZD</button>
+        <button type="button" data-cot-symbol="USD">USD</button>
+        <button type="button" data-cot-symbol="GOLD">GOLD</button>
+        <button type="button" data-cot-symbol="OIL">OIL</button>
+    </nav>
+
+    <section class="cot-price-input">
+        <label for="cot-price-text">Optional price overlay</label>
+        <textarea id="cot-price-text" data-cot-price-input placeholder="Paste one price per line, newest last. Optional formats: 1.0920 or 2025-12-30,1.0920"></textarea>
+        <button type="button" data-cot-apply-price>Apply price overlay</button>
+    </section>
+
+    <section class="cot-grid cot-grid--two">
+        <article class="cot-panel">
+            <header><span>1. Net Positioning Chart</span><em data-cot-active-label>EUR</em></header>
+            <div class="cot-chart-box"><canvas data-chart="net"></canvas></div>
+            <p class="cot-insight" data-insight="net"></p>
+        </article>
+
+        <article class="cot-panel">
+            <header><span>2. Extremes Index</span><em>52-week range</em></header>
+            <div class="cot-extreme-current" data-current-extreme></div>
+            <div class="cot-extreme-list" data-extreme-bars></div>
+            <p class="cot-insight" data-insight="extreme"></p>
+        </article>
+    </section>
+
+    <section class="cot-grid cot-grid--two">
+        <article class="cot-panel">
+            <header><span>3. Commercial vs Speculator Spread</span><em>Net gap</em></header>
+            <div class="cot-chart-box"><canvas data-chart="spread"></canvas></div>
+            <p class="cot-insight" data-insight="spread"></p>
+        </article>
+
+        <article class="cot-panel">
+            <header><span>4. Open Interest Trend</span><em>Weekly participation</em></header>
+            <div class="cot-chart-box"><canvas data-chart="oi"></canvas></div>
+            <p class="cot-insight" data-insight="oi"></p>
+        </article>
+    </section>
+
+    <section class="cot-grid cot-grid--two">
+        <article class="cot-panel">
+            <header><span>5. Weekly Positioning Delta</span><em>Spec net WoW</em></header>
+            <div class="cot-chart-box"><canvas data-chart="delta"></canvas></div>
+            <p class="cot-insight" data-insight="delta"></p>
+        </article>
+
+        <article class="cot-panel">
+            <header><span>6. Divergence Detector</span><em>8-week direction</em></header>
+            <div class="cot-divergence-card" data-divergence-card></div>
+            <div class="cot-signal-list" data-divergence-history></div>
+            <p class="cot-insight" data-insight="divergence"></p>
+        </article>
+    </section>
+
+    <section class="cot-grid cot-grid--two">
+        <article class="cot-panel cot-panel--wide">
+            <header><span>7. Multi-Currency Relative Strength</span><em>All major FX futures</em></header>
+            <div class="cot-table-wrap">
+                <table class="cot-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Currency</th>
+                            <th>Current net</th>
+                            <th>52w high</th>
+                            <th>52w low</th>
+                            <th>Index</th>
+                            <th>Signal</th>
+                        </tr>
+                    </thead>
+                    <tbody data-strength-table></tbody>
+                </table>
+            </div>
+            <p class="cot-insight" data-insight="table"></p>
+        </article>
+
+        <article class="cot-panel">
+            <header><span>8. USD Composite Index</span><em>7-contract aggregate</em></header>
+            <div class="cot-chart-box"><canvas data-chart="usd"></canvas></div>
+            <p class="cot-insight" data-insight="usd"></p>
+        </article>
     </section>
 </main>
 
-<script src="{{ url_for('static', path='js/cot.js') }}?v=20260506d" defer></script>
+<script src="{{ url_for('static', path='js/cot.js') }}?v=20260509b" defer></script>
 {% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block body %}
+<main class="shell shell--settings">
+    <header class="settings-hero">
+        <div>
+            <a class="back-link" href="/">Back to dashboard</a>
+            <p class="eyebrow">Access Control</p>
+            <h1>User accounts</h1>
+            <p class="calendar-hero__copy">
+                Viewer users can read dashboards, analyst users can run analysis actions, and admin users can manage the system.
+            </p>
+        </div>
+    </header>
+
+    {% if message %}
+        <p class="auth-message">{{ message.replace("_", " ") }}</p>
+    {% endif %}
+
+    <section class="settings-grid auth-grid">
+        <article class="settings-panel">
+            <p class="eyebrow">Add user</p>
+            <form method="post" action="/users" class="auth-form auth-form--inline">
+                <label>
+                    <span>Email</span>
+                    <input name="email" type="email" required>
+                </label>
+                <label>
+                    <span>Display name</span>
+                    <input name="display_name">
+                </label>
+                <label>
+                    <span>Role</span>
+                    <select name="role">
+                        {% for role in roles %}
+                            <option value="{{ role }}">{{ role.title() }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    <span>Temporary password</span>
+                    <input name="password" type="password" minlength="10" required>
+                </label>
+                <button class="primary-action" type="submit">Create User</button>
+            </form>
+        </article>
+
+        <article class="settings-panel auth-users-panel">
+            <p class="eyebrow">Current users</p>
+            <div class="auth-user-list">
+                {% for user in users %}
+                    <form method="post" action="/users/{{ user.id }}" class="auth-user-row">
+                        <div>
+                            <strong>{{ user.email }}</strong>
+                            <small>{{ "Active" if user.is_active else "Inactive" }} · Last login {{ user.last_login_at or "never" }}</small>
+                        </div>
+                        <input name="display_name" value="{{ user.display_name }}" aria-label="Display name">
+                        <select name="role" aria-label="Role">
+                            {% for role in roles %}
+                                <option value="{{ role }}" {% if role == user.role %}selected{% endif %}>{{ role.title() }}</option>
+                            {% endfor %}
+                        </select>
+                        <input name="password" type="password" placeholder="New password" aria-label="New password">
+                        <button class="btn" type="submit" name="action" value="save">Save</button>
+                        {% if user.is_active %}
+                            <button class="btn danger" type="submit" name="action" value="deactivate">Disable</button>
+                        {% endif %}
+                    </form>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+</main>
+{% endblock %}

@@ -15,6 +15,7 @@ ENV/
 
 # Environment variables
 .env
+data/bank_research/admin_state.json
 .env.local
 
 # Testing
@@ -41,6 +42,9 @@ Thumbs.db
 HANDOFF_NOTE.md
 logs/
 *.log
+
+# LinkedIn post drafts (personal, not for version control)
+data/linkedin/drafts/
 
 # Alembic
 # (keep migrations/versions/, ignore nothing here)

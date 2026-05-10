@@ -21,6 +21,7 @@ from fastapi.testclient import TestClient
 
 # Disable the scheduler for tests so APScheduler doesn't spin up jobs.
 os.environ["ENABLE_SCHEDULER"] = "false"
+os.environ["AUTH_ENABLED"] = "false"
 
 from app.main import app  # noqa: E402 — import after env var set
 

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/research_lab.css') }}?v=20260510corr">
+{% endblock %}
+
+{% block body %}
+<main class="research-lab shell">
+    <header class="research-lab__hero">
+        <div>
+            <a class="back-link" href="/">Back to dashboard</a>
+            <p class="eyebrow">Currency Research Lab</p>
+            <h1>Fundamental valuation workspace</h1>
+            <p class="calendar-hero__copy">
+                Compare FX price action with macro drivers, yield proxies, central-bank pressure, and fair-value divergence.
+            </p>
+        </div>
+    </header>
+
+    <section class="research-lab__panel">
+        <header>
+            <div>
+                <p class="eyebrow">Research Stack</p>
+                <h2>Currency dashboard context</h2>
+            </div>
+        </header>
+        <div class="research-lab__placeholder-grid">
+            <article>
+                <span>Macro Data</span>
+                <strong>Inflation, PMI, policy</strong>
+                <small>Built from processed indicator features.</small>
+            </article>
+            <article>
+                <span>Bank Research</span>
+                <strong>Currency-specific notes</strong>
+                <small>Uses the existing bank research cache.</small>
+            </article>
+            <article>
+                <span>Yields</span>
+                <strong>Differentials and proxies</strong>
+                <small>Ready for cached GBOND yield series.</small>
+            </article>
+        </div>
+    </section>
+
+    <section id="correlation-lab-section" class="correlation-lab">
+        <div class="section-header">
+            <span class="section-label">Correlation Lab</span>
+        </div>
+        <!-- JS renders everything inside here -->
+    </section>
+</main>
+
+<script type="module">
+    import { initCorrelationLab } from "{{ url_for('static', path='js/correlation_lab.js') }}?v=20260510corr";
+    initCorrelationLab();
+</script>
+{% endblock %}

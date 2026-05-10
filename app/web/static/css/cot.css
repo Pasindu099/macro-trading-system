@@ -1,0 +1,193 @@
+body.has-reference-shell .content > .cot-dashboard {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+
+body.has-reference-shell .cot-dashboard {
+    --cot-bg: #0b0d11;
+    --cot-panel: #12161d;
+    --cot-panel-2: #171c24;
+    --cot-border: rgba(148, 163, 184, .2);
+    --cot-grid: rgba(148, 163, 184, .16);
+    --cot-text: #f4f5f7;
+    --cot-muted: #9da4ae;
+    --cot-bull: #1D9E75;
+    --cot-bear: #D85A30;
+    --cot-neutral: #888780;
+    display: block;
+    color: var(--cot-text);
+}
+
+body.has-reference-shell .cot-dashboard.cot-light {
+    --cot-bg: #f6f7f8;
+    --cot-panel: #ffffff;
+    --cot-panel-2: #eef1f4;
+    --cot-border: rgba(22, 29, 36, .16);
+    --cot-grid: rgba(22, 29, 36, .12);
+    --cot-text: #151922;
+    --cot-muted: #58606b;
+}
+
+body.has-reference-shell .cot-dashboard__header,
+body.has-reference-shell .cot-status-panel,
+body.has-reference-shell .cot-price-input,
+body.has-reference-shell .cot-panel {
+    border: 1px solid var(--cot-border) !important;
+    background: var(--cot-panel) !important;
+    border-radius: 8px !important;
+    color: var(--cot-text) !important;
+}
+
+body.has-reference-shell .cot-dashboard__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 20px;
+    margin-bottom: 14px;
+}
+
+body.has-reference-shell .cot-dashboard h1 {
+    margin: 0 0 8px;
+    color: var(--cot-text);
+    font-size: 28px;
+}
+
+body.has-reference-shell .cot-dashboard p,
+body.has-reference-shell .cot-kicker,
+body.has-reference-shell .cot-meta-row,
+body.has-reference-shell .cot-panel header em {
+    color: var(--cot-muted);
+}
+
+body.has-reference-shell .cot-grid {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+body.has-reference-shell .cot-grid--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.has-reference-shell .cot-panel {
+    padding: 14px !important;
+}
+
+body.has-reference-shell .cot-chart-box {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    min-height: 300px;
+}
+
+body.has-reference-shell .cot-chart-box canvas {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+body.has-reference-shell .cot-tabs,
+body.has-reference-shell .cot-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+body.has-reference-shell .cot-tabs {
+    margin-bottom: 14px;
+}
+
+body.has-reference-shell .cot-actions button,
+body.has-reference-shell .cot-price-input button,
+body.has-reference-shell .cot-tabs button {
+    border: 1px solid var(--cot-border);
+    background: var(--cot-panel-2);
+    color: var(--cot-text);
+    border-radius: 6px;
+    min-height: 34px;
+    padding: 0 12px;
+    font: 600 11px var(--mono, monospace);
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+body.has-reference-shell .cot-tabs button.is-active,
+body.has-reference-shell .cot-tabs button:hover,
+body.has-reference-shell .cot-actions button:hover,
+body.has-reference-shell .cot-price-input button:hover {
+    border-color: var(--cot-bull);
+    color: var(--cot-bull);
+}
+
+body.has-reference-shell .cot-price-input {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    margin-bottom: 14px;
+}
+
+body.has-reference-shell .cot-price-input textarea {
+    width: 100%;
+    min-height: 44px;
+    resize: vertical;
+    border: 1px solid var(--cot-border);
+    background: var(--cot-panel-2);
+    color: var(--cot-text);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font: 12px var(--mono, monospace);
+}
+
+body.has-reference-shell .cot-status-panel {
+    padding: 14px 16px;
+    margin-bottom: 14px;
+}
+
+body.has-reference-shell .cot-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+body.has-reference-shell .cot-loading[hidden],
+body.has-reference-shell .cot-error-box[hidden] {
+    display: none !important;
+}
+
+body.has-reference-shell .cot-insight {
+    min-height: 42px;
+    margin-top: 12px !important;
+    border-top: 1px solid var(--cot-border);
+    padding-top: 10px;
+    color: var(--cot-muted);
+    font-size: 13px;
+}
+
+body.has-reference-shell .cot-extreme-current,
+body.has-reference-shell .cot-divergence-card {
+    background: var(--cot-panel-2);
+    border-radius: 8px;
+}
+
+@media (max-width: 980px) {
+    body.has-reference-shell .cot-dashboard__header,
+    body.has-reference-shell .cot-meta-row {
+        flex-direction: column;
+    }
+
+    body.has-reference-shell .cot-grid--two,
+    body.has-reference-shell .cot-price-input {
+        grid-template-columns: 1fr;
+    }
+
+    body.has-reference-shell .cot-chart-box {
+        height: 260px;
+        min-height: 260px;
+    }
+}

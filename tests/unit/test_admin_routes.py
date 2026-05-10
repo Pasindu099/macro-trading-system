@@ -11,6 +11,7 @@ from app.api.routes.public import (
     EconomicCalendarEvent,
     _dedupe_calendar_events,
     _normalize_category_filter,
+    _parse_rss_articles,
 )
 
 
@@ -197,6 +198,33 @@ def test_calendar_category_filter_accepts_ui_categories() -> None:
     assert _normalize_category_filter("Monetary Policy") == "Monetary Policy"
     assert _normalize_category_filter("trade") == "Trade"
     assert _normalize_category_filter("Sentiment") == "Sentiment"
+
+
+def test_parse_rss_articles_normalizes_investinglive_items() -> None:
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+    <rss version="2.0">
+      <channel>
+        <item>
+          <title>EUR/USD rises as ECB officials discuss rates</title>
+          <link>https://investinglive.com/news/eur-usd-test</link>
+          <pubDate>Wed, 06 May 2026 09:00:00 +0000</pubDate>
+          <description><![CDATA[<p>The euro pushed higher after fresh central bank remarks.</p>]]></description>
+          <category>Forex</category>
+        </item>
+      </channel>
+    </rss>
+    """
+
+    articles = _parse_rss_articles(xml)
+
+    assert articles == [{
+        "title": "EUR/USD rises as ECB officials discuss rates",
+        "link": "https://investinglive.com/news/eur-usd-test",
+        "pubDate": "Wed, 06 May 2026 09:00:00 +0000",
+        "description": "The euro pushed higher after fresh central bank remarks.",
+        "category": "Central banks",
+        "source": "investinglive.com",
+    }]
 
 
 def test_dedupe_calendar_events_prefers_mapped_event() -> None:

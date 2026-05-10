@@ -1,0 +1,9 @@
+currency,country_code,mandate_type,inflation_weight,labor_weight,growth_weight,train_directional_accuracy
+AUD,AU,dual,1.5,1.0,0.25,0.5739
+JPY,JP,dual,1.5,1.0,0.25,0.5739
+NZD,NZ,dual,1.5,1.0,0.25,0.5739
+USD,US,dual,1.5,1.0,0.25,0.5739
+CAD,CA,inflation,1.0,0.25,0.25,0.5347
+GBP,UK,inflation,1.0,0.25,0.25,0.5347
+EUR,EU,single,1.25,0.75,0.5,0.5353
+CHF,CH,single,1.25,0.75,0.5,0.5353

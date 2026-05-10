@@ -14,17 +14,20 @@ the scheduler gracefully.
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import admin, pages, public
-from app.db.session import dispose_engine
+from app.api.routes import admin, auth, pages, public, rate_probability, research
+from app.auth import AuthMiddleware, ensure_auth_schema
+from app.db.session import dispose_engine, session_scope
 from app.ingestion.scheduler import Scheduler
 from app.logging_config import configure_logging
+from app.services.correlation_service import ensure_correlation_schema
+from app.services.meeting_calendar import seed_meetings_from_yaml
 from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -47,6 +50,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     logger.info("Starting Macro Dashboard app…")
     logger.info("  log_level=%s", settings.log_level)
+    if settings.auth_enabled:
+        await ensure_auth_schema()
+    await ensure_correlation_schema()
+    async with session_scope() as session:
+        await seed_meetings_from_yaml(session)
 
     # Scheduler — store on app state so routes can access if needed.
     scheduler: Scheduler | None = None
@@ -83,12 +91,16 @@ app = FastAPI(
     description="Macro economic data for FX trading — Phase 1",
     lifespan=lifespan,
 )
+app.add_middleware(AuthMiddleware)
 
 # Mount routers and static assets
 app.mount("/static", StaticFiles(directory="app/web/static"), name="static")
+app.include_router(auth.router)
 app.include_router(pages.router)
 app.include_router(admin.router)
 app.include_router(public.router)
+app.include_router(research.router)
+app.include_router(rate_probability.router)
 
 
 # ══════════════════════════════════════════════════════════════════════

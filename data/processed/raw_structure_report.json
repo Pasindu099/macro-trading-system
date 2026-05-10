@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-24T19:46:39.427750Z",
+  "generated_at": "2026-04-25T22:23:29.401260Z",
   "raw_tables": {
     "countries": {
       "columns": [
@@ -178,7 +178,7 @@
         "last_release_at_utc": "2026-05-08T23:30:00+00:00"
       },
       "duplicates": {
-        "exact_duplicate_candidate_rows": 2045.0
+        "exact_duplicate_candidate_rows": 2315.0
       },
       "frequency": {
         "release_frequency_counts": [
@@ -190,22 +190,22 @@
           {
             "country_code": "AU",
             "frequency": "monthly",
-            "release_count": 2497
+            "release_count": 2538
           },
           {
             "country_code": "AU",
             "frequency": "quarterly",
-            "release_count": 397
+            "release_count": 423
           },
           {
             "country_code": "CA",
             "frequency": "irregular",
-            "release_count": 60
+            "release_count": 67
           },
           {
             "country_code": "CA",
             "frequency": "monthly",
-            "release_count": 2553
+            "release_count": 2575
           },
           {
             "country_code": "CA",
@@ -220,7 +220,7 @@
           {
             "country_code": "CH",
             "frequency": "monthly",
-            "release_count": 838
+            "release_count": 853
           },
           {
             "country_code": "CH",
@@ -230,47 +230,47 @@
           {
             "country_code": "DE",
             "frequency": "monthly",
-            "release_count": 186
+            "release_count": 245
           },
           {
             "country_code": "DE",
             "frequency": "quarterly",
-            "release_count": 19
+            "release_count": 27
           },
           {
             "country_code": "EU",
             "frequency": "irregular",
-            "release_count": 38
+            "release_count": 40
           },
           {
             "country_code": "EU",
             "frequency": "monthly",
-            "release_count": 1323
+            "release_count": 1335
           },
           {
             "country_code": "EU",
             "frequency": "quarterly",
+            "release_count": 67
+          },
+          {
+            "country_code": "FR",
+            "frequency": "monthly",
+            "release_count": 221
+          },
+          {
+            "country_code": "FR",
+            "frequency": "quarterly",
+            "release_count": 30
+          },
+          {
+            "country_code": "JP",
+            "frequency": "irregular",
             "release_count": 66
           },
           {
-            "country_code": "FR",
-            "frequency": "monthly",
-            "release_count": 168
-          },
-          {
-            "country_code": "FR",
-            "frequency": "quarterly",
-            "release_count": 18
-          },
-          {
-            "country_code": "JP",
-            "frequency": "irregular",
-            "release_count": 61
-          },
-          {
             "country_code": "JP",
             "frequency": "monthly",
-            "release_count": 3359
+            "release_count": 3403
           },
           {
             "country_code": "JP",
@@ -285,12 +285,12 @@
           {
             "country_code": "NZ",
             "frequency": "irregular",
-            "release_count": 298
+            "release_count": 318
           },
           {
             "country_code": "NZ",
             "frequency": "monthly",
-            "release_count": 424
+            "release_count": 427
           },
           {
             "country_code": "NZ",
@@ -300,12 +300,12 @@
           {
             "country_code": "UK",
             "frequency": "irregular",
-            "release_count": 66
+            "release_count": 69
           },
           {
             "country_code": "UK",
             "frequency": "monthly",
-            "release_count": 2817
+            "release_count": 2837
           },
           {
             "country_code": "UK",
@@ -315,70 +315,70 @@
           {
             "country_code": "US",
             "frequency": "irregular",
-            "release_count": 49
+            "release_count": 53
           },
           {
             "country_code": "US",
             "frequency": "monthly",
-            "release_count": 2886
+            "release_count": 2903
           },
           {
             "country_code": "US",
             "frequency": "quarterly",
-            "release_count": 163
+            "release_count": 164
           },
           {
             "country_code": "US",
             "frequency": "weekly",
-            "release_count": 1060
+            "release_count": 1062
           },
           {
             "country_code": null,
             "frequency": null,
-            "release_count": 29214
+            "release_count": 29277
           }
         ]
       },
       "missingness": {
         "actual": {
-          "missing_count": 9325,
-          "missing_pct": 18.7
+          "missing_count": 9458,
+          "missing_pct": 18.81
         },
         "change": {
-          "missing_count": 11214,
-          "missing_pct": 22.49
+          "missing_count": 11365,
+          "missing_pct": 22.6
         },
         "change_percentage": {
-          "missing_count": 11663,
-          "missing_pct": 23.39
+          "missing_count": 11821,
+          "missing_pct": 23.5
         },
         "estimate": {
-          "missing_count": 20596,
-          "missing_pct": 41.31
+          "missing_count": 20738,
+          "missing_pct": 41.23
         },
         "id": {
           "missing_count": 0,
           "missing_pct": 0.0
         },
         "indicator_id": {
-          "missing_count": 29214,
-          "missing_pct": 58.6
+          "missing_count": 29277,
+          "missing_pct": 58.21
         },
         "is_latest": {
           "missing_count": 0,
           "missing_pct": 0.0
         },
         "period": {
-          "missing_count": 13307,
-          "missing_pct": 26.69
+          "missing_count": 13396,
+          "missing_pct": 26.63
         },
         "period_start_date": {
-          "missing_count": 13341,
-          "missing_pct": 26.76
+          "missing_count": 13432,
+          "missing_pct": 26.71
         },
         "previous": {
-          "missing_count": 7901,
-          "missing_pct": 15.85
+          "missing_count": 7932,
+          "missing_pct": 15.77
         },
         "raw_payload": {
           "missing_count": 0,
@@ -393,19 +393,19 @@
           "missing_pct": 0.0
         },
         "surprise": {
-          "missing_count": 22107,
-          "missing_pct": 44.34
+          "missing_count": 22322,
+          "missing_pct": 44.38
         }
       },
       "obvious_inconsistencies": {
         "future_reference_period": 33,
-        "missing_actual": 9325,
+        "missing_actual": 9458,
         "missing_latest_flag": 0,
-        "missing_reference_period": 13341,
-        "release_before_reference_period": 83,
-        "unmapped_releases": 29214
+        "missing_reference_period": 13432,
+        "release_before_reference_period": 84,
+        "unmapped_releases": 29277
       },
-      "row_count": 49855
+      "row_count": 50295
     },
     "indicators": {
       "columns": [
@@ -761,7 +761,7 @@
       ],
       "date_coverage": {
         "first_started_at": "2026-04-21T07:29:35.381225+00:00",
-        "last_finished_at": "2026-04-24T19:45:19.606736+00:00"
+        "last_finished_at": "2026-04-25T22:14:32.868224+00:00"
       },
       "duplicates": {
         "duplicate_run_ids": 0
@@ -810,7 +810,7 @@
         }
       },
       "obvious_inconsistencies": {},
-      "row_count": 29
+      "row_count": 31
     }
   }
 }

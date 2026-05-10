@@ -1,0 +1,160 @@
+{
+  "summary": {
+    "score_rows": 10677,
+    "ranking_rows": 10677,
+    "first_date": "2020-01-17",
+    "last_date": "2026-04-29",
+    "currencies": 8
+  },
+  "latest_rankings": [
+    {
+      "date": "2026-04-29",
+      "currency": "EUR",
+      "country_code": "EU",
+      "cb_strength_score": 1.335822,
+      "cb_pressure_normalized": 1.26907,
+      "strength_label": "strong",
+      "trend_label": "improving",
+      "confidence": "high",
+      "rank_strongest": 1
+    },
+    {
+      "date": "2026-04-29",
+      "currency": "CHF",
+      "country_code": "CH",
+      "cb_strength_score": 1.317218,
+      "cb_pressure_normalized": 1.256567,
+      "strength_label": "strong",
+      "trend_label": "improving",
+      "confidence": "medium",
+      "rank_strongest": 2
+    },
+    {
+      "date": "2026-04-29",
+      "currency": "USD",
+      "country_code": "US",
+      "cb_strength_score": 0.465805,
+      "cb_pressure_normalized": 0.684368,
+      "strength_label": "mild_strong",
+      "trend_label": "weakening",
+      "confidence": "high",
+      "rank_strongest": 3
+    },
+    {
+      "date": "2026-04-29",
+      "currency": "GBP",
+      "country_code": "UK",
+      "cb_strength_score": 0.007033,
+      "cb_pressure_normalized": 0.376047,
+      "strength_label": "neutral",
+      "trend_label": "improving",
+      "confidence": "high",
+      "rank_strongest": 4
+    },
+    {
+      "date": "2026-04-29",
+      "currency": "AUD",
+      "country_code": "AU",
+      "cb_strength_score": -0.227411,
+      "cb_pressure_normalized": 0.218487,
+      "strength_label": "neutral",
+      "trend_label": "weakening",
+      "confidence": "medium",
+      "rank_strongest": 5
+    },
+    {
+      "date": "2026-04-29",
+      "currency": "NZD",
+      "country_code": "NZ",
+      "cb_strength_score": -0.443559,
+      "cb_pressure_normalized": 0.073223,
+      "strength_label": "mild_weak",
+      "trend_label": "weakening",
+      "confidence": "high",
+      "rank_strongest": 6
+    },
+    {
+      "date": "2026-04-29",
+      "currency": "CAD",
+      "country_code": "CA",
+      "cb_strength_score": -1.19789,
+      "cb_pressure_normalized": -0.433731,
+      "strength_label": "weak",
+      "trend_label": "improving",
+      "confidence": "high",
+      "rank_strongest": 7
+    },
+    {
+      "date": "2026-04-29",
+      "currency": "JPY",
+      "country_code": "JP",
+      "cb_strength_score": -1.257017,
+      "cb_pressure_normalized": -0.473468,
+      "strength_label": "weak",
+      "trend_label": "improving",
+      "confidence": "high",
+      "rank_strongest": 8
+    }
+  ],
+  "indicator_coverage": [
+    {
+      "country_code": "AU",
+      "infl_indicators": 2,
+      "labor_indicators": 2,
+      "growth_indicators": 1
+    },
+    {
+      "country_code": "CA",
+      "infl_indicators": 4,
+      "labor_indicators": 2,
+      "growth_indicators": 2
+    },
+    {
+      "country_code": "CH",
+      "infl_indicators": 2,
+      "labor_indicators": 1,
+      "growth_indicators": 2
+    },
+    {
+      "country_code": "EU",
+      "infl_indicators": 3,
+      "labor_indicators": 1,
+      "growth_indicators": 3
+    },
+    {
+      "country_code": "JP",
+      "infl_indicators": 3,
+      "labor_indicators": 1,
+      "growth_indicators": 3
+    },
+    {
+      "country_code": "NZ",
+      "infl_indicators": 2,
+      "labor_indicators": 3,
+      "growth_indicators": 2
+    },
+    {
+      "country_code": "UK",
+      "infl_indicators": 2,
+      "labor_indicators": 2,
+      "growth_indicators": 3
+    },
+    {
+      "country_code": "US",
+      "infl_indicators": 3,
+      "labor_indicators": 3,
+      "growth_indicators": 3
+    }
+  ],
+  "watchlist_size": {
+    "US": 9,
+    "EU": 7,
+    "UK": 7,
+    "JP": 7,
+    "AU": 7,
+    "NZ": 7,
+    "CA": 9,
+    "CH": 5
+  },
+  "generated_at": "2026-05-03T20:33:39.898252Z"
+}

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-24T19:46:42.873195Z",
+  "generated_at": "2026-04-25T22:23:33.130439Z",
   "indicators_with_insufficient_history": [
     {
       "actual_count": 4,
@@ -61,25 +61,17 @@
       "actual_count": 21,
       "country_code": "AU",
       "frequency": "monthly",
-      "indicator_key": "cpi_headline_mom",
-      "indicator_name": "Headline CPI (MoM)",
-      "release_count": 45
-    },
-    {
-      "actual_count": 21,
-      "country_code": "AU",
-      "frequency": "monthly",
       "indicator_key": "thomson_reuters_ipsos_pcsi",
       "indicator_name": "Thomson Reuters IPSOS PCSI",
       "release_count": 23
     },
     {
-      "actual_count": 22,
+      "actual_count": 23,
       "country_code": "AU",
       "frequency": "monthly",
       "indicator_key": "consumer_price_index",
       "indicator_name": "Consumer Price Index",
-      "release_count": 30
+      "release_count": 33
     },
     {
       "actual_count": 0,
@@ -138,12 +130,12 @@
       "release_count": 0
     },
     {
-      "actual_count": 1,
+      "actual_count": 2,
       "country_code": "DE",
       "frequency": "monthly",
       "indicator_key": "employment_change",
       "indicator_name": "Employment Change",
-      "release_count": 4
+      "release_count": 6
     },
     {
       "actual_count": 2,
@@ -151,7 +143,7 @@
       "frequency": "quarterly",
       "indicator_key": "gdp_qoq",
       "indicator_name": "GDP (QoQ)",
-      "release_count": 9
+      "release_count": 13
     },
     {
       "actual_count": 2,
@@ -159,23 +151,7 @@
       "frequency": "quarterly",
       "indicator_key": "gdp_yoy",
       "indicator_name": "GDP (YoY)",
-      "release_count": 10
-    },
-    {
-      "actual_count": 2,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "industrial_production_yoy",
-      "indicator_name": "Industrial Production (YoY)",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "balance_of_trade",
-      "indicator_name": "Balance of Trade",
-      "release_count": 4
+      "release_count": 14
     },
     {
       "actual_count": 3,
@@ -183,55 +159,7 @@
       "frequency": "monthly",
       "indicator_key": "consumer_confidence",
       "indicator_name": "Consumer Confidence",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "current_account",
-      "indicator_name": "Current Account",
-      "release_count": 3
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "exports_mom",
-      "indicator_name": "Exports (MoM)",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "factory_orders_mom",
-      "indicator_name": "Factory Orders (MoM)",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "ifo_business_climate",
-      "indicator_name": "Ifo Business Climate",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "ifo_current_conditions",
-      "indicator_name": "Ifo Current Conditions",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "ifo_expectations",
-      "indicator_name": "Ifo Expectations",
-      "release_count": 4
+      "release_count": 5
     },
     {
       "actual_count": 3,
@@ -253,112 +181,80 @@
       "actual_count": 3,
       "country_code": "DE",
       "frequency": "monthly",
-      "indicator_key": "imports_mom",
-      "indicator_name": "Imports (MoM)",
+      "indicator_key": "industrial_production_yoy",
+      "indicator_name": "Industrial Production (YoY)",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "balance_of_trade",
+      "indicator_name": "Balance of Trade",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "current_account",
+      "indicator_name": "Current Account",
       "release_count": 4
     },
     {
-      "actual_count": 3,
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "exports_mom",
+      "indicator_name": "Exports (MoM)",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "factory_orders_mom",
+      "indicator_name": "Factory Orders (MoM)",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "ifo_business_climate",
+      "indicator_name": "Ifo Business Climate",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "ifo_current_conditions",
+      "indicator_name": "Ifo Current Conditions",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "ifo_expectations",
+      "indicator_name": "Ifo Expectations",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "imports_mom",
+      "indicator_name": "Imports (MoM)",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
       "country_code": "DE",
       "frequency": "monthly",
       "indicator_key": "industrial_production_mom",
       "indicator_name": "Industrial Production (MoM)",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "new_car_sales_yoy",
-      "indicator_name": "New Car Sales (YoY)",
-      "release_count": 5
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "ppi_mom",
-      "indicator_name": "Producer Prices (MoM)",
-      "release_count": 3
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "ppi_yoy",
-      "indicator_name": "Producer Prices (YoY)",
-      "release_count": 3
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "retail_sales_mom",
-      "indicator_name": "Retail Sales (MoM)",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "retail_sales_yoy",
-      "indicator_name": "Retail Sales (YoY)",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "unemployed_persons",
-      "indicator_name": "Unemployed Persons",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "unemployment_rate",
-      "indicator_name": "Unemployment Rate",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "wholesale_prices_mom",
-      "indicator_name": "Wholesale Prices (MoM)",
-      "release_count": 3
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "wholesale_prices_yoy",
-      "indicator_name": "Wholesale Prices (YoY)",
-      "release_count": 3
-    },
-    {
-      "actual_count": 3,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "zew_current_conditions",
-      "indicator_name": "ZEW Current Conditions",
-      "release_count": 4
-    },
-    {
-      "actual_count": 4,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "composite_pmi",
-      "indicator_name": "Composite PMI",
-      "release_count": 5
-    },
-    {
-      "actual_count": 4,
-      "country_code": "DE",
-      "frequency": "monthly",
-      "indicator_key": "manufacturing_pmi",
-      "indicator_name": "Manufacturing PMI",
       "release_count": 5
     },
     {
@@ -373,49 +269,145 @@
       "actual_count": 4,
       "country_code": "DE",
       "frequency": "monthly",
-      "indicator_key": "services_pmi",
-      "indicator_name": "Services PMI",
+      "indicator_key": "new_car_sales_yoy",
+      "indicator_name": "New Car Sales (YoY)",
+      "release_count": 6
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "ppi_mom",
+      "indicator_name": "Producer Prices (MoM)",
+      "release_count": 4
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "ppi_yoy",
+      "indicator_name": "Producer Prices (YoY)",
+      "release_count": 4
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "retail_sales_mom",
+      "indicator_name": "Retail Sales (MoM)",
+      "release_count": 6
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "retail_sales_yoy",
+      "indicator_name": "Retail Sales (YoY)",
+      "release_count": 6
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "unemployed_persons",
+      "indicator_name": "Unemployed Persons",
       "release_count": 5
     },
     {
-      "actual_count": 7,
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "unemployment_rate",
+      "indicator_name": "Unemployment Rate",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "wholesale_prices_mom",
+      "indicator_name": "Wholesale Prices (MoM)",
+      "release_count": 4
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "wholesale_prices_yoy",
+      "indicator_name": "Wholesale Prices (YoY)",
+      "release_count": 4
+    },
+    {
+      "actual_count": 4,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "zew_current_conditions",
+      "indicator_name": "ZEW Current Conditions",
+      "release_count": 5
+    },
+    {
+      "actual_count": 5,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "composite_pmi",
+      "indicator_name": "Composite PMI",
+      "release_count": 6
+    },
+    {
+      "actual_count": 5,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "manufacturing_pmi",
+      "indicator_name": "Manufacturing PMI",
+      "release_count": 6
+    },
+    {
+      "actual_count": 5,
+      "country_code": "DE",
+      "frequency": "monthly",
+      "indicator_key": "services_pmi",
+      "indicator_name": "Services PMI",
+      "release_count": 6
+    },
+    {
+      "actual_count": 8,
       "country_code": "DE",
       "frequency": "monthly",
       "indicator_key": "cpi_headline_mom",
       "indicator_name": "Headline CPI (MoM)",
-      "release_count": 15
+      "release_count": 21
     },
     {
-      "actual_count": 7,
+      "actual_count": 10,
       "country_code": "DE",
       "frequency": "monthly",
       "indicator_key": "cpi_headline_yoy",
       "indicator_name": "Headline CPI (YoY)",
-      "release_count": 15
+      "release_count": 22
     },
     {
-      "actual_count": 7,
+      "actual_count": 10,
       "country_code": "DE",
       "frequency": "monthly",
       "indicator_key": "hicp_mom",
       "indicator_name": "Harmonised CPI (MoM)",
-      "release_count": 15
+      "release_count": 22
     },
     {
-      "actual_count": 7,
+      "actual_count": 10,
       "country_code": "DE",
       "frequency": "monthly",
       "indicator_key": "hicp_yoy",
       "indicator_name": "Harmonised CPI (YoY)",
-      "release_count": 15
+      "release_count": 20
     },
     {
-      "actual_count": 12,
+      "actual_count": 18,
       "country_code": "DE",
       "frequency": "monthly",
       "indicator_key": "zew_economic_sentiment",
       "indicator_name": "ZEW Economic Sentiment Index",
-      "release_count": 14
+      "release_count": 20
     },
     {
       "actual_count": 5,
@@ -482,102 +474,6 @@
       "release_count": 1
     },
     {
-      "actual_count": 2,
-      "country_code": "FR",
-      "frequency": "quarterly",
-      "indicator_key": "gdp_qoq",
-      "indicator_name": "GDP (QoQ)",
-      "release_count": 4
-    },
-    {
-      "actual_count": 2,
-      "country_code": "FR",
-      "frequency": "quarterly",
-      "indicator_key": "gdp_yoy",
-      "indicator_name": "GDP (YoY)",
-      "release_count": 11
-    },
-    {
-      "actual_count": 3,
-      "country_code": "FR",
-      "frequency": "monthly",
-      "indicator_key": "balance_of_trade",
-      "indicator_name": "Balance of Trade",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "FR",
-      "frequency": "monthly",
-      "indicator_key": "consumer_confidence",
-      "indicator_name": "Consumer Confidence",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "FR",
-      "frequency": "monthly",
-      "indicator_key": "cpi_nsa_mom",
-      "indicator_name": "CPI n.s.a. (MoM)",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "FR",
-      "frequency": "monthly",
-      "indicator_key": "cpi_nsa_yoy",
-      "indicator_name": "CPI n.s.a. (YoY)",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "FR",
-      "frequency": "monthly",
-      "indicator_key": "current_account",
-      "indicator_name": "Current Account",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "FR",
-      "frequency": "monthly",
-      "indicator_key": "exports",
-      "indicator_name": "Exports",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "FR",
-      "frequency": "monthly",
-      "indicator_key": "imports",
-      "indicator_name": "Imports",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "FR",
-      "frequency": "monthly",
-      "indicator_key": "industrial_production_mom",
-      "indicator_name": "Industrial Production (MoM)",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "FR",
-      "frequency": "monthly",
-      "indicator_key": "jobseekers_total",
-      "indicator_name": "Jobseekers Total",
-      "release_count": 4
-    },
-    {
-      "actual_count": 3,
-      "country_code": "FR",
-      "frequency": "monthly",
-      "indicator_key": "new_car_sales_yoy",
-      "indicator_name": "New Car Sales (YoY)",
-      "release_count": 3
-    },
-    {
       "actual_count": 3,
       "country_code": "FR",
       "frequency": "monthly",
@@ -594,27 +490,83 @@
       "release_count": 4
     },
     {
-      "actual_count": 3,
-      "country_code": "FR",
-      "frequency": "monthly",
-      "indicator_key": "unemployment_benefit_claims",
-      "indicator_name": "Unemployment Benefit Claims",
-      "release_count": 4
-    },
-    {
       "actual_count": 4,
       "country_code": "FR",
       "frequency": "monthly",
-      "indicator_key": "composite_pmi",
-      "indicator_name": "Composite PMI",
+      "indicator_key": "balance_of_trade",
+      "indicator_name": "Balance of Trade",
       "release_count": 5
     },
     {
       "actual_count": 4,
       "country_code": "FR",
       "frequency": "monthly",
-      "indicator_key": "manufacturing_pmi",
-      "indicator_name": "Manufacturing PMI",
+      "indicator_key": "cpi_nsa_mom",
+      "indicator_name": "CPI n.s.a. (MoM)",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "FR",
+      "frequency": "monthly",
+      "indicator_key": "cpi_nsa_yoy",
+      "indicator_name": "CPI n.s.a. (YoY)",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "FR",
+      "frequency": "monthly",
+      "indicator_key": "current_account",
+      "indicator_name": "Current Account",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "FR",
+      "frequency": "monthly",
+      "indicator_key": "exports",
+      "indicator_name": "Exports",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "FR",
+      "frequency": "quarterly",
+      "indicator_key": "gdp_qoq",
+      "indicator_name": "GDP (QoQ)",
+      "release_count": 10
+    },
+    {
+      "actual_count": 4,
+      "country_code": "FR",
+      "frequency": "quarterly",
+      "indicator_key": "gdp_yoy",
+      "indicator_name": "GDP (YoY)",
+      "release_count": 17
+    },
+    {
+      "actual_count": 4,
+      "country_code": "FR",
+      "frequency": "monthly",
+      "indicator_key": "imports",
+      "indicator_name": "Imports",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "FR",
+      "frequency": "monthly",
+      "indicator_key": "industrial_production_mom",
+      "indicator_name": "Industrial Production (MoM)",
+      "release_count": 5
+    },
+    {
+      "actual_count": 4,
+      "country_code": "FR",
+      "frequency": "monthly",
+      "indicator_key": "jobseekers_total",
+      "indicator_name": "Jobseekers Total",
       "release_count": 5
     },
     {
@@ -629,57 +581,89 @@
       "actual_count": 4,
       "country_code": "FR",
       "frequency": "monthly",
-      "indicator_key": "services_pmi",
-      "indicator_name": "Services PMI",
+      "indicator_key": "new_car_sales_yoy",
+      "indicator_name": "New Car Sales (YoY)",
+      "release_count": 4
+    },
+    {
+      "actual_count": 4,
+      "country_code": "FR",
+      "frequency": "monthly",
+      "indicator_key": "unemployment_benefit_claims",
+      "indicator_name": "Unemployment Benefit Claims",
       "release_count": 5
     },
     {
-      "actual_count": 7,
+      "actual_count": 5,
+      "country_code": "FR",
+      "frequency": "monthly",
+      "indicator_key": "composite_pmi",
+      "indicator_name": "Composite PMI",
+      "release_count": 6
+    },
+    {
+      "actual_count": 5,
+      "country_code": "FR",
+      "frequency": "monthly",
+      "indicator_key": "consumer_confidence",
+      "indicator_name": "Consumer Confidence",
+      "release_count": 6
+    },
+    {
+      "actual_count": 5,
+      "country_code": "FR",
+      "frequency": "monthly",
+      "indicator_key": "manufacturing_pmi",
+      "indicator_name": "Manufacturing PMI",
+      "release_count": 6
+    },
+    {
+      "actual_count": 5,
+      "country_code": "FR",
+      "frequency": "monthly",
+      "indicator_key": "services_pmi",
+      "indicator_name": "Services PMI",
+      "release_count": 6
+    },
+    {
+      "actual_count": 9,
       "country_code": "FR",
       "frequency": "monthly",
       "indicator_key": "cpi_headline_mom",
       "indicator_name": "Headline CPI (MoM)",
-      "release_count": 17
+      "release_count": 21
     },
     {
-      "actual_count": 7,
+      "actual_count": 9,
       "country_code": "FR",
       "frequency": "monthly",
       "indicator_key": "cpi_headline_yoy",
       "indicator_name": "Headline CPI (YoY)",
-      "release_count": 14
+      "release_count": 18
     },
     {
-      "actual_count": 7,
+      "actual_count": 9,
       "country_code": "FR",
       "frequency": "monthly",
       "indicator_key": "hicp_mom",
       "indicator_name": "Harmonised CPI (MoM)",
-      "release_count": 13
+      "release_count": 17
     },
     {
-      "actual_count": 7,
+      "actual_count": 9,
       "country_code": "FR",
       "frequency": "monthly",
       "indicator_key": "hicp_yoy",
       "indicator_name": "Harmonised CPI (YoY)",
-      "release_count": 13
+      "release_count": 19
     },
     {
-      "actual_count": 12,
+      "actual_count": 18,
       "country_code": "FR",
       "frequency": "monthly",
       "indicator_key": "consumer_spending_mom",
       "indicator_name": "Consumer Spending (MoM)",
-      "release_count": 20
-    },
-    {
-      "actual_count": 17,
-      "country_code": "FR",
-      "frequency": "monthly",
-      "indicator_key": "business_confidence",
-      "indicator_name": "Business Confidence",
-      "release_count": 20
+      "release_count": 28
     },
     {
       "actual_count": 0,
@@ -738,12 +722,12 @@
       "release_count": 7
     },
     {
-      "actual_count": 14,
+      "actual_count": 18,
       "country_code": "JP",
       "frequency": "monthly",
       "indicator_key": "adjusted_trade_balance",
       "indicator_name": "Adjusted Trade Balance",
-      "release_count": 18
+      "release_count": 22
     },
     {
       "actual_count": 4,
@@ -810,12 +794,12 @@
       "release_count": 4
     },
     {
-      "actual_count": 4,
+      "actual_count": 5,
       "country_code": "US",
       "frequency": "monthly",
       "indicator_key": "umich_inflation_exp_1y",
       "indicator_name": "UMich 1Y Inflation Expectations",
-      "release_count": 5
+      "release_count": 7
     },
     {
       "actual_count": 20,
@@ -844,7 +828,7 @@
   ],
   "issue_counts": [
     {
-      "issue_count": 1334,
+      "issue_count": 1407,
       "issue_type": "exact_duplicate_candidate",
       "severity": "info"
     },
@@ -854,22 +838,22 @@
       "severity": "review"
     },
     {
-      "issue_count": 287,
+      "issue_count": 291,
       "issue_type": "iqr_outlier_candidate",
       "severity": "review"
     },
     {
-      "issue_count": 3127,
+      "issue_count": 3138,
       "issue_type": "missing_estimate",
       "severity": "review"
     },
     {
-      "issue_count": 2113,
+      "issue_count": 2127,
       "issue_type": "multiple_latest_rows",
       "severity": "review"
     },
     {
-      "issue_count": 57,
+      "issue_count": 58,
       "issue_type": "release_before_reference_period",
       "severity": "review"
     },
@@ -879,12 +863,12 @@
       "severity": "review"
     },
     {
-      "issue_count": 105,
+      "issue_count": 103,
       "issue_type": "insufficient_history",
       "severity": "warning"
     },
     {
-      "issue_count": 1171,
+      "issue_count": 1210,
       "issue_type": "missing_actual",
       "severity": "warning"
     },
@@ -894,7 +878,7 @@
       "severity": "warning"
     },
     {
-      "issue_count": 29214,
+      "issue_count": 29277,
       "issue_type": "unmapped_raw_release",
       "severity": "warning"
     }
@@ -932,44 +916,44 @@
     },
     "indicator_releases": {
       "actual": {
-        "missing_count": 9325,
-        "missing_pct": 18.7
+        "missing_count": 9458,
+        "missing_pct": 18.81
       },
       "change": {
-        "missing_count": 11214,
-        "missing_pct": 22.49
+        "missing_count": 11365,
+        "missing_pct": 22.6
       },
       "change_percentage": {
-        "missing_count": 11663,
-        "missing_pct": 23.39
+        "missing_count": 11821,
+        "missing_pct": 23.5
       },
       "estimate": {
-        "missing_count": 20596,
-        "missing_pct": 41.31
+        "missing_count": 20738,
+        "missing_pct": 41.23
       },
       "id": {
         "missing_count": 0,
         "missing_pct": 0.0
       },
       "indicator_id": {
-        "missing_count": 29214,
-        "missing_pct": 58.6
+        "missing_count": 29277,
+        "missing_pct": 58.21
       },
       "is_latest": {
         "missing_count": 0,
         "missing_pct": 0.0
       },
       "period": {
-        "missing_count": 13307,
-        "missing_pct": 26.69
+        "missing_count": 13396,
+        "missing_pct": 26.63
       },
       "period_start_date": {
-        "missing_count": 13341,
-        "missing_pct": 26.76
+        "missing_count": 13432,
+        "missing_pct": 26.71
       },
       "previous": {
-        "missing_count": 7901,
-        "missing_pct": 15.85
+        "missing_count": 7932,
+        "missing_pct": 15.77
       },
       "raw_payload": {
         "missing_count": 0,
@@ -984,8 +968,8 @@
         "missing_pct": 0.0
       },
       "surprise": {
-        "missing_count": 22107,
-        "missing_pct": 44.34
+        "missing_count": 22322,
+        "missing_pct": 44.38
       }
     },
     "indicators": {
@@ -1083,16 +1067,16 @@
   },
   "observation_counts_by_country": [
     {
-      "actual_values": 2602,
+      "actual_values": 2603,
       "country_code": "AU",
-      "flagged_observations": 510,
-      "observations": 2757
+      "flagged_observations": 519,
+      "observations": 2766
     },
     {
-      "actual_values": 2388,
+      "actual_values": 2394,
       "country_code": "CA",
-      "flagged_observations": 474,
-      "observations": 2553
+      "flagged_observations": 475,
+      "observations": 2559
     },
     {
       "actual_values": 779,
@@ -1101,46 +1085,46 @@
       "observations": 848
     },
     {
-      "actual_values": 115,
+      "actual_values": 147,
       "country_code": "DE",
-      "flagged_observations": 52,
-      "observations": 157
+      "flagged_observations": 66,
+      "observations": 200
     },
     {
       "actual_values": 1377,
       "country_code": "EU",
-      "flagged_observations": 123,
-      "observations": 1421
+      "flagged_observations": 122,
+      "observations": 1423
     },
     {
-      "actual_values": 93,
+      "actual_values": 116,
       "country_code": "FR",
-      "flagged_observations": 45,
-      "observations": 127
+      "flagged_observations": 49,
+      "observations": 152
     },
     {
-      "actual_values": 4085,
+      "actual_values": 4086,
       "country_code": "JP",
-      "flagged_observations": 1014,
-      "observations": 4211
+      "flagged_observations": 1019,
+      "observations": 4216
     },
     {
       "actual_values": 853,
       "country_code": "NZ",
-      "flagged_observations": 536,
-      "observations": 895
+      "flagged_observations": 537,
+      "observations": 896
     },
     {
-      "actual_values": 2711,
+      "actual_values": 2716,
       "country_code": "UK",
-      "flagged_observations": 458,
-      "observations": 2904
+      "flagged_observations": 460,
+      "observations": 2910
     },
     {
-      "actual_values": 3462,
+      "actual_values": 3467,
       "country_code": "US",
-      "flagged_observations": 857,
-      "observations": 3763
+      "flagged_observations": 871,
+      "observations": 3778
     }
   ],
   "outlier_candidates": [
@@ -1165,6 +1149,17 @@
       "period_label": "Apr",
       "reference_period_start": "2020-04-01",
       "release_timestamp_utc": "2020-05-04T23:00:00+00:00"
+    },
+    {
+      "actual_value": 1.0,
+      "country_code": "AU",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "cpi_headline_mom",
+      "period_label": "Dec",
+      "reference_period_start": "2025-12-01",
+      "release_timestamp_utc": "2026-01-28T00:30:00+00:00"
     },
     {
       "actual_value": -0.3,
@@ -1664,6 +1659,17 @@
       "release_timestamp_utc": "2021-06-01T06:30:00+00:00"
     },
     {
+      "actual_value": 2.8,
+      "country_code": "DE",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "hicp_yoy",
+      "period_label": "Mar",
+      "reference_period_start": "2026-03-01",
+      "release_timestamp_utc": "2026-04-10T06:00:00+00:00"
+    },
+    {
       "actual_value": -28.4,
       "country_code": "EU",
       "data_quality_flags": [
@@ -1684,39 +1690,6 @@
       "period_label": "Apr",
       "reference_period_start": "2021-04-01",
       "release_timestamp_utc": "2021-06-17T09:00:00+00:00"
-    },
-    {
-      "actual_value": -18.5,
-      "country_code": "EU",
-      "data_quality_flags": [
-        "iqr_outlier_candidate"
-      ],
-      "indicator_key": "economic_sentiment",
-      "period_label": "Apr",
-      "reference_period_start": "2025-04-01",
-      "release_timestamp_utc": "2025-04-15T09:00:00+00:00"
-    },
-    {
-      "actual_value": -20.4,
-      "country_code": "EU",
-      "data_quality_flags": [
-        "iqr_outlier_candidate"
-      ],
-      "indicator_key": "economic_sentiment",
-      "period_label": "Apr",
-      "reference_period_start": "2026-04-01",
-      "release_timestamp_utc": "2026-04-29T09:00:00+00:00"
-    },
-    {
-      "actual_value": -20.4,
-      "country_code": "EU",
-      "data_quality_flags": [
-        "iqr_outlier_candidate"
-      ],
-      "indicator_key": "economic_sentiment",
-      "period_label": "Apr",
-      "reference_period_start": "2026-04-01",
-      "release_timestamp_utc": "2026-04-29T09:00:00+00:00"
     },
     {
       "actual_value": -3.8,
@@ -2113,6 +2086,17 @@
       "period_label": "May",
       "reference_period_start": "2020-05-01",
       "release_timestamp_utc": "2020-06-16T06:00:00+00:00"
+    },
+    {
+      "actual_value": 2.5,
+      "country_code": "UK",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "cpi_headline_mom",
+      "period_label": "Apr",
+      "reference_period_start": "2022-04-01",
+      "release_timestamp_utc": "2022-05-18T06:00:00+00:00"
     },
     {
       "actual_value": -5.8,
@@ -3087,6 +3071,50 @@
       "period_label": "Jun/12",
       "reference_period_start": "2021-06-12",
       "release_timestamp_utc": "2021-06-24T12:30:00+00:00"
+    },
+    {
+      "actual_value": 8.5,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "cpi_headline_yoy",
+      "period_label": "Mar",
+      "reference_period_start": "2022-03-01",
+      "release_timestamp_utc": "2022-04-12T12:30:00+00:00"
+    },
+    {
+      "actual_value": 8.3,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "cpi_headline_yoy",
+      "period_label": "Apr",
+      "reference_period_start": "2022-04-01",
+      "release_timestamp_utc": "2022-05-11T12:30:00+00:00"
+    },
+    {
+      "actual_value": 8.6,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "cpi_headline_yoy",
+      "period_label": "May",
+      "reference_period_start": "2022-05-01",
+      "release_timestamp_utc": "2022-06-10T12:30:00+00:00"
+    },
+    {
+      "actual_value": 8.2,
+      "country_code": "US",
+      "data_quality_flags": [
+        "iqr_outlier_candidate"
+      ],
+      "indicator_key": "cpi_headline_yoy",
+      "period_label": "Sep",
+      "reference_period_start": "2022-09-01",
+      "release_timestamp_utc": "2022-10-13T12:30:00+00:00"
     },
     {
       "actual_value": -980.0,
@@ -4408,7 +4436,7 @@
     {
       "country_code": "DE",
       "indicator_key": "consumer_confidence",
-      "issue_count": 4,
+      "issue_count": 5,
       "issue_type": "release_before_reference_period"
     },
     {
@@ -4455,10 +4483,10 @@
     }
   ],
   "summary": {
-    "flagged_observations": 4476,
+    "flagged_observations": 4525,
     "indicators": 369,
-    "observations": 19636,
-    "quality_issues": 38060,
-    "raw_releases": 49855
+    "observations": 19748,
+    "quality_issues": 38263,
+    "raw_releases": 50295
   }
 }

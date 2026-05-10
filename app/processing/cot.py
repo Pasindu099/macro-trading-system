@@ -56,6 +56,21 @@ COT_PAIRS = {
         "pair_label": "USD/MXN",
         "market": "MEXICAN PESO",
     },
+    "USD": {
+        "label": "USD",
+        "pair_label": "USD Index",
+        "market": "U.S. DOLLAR INDEX",
+    },
+    "GOLD": {
+        "label": "GOLD",
+        "pair_label": "Gold Futures",
+        "market": "GOLD",
+    },
+    "OIL": {
+        "label": "OIL",
+        "pair_label": "Crude Oil (WTI)",
+        "market": "CRUDE OIL, LIGHT SWEET",
+    },
 }
 
 CSV_COLUMNS = {
@@ -116,15 +131,17 @@ async def _load_cot_rows() -> dict[str, list[dict[str, Any]]]:
         return _cache.rows_by_pair
 
     source_rows: list[dict[str, Any]] = []
-    years = [now.year]
-    if now.month <= 3:
-        years.append(now.year - 1)
+    current_year = now.year
+    years = [current_year - 2, current_year - 1, current_year]
 
-    async with httpx.AsyncClient(timeout=45.0, follow_redirects=True) as client:
+    async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
         for year in years:
-            response = await client.get(_history_zip_url(year))
-            response.raise_for_status()
-            source_rows.extend(_parse_cot_zip(response.content))
+            try:
+                response = await client.get(_history_zip_url(year))
+                response.raise_for_status()
+                source_rows.extend(_parse_cot_zip(response.content))
+            except httpx.HTTPError:
+                pass
 
     rows_by_pair: dict[str, list[dict[str, Any]]] = {}
     for pair_key, config in COT_PAIRS.items():
@@ -301,3 +318,25 @@ def _build_pair_payload(pair_key: str, rows: list[dict[str, Any]]) -> dict[str, 
         "chg_nonreportable_net": _k(current_nr_net - previous_nr_net),
         "signal": signal,
     }
+
+
+async def get_all_cot_rows() -> dict[str, list[dict[str, Any]]]:
+    """Return raw COT row history for all supported markets, formatted for the frontend chart dashboard."""
+    rows_by_pair = await _load_cot_rows()
+    result: dict[str, list[dict[str, Any]]] = {}
+    for pair_key, rows in rows_by_pair.items():
+        history = rows[-156:]
+        result[pair_key] = [
+            {
+                "date": row["week_date"],
+                "specLong": int(row["noncom_long"]),
+                "specShort": int(row["noncom_short"]),
+                "commercialLong": int(row["com_long"]),
+                "commercialShort": int(row["com_short"]),
+                "openInterest": int(row["open_interest"]),
+                "specNet": int(row["noncom_long"]) - int(row["noncom_short"]),
+                "commercialNet": int(row["com_long"]) - int(row["com_short"]),
+            }
+            for row in history
+        ]
+    return result

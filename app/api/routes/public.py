@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import date, datetime, timedelta, timezone
+import html
 import json
 import re
 from typing import Any
@@ -33,7 +35,7 @@ from app.api.schemas import (
 )
 from app.db.models import Country, Indicator, IndicatorRelease, IngestionRun
 from app.db.session import get_session
-from app.processing.cot import COT_PAIRS, get_cot_payload, normalize_cot_pair
+from app.processing.cot import COT_PAIRS, get_all_cot_rows, get_cot_payload, normalize_cot_pair
 from app.settings import get_settings
 
 router = APIRouter(prefix="/api", tags=["public"])
@@ -57,6 +59,19 @@ OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
 NEWS_SENTIMENT_MODEL = "gpt-4.1"
 INVESTINGLIVE_RSS_URL = "https://investinglive.com/feed/"
 
+CB_FEED_CACHE_TTL = 900  # 15 minutes
+CB_RSS_FEEDS: dict[str, dict[str, str]] = {
+    "USD": {"name": "Fed",  "url": "https://www.federalreserve.gov/feeds/press_all.xml"},
+    "EUR": {"name": "ECB",  "url": "https://www.ecb.europa.eu/rss/press.html"},
+    "GBP": {"name": "BoE",  "url": "https://www.bankofengland.co.uk/rss/publications"},
+    "JPY": {"name": "BoJ",  "url": "https://www.boj.or.jp/en/rss/news.xml"},
+    "AUD": {"name": "RBA",  "url": "https://www.rba.gov.au/rss/rss-cb-speeches.xml"},
+    "CAD": {"name": "BoC",  "url": "https://www.bankofcanada.ca/feed/"},
+    "CHF": {"name": "SNB",  "url": "https://www.snb.ch/en/media-news/rss-news"},
+    "NZD": {"name": "RBNZ", "url": "https://www.rbnz.govt.nz/hub/news/rss"},
+}
+_cb_feed_cache: dict[str, dict[str, Any]] = {}
+
 
 class NewsSentimentRequest(BaseModel):
     headline: str = Field(..., min_length=1, max_length=500)
@@ -72,35 +87,61 @@ def _rss_node_text(node: ElementTree.Element, name: str) -> str:
 
 def _strip_html(value: str) -> str:
     text = re.sub(r"<[^>]+>", " ", value or "")
-    return re.sub(r"\s+", " ", text).strip()
+    return html.unescape(re.sub(r"\s+", " ", text).strip())
 
 
 def _news_category(categories: list[str], title: str, description: str) -> str:
-    haystack = " ".join([*categories, title, description]).lower()
+    primary_text = " ".join([*categories, title]).lower()
+    full_text = f"{primary_text} {description}".lower()
+
     if re.search(
-        r"war|sanction|conflict|military|nato|\bun\b|treaty|tariff|trade war|election"
-        r"|government|ministry|president|prime minister|diplomacy|geopolit|invasion"
-        r"|coup|protest|border|embargo",
-        haystack,
+        r"stock|shares|earnings|s&p|nasdaq|dow|ftse|dax|\bipo\b|dividend|equity|market cap",
+        primary_text,
     ):
-        return "Geopolitical"
+        return "Equities"
     if re.search(
         r"\bfed\b|ecb|boj|boe|rba|rbnz|snb|central bank|rate decision|interest rate"
         r"|monetary policy|powell|lagarde|inflation|taper|\bqe\b|\bqt\b",
-        haystack,
+        primary_text,
     ):
         return "Central banks"
     if re.search(
         r"\beur\b|\bgbp\b|\bjpy\b|\baud\b|\bcad\b|\bchf\b|\bnzd\b|forex|currency"
         r"|\busd\b|dollar|pound|yen|euro",
-        haystack,
+        primary_text,
     ):
         return "FX"
     if re.search(
+        r"war|sanction|conflict|military|nato|\bun\b|treaty|tariff|trade war|election"
+        r"|government|ministry|president|prime minister|diplomacy|geopolit|invasion"
+        r"|coup|protest|border|embargo",
+        primary_text,
+    ):
+        return "Geopolitical"
+    if re.search(
         r"stock|shares|earnings|s&p|nasdaq|dow|ftse|dax|\bipo\b|dividend|equity|market cap",
-        haystack,
+        full_text,
     ):
         return "Equities"
+    if re.search(
+        r"\bfed\b|ecb|boj|boe|rba|rbnz|snb|central bank|rate decision|interest rate"
+        r"|monetary policy|powell|lagarde|inflation|taper|\bqe\b|\bqt\b",
+        full_text,
+    ):
+        return "Central banks"
+    if re.search(
+        r"\beur\b|\bgbp\b|\bjpy\b|\baud\b|\bcad\b|\bchf\b|\bnzd\b|forex|currency"
+        r"|\busd\b|dollar|pound|yen|euro",
+        full_text,
+    ):
+        return "FX"
+    if re.search(
+        r"war|sanction|conflict|military|nato|\bun\b|treaty|tariff|trade war|election"
+        r"|government|ministry|president|prime minister|diplomacy|geopolit|invasion"
+        r"|coup|protest|border|embargo",
+        full_text,
+    ):
+        return "Geopolitical"
     return "Macro"
 
 
@@ -109,7 +150,7 @@ def _parse_rss_articles(xml_body: str, *, limit: int = 40) -> list[dict[str, Any
     articles: list[dict[str, Any]] = []
 
     for item in root.findall(".//item"):
-        title = _rss_node_text(item, "title") or "Untitled headline"
+        title = html.unescape(_rss_node_text(item, "title")) or "Untitled headline"
         link = _rss_node_text(item, "link")
         if not link:
             continue
@@ -133,6 +174,29 @@ def _parse_rss_articles(xml_body: str, *, limit: int = 40) -> list[dict[str, Any
             break
 
     return articles
+
+
+async def fetch_investinglive_articles(*, limit: int = 40) -> list[dict[str, Any]]:
+    """Fetch and normalize InvestingLive RSS headlines."""
+    try:
+        async with httpx.AsyncClient(
+            timeout=get_settings().http_timeout_seconds,
+            follow_redirects=True,
+        ) as client:
+            response = await client.get(
+                INVESTINGLIVE_RSS_URL,
+                headers={"User-Agent": "MacroDashboard/0.1 RSS reader"},
+            )
+            response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=502, detail="InvestingLive feed returned an error.") from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail="InvestingLive feed is unavailable.") from exc
+
+    try:
+        return _parse_rss_articles(response.text, limit=limit)
+    except ElementTree.ParseError as exc:
+        raise HTTPException(status_code=502, detail="InvestingLive feed returned invalid RSS.") from exc
 
 
 def _extract_response_text(payload: dict[str, Any]) -> str:
@@ -939,35 +1003,186 @@ async def get_cot_positioning(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
+@router.get("/cot/rows")
+async def get_cot_rows() -> dict[str, Any]:
+    """Return raw COT row history for all supported markets for the chart dashboard."""
+    try:
+        return await get_all_cot_rows()
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=502, detail="CFTC COT download failed.") from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail="CFTC COT data is unavailable.") from exc
+
+
 @router.get("/news/feed")
 async def get_news_feed(
     limit: int = Query(default=40, ge=1, le=80),
 ) -> dict[str, Any]:
     """Return normalized InvestingLive RSS headlines for the dashboard feed."""
-    try:
-        async with httpx.AsyncClient(
-            timeout=get_settings().http_timeout_seconds,
-            follow_redirects=True,
-        ) as client:
-            response = await client.get(
-                INVESTINGLIVE_RSS_URL,
-                headers={"User-Agent": "MacroDashboard/0.1 RSS reader"},
-            )
-            response.raise_for_status()
-    except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=502, detail="InvestingLive feed returned an error.") from exc
-    except httpx.HTTPError as exc:
-        raise HTTPException(status_code=502, detail="InvestingLive feed is unavailable.") from exc
-
-    try:
-        articles = _parse_rss_articles(response.text, limit=limit)
-    except ElementTree.ParseError as exc:
-        raise HTTPException(status_code=502, detail="InvestingLive feed returned invalid RSS.") from exc
-
     return {
         "source": "investinglive.com",
-        "articles": articles,
+        "articles": await fetch_investinglive_articles(limit=limit),
         "fetched_at": _now().isoformat(),
+    }
+
+
+def _parse_cb_feed(xml_body: str, currency: str, bank_name: str, *, limit: int = 12) -> list[dict[str, Any]]:
+    """Parse RSS 2.0 or Atom 1.0 feed into normalized article list."""
+    try:
+        root = ElementTree.fromstring(xml_body)
+    except ElementTree.ParseError:
+        return []
+
+    articles: list[dict[str, Any]] = []
+    atom_ns = "http://www.w3.org/2005/Atom"
+    is_atom = root.tag == f"{{{atom_ns}}}feed" or "feed" in root.tag.lower()
+
+    if is_atom:
+        for entry in root.findall(f"{{{atom_ns}}}entry"):
+            title_el = entry.find(f"{{{atom_ns}}}title")
+            title = (title_el.text or "").strip() if title_el is not None else "Untitled"
+
+            link_el = entry.find(f"{{{atom_ns}}}link")
+            link = ""
+            if link_el is not None:
+                link = link_el.get("href", "") or (link_el.text or "")
+            if not link:
+                continue
+
+            summary_el = entry.find(f"{{{atom_ns}}}summary") or entry.find(f"{{{atom_ns}}}content")
+            description = _strip_html((summary_el.text or "") if summary_el is not None else "")
+
+            pub_el = entry.find(f"{{{atom_ns}}}published") or entry.find(f"{{{atom_ns}}}updated")
+            pub_date = (pub_el.text or "").strip() if pub_el is not None else ""
+
+            articles.append({"title": title, "link": link, "pubDate": pub_date, "description": description[:500], "currency": currency, "bank": bank_name})
+            if len(articles) >= limit:
+                break
+    else:
+        for item in root.findall(".//item"):
+            title = _rss_node_text(item, "title") or "Untitled"
+            link = _rss_node_text(item, "link")
+            if not link:
+                continue
+            description = _strip_html(_rss_node_text(item, "description"))
+            articles.append({"title": title, "link": link, "pubDate": _rss_node_text(item, "pubDate"), "description": description[:500], "currency": currency, "bank": bank_name})
+            if len(articles) >= limit:
+                break
+
+    return articles
+
+
+async def _fetch_one_cb_feed(currency: str, now: datetime) -> dict[str, Any]:
+    """Return cached or freshly fetched feed for one central bank."""
+    config = CB_RSS_FEEDS[currency]
+    cached = _cb_feed_cache.get(currency)
+    if cached and (now - cached["fetched_at"]).total_seconds() < CB_FEED_CACHE_TTL:
+        return cached
+
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            response = await client.get(
+                config["url"],
+                headers={"User-Agent": "MacroDashboard/1.0 (macro research dashboard)"},
+                follow_redirects=True,
+            )
+            response.raise_for_status()
+            articles = _parse_cb_feed(response.text, currency, config["name"])
+    except Exception:
+        articles = []
+
+    result: dict[str, Any] = {"currency": currency, "name": config["name"], "articles": articles, "fetched_at": now}
+    _cb_feed_cache[currency] = result
+    return result
+
+
+@router.get("/cb/feeds")
+async def get_cb_feeds(bank: str | None = Query(default=None)) -> dict[str, Any]:
+    """Fetch and cache RSS feeds from the eight main central banks."""
+    now = _now()
+    currencies = [bank.upper()] if bank and bank.upper() in CB_RSS_FEEDS else list(CB_RSS_FEEDS.keys())
+    results = await asyncio.gather(*[_fetch_one_cb_feed(c, now) for c in currencies], return_exceptions=True)
+    feeds = [
+        {"currency": r["currency"], "name": r["name"], "articles": r["articles"], "fetchedAt": r["fetched_at"].isoformat()}
+        for r in results
+        if isinstance(r, dict)
+    ]
+    return {"feeds": feeds, "generatedAt": now.isoformat()}
+
+
+@router.post("/cb/analysis")
+async def analyze_cb_feeds(bank: str | None = Query(default=None)) -> dict[str, Any]:
+    """Run OpenAI analysis over cached CB feed articles for the selected bank(s)."""
+    settings = get_settings()
+    if not settings.openai_api_key:
+        raise HTTPException(status_code=503, detail="OPENAI_API_KEY is not configured.")
+
+    now = _now()
+    currencies = [bank.upper()] if bank and bank.upper() in CB_RSS_FEEDS else list(CB_RSS_FEEDS.keys())
+
+    # Use cache where available; fetch missing banks
+    missing = [c for c in currencies if c not in _cb_feed_cache]
+    if missing:
+        await asyncio.gather(*[_fetch_one_cb_feed(c, now) for c in missing], return_exceptions=True)
+
+    snippets: list[str] = []
+    for c in currencies:
+        cached = _cb_feed_cache.get(c)
+        if not cached:
+            continue
+        for article in cached.get("articles", [])[:3]:
+            snippets.append(f"[{c}/{cached['name']}] {article['title']}: {article['description'][:200]}")
+
+    if not snippets:
+        raise HTTPException(status_code=404, detail="No CB feed articles available for analysis. Try refreshing feeds first.")
+
+    bank_label = CB_RSS_FEEDS[bank.upper()]["name"] if bank and bank.upper() in CB_RSS_FEEDS else "G8 Central Banks"
+    input_text = "\n\n".join(snippets[:18])
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                OPENAI_RESPONSES_URL,
+                headers={"Authorization": f"Bearer {settings.openai_api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": NEWS_SENTIMENT_MODEL,
+                    "instructions": (
+                        f"You are a senior macro analyst specialising in central bank policy. "
+                        f"Analyse these recent communications from {bank_label}. "
+                        "Return ONLY valid JSON, no markdown, no explanation. "
+                        'Shape: {"stance":"hawkish"|"dovish"|"neutral","confidence":<0-100>,'
+                        '"summary":"<3-4 sentence analysis of policy direction and market implications>",'
+                        '"key_themes":["<theme1>","<theme2>","<theme3>"],'
+                        '"fx_implication":"<1 sentence on expected currency impact>",'
+                        '"rate_bias":"cut"|"hold"|"hike",'
+                        '"risk_factors":["<risk1>","<risk2>"]}'
+                    ),
+                    "input": input_text,
+                    "max_output_tokens": 900,
+                },
+            )
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail="OpenAI CB analysis failed.") from exc
+
+    text = _extract_response_text(response.json())
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=502, detail="OpenAI returned invalid analysis JSON.") from exc
+    if not isinstance(parsed, dict):
+        raise HTTPException(status_code=502, detail="OpenAI returned an invalid analysis payload.")
+
+    return {
+        "bank": bank_label,
+        "stance": str(parsed.get("stance", "neutral")).lower(),
+        "confidence": pct_from(parsed.get("confidence", 50)),
+        "summary": str(parsed.get("summary", ""))[:1000],
+        "key_themes": [str(t)[:60] for t in parsed.get("key_themes", []) if isinstance(t, str)][:5],
+        "fx_implication": str(parsed.get("fx_implication", ""))[:250],
+        "rate_bias": str(parsed.get("rate_bias", "hold")).lower(),
+        "risk_factors": [str(r)[:100] for r in parsed.get("risk_factors", []) if isinstance(r, str)][:4],
+        "generated_at": now.isoformat(),
     }
 
 

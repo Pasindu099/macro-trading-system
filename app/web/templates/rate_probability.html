@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/rate_probability.css') }}?v=20260510e">
+{% endblock %}
+
+{% block body %}
+<div class="rp-page" id="rp-content">
+
+  {# ── Bank switcher tabs ──────────────────────────────────────────── #}
+  <nav class="rp-tabs" aria-label="Central bank selector">
+    {% for b in valid_banks %}
+    <a href="/rate-prob/{{ b }}"
+       class="rp-tab{% if b == bank %} is-active{% endif %}"
+       aria-current="{% if b == bank %}page{% else %}false{% endif %}">
+      {{ b }}
+    </a>
+    {% endfor %}
+  </nav>
+
+  {# ── Header row ──────────────────────────────────────────────────── #}
+  <header class="rp-header">
+    <div class="rp-header-left">
+      <h1 class="rp-bank-name">{{ summary.bank_full_name }}</h1>
+      <div class="rp-header-subtitle">
+        {{ summary.rate_label }}&nbsp;&mdash;&nbsp;Twelve-Month Market Pricing
+      </div>
+      <div class="rp-header-meta">
+        As of: {{ summary.as_of_date }}
+        &nbsp;|&nbsp;
+        {% if bank == "ECB" %}
+        Deposit Facility: <strong>{{ "%.2f"|format(summary.deposit_rate) }}%</strong>
+        &nbsp;|&nbsp;
+        Main Refinancing Rate: <strong>{{ "%.2f"|format(summary.main_rate) }}%</strong>
+        &nbsp;|&nbsp;
+        Marginal Lending: <strong>{{ "%.2f"|format(summary.lending_rate) }}%</strong>
+        {% else %}
+        {{ summary.rate_label }}: <strong>{{ "%.2f"|format(summary.current_rate) }}%</strong>
+        {% endif %}
+      </div>
+      <div class="rp-header-ois">
+        Last OIS:&nbsp;<strong>{{ "%.3f"|format(summary.last_ois_rate) }}%</strong>
+        &nbsp;|&nbsp;
+        <span class="rp-data-badge{% if not summary.market_data.available %} is-missing{% elif summary.market_data.is_proxy %} is-proxy{% endif %}">
+          {{ summary.market_data.label }}
+        </span>
+        &nbsp;|&nbsp;
+        Step:
+        <select class="rp-step-select" id="rp-step-select" data-bank="{{ bank }}">
+          <option value="25"{% if summary.step_bps == 25 %} selected{% endif %}>25 bps</option>
+          <option value="50"{% if summary.step_bps == 50 %} selected{% endif %}>50 bps</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="rp-header-right">
+      <button class="btn rp-refresh-btn"
+              hx-get="/rate-prob/{{ bank }}"
+              hx-target="#rp-content"
+              hx-swap="outerHTML"
+              title="Refresh data">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  {# ── No-data notice ──────────────────────────────────────────────── #}
+  {% if summary.no_data %}
+  <div class="rp-notice">
+    OIS curve data not yet loaded — rate probabilities unavailable.
+    Meeting dates from the official calendar are shown below.
+    <span class="rp-muted-text">Market-implied pricing is not available for {{ bank }} yet.</span>
+  </div>
+  {% endif %}
+
+  {% if summary.market_data.is_proxy %}
+  <div class="rp-notice rp-notice-proxy">
+    {{ bank }} is using {{ summary.market_data.label }} data as a proxy until a direct OIS curve is available.
+  </div>
+  {% endif %}
+
+  {# ── Four summary cards ──────────────────────────────────────────── #}
+  <section class="rp-cards" aria-label="Summary statistics">
+
+    {# Card 1 — Countdown #}
+    <div class="rp-card">
+      <div class="rp-card-label">Next Decision In</div>
+      <div class="rp-countdown" id="countdown-display" aria-live="polite">--d --:--:--</div>
+      <div class="rp-card-sub">{{ summary.next_meeting_datetime }}</div>
+    </div>
+
+    {# Card 2 — Next meeting pricing #}
+    <div class="rp-card">
+      <div class="rp-card-label">Next Meeting Pricing</div>
+      {% if summary.no_data %}
+      <div class="rp-big-value rp-hold">&mdash;</div>
+      <div class="rp-card-sub">No OIS data</div>
+      {% else %}
+      <div class="rp-big-value rp-{{ summary.dominant_outcome | lower }}">
+        {{ "%.0f" | format(summary.dominant_prob) }}%&nbsp;{{ summary.dominant_outcome }}
+      </div>
+      <div class="rp-card-sub rp-delta">
+        {% set d = summary.implied_delta_bps %}
+        {% if d > 0 %}+{% endif %}{{ "%.1f" | format(d) }}&nbsp;bps implied
+      </div>
+      {% endif %}
+    </div>
+
+    {# Card 3 — Current rate #}
+    <div class="rp-card">
+      <div class="rp-card-label">Current Rate</div>
+      <div class="rp-big-value">{{ "%.2f" | format(summary.current_rate) }}%</div>
+      <div class="rp-card-sub">Last OIS:&nbsp;{{ "%.3f" | format(summary.last_ois_rate) }}%</div>
+    </div>
+
+    {# Card 4 — 12-month outlook #}
+    <div class="rp-card">
+      <div class="rp-card-label">12-Month Outlook</div>
+      {% if summary.no_data %}
+      <div class="rp-big-value rp-hold">&mdash;</div>
+      <div class="rp-card-sub">No OIS data</div>
+      {% else %}
+      {% set outlook_cls = "rp-hike" if summary.outlook_direction == "up" else "rp-cut" if summary.outlook_direction == "down" else "rp-hold" %}
+      <div class="rp-big-value {{ outlook_cls }}">{{ summary.outlook_delta_bps }}</div>
+      <div class="rp-card-sub">{{ summary.outlook_description }}</div>
+      {% endif %}
+    </div>
+
+  </section>
+
+  {# ── Meeting table ───────────────────────────────────────────────── #}
+  <section class="rp-table-section rp-market-path-section">
+    <div class="rp-table-header-row">
+      <span class="rp-section-title">
+        {% if bank == "FED" %}
+          Path of Fed Funds Target Midpoint: Market Expectation
+        {% else %}
+          Meeting-by-Meeting Market Expectation
+        {% endif %}
+      </span>
+      <span class="rp-table-hint">Step dropdown re-fetches this table</span>
+    </div>
+
+    <div class="rp-table-wrap" id="rp-table-wrap">
+      {% if meetings %}
+      <table class="rp-table" id="rp-meetings-table">
+        <thead>
+          <tr>
+            <th>Meeting</th>
+            <th>Implied<br><span>Basis Pts</span></th>
+            <th>Adj Basis<br><span>Pts</span></th>
+            <th>Probable<br><span>Move</span></th>
+            <th>Cut<br><span>Probability</span></th>
+            <th>Hold<br><span>Probability</span></th>
+            <th>Hike<br><span>Probability</span></th>
+          </tr>
+        </thead>
+        <tbody id="rp-meetings-body">
+          {% for m in meetings %}
+          {% set dominant = "Hike" if m.hike_prob >= m.hold_prob and m.hike_prob >= m.cut_prob else "Cut" if m.cut_prob >= m.hold_prob and m.cut_prob >= m.hike_prob else "Hold" %}
+          {% set dominant_cls = "rp-hike" if dominant == "Hike" else "rp-cut" if dominant == "Cut" else "rp-hold" %}
+          <tr class="rp-row{% if loop.index is even %} rp-row-alt{% endif %}">
+
+            <td class="rp-meeting-date">
+              {{ m.meeting_date }}
+              {% if not m.is_official %}<span class="rp-star" title="Projected date">*</span>{% endif %}
+            </td>
+
+            <td class="rp-mono">
+              {% if m.market_data_available %}{{ "%.1f" | format(m.cumulative_delta_bps) }}{% else %}&mdash;{% endif %}
+            </td>
+
+            <td class="rp-mono{% if m.delta_bps > 0.5 %} rp-hike{% elif m.delta_bps < -0.5 %} rp-cut{% endif %}">
+              {% if m.market_data_available %}{% if m.delta_bps > 0 %}+{% endif %}{{ "%.1f" | format(m.delta_bps) }}{% else %}&mdash;{% endif %}
+            </td>
+
+            <td>
+              {% if m.market_data_available %}
+              <span class="rp-move-pill {{ dominant_cls }}">{{ dominant }}</span>
+              {% else %}
+              <span class="rp-muted-text">N/A</span>
+              {% endif %}
+            </td>
+
+            <td class="rp-prob-cell">
+              {% if m.market_data_available %}
+              <div class="rp-prob-value">{{ "%.1f" | format(m.cut_prob * 100) }}</div>
+              <div class="rp-prob-track"><span class="rp-prob-fill rp-bar-cut" style="width: {{ (m.cut_prob * 100) | round(1) }}%"></span></div>
+              {% else %}
+              &mdash;
+              {% endif %}
+            </td>
+
+            <td class="rp-prob-cell">
+              {% if m.market_data_available %}
+              <div class="rp-prob-value">{{ "%.1f" | format(m.hold_prob * 100) }}</div>
+              <div class="rp-prob-track"><span class="rp-prob-fill rp-bar-hold" style="width: {{ (m.hold_prob * 100) | round(1) }}%"></span></div>
+              {% else %}
+              &mdash;
+              {% endif %}
+            </td>
+
+            <td class="rp-prob-cell">
+              {% if m.market_data_available %}
+              <div class="rp-prob-value">{{ "%.1f" | format(m.hike_prob * 100) }}</div>
+              <div class="rp-prob-track"><span class="rp-prob-fill rp-bar-hike" style="width: {{ (m.hike_prob * 100) | round(1) }}%"></span></div>
+              {% else %}
+              &mdash;
+              {% endif %}
+            </td>
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if meetings | selectattr("is_official", "equalto", false) | list | length > 0 %}
+      <p class="rp-footnote">* Projected meeting date — not yet officially announced</p>
+      {% endif %}
+
+      {% else %}
+      <div class="rp-empty">No meeting data available for {{ bank }}.</div>
+      {% endif %}
+    </div>
+  </section>
+
+  {# ── Charts ──────────────────────────────────────────────────────── #}
+  <section class="rp-charts-section">
+
+    {# Rate path — step line with historical snapshot overlays #}
+    <div class="rp-chart-card rp-rate-path-card">
+      <div class="rp-chart-card-header">
+        <span class="rp-chart-label rp-rate-path-title">Implied Rate Path</span>
+        <label class="rp-step-switch" title="Toggle interpolation style">
+          <span>Step Line</span>
+          <input type="checkbox" id="rp-step-toggle" checked>
+          <i aria-hidden="true"></i>
+        </label>
+      </div>
+      <div class="rp-path-legend" id="rp-path-legend" aria-label="Rate path legend"></div>
+      <div id="rate-path-chart" class="rp-rate-path-chart"></div>
+    </div>
+
+    {# Year-end bar — all 8 banks 12m bps priced #}
+    <div class="rp-chart-card">
+      <div class="rp-chart-card-header">
+        <span class="rp-chart-label">12-Month Rate Expectations by Bank</span>
+      </div>
+      <div id="year-end-bar" style="height:160px;width:100%"></div>
+    </div>
+
+    {# Policy rate history #}
+    <div class="rp-chart-card">
+      <div class="rp-chart-card-header">
+        <span class="rp-chart-label">Policy Rate History</span>
+      </div>
+      <div id="policy-history-chart" style="height:180px;width:100%"></div>
+    </div>
+
+  </section>
+
+</div>{# /rp-page #}
+
+<script>
+  window._rpMeetingIso  = {{ summary.next_meeting_dt_iso | tojson }};
+  window._rpBank        = {{ bank | tojson }};
+  window._rpCurrentRate = {{ summary.current_rate | tojson }};
+</script>
+<script src="{{ url_for('static', path='js/rate_probability.js') }}?v=20260510e" defer></script>
+{% endblock %}

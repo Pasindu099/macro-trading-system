@@ -1,63 +1,246 @@
 {
   "errors": [],
-  "folder_url": "https://drive.google.com/drive/folders/18LOtdmnHncKQUI8QJ6fOsweHuAkK9yn4",
-  "generated_at": "2026-04-24T14:08:35.224928+00:00",
+  "folder_url": "https://drive.google.com/drive/folders/1sLco8wR_fgAp2BoCm69JPsc5iMlMH-gL?usp=sharing",
+  "generated_at": "2026-05-06T13:38:23.912803+00:00",
   "reports": [
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "S&P 500",
+            "asset_class": "Equities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The S&P has shown strong annualized gains during Powell's tenure, indicating robust market performance."
+          },
+          {
+            "asset": "Brent Crude Oil",
+            "asset_class": "Commodities",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "China's oil reserves and reliance on discounted imports may be affected by geopolitical pressures."
+          },
+          {
+            "asset": "Semiconductors",
+            "asset_class": "Equities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Semiconductors now dominate the MSCI World market capitalization, reflecting strong sector performance."
+          },
+          {
+            "asset": "US Oil Exports",
+            "asset_class": "Commodities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Record levels of US oil exports indicate strong demand and market positioning."
+          },
+          {
+            "asset": "Google (GOOG)",
+            "asset_class": "Equities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Significant earnings beat and revenue growth suggest strong company performance."
+          },
+          {
+            "asset": "Microsoft (MSFT)",
+            "asset_class": "Equities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Earnings and revenue exceeded expectations, indicating solid financial health."
+          },
+          {
+            "asset": "Amazon (AMZN)",
+            "asset_class": "Equities",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "Despite a strong earnings beat, initial market reaction was negative before recovery."
+          },
+          {
+            "asset": "Meta (META)",
+            "asset_class": "Equities",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "Strong earnings performance but faced a drop in stock price post-report."
+          },
+          {
+            "asset": "Worldcoin (WLD)",
+            "asset_class": "Crypto",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "Significant loss in value raises concerns about regulatory pushback and ethical issues."
+          }
+        ],
+        "bank": "Syz",
+        "executive_summary": "The report highlights significant movements in equities, particularly the performance of major tech companies, alongside shifts in China's economic signals and energy position. It also notes the ongoing geopolitical tensions between the U.S. and China, which may impact trade dynamics and oil imports.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Geopolitical tensions may lead to volatility in financial markets, particularly in commodities and trade-sensitive sectors.",
+          "bank_view_global_economy": "The rivalry between the U.S. and China is a significant factor influencing global economic conditions.",
+          "discussed": true,
+          "summary": "The report discusses the ongoing geopolitical tensions between the U.S. and China, particularly regarding military options and trade dynamics."
+        },
+        "key_risks": [
+          "Geopolitical tensions affecting trade and energy supplies.",
+          "Potential regulatory challenges for crypto projects.",
+          "Economic data divergence between the U.S. and Europe impacting market sentiment."
+        ],
+        "report_date": "2026-04-30",
+        "title": "Market Insights and Economic Signals - April 2026"
+      },
+      "cached_at": "2026-05-03T20:54:18.900444+00:00",
+      "drive_file_id": "13bGdBm_q4uNXz8aijzPPt5caN9MPsW6u",
+      "drive_web_link": "https://drive.google.com/file/d/13bGdBm_q4uNXz8aijzPPt5caN9MPsW6u/view?usp=drivesdk",
+      "file_name": "Syz_the moment-20260430.pdf",
+      "local_path": "data/bank_research/files/13bGdBm_q4uNXz8aijzPPt5caN9MPsW6u_Syz_the_moment-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:21:01.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "USD",
+            "asset_class": "Currency",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "Geopolitical risks and diverging monetary policies are expected to weaken the USD."
+          },
+          {
+            "asset": "CAD",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "Fundamentals support a stronger CAD as it retraces previous declines and benefits from improving economic conditions."
+          },
+          {
+            "asset": "EUR",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "The EUR's performance is affected by geopolitical tensions and ECB's hawkish stance amid rising energy prices."
+          },
+          {
+            "asset": "GBP",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "Expectations for aggressive tightening by the BoE support a positive outlook for the GBP."
+          },
+          {
+            "asset": "JPY",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Concerns over fiscal policy and negative terms-of-trade shocks keep the JPY under pressure."
+          },
+          {
+            "asset": "AUD",
+            "asset_class": "Currency",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Rising commodity prices and improving terms of trade support a positive outlook for the AUD."
+          },
+          {
+            "asset": "MXN",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "Despite geopolitical volatility, the MXN remains resilient but faces risks from economic fundamentals."
+          },
+          {
+            "asset": "BRL",
+            "asset_class": "Currency",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "High yields and favorable economic conditions support the BRL despite political uncertainty."
+          },
+          {
+            "asset": "CLP",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Dependence on oil imports and declining copper prices negatively impact the CLP."
+          },
+          {
+            "asset": "PEN",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Political uncertainty and risk aversion have led to recent depreciation of the PEN."
+          }
+        ],
+        "bank": "Scotiabank",
+        "executive_summary": "The US dollar (USD) is expected to remain weak against major currencies due to geopolitical tensions and diverging central bank policies. The Canadian dollar (CAD) is projected to strengthen as it recovers from previous declines, while the euro (EUR) and British pound (GBP) show mixed performance influenced by regional economic conditions. Overall, the outlook for the USD remains bearish through 2027.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Market participants are adjusting their positions in response to geopolitical developments, affecting currency valuations.",
+          "bank_view_global_economy": "Geopolitical tensions are complicating the economic outlook, with potential risks to inflation and growth.",
+          "discussed": true,
+          "summary": "The report highlights the impact of the US/Iran conflict on currency markets, particularly the USD's temporary strength and the CAD's recovery."
+        },
+        "key_risks": [
+          "Geopolitical tensions could escalate, impacting currency stability.",
+          "Divergence in central bank policies may lead to unexpected market reactions.",
+          "Political uncertainty in key regions could affect economic forecasts.",
+          "Commodity price fluctuations may influence currency valuations."
+        ],
+        "report_date": "2026-04-30",
+        "title": "Foreign Exchange Outlook"
+      },
+      "cached_at": "2026-05-03T20:54:32.483144+00:00",
+      "drive_file_id": "1YTW9R4kwBhSuygn5BTzGdr168i_QoidL",
+      "drive_web_link": "https://drive.google.com/file/d/1YTW9R4kwBhSuygn5BTzGdr168i_QoidL/view?usp=drivesdk",
+      "file_name": "Scotia_Foreign Exchange Outlook-20260430.pdf",
+      "local_path": "data/bank_research/files/1YTW9R4kwBhSuygn5BTzGdr168i_QoidL_Scotia_Foreign_Exchange_Outlook-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:20:52.000Z"
+    },
     {
       "analysis": {
         "assets": [
           {
             "asset": "EUR/USD",
             "asset_class": "FX",
-            "confidence": "Moderate",
-            "outlook": "Neutral",
-            "reasons": "The EUR/USD pair's stability relies on resilient risk sentiment, with a surprise from the ECB needed for a lasting impact."
-          },
-          {
-            "asset": "Euro",
-            "asset_class": "Currency",
-            "confidence": "Moderate",
+            "confidence": "High",
             "outlook": "Bullish",
-            "reasons": "The ECB's cautious tone and potential for future rate hikes support the euro's outlook."
+            "reasons": "Expectations of a rate hike in June could strengthen the euro against the dollar."
           },
           {
             "asset": "Oil",
-            "asset_class": "Commodity",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "High oil prices are influencing inflation expectations and could necessitate ECB action."
+            "asset_class": "Commodities",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "Oil prices are currently falling, but their future trajectory will significantly influence ECB rate decisions."
           },
           {
-            "asset": "Global Equities",
-            "asset_class": "Equities",
+            "asset": "ECB Rates",
+            "asset_class": "Rates",
             "confidence": "High",
             "outlook": "Bullish",
-            "reasons": "Current market dynamics show that global equities are a primary driver for the EUR/USD pair."
+            "reasons": "Market pricing reflects expectations of a 25bp hike in June and nearly 75bp by year-end."
           }
         ],
-        "bank": "ING",
-        "executive_summary": "The ECB is expected to maintain its current interest rates during the April meeting, with a potential hike anticipated in June. Market expectations for rate adjustments remain cautious, influenced by inflation and growth risks. The euro's strength is supported by these expectations, but global equities and oil prices are currently more significant market drivers.",
+        "bank": "Nordea",
+        "executive_summary": "The ECB has decided to keep rates unchanged at 2.0%, but a rate hike in June is anticipated unless there is a significant easing in energy prices or a downturn in growth. The bank is closely monitoring inflation and growth risks, with expectations for a 25bp hike in June and further increases later in the year.",
         "geopolitical": {
-          "bank_view_financial_markets": null,
-          "bank_view_global_economy": null,
-          "discussed": false,
-          "summary": null
+          "bank_view_financial_markets": "Financial markets are reacting to the interplay between energy prices and ECB rate expectations.",
+          "bank_view_global_economy": "The ECB is cautious about the global economic outlook, particularly due to the risks posed by high energy prices.",
+          "discussed": true,
+          "summary": "The ongoing war and its impact on energy prices are critical factors influencing inflation and economic activity."
         },
         "key_risks": [
-          "Unexpected ECB rate hike could disrupt market expectations.",
-          "Dovish ECB stance may lead to a steepening of the yield curve.",
-          "Continued high oil prices could pressure inflation and necessitate policy changes."
+          "High energy prices could persist, impacting inflation and growth.",
+          "A significant downturn in economic growth may delay rate hikes.",
+          "Geopolitical tensions could exacerbate market volatility."
         ],
-        "report_date": "2026-04-23",
-        "title": "FX April ECB Cheat Sheet: Ready, Aim, Hold"
+        "report_date": "2026-04-30",
+        "title": "ECB Watch: Prepared to hike in June"
       },
-      "cached_at": "2026-04-24T14:04:12.339789+00:00",
-      "drive_file_id": "1nT2Tac7F-SPCEx2AGfk3lg-j9HszYxeF",
-      "drive_web_link": "https://drive.google.com/file/d/1nT2Tac7F-SPCEx2AGfk3lg-j9HszYxeF/view?usp=drivesdk",
-      "file_name": "ING-Think-april-ecb-cheat-sheet-ready-aim-hold.pdf",
-      "local_path": "data/bank_research/files/1nT2Tac7F-SPCEx2AGfk3lg-j9HszYxeF_ING-Think-april-ecb-cheat-sheet-ready-aim-hold.pdf",
+      "cached_at": "2026-05-03T20:54:39.184631+00:00",
+      "drive_file_id": "1bZ33n3vs2DYIlVNYZt5chJyocdyb8gpo",
+      "drive_web_link": "https://drive.google.com/file/d/1bZ33n3vs2DYIlVNYZt5chJyocdyb8gpo/view?usp=drivesdk",
+      "file_name": "Nordea_ECB Watch Prepared to hike in June-20260430.pdf",
+      "local_path": "data/bank_research/files/1bZ33n3vs2DYIlVNYZt5chJyocdyb8gpo_Nordea_ECB_Watch_Prepared_to_hike_in_June-20260430.pdf",
       "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:28:16.000Z"
+      "source_modified_time": "2026-05-01T08:20:48.000Z"
     },
     {
       "analysis": {
@@ -67,378 +250,991 @@
             "asset_class": "Currency",
             "confidence": "Moderate",
             "outlook": "Mixed",
-            "reasons": "The rise in inflation may lead to a tightening policy bias, affecting GBP's performance."
+            "reasons": "The BoE's decision to hold rates reflects a cautious approach to current economic pressures, with potential for future hikes depending on inflation trends."
           },
           {
-            "asset": "Oil",
-            "asset_class": "Commodity",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "The ongoing conflict in Iran is expected to keep oil prices elevated, contributing to inflation."
-          },
-          {
-            "asset": "UK CPI",
+            "asset": "CPI Inflation",
             "asset_class": "Economic Indicator",
             "confidence": "High",
-            "outlook": "Bearish",
-            "reasons": "While inflation is rising, it is expected to fall below 3% in the near term due to the drop in the Ofgem energy price cap."
-          },
-          {
-            "asset": "Bank Rate",
-            "asset_class": "Interest Rate",
-            "confidence": "Moderate",
             "outlook": "Bullish",
-            "reasons": "Market expectations are leaning towards rate hikes as inflation concerns persist."
-          }
-        ],
-        "bank": "Lloyds Bank",
-        "executive_summary": "UK CPI inflation increased to 3.3% in March, influenced by the Iran war and rising oil prices. While energy-related items drove the inflation rise, core inflation showed limited broader price pressures. Financial markets are pricing in potential rate hikes due to concerns over second-round inflation effects.",
-        "geopolitical": {
-          "bank_view_financial_markets": "Financial markets are reacting to inflation concerns with expectations of tighter monetary policy.",
-          "bank_view_global_economy": "The conflict is expected to create upward pressure on inflation globally, particularly through energy prices.",
-          "discussed": true,
-          "summary": "The report highlights the impact of the Iran war on UK inflation and energy prices."
-        },
-        "key_risks": [
-          "Potential for second-round inflation effects to materialize.",
-          "Further escalation of the Iran conflict impacting oil prices.",
-          "Market volatility due to changing expectations around interest rate hikes."
-        ],
-        "report_date": "2026-04-22",
-        "title": "UK CPI Inflation Rises Amid Iran Conflict"
-      },
-      "cached_at": "2026-04-24T14:04:24.452748+00:00",
-      "drive_file_id": "1nOem-LxQn58Ilc1ZHchv_Os3SqDMllO8",
-      "drive_web_link": "https://drive.google.com/file/d/1nOem-LxQn58Ilc1ZHchv_Os3SqDMllO8/view?usp=drivesdk",
-      "file_name": "Lloyds_UK CPI (Mar-26) - Iran war fuels upward move in inflation-20260422.pdf",
-      "local_path": "data/bank_research/files/1nOem-LxQn58Ilc1ZHchv_Os3SqDMllO8_Lloyds_UK_CPI_Mar-26_-_Iran_war_fuels_upward_move_in_inflation-20260422.pdf",
-      "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:27:54.000Z"
-    },
-    {
-      "analysis": {
-        "assets": [
-          {
-            "asset": "BRL",
-            "asset_class": "Currency",
-            "confidence": "Moderate",
-            "outlook": "Mixed",
-            "reasons": "The BRL profile has been revised stronger due to improved terms of trade, but depreciation is still expected due to fiscal challenges."
+            "reasons": "Inflation is expected to rise due to higher energy prices, with forecasts indicating a significant increase in CPI for 2026 and beyond."
           },
           {
-            "asset": "HUF",
-            "asset_class": "Currency",
-            "confidence": "High",
-            "outlook": "Neutral",
-            "reasons": "The central bank is expected to maintain rates amid political changes, with inflation risks from potential removal of price caps."
-          },
-          {
-            "asset": "CNY",
-            "asset_class": "Currency",
-            "confidence": "Moderate",
-            "outlook": "Neutral",
-            "reasons": "CNY appreciation expectations are slowing, with geopolitical tensions impacting its safe-haven status."
-          },
-          {
-            "asset": "IDR",
-            "asset_class": "Currency",
-            "confidence": "Low",
-            "outlook": "Bearish",
-            "reasons": "Bank Indonesia is cautious about external shocks and prioritizing stability, limiting potential for appreciation."
-          },
-          {
-            "asset": "THB",
-            "asset_class": "Currency",
-            "confidence": "Moderate",
-            "outlook": "Neutral",
-            "reasons": "The Bank of Thailand is likely to maintain its policy rate, with a cautious approach to inflation and economic recovery."
-          },
-          {
-            "asset": "MXN",
-            "asset_class": "Currency",
+            "asset": "UK GDP",
+            "asset_class": "Economic Indicator",
             "confidence": "Moderate",
             "outlook": "Bearish",
-            "reasons": "Uncertainty around the USMCA agreement is expected to weigh on investor confidence, leading to gradual weakening."
+            "reasons": "GDP growth forecasts have been lowered, indicating a weaker economic outlook for 2026 and 2027."
           },
           {
-            "asset": "CLP",
-            "asset_class": "Currency",
-            "confidence": "Moderate",
-            "outlook": "Watch",
-            "reasons": "Dependence on energy imports poses risks to the outlook, particularly with ongoing geopolitical tensions."
-          },
-          {
-            "asset": "COP",
-            "asset_class": "Currency",
-            "confidence": "Moderate",
-            "outlook": "Neutral",
-            "reasons": "Political uncertainties in Colombia could significantly shift the outlook, maintaining a cautious stance."
-          },
-          {
-            "asset": "PEN",
-            "asset_class": "Currency",
-            "confidence": "Moderate",
-            "outlook": "Neutral",
-            "reasons": "Political outcomes in Peru could drastically change the economic outlook, keeping forecasts stable for now."
-          },
-          {
-            "asset": "CGB",
-            "asset_class": "Bond",
-            "confidence": "Moderate",
-            "outlook": "Neutral",
-            "reasons": "The long end of the CGB market is expected to remain range-bound, with inflation risks influencing investor sentiment."
-          }
-        ],
-        "bank": "Cr\u00e9dit Agricole CIB",
-        "executive_summary": "Emerging Market investors are currently cautious due to geopolitical uncertainties, particularly regarding US-Iran relations. While some EM currencies have shown recovery, there are concerns about potential depreciation and the impact of external factors on local economies. The report outlines various strategies and forecasts for different regions and currencies.",
-        "geopolitical": {
-          "bank_view_financial_markets": "Financial markets are expected to remain volatile due to these geopolitical tensions, affecting currency and bond markets.",
-          "bank_view_global_economy": "The bank views the global economy as facing significant risks from geopolitical uncertainties, particularly in the Middle East.",
-          "discussed": true,
-          "summary": "The report highlights ongoing geopolitical tensions, particularly the US-Iran conflict, which is impacting emerging markets and investor sentiment."
-        },
-        "key_risks": [
-          "Geopolitical tensions, particularly in the Middle East, could escalate and impact global markets.",
-          "Uncertainty surrounding the USMCA agreement may weigh on investor confidence in Mexico.",
-          "Inflationary pressures from energy prices could affect monetary policy decisions across various EM countries.",
-          "Political instability in Latin America could lead to significant shifts in currency outlooks."
-        ],
-        "report_date": "2026-04-22",
-        "title": "Emerging Market Weekly Pulse"
-      },
-      "cached_at": "2026-04-24T14:05:06.574988+00:00",
-      "drive_file_id": "1IsCJRVq72ye1JccTX2_SrU4x3IPU-LS0",
-      "drive_web_link": "https://drive.google.com/file/d/1IsCJRVq72ye1JccTX2_SrU4x3IPU-LS0/view?usp=drivesdk",
-      "file_name": "CACIB_EM Weekly Caught between two stools-20260422.pdf",
-      "local_path": "data/bank_research/files/1IsCJRVq72ye1JccTX2_SrU4x3IPU-LS0_CACIB_EM_Weekly_Caught_between_two_stools-20260422.pdf",
-      "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:27:26.000Z"
-    },
-    {
-      "analysis": {
-        "assets": [
-          {
-            "asset": "10Y Treasury",
-            "asset_class": "Rates",
-            "confidence": "Moderate",
-            "outlook": "Neutral",
-            "reasons": "The yield is currently stable within a defined range, indicating a holding pattern influenced by geopolitical events."
-          },
-          {
-            "asset": "S&P 500",
-            "asset_class": "Equities",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "The index has reached record highs, suggesting strong performance despite broader market concerns."
-          },
-          {
-            "asset": "US Treasury Securities",
-            "asset_class": "Rates",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "Foreign investors continue to increase their holdings, indicating strong demand and confidence in US Treasuries."
-          }
-        ],
-        "bank": "Cr\u00e9dit Agricole CIB",
-        "executive_summary": "The rates market is expected to be influenced by ongoing developments in the Iran war, particularly following the extension of the ceasefire by President Trump. Currently, the 10Y Treasury yield is fluctuating between 4.20% and 4.35%. Despite inflation concerns, the market is pricing in a slight easing from the Fed by year-end.",
-        "geopolitical": {
-          "bank_view_financial_markets": "Despite geopolitical tensions, the financial markets are adapting, with foreign demand for Treasuries at record levels.",
-          "bank_view_global_economy": "The geopolitical situation is creating uncertainty, but the resilience of the US Treasury market remains strong.",
-          "discussed": true,
-          "summary": "The report highlights the impact of the Iran war on the rates market, particularly following the recent ceasefire extension."
-        },
-        "key_risks": [
-          "Potential escalation of the Iran war affecting market stability.",
-          "Changes in Fed policy could disrupt current market pricing.",
-          "Inflation concerns may lead to volatility in rates and equities."
-        ],
-        "report_date": "2026-04-22",
-        "title": "Interest Rates Focus: Beyond the Ceasefire"
-      },
-      "cached_at": "2026-04-24T14:05:21.757998+00:00",
-      "drive_file_id": "1l6BiOshKWtqdPKUhjntyDEdMNEtx0dg7",
-      "drive_web_link": "https://drive.google.com/file/d/1l6BiOshKWtqdPKUhjntyDEdMNEtx0dg7/view?usp=drivesdk",
-      "file_name": "CACIB_Rates Focus Beyond the ceasefire-20260422.pdf",
-      "local_path": "data/bank_research/files/1l6BiOshKWtqdPKUhjntyDEdMNEtx0dg7_CACIB_Rates_Focus_Beyond_the_ceasefire-20260422.pdf",
-      "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:27:22.000Z"
-    },
-    {
-      "analysis": {
-        "assets": [
-          {
-            "asset": "Japanese Yen (JPY)",
-            "asset_class": "Currency",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "The yen is expected to appreciate as domestic investment increases and economic strength recovers, countering the current weakness attributed to low domestic demand."
-          },
-          {
-            "asset": "Japanese Government Bonds (JGB)",
-            "asset_class": "Fixed Income",
-            "confidence": "Medium",
-            "outlook": "Neutral",
-            "reasons": "While yields have risen, this is seen as a normalization rather than a crisis, reflecting improved economic conditions and growth expectations."
-          },
-          {
-            "asset": "Japanese Equities",
-            "asset_class": "Equities",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "A potential structural uptrend is anticipated if capital expenditure breaks through historical ceilings, leading to increased market capitalization in line with economic growth."
-          }
-        ],
-        "bank": "Cr\u00e9dit Agricole Corporate and Investment Bank",
-        "executive_summary": "The report discusses the economic policies of Japan's Takaichi administration, termed 'Sanaenomics', which aims to reverse decades of stagnation through strategic public-private investments. It contrasts Sanaenomics with Abenomics, emphasizing a shift from monetary easing to proactive fiscal policy, and argues that Japan's economic fundamentals are stronger than perceived by global markets.",
-        "geopolitical": {
-          "bank_view_financial_markets": "The bank believes that financial markets have misinterpreted Japan's fiscal policies, leading to unwarranted alarm and mispricing of assets.",
-          "bank_view_global_economy": "The bank views Japan's economic strategy as a necessary pivot to compete effectively in a global landscape increasingly focused on growth investment.",
-          "discussed": true,
-          "summary": "The report highlights misconceptions about Japan's fiscal policies and economic strategy in the context of global competition and investment."
-        },
-        "key_risks": [
-          "Misinterpretation of fiscal policies leading to market volatility.",
-          "Potential for slower-than-expected economic recovery.",
-          "Global economic conditions impacting Japan's growth strategy."
-        ],
-        "report_date": "2026-04-23",
-        "title": "Sanaenomics: The Blueprint for Japan\u2019s Economic Dominance"
-      },
-      "cached_at": "2026-04-24T14:05:40.402154+00:00",
-      "drive_file_id": "1VJa2wAeHvBTR5b_2JEniCv2xv7IbA8Kl",
-      "drive_web_link": "https://drive.google.com/file/d/1VJa2wAeHvBTR5b_2JEniCv2xv7IbA8Kl/view?usp=drivesdk",
-      "file_name": "CACIB_Japan- Sanaenomics the blueprint for Japan\u2019s economic dominance-20260423.pdf",
-      "local_path": "data/bank_research/files/1VJa2wAeHvBTR5b_2JEniCv2xv7IbA8Kl_CACIB_Japan-_Sanaenomics_the_blueprint_for_Japan_s_economic_dominance-20260423.pdf",
-      "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:27:17.000Z"
-    },
-    {
-      "analysis": {
-        "assets": [
-          {
-            "asset": "EUR/USD",
-            "asset_class": "FX",
-            "confidence": "High",
-            "outlook": "Bearish",
-            "reasons": "The EUR is under pressure due to stagnant growth prospects in the Eurozone, while the USD is supported by stronger domestic demand."
-          },
-          {
-            "asset": "USD",
-            "asset_class": "Currency",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "The USD is expected to benefit from a cautious recovery in the US economy and resilient domestic demand."
-          },
-          {
-            "asset": "EUR",
-            "asset_class": "Currency",
-            "confidence": "Medium",
-            "outlook": "Bearish",
-            "reasons": "The EUR faces downward pressure from deteriorating growth indicators and potential energy rationing in the Eurozone."
-          },
-          {
-            "asset": "JPY",
-            "asset_class": "Currency",
-            "confidence": "Medium",
-            "outlook": "Watch",
-            "reasons": "The JPY is struggling due to geopolitical tensions and could be affected by potential intervention from the BoJ."
-          },
-          {
-            "asset": "Oil",
+            "asset": "Oil Prices",
             "asset_class": "Commodity",
             "confidence": "High",
             "outlook": "Bullish",
-            "reasons": "Higher oil prices are expected as geopolitical tensions persist, particularly with the blockade of the Strait of Hormuz."
+            "reasons": "The ongoing conflict in Iran is expected to sustain upward pressure on oil prices, influencing inflation and economic policy."
+          },
+          {
+            "asset": "Gas Prices",
+            "asset_class": "Commodity",
+            "confidence": "Moderate",
+            "outlook": "Neutral",
+            "reasons": "Gas prices are projected to be less affected than oil prices, with a gradual end to the Hormuz strait blockade anticipated."
           }
         ],
-        "bank": "Cr\u00e9dit Agricole CIB",
-        "executive_summary": "The extension of the US-Iran ceasefire is causing market unease, particularly affecting the EUR/USD exchange rate. As the geopolitical tensions continue, the USD is expected to outperform the EUR due to contrasting economic conditions in the US and Eurozone. Upcoming PMI data will be crucial in assessing the economic outlook for both regions.",
+        "bank": "Natixis",
+        "executive_summary": "The Bank of England has decided to maintain interest rates at 3.75% amidst a complex economic landscape influenced by the Iran war's energy shock. The central bank anticipates two rate hikes later this year to address rising inflation expectations, while navigating the risks of second-round inflation effects and a weakening economy.",
         "geopolitical": {
-          "bank_view_financial_markets": "The market is reacting negatively to the geopolitical situation, with the USD gaining against other currencies.",
-          "bank_view_global_economy": "The prolonged standoff is likely to exacerbate the growth gap between the US and Eurozone economies.",
+          "bank_view_financial_markets": "Financial markets are expected to remain volatile due to uncertainties surrounding energy prices and inflation expectations.",
+          "bank_view_global_economy": "The bank views the global economy as facing significant risks from geopolitical tensions, particularly in relation to energy supply and inflation.",
           "discussed": true,
-          "summary": "The ongoing US-Iran tensions and the blockade of the Strait of Hormuz are impacting market sentiment and economic forecasts."
+          "summary": "The report discusses the impact of the Iran war on energy prices and inflation, highlighting the geopolitical risks associated with prolonged conflicts."
         },
         "key_risks": [
-          "Prolonged geopolitical tensions in the Middle East",
-          "Deteriorating economic indicators in the Eurozone",
-          "Potential for energy rationing in Europe",
-          "Market volatility due to upcoming PMI data releases"
+          "Prolonged energy price shocks could necessitate aggressive monetary tightening.",
+          "Second-round inflation effects may persist, complicating monetary policy decisions.",
+          "A weaker economy could lead to lower inflation but may also increase risks of stagflation."
         ],
-        "report_date": "2026-04-23",
-        "title": "EUR/USD: The Loser of the \u2018Open-End\u2019 Ceasefire"
+        "report_date": "2026-04-30",
+        "title": "BoE Post view: Rates on Hold Amid Complex Scenarios"
       },
-      "cached_at": "2026-04-24T14:05:52.488160+00:00",
-      "drive_file_id": "1z_9e3s6HseRImxwx2LnqR03A-Cb4XqGk",
-      "drive_web_link": "https://drive.google.com/file/d/1z_9e3s6HseRImxwx2LnqR03A-Cb4XqGk/view?usp=drivesdk",
-      "file_name": "CACIB_FX Daily EURUSD the loser of the \u2018open-end\u2019 ceasefire-20260423.pdf",
-      "local_path": "data/bank_research/files/1z_9e3s6HseRImxwx2LnqR03A-Cb4XqGk_CACIB_FX_Daily_EURUSD_the_loser_of_the_open-end_ceasefire-20260423.pdf",
+      "cached_at": "2026-05-03T20:54:50.737011+00:00",
+      "drive_file_id": "19C6qrYXgQdOTPnJPFBl-DFC0BXIwONWI",
+      "drive_web_link": "https://drive.google.com/file/d/19C6qrYXgQdOTPnJPFBl-DFC0BXIwONWI/view?usp=drivesdk",
+      "file_name": "Natixis_BoE Post view Rates on Hold Amid Complex Scenarios-20260430.pdf",
+      "local_path": "data/bank_research/files/19C6qrYXgQdOTPnJPFBl-DFC0BXIwONWI_Natixis_BoE_Post_view_Rates_on_Hold_Amid_Complex_Scenarios-20260430.pdf",
       "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:27:08.000Z"
+      "source_modified_time": "2026-05-01T08:20:43.000Z"
     },
     {
       "analysis": {
         "assets": [
           {
-            "asset": "USD",
+            "asset": "GBP",
             "asset_class": "Currency",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "Strong earnings in US equities and ongoing geopolitical tensions support the dollar's strength."
-          },
-          {
-            "asset": "EUR/USD",
-            "asset_class": "Currency Pair",
             "confidence": "Medium",
             "outlook": "Bearish",
-            "reasons": "Potential for lower movement if diplomatic efforts fail, with support levels noted around 1.1650-1.1670."
+            "reasons": "The pound faces downward pressure from potential political uncertainties and the impact of rate hikes in a weak economic environment."
+          },
+          {
+            "asset": "BoE Rate",
+            "asset_class": "Interest Rate",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The BoE is expected to implement 50 basis points of tightening this year, with a strong likelihood of a hike in June."
           },
           {
             "asset": "EUR/GBP",
             "asset_class": "Currency Pair",
             "confidence": "Medium",
             "outlook": "Bullish",
-            "reasons": "Expectations of further tightening in the front-end rate spread and increased political risk premium post-local elections."
+            "reasons": "Expectations of GBP underperformance suggest that EUR/GBP may drift higher throughout the year."
+          },
+          {
+            "asset": "2-Year Gilt",
+            "asset_class": "Bond",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "The yield has risen significantly in anticipation of rate hikes, reflecting market expectations."
+          },
+          {
+            "asset": "Crude Oil",
+            "asset_class": "Commodity",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "Recent volatility in oil prices affects inflation expectations and economic conditions."
+          }
+        ],
+        "bank": "MUFG",
+        "executive_summary": "The Bank of England (BoE) has maintained its rates but indicated a readiness to tighten monetary policy in response to persistent inflation pressures. The report anticipates two rate hikes this year, with the first likely in June, contingent on upcoming economic data. However, risks to the British pound remain skewed to the downside due to geopolitical uncertainties and weak economic conditions.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Market reactions are influenced by geopolitical uncertainties, which may lead to increased volatility and affect currency performance.",
+          "bank_view_global_economy": "The BoE is cautious about the global economic environment, particularly due to geopolitical risks that could impact inflation and growth.",
+          "discussed": true,
+          "summary": "The report highlights ongoing geopolitical tensions, particularly in the Middle East, which are contributing to inflationary pressures and complicating the economic outlook."
+        },
+        "key_risks": [
+          "Political uncertainty in the UK could undermine GBP performance.",
+          "Weak economic conditions may hinder the effectiveness of rate hikes.",
+          "Geopolitical tensions, particularly in the Middle East, could exacerbate inflationary pressures.",
+          "Increased market volatility may impact currency dynamics."
+        ],
+        "report_date": "2026-04-30",
+        "title": "BoE Review: Ready to Act"
+      },
+      "cached_at": "2026-05-03T20:55:02.434981+00:00",
+      "drive_file_id": "1SYxFJzkSGdmQNVHe4nWXPZnetj79hwYQ",
+      "drive_web_link": "https://drive.google.com/file/d/1SYxFJzkSGdmQNVHe4nWXPZnetj79hwYQ/view?usp=drivesdk",
+      "file_name": "MUFG_FX Focus BOE Rreview-20260430.pdf",
+      "local_path": "data/bank_research/files/1SYxFJzkSGdmQNVHe4nWXPZnetj79hwYQ_MUFG_FX_Focus_BOE_Rreview-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:20:37.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "EUR/USD",
+            "asset_class": "FX",
+            "confidence": "Moderate",
+            "outlook": "Bullish",
+            "reasons": "The EUR remains resilient despite the energy price shock, supported by the ECB's hawkish stance and narrowing yield spreads with the US."
+          },
+          {
+            "asset": "EUR/GBP",
+            "asset_class": "FX",
+            "confidence": "Low",
+            "outlook": "Neutral",
+            "reasons": "The pair has shown limited movement, reflecting the overall stability in the euro-zone rate expectations."
+          },
+          {
+            "asset": "Brent Crude Oil",
+            "asset_class": "Commodity",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Prices have surged by around 60% due to the ongoing conflict, impacting inflation and economic sentiment."
+          },
+          {
+            "asset": "Euro-zone GDP",
+            "asset_class": "Equity",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "Recent GDP data showed only 0.1% growth, indicating a slowdown in economic momentum."
+          }
+        ],
+        "bank": "MUFG",
+        "executive_summary": "The ECB has decided to keep its policy rates unchanged while acknowledging intensified risks to inflation and growth due to the energy price shock. Although the euro-zone economy is moving away from the baseline scenario, the ECB is considering measured rate hikes starting in June. The market reaction has been muted, reflecting the lack of major surprises in the ECB's policy stance.",
+        "geopolitical": {
+          "bank_view_financial_markets": "The ECB's policy guidance is seen as stabilizing for financial markets amidst heightened uncertainty.",
+          "bank_view_global_economy": "The ECB is cautious about the economic outlook due to the ongoing conflict and its effects on inflation and growth.",
+          "discussed": true,
+          "summary": "The report discusses the impact of the Middle East conflict on energy prices and economic activity in the euro-zone."
+        },
+        "key_risks": [
+          "Prolonged closure of the Strait of Hormuz could exacerbate inflation and economic downturn.",
+          "Potential for more aggressive ECB rate hikes if inflation overshoots targets.",
+          "Geopolitical tensions may lead to further volatility in energy prices."
+        ],
+        "report_date": "2026-04-30",
+        "title": "FX Focus ECB Review: Time is Running Out to Look Through Energy Price Shock"
+      },
+      "cached_at": "2026-05-03T20:55:15.379767+00:00",
+      "drive_file_id": "15qZEyqUg8PVztqawXAFr6bdy1-NemrmJ",
+      "drive_web_link": "https://drive.google.com/file/d/15qZEyqUg8PVztqawXAFr6bdy1-NemrmJ/view?usp=drivesdk",
+      "file_name": "MUFG_FX Focus ECB Review-20260430.pdf",
+      "local_path": "data/bank_research/files/15qZEyqUg8PVztqawXAFr6bdy1-NemrmJ_MUFG_FX_Focus_ECB_Review-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:20:33.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "S&P 500",
+            "asset_class": "Equities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Solid corporate earnings and positive economic data have calmed investor fears, contributing to a strong rally."
+          },
+          {
+            "asset": "Nasdaq",
+            "asset_class": "Equities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Strong earnings reports from major tech companies have driven significant gains."
+          },
+          {
+            "asset": "Dollar/Yen",
+            "asset_class": "FX",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "The dollar fell sharply after Japanese authorities intervened to support the yen."
+          },
+          {
+            "asset": "Euro/Dollar",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "The euro gained against the dollar amid a weaker dollar index."
+          },
+          {
+            "asset": "Sterling/Dollar",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "The pound strengthened against the dollar, reflecting positive sentiment."
+          },
+          {
+            "asset": "Brent Crude",
+            "asset_class": "Commodities",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "Oil prices eased after reaching four-year highs, influenced by geopolitical risks."
+          },
+          {
+            "asset": "WTI Crude",
+            "asset_class": "Commodities",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "Prices retreated from highs due to market reassessment of geopolitical tensions."
+          },
+          {
+            "asset": "Gold",
+            "asset_class": "Commodities",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "Gold prices rose as a safe-haven asset amid ongoing inflation concerns."
+          },
+          {
+            "asset": "10-Year Treasury",
+            "asset_class": "Rates",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "Treasury yields eased as investors digested recent economic data."
+          }
+        ],
+        "bank": "LSEG",
+        "executive_summary": "The U.S. stock market experienced significant gains driven by strong corporate earnings, while the dollar weakened against the yen following reported Japanese intervention in FX markets. Oil prices eased from recent highs amid geopolitical tensions, and gold prices rose as inflation concerns persist.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Market volatility is expected as geopolitical uncertainties continue to influence investor behavior.",
+          "bank_view_global_economy": "The ongoing conflict in the Middle East poses significant risks to global economic stability and growth.",
+          "discussed": true,
+          "summary": "Geopolitical tensions, particularly related to the Iran conflict, are impacting oil prices and market sentiment."
+        },
+        "key_risks": [
+          "Geopolitical tensions in the Middle East affecting oil supply and prices.",
+          "Potential for further currency interventions by Japan.",
+          "Inflationary pressures impacting consumer spending and economic growth.",
+          "Uncertainty surrounding U.S. Federal Reserve's monetary policy direction."
+        ],
+        "report_date": "2026-05-01",
+        "title": "Market Recap and Economic Outlook"
+      },
+      "cached_at": "2026-05-03T20:55:31.401784+00:00",
+      "drive_file_id": "1SROiaLZ6CASHMiTgsmbwM-SE_Hei57ve",
+      "drive_web_link": "https://drive.google.com/file/d/1SROiaLZ6CASHMiTgsmbwM-SE_Hei57ve/view?usp=drivesdk",
+      "file_name": "LSEG_The Day Ahead-20260501.pdf",
+      "local_path": "data/bank_research/files/1SROiaLZ6CASHMiTgsmbwM-SE_Hei57ve_LSEG_The_Day_Ahead-20260501.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:20:30.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "JPY",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "The JPY is under pressure due to geopolitical tensions and rising oil prices, but a strengthening capital expenditure cycle may support its value."
+          },
+          {
+            "asset": "USD/JPY",
+            "asset_class": "FX Pair",
+            "confidence": "Medium",
+            "outlook": "Watch",
+            "reasons": "The potential for aggressive currency intervention by the Ministry of Finance if USD/JPY weakens beyond 160 is a key factor to monitor."
+          },
+          {
+            "asset": "Oil",
+            "asset_class": "Commodity",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "Surging oil prices are expected to negatively impact Japan's terms of trade and corporate profits."
+          },
+          {
+            "asset": "Japanese Equities",
+            "asset_class": "Equity",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "Corporate profits may be pressured by rising oil prices, but investment-driven expansion could provide some support."
+          }
+        ],
+        "bank": "Cr\u00e9dit Agricole CIB",
+        "executive_summary": "The report discusses the implications of ongoing geopolitical uncertainty in the Middle East on Japan's economy and prices. The Bank of Japan (BoJ) has revised its GDP growth forecast downward due to rising oil prices and the potential for economic stagnation. Coordination between the government and the BoJ is deemed essential to navigate these challenges.",
+        "geopolitical": {
+          "bank_view_financial_markets": "The BoJ is closely monitoring the impact of geopolitical developments on financial and FX markets, emphasizing the need for coordination with the government.",
+          "bank_view_global_economy": "The BoJ has revised its GDP growth forecast downward, indicating concerns about potential economic stagnation if geopolitical tensions persist.",
+          "discussed": true,
+          "summary": "The report highlights the significant risks posed by geopolitical tensions in the Middle East, particularly regarding oil prices and their impact on Japan's economy."
+        },
+        "key_risks": [
+          "Continued geopolitical tensions in the Middle East",
+          "Rising oil prices impacting economic growth",
+          "Potential for a significant downturn in real GDP growth",
+          "Weak domestic demand affecting inflation targets"
+        ],
+        "report_date": "2026-05-01",
+        "title": "Japan Q&A \u2013 Geopolitical Uncertainty in the Middle East"
+      },
+      "cached_at": "2026-05-03T20:55:44.255394+00:00",
+      "drive_file_id": "1_pJS0uI3xMlT6_xLjMvHQjDXZHN3KioV",
+      "drive_web_link": "https://drive.google.com/file/d/1_pJS0uI3xMlT6_xLjMvHQjDXZHN3KioV/view?usp=drivesdk",
+      "file_name": "GS_Japan Q&A \u2013 geopolitical uncertainty in the Middle East-20260501.pdf",
+      "local_path": "data/bank_research/files/1_pJS0uI3xMlT6_xLjMvHQjDXZHN3KioV_GS_Japan_Q_A_geopolitical_uncertainty_in_the_Middle_East-20260501.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:20:19.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "GBP/USD",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "The Bank of England's indecision on rate hikes creates uncertainty in the GBP outlook."
+          },
+          {
+            "asset": "USD/JPY",
+            "asset_class": "FX",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "The JPY weakened initially but strengthened after intervention signals, indicating volatility."
+          },
+          {
+            "asset": "EUR/USD",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "The ECB's potential rate hikes support a stronger Euro against the USD."
+          },
+          {
+            "asset": "Fed Funds Rate",
+            "asset_class": "Rates",
+            "confidence": "High",
+            "outlook": "Neutral",
+            "reasons": "The Fed maintains a steady rate, indicating a wait-and-see approach."
+          },
+          {
+            "asset": "BoE Policy Rate",
+            "asset_class": "Rates",
+            "confidence": "Medium",
+            "outlook": "Watch",
+            "reasons": "The BoE's mixed signals on future hikes suggest potential volatility."
+          },
+          {
+            "asset": "BoJ Policy Rate",
+            "asset_class": "Rates",
+            "confidence": "Medium",
+            "outlook": "Watch",
+            "reasons": "The BoJ's delayed rate hikes amid economic uncertainty could lead to future adjustments."
+          }
+        ],
+        "bank": "BNP Paribas",
+        "executive_summary": "The central banks of major advanced economies have opted to maintain their policy rates amid rising inflation concerns. While the Bank of England, Bank of Japan, and European Central Bank are expected to implement rate hikes in June, the Federal Reserve remains cautious, indicating a balanced approach to future monetary policy adjustments.",
+        "geopolitical": {
+          "bank_view_financial_markets": null,
+          "bank_view_global_economy": null,
+          "discussed": false,
+          "summary": null
+        },
+        "key_risks": [
+          "Higher-than-expected inflation leading to aggressive rate hikes.",
+          "Geopolitical tensions affecting economic stability.",
+          "Market volatility due to central bank policy uncertainty."
+        ],
+        "report_date": "2026-04-30",
+        "title": "Four Central Banks on Active Hold"
+      },
+      "cached_at": "2026-05-03T20:55:51.462848+00:00",
+      "drive_file_id": "1h1XGI1_bCXOeRxzCWQNtEtt_zPKH6P6N",
+      "drive_web_link": "https://drive.google.com/file/d/1h1XGI1_bCXOeRxzCWQNtEtt_zPKH6P6N/view?usp=drivesdk",
+      "file_name": "BNPP_Eco Flash Four Central Banks on Active Hold-20260430.pdf",
+      "local_path": "data/bank_research/files/1h1XGI1_bCXOeRxzCWQNtEtt_zPKH6P6N_BNPP_Eco_Flash_Four_Central_Banks_on_Active_Hold-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:20:14.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "USD",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "The USD has shown volatility due to geopolitical tensions and market sentiment, with potential support from foreign equity inflows."
+          },
+          {
+            "asset": "AUD",
+            "asset_class": "Currency",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The AUD is benefiting from high energy prices and expected rate hikes from the RBA, making it attractive for carry trades."
           },
           {
             "asset": "NOK",
             "asset_class": "Currency",
             "confidence": "High",
             "outlook": "Bullish",
-            "reasons": "Strong performance driven by resilient risk sentiment and rising oil prices, with expectations of a rate hike by Norges Bank."
+            "reasons": "The NOK has performed well due to a hawkish Norges Bank and rising energy prices, supporting its carry trade appeal."
           },
           {
-            "asset": "EUR/NOK",
-            "asset_class": "Currency Pair",
+            "asset": "JPY",
+            "asset_class": "Currency",
             "confidence": "Medium",
             "outlook": "Bearish",
-            "reasons": "Market conditions suggest potential downside risks relative to previously identified targets."
+            "reasons": "The JPY is under pressure from domestic economic policies and rising oil prices, with recent interventions indicating a weak stance."
+          },
+          {
+            "asset": "CHF",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "The CHF remains stable amid safe-haven demand but faces pressure from widening rate spreads against peers."
+          },
+          {
+            "asset": "EUR/USD",
+            "asset_class": "FX Pair",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "The EUR is expected to weaken due to negative growth prospects and competitive disadvantages against the USD."
+          },
+          {
+            "asset": "GBP/USD",
+            "asset_class": "FX Pair",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "The GBP faces stagflation risks and uncertainty around BoE policy, making it vulnerable against the USD."
+          },
+          {
+            "asset": "USD/CAD",
+            "asset_class": "FX Pair",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "The CAD is stable within a range, supported by energy prices but facing risks from USMCA negotiations."
+          },
+          {
+            "asset": "NZD/USD",
+            "asset_class": "FX Pair",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "The NZD is expected to gain as the economy rebounds, but faces headwinds from rising energy prices."
+          },
+          {
+            "asset": "EUR/CHF",
+            "asset_class": "FX Pair",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "The EUR/CHF pair is stable, with the CHF maintaining strength against the EUR amid geopolitical concerns."
+          },
+          {
+            "asset": "NOK/SEK",
+            "asset_class": "FX Pair",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The NOK has outperformed the SEK due to energy price dynamics, reaching parity for the first time since late 2024."
+          },
+          {
+            "asset": "Gold (XAU)",
+            "asset_class": "Commodity",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Gold remains supported by inflation concerns and fiscal dominance fears, making it a safe-haven asset."
+          }
+        ],
+        "bank": "Cr\u00e9dit Agricole CIB",
+        "executive_summary": "The US-Iran conflict has reignited the risk-on risk-off (RORO) theme in FX markets, impacting the USD and boosting high-yielding currencies like AUD and NOK. The report discusses the implications of geopolitical tensions on energy prices and the attractiveness of FX carry trades funded by low-yielding currencies. It also highlights the potential for further USD strength amid ongoing foreign demand for US equities despite concerns over US fiscal policies.",
+        "geopolitical": {
+          "bank_view_financial_markets": "The bank believes that financial markets will remain sensitive to geopolitical developments, with potential implications for currency valuations and risk appetite.",
+          "bank_view_global_economy": "The bank views the global economy as facing risks from geopolitical tensions, particularly in the Middle East, which could hinder growth prospects.",
+          "discussed": true,
+          "summary": "The report discusses the impact of the US-Iran conflict on global risk sentiment and energy prices, highlighting the interplay between geopolitical tensions and FX markets."
+        },
+        "key_risks": [
+          "Escalation of the US-Iran conflict impacting energy supply and global growth.",
+          "High USD hedging costs limiting foreign investment inflows.",
+          "Potential for stagflation in major economies affecting monetary policy decisions.",
+          "Uncertainty surrounding US fiscal policies and their impact on the USD.",
+          "Weakening demand for safe-haven assets amid recovering risk appetite."
+        ],
+        "report_date": "2026-05-01",
+        "title": "RORO + Oil = FX Carry Trades"
+      },
+      "cached_at": "2026-05-03T20:56:22.633363+00:00",
+      "drive_file_id": "1mqiQmhLZ15vFbRhcaywg3qHVWq8sqrsa",
+      "drive_web_link": "https://drive.google.com/file/d/1mqiQmhLZ15vFbRhcaywg3qHVWq8sqrsa/view?usp=drivesdk",
+      "file_name": "CACIB_FX Weekly RORO + oil = FX carry trades-20260501.pdf",
+      "local_path": "data/bank_research/files/1mqiQmhLZ15vFbRhcaywg3qHVWq8sqrsa_CACIB_FX_Weekly_RORO_oil_FX_carry_trades-20260501.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:20:11.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "EUR/USD",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "The ECB's decision to hold rates may lead to a stable euro in the short term, but ongoing stagflation concerns could create volatility."
+          },
+          {
+            "asset": "Eurozone GDP",
+            "asset_class": "Macro",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "Weaker-than-expected GDP growth in the first quarter indicates potential economic downturn."
+          },
+          {
+            "asset": "German Inflation",
+            "asset_class": "Macro",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "Rising headline inflation coupled with declining core inflation suggests conflicting economic signals."
           }
         ],
         "bank": "ING",
-        "executive_summary": "The report discusses the interplay between equities and oil prices and their impact on FX markets, particularly the USD and commodity currencies. Resilient risk sentiment and rising crude prices are favorable for these currencies, although a downturn in US equities could shift the advantage to the USD. The report highlights upcoming macro events, including PMIs, that could influence market sentiment.",
+        "executive_summary": "The ECB has opted to maintain interest rates, citing increasing stagflationary pressures within the eurozone. While inflation is rising, growth risks are also becoming more pronounced, complicating the ECB's policy decisions. The report suggests that the ECB is unlikely to rush into rate hikes, drawing parallels to past experiences that led to economic stagnation.",
         "geopolitical": {
-          "bank_view_financial_markets": "Financial markets are expected to remain sensitive to geopolitical developments, with a focus on risk sentiment and commodity prices.",
-          "bank_view_global_economy": "The bank views the global economy as facing uncertainty due to geopolitical tensions, particularly in the Middle East.",
-          "discussed": true,
-          "summary": "The report highlights ongoing tensions in the Gulf region, particularly regarding Iran and the Strait of Hormuz, which could impact market sentiment."
+          "bank_view_financial_markets": null,
+          "bank_view_global_economy": null,
+          "discussed": false,
+          "summary": null
         },
         "key_risks": [
-          "Potential downturn in US equities affecting USD strength.",
-          "Geopolitical tensions escalating in the Gulf region.",
-          "Weak PMIs leading to economic contraction signals in Europe.",
-          "Dovish repricing in GBP if UK PMIs fall into contraction."
+          "Underestimation of stagflation impacts on growth",
+          "Potential for rapid policy shifts if inflation continues to rise",
+          "Adverse effects from external supply shocks"
         ],
-        "report_date": "2026-04-23",
-        "title": "FX Daily: Gauging the Oil-Equities Mix"
+        "report_date": "30 April 2026",
+        "title": "ECB Keeps Rates on Hold Amid Rising Stagflationary Pressures"
       },
-      "cached_at": "2026-04-24T14:06:03.248923+00:00",
-      "drive_file_id": "1SuUi6AjikBpB4LzbF_HmFYrMF8lXvhI5",
-      "drive_web_link": "https://drive.google.com/file/d/1SuUi6AjikBpB4LzbF_HmFYrMF8lXvhI5/view?usp=drivesdk",
-      "file_name": "ING_FX-Daily-gauging-the-oil-equities-mix-20260423.pdf",
-      "local_path": "data/bank_research/files/1SuUi6AjikBpB4LzbF_HmFYrMF8lXvhI5_ING_FX-Daily-gauging-the-oil-equities-mix-20260423.pdf",
+      "cached_at": "2026-05-03T20:56:31.262882+00:00",
+      "drive_file_id": "1Mg3zKE27H7kEdONzMo3taoe6ot1sytQ2",
+      "drive_web_link": "https://drive.google.com/file/d/1Mg3zKE27H7kEdONzMo3taoe6ot1sytQ2/view?usp=drivesdk",
+      "file_name": "ING-Think-ecb-policy-announcement-apr26.pdf",
+      "local_path": "data/bank_research/files/1Mg3zKE27H7kEdONzMo3taoe6ot1sytQ2_ING-Think-ecb-policy-announcement-apr26.pdf",
       "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:27:01.000Z"
+      "source_modified_time": "2026-05-01T08:19:56.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "GBP",
+            "asset_class": "Currency",
+            "confidence": "Moderate",
+            "outlook": "Bullish",
+            "reasons": "The expectation of a rate hike in June supports a stronger outlook for the British Pound."
+          },
+          {
+            "asset": "Oil",
+            "asset_class": "Commodity",
+            "confidence": "Moderate",
+            "outlook": "Mixed",
+            "reasons": "Oil prices are expected to ease below $100/bbl, but ongoing geopolitical tensions could keep them elevated."
+          },
+          {
+            "asset": "Natural Gas",
+            "asset_class": "Commodity",
+            "confidence": "Low",
+            "outlook": "Watch",
+            "reasons": "Natural gas prices are critical for UK inflation, and any significant changes could impact economic forecasts."
+          }
+        ],
+        "bank": "ING",
+        "executive_summary": "The Bank of England maintained its interest rate at 3.75% in April but is expected to implement a modest rate hike in June. The ongoing crisis in the Middle East is influencing this decision, with rising energy prices posing a risk to inflation forecasts. The report suggests a cautious approach, indicating that while a June hike is likely, it may be a one-time adjustment.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Financial markets are reacting to the potential for sustained higher energy prices, which could influence inflation and monetary policy.",
+          "bank_view_global_economy": "The Bank of England is navigating uncertainty due to geopolitical tensions, which could lead to less favorable economic scenarios.",
+          "discussed": true,
+          "summary": "The report highlights the ongoing crisis in the Middle East as a significant factor affecting economic conditions and inflation."
+        },
+        "key_risks": [
+          "Prolonged geopolitical tensions in the Middle East affecting energy prices.",
+          "Higher than expected inflation due to rising energy costs.",
+          "Market volatility surrounding potential rate hikes."
+        ],
+        "report_date": "30 April 2026",
+        "title": "Bank of England June Rate Hike Now Likely Despite April Hold"
+      },
+      "cached_at": "2026-05-03T20:56:40.843455+00:00",
+      "drive_file_id": "1QTuggB0tvDlJc77rzmNJDltdgKHGL1GP",
+      "drive_web_link": "https://drive.google.com/file/d/1QTuggB0tvDlJc77rzmNJDltdgKHGL1GP/view?usp=drivesdk",
+      "file_name": "ING-Think-bank-of-england-june-rate-hike-now-likely-despite-april-hold.pdf",
+      "local_path": "data/bank_research/files/1QTuggB0tvDlJc77rzmNJDltdgKHGL1GP_ING-Think-bank-of-england-june-rate-hike-now-likely-despite-april-hold.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:19:52.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "EUR/USD",
+            "asset_class": "FX",
+            "confidence": "Moderate",
+            "outlook": "Bullish",
+            "reasons": "The ECB is expected to hike rates ahead of the Fed, which could support the euro against the dollar."
+          },
+          {
+            "asset": "EUR/GBP",
+            "asset_class": "FX",
+            "confidence": "Moderate",
+            "outlook": "Neutral",
+            "reasons": "The pair has shown limited movement, reflecting the market's pricing of ECB rate expectations."
+          },
+          {
+            "asset": "Brent Crude Oil",
+            "asset_class": "Commodity",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The price has surged due to the ongoing conflict in the Middle East, impacting inflation."
+          },
+          {
+            "asset": "Euro-zone GDP",
+            "asset_class": "Equity",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "Recent GDP data showed slowing growth, particularly in France, which raises concerns about economic momentum."
+          }
+        ],
+        "bank": "MUFG Bank, Ltd.",
+        "executive_summary": "The ECB has decided to keep its policy rates unchanged while acknowledging intensified risks to inflation and growth due to the energy price shock. Although the euro-zone economy is moving away from the baseline scenario, the ECB is considering measured rate hikes starting in June. The market reaction has been muted, indicating that expectations for future rate hikes are already priced in.",
+        "geopolitical": {
+          "bank_view_financial_markets": "The ECB's guidance is aimed at managing market expectations amidst heightened uncertainty.",
+          "bank_view_global_economy": "The ECB is cautious about the impact of geopolitical tensions on economic activity and inflation.",
+          "discussed": true,
+          "summary": "The ongoing conflict in the Middle East has led to significant energy price increases, affecting inflation and economic sentiment in the euro-zone."
+        },
+        "key_risks": [
+          "Prolonged closure of the Strait of Hormuz could exacerbate inflation and economic slowdown.",
+          "Potential for more severe inflationary pressures if the energy price shock persists.",
+          "Uncertainty surrounding the geopolitical landscape may lead to volatility in financial markets."
+        ],
+        "report_date": "30 April 2026",
+        "title": "ECB Review: Time is running out to look through energy price shock"
+      },
+      "cached_at": "2026-05-03T20:56:53.409036+00:00",
+      "drive_file_id": "1iv5FqW6odYAwS7id01u1oRzx4FEGjVz9",
+      "drive_web_link": "https://drive.google.com/file/d/1iv5FqW6odYAwS7id01u1oRzx4FEGjVz9/view?usp=drivesdk",
+      "file_name": "FX Focus  (6).pdf",
+      "local_path": "data/bank_research/files/1iv5FqW6odYAwS7id01u1oRzx4FEGjVz9_FX_Focus_6_.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:19:45.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "Federal Funds Rate",
+            "asset_class": "Rates",
+            "confidence": "High",
+            "outlook": "Neutral",
+            "reasons": "The FOMC decided to keep the rate unchanged, indicating a cautious approach to future adjustments."
+          },
+          {
+            "asset": "Oil",
+            "asset_class": "Commodities",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "Oil prices spiked but remained stable during the FOMC communications, reflecting ongoing market focus."
+          },
+          {
+            "asset": "Tech Stocks (Amazon, Alphabet, Meta, Microsoft)",
+            "asset_class": "Equities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Strong earnings reports from major tech companies are expected to support stock prices."
+          }
+        ],
+        "bank": "Scotiabank",
+        "executive_summary": "The FOMC maintained the federal funds rate range at 3.5\u20133.75% as expected, with minimal changes to the statement. The meeting highlighted dissent among members regarding the easing bias, particularly with the upcoming leadership transition to Kevin Warsh. Overall, the market reaction was muted, with oil prices remaining a focal point amid significant tech earnings announcements.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Financial markets are seen as stable, with a focus on upcoming earnings and central bank communications.",
+          "bank_view_global_economy": "The bank views the global economy as resilient but acknowledges risks from geopolitical tensions.",
+          "discussed": true,
+          "summary": "The report mentions uncertainty regarding the economic outlook due to developments in the Middle East, which could impact inflation and economic stability."
+        },
+        "key_risks": [
+          "Potential for increased inflation due to energy price spikes.",
+          "Geopolitical tensions affecting economic stability.",
+          "Market reaction to the new Fed leadership under Kevin Warsh."
+        ],
+        "report_date": "2026-04-29",
+        "title": "FOMC Hawks Roll Out the Welcome Mat for Kevin Warsh"
+      },
+      "cached_at": "2026-05-03T20:57:02.820036+00:00",
+      "drive_file_id": "1IMfYKE1TR6hUR_m5BhL6NuAHQel1Yyyb",
+      "drive_web_link": "https://drive.google.com/file/d/1IMfYKE1TR6hUR_m5BhL6NuAHQel1Yyyb/view?usp=drivesdk",
+      "file_name": "Scotibank_FOMC Hawks Roll Out the Welcome Mat for Kevin Warsh-20260429.pdf",
+      "local_path": "data/bank_research/files/1IMfYKE1TR6hUR_m5BhL6NuAHQel1Yyyb_Scotibank_FOMC_Hawks_Roll_Out_the_Welcome_Mat_for_Kevin_Warsh-20260429.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:19:27.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "USD/JPY",
+            "asset_class": "FX",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The yen is strengthening due to intervention signals from Japan's finance minister."
+          },
+          {
+            "asset": "GBP",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "The Bank of England held rates and presented multiple scenarios for future hikes, indicating uncertainty."
+          },
+          {
+            "asset": "EUR",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "The ECB is expected to hold rates, awaiting more data before making decisions."
+          },
+          {
+            "asset": "CAD",
+            "asset_class": "FX",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "Potential rate cuts by the Bank of Canada could weaken the currency significantly."
+          },
+          {
+            "asset": "Brazilian Real (BRL)",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "The Brazilian central bank cut rates, which may support the currency amid inflation concerns."
+          },
+          {
+            "asset": "Oil",
+            "asset_class": "Commodity",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "Oil prices are stable after a recent surge, with geopolitical tensions influencing market sentiment."
+          },
+          {
+            "asset": "US Equities (Apple)",
+            "asset_class": "Equity",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "Apple's upcoming earnings report is anticipated but uncertain in impact."
+          },
+          {
+            "asset": "Eurozone GDP",
+            "asset_class": "Macro",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "Recent data shows the Eurozone economy is stalling, with GDP growth disappointing."
+          }
+        ],
+        "bank": "Scotiabank",
+        "executive_summary": "The Japanese yen is gaining strength due to signals of potential intervention against its weakness. Central banks are in the spotlight, with the Bank of England holding rates while signaling various scenarios for future hikes, and the European Central Bank expected to maintain its current rate. Economic data from the US and Eurozone indicates mixed growth prospects, with inflation concerns persisting.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Financial markets are expected to remain volatile due to ongoing geopolitical developments and central bank policies.",
+          "bank_view_global_economy": "The bank views the global economy as facing significant risks from geopolitical tensions and inflationary pressures.",
+          "discussed": true,
+          "summary": "Geopolitical tensions, particularly between Iran and the US, are affecting market sentiment and oil prices."
+        },
+        "key_risks": [
+          "Geopolitical tensions affecting oil prices and market stability.",
+          "Potential for higher inflation impacting central bank decisions.",
+          "Weak consumer spending in the US could hinder economic growth.",
+          "Uncertainty surrounding future central bank policies in the UK and Eurozone."
+        ],
+        "report_date": "2026-04-30",
+        "title": "Yen Strengthens Amid Intervention Signals; Central Banks in Focus"
+      },
+      "cached_at": "2026-05-03T20:57:16.186538+00:00",
+      "drive_file_id": "10m2YVz69-Q7cMAHPdreAM-2FwND72J5K",
+      "drive_web_link": "https://drive.google.com/file/d/10m2YVz69-Q7cMAHPdreAM-2FwND72J5K/view?usp=drivesdk",
+      "file_name": "Scotiabank_Daily Points-20260430.pdf",
+      "local_path": "data/bank_research/files/10m2YVz69-Q7cMAHPdreAM-2FwND72J5K_Scotiabank_Daily_Points-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:19:23.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "Federal Funds Rate",
+            "asset_class": "Rates",
+            "confidence": "High",
+            "outlook": "Neutral",
+            "reasons": "The FOMC's decision to maintain the rate reflects a cautious stance amid inflation concerns and economic uncertainty."
+          },
+          {
+            "asset": "Oil Prices",
+            "asset_class": "Commodities",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "Higher oil prices are expected to contribute to inflationary pressures, but the impact may be temporary."
+          }
+        ],
+        "bank": "Natixis",
+        "executive_summary": "The FOMC maintained its policy rate at 3.75%, marking a pause for the third consecutive time amidst a split decision among members. The ongoing debate over inflation and external pressures, particularly from the Iran conflict, suggests a contentious year ahead for monetary policy. The Fed's cautious approach will likely continue as it balances inflation concerns with economic growth.",
+        "geopolitical": {
+          "bank_view_financial_markets": "The Fed's approach suggests a careful monitoring of market reactions to geopolitical developments.",
+          "bank_view_global_economy": "The Fed is cautious about external shocks affecting inflation and economic growth.",
+          "discussed": true,
+          "summary": "The report highlights concerns regarding the Iran conflict and its potential impact on inflation and economic stability."
+        },
+        "key_risks": [
+          "Continued inflationary pressures from energy prices.",
+          "Potential for further dissent within the FOMC regarding policy direction.",
+          "Economic slowdown impacting labor market conditions."
+        ],
+        "report_date": "2026-04-29",
+        "title": "FOMC Recap: Nobody puts Powell in a corner"
+      },
+      "cached_at": "2026-05-03T20:57:26.273869+00:00",
+      "drive_file_id": "1lpJxBwVmN2IFs2AET2hkAdmSTHh0ju_r",
+      "drive_web_link": "https://drive.google.com/file/d/1lpJxBwVmN2IFs2AET2hkAdmSTHh0ju_r/view?usp=drivesdk",
+      "file_name": "Natixis_FOMC Recap Nobody puts Powell in a corner-20260429.pdf",
+      "local_path": "data/bank_research/files/1lpJxBwVmN2IFs2AET2hkAdmSTHh0ju_r_Natixis_FOMC_Recap_Nobody_puts_Powell_in_a_corner-20260429.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:19:16.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "Chinese Yuan (CNY)",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "The yuan's performance is influenced by China's economic transition and its dependence on global trade, which is facing headwinds."
+          },
+          {
+            "asset": "Chinese equities (Tech sector)",
+            "asset_class": "Equity",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The digital economy and AI-related industries are experiencing rapid growth, supported by significant investments from tech giants."
+          },
+          {
+            "asset": "Steel",
+            "asset_class": "Commodity",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Weak demand in the construction sector is leading to lower consumption of steel, impacting prices negatively."
+          },
+          {
+            "asset": "Automotive sector",
+            "asset_class": "Equity",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Falling sales and pressure from economic shifts are negatively affecting the automotive industry's outlook."
+          },
+          {
+            "asset": "Integrated Circuits",
+            "asset_class": "Commodity",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "A significant increase in imports indicates strong investment in technology, particularly in AI and digital sectors."
+          }
+        ],
+        "bank": "Natixis",
+        "executive_summary": "China is undergoing a significant economic transition towards high-tech industries and technological self-reliance, which is expected to meet its GDP growth target of 4.5-5% for 2026. However, this shift is accompanied by a decline in traditional sectors like real estate and manufacturing, leading to structural challenges such as weak domestic demand and increased reliance on global exports. The success of this new economic model is closely tied to the stability of global trade.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Financial markets may react negatively to signs of weakening demand in global markets, affecting China's economic outlook.",
+          "bank_view_global_economy": "The global economy is facing instability, which poses risks to China's growth strategy that relies heavily on exports.",
+          "discussed": true,
+          "summary": "The report highlights the impact of global protectionism and geopolitical tensions on China's export-driven economy, particularly in key markets like ASEAN."
+        },
+        "key_risks": [
+          "Weakening global demand impacting China's export-driven growth.",
+          "Continued decline in traditional sectors like real estate and manufacturing.",
+          "Increased global protectionism affecting trade relationships.",
+          "Structural issues of insufficient domestic demand leading to economic vulnerabilities."
+        ],
+        "report_date": "2026-04-30",
+        "title": "China's Economic Transition and Global Dependencies"
+      },
+      "cached_at": "2026-05-03T20:57:39.138417+00:00",
+      "drive_file_id": "1JUtRQ2CiY7kV3ny-ooZL2idmGC7aAZF-",
+      "drive_web_link": "https://drive.google.com/file/d/1JUtRQ2CiY7kV3ny-ooZL2idmGC7aAZF-/view?usp=drivesdk",
+      "file_name": "Natixis_Beyond Headline Growth, China continues its push for a New Normal-20260430.pdf",
+      "local_path": "data/bank_research/files/1JUtRQ2CiY7kV3ny-ooZL2idmGC7aAZF-_Natixis_Beyond_Headline_Growth_China_continues_its_push_for_a_New_Normal-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:19:11.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "Brent Crude Oil",
+            "asset_class": "Commodities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Supply disruptions and geopolitical tensions are driving prices higher, with potential for further upside."
+          },
+          {
+            "asset": "WTI Crude Oil",
+            "asset_class": "Commodities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Similar to Brent, WTI prices are influenced by geopolitical risks and supply constraints."
+          },
+          {
+            "asset": "Gold",
+            "asset_class": "Commodities",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "Gold prices are rebounding slightly but face pressure from rising yields and inflation concerns."
+          },
+          {
+            "asset": "UAE Interest Rates",
+            "asset_class": "Rates",
+            "confidence": "High",
+            "outlook": "Neutral",
+            "reasons": "Interest rates remain unchanged, reflecting alignment with US Fed policy."
+          },
+          {
+            "asset": "Qatar Interest Rates",
+            "asset_class": "Rates",
+            "confidence": "High",
+            "outlook": "Neutral",
+            "reasons": "The Qatar Central Bank has maintained its rates to ensure monetary stability."
+          },
+          {
+            "asset": "Bahrain Interest Rates",
+            "asset_class": "Rates",
+            "confidence": "High",
+            "outlook": "Neutral",
+            "reasons": "Bahrain's central bank has kept rates steady to support financial stability."
+          },
+          {
+            "asset": "Oman Bonds",
+            "asset_class": "Credit",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "Strong buying interest in the belly of the curve indicates positive sentiment."
+          },
+          {
+            "asset": "Qatar Bonds",
+            "asset_class": "Credit",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Recent performance has shown slight underperformance in the market."
+          }
+        ],
+        "bank": "MUFG Bank, Ltd.",
+        "executive_summary": "Oil prices have reached wartime highs due to escalating tensions in the Middle East, particularly concerning Iran and the Strait of Hormuz. Gold has seen a slight rebound, although it remains under pressure from rising Treasury yields and ongoing inflation risks. Gulf central banks have maintained their policy rates in alignment with the US Federal Reserve's decisions, reflecting their commitment to monetary stability.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Financial markets are reacting to geopolitical risks, leading to increased volatility in commodities and rates.",
+          "bank_view_global_economy": "The ongoing conflict is expected to drive commodity prices sharply higher, with significant implications for global economic stability.",
+          "discussed": true,
+          "summary": "The report highlights escalating tensions in the Middle East, particularly regarding Iran and the Strait of Hormuz, which are impacting global oil supply and prices."
+        },
+        "key_risks": [
+          "Prolonged military conflict in the Middle East could exacerbate supply shocks.",
+          "Rising inflation may lead to tighter monetary policies affecting asset prices.",
+          "Geopolitical tensions could lead to further disruptions in oil supply."
+        ],
+        "report_date": "2026-04-30",
+        "title": "Middle East Daily - Oil Prices Surge Amid Escalating Tensions"
+      },
+      "cached_at": "2026-05-03T20:57:54.887710+00:00",
+      "drive_file_id": "1IqQZUJLqSUNUJIbhfUQZCjegJESN9hf0",
+      "drive_web_link": "https://drive.google.com/file/d/1IqQZUJLqSUNUJIbhfUQZCjegJESN9hf0/view?usp=drivesdk",
+      "file_name": "MUFG_Middle East Daily-20260430.pdf",
+      "local_path": "data/bank_research/files/1IqQZUJLqSUNUJIbhfUQZCjegJESN9hf0_MUFG_Middle_East_Daily-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:19:07.000Z"
     },
     {
       "analysis": {
@@ -448,629 +1244,885 @@
             "asset_class": "Currency",
             "confidence": "High",
             "outlook": "Bullish",
-            "reasons": "Safe-haven demand is supporting the dollar amid geopolitical tensions."
+            "reasons": "The USD is gaining strength due to rising oil prices and a hawkish Fed stance."
           },
           {
             "asset": "EUR/USD",
-            "asset_class": "Currency Pair",
+            "asset_class": "FX Pair",
             "confidence": "Medium",
             "outlook": "Bearish",
-            "reasons": "The euro is experiencing a decline, marking its first drop in four weeks."
-          },
-          {
-            "asset": "GBP/USD",
-            "asset_class": "Currency Pair",
-            "confidence": "Medium",
-            "outlook": "Bearish",
-            "reasons": "Sterling has weakened slightly against the dollar."
-          },
-          {
-            "asset": "AUD/USD",
-            "asset_class": "Currency Pair",
-            "confidence": "Medium",
-            "outlook": "Bearish",
-            "reasons": "The Australian dollar has shown a minor decline."
-          },
-          {
-            "asset": "NZD/USD",
-            "asset_class": "Currency Pair",
-            "confidence": "Medium",
-            "outlook": "Bearish",
-            "reasons": "The New Zealand dollar is also down against the dollar."
-          },
-          {
-            "asset": "JPY/USD",
-            "asset_class": "Currency Pair",
-            "confidence": "Medium",
-            "outlook": "Neutral",
-            "reasons": "The Japanese yen remains stable but close to intervention levels."
-          },
-          {
-            "asset": "Oil",
-            "asset_class": "Commodity",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "Escalating tensions have driven oil prices above $100 per barrel."
-          },
-          {
-            "asset": "U.S. Dollar Index",
-            "asset_class": "Index",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "The index is near its highest level since April 13, supported by safe-haven demand."
-          }
-        ],
-        "bank": "LSEG",
-        "executive_summary": "The U.S. dollar is holding near a 1.5-week high due to ongoing tensions between Iran and the U.S., which have also pushed oil prices above $100 per barrel. The Federal Reserve is expected to delay rate cuts as inflation concerns rise from the energy shock caused by the conflict. Market sentiment remains cautious as investors await further economic indicators.",
-        "geopolitical": {
-          "bank_view_financial_markets": "Financial markets are in a cautious state, with volatility as investors await further developments.",
-          "bank_view_global_economy": "The geopolitical tensions are expected to negatively impact global economic confidence and inflation.",
-          "discussed": true,
-          "summary": "The report highlights the ongoing stand-off between Iran and the U.S., which has significant implications for global markets, particularly in energy."
-        },
-        "key_risks": [
-          "Escalation of Iran-U.S. tensions could further disrupt oil supply.",
-          "Continued high inflation may lead to delayed rate cuts by the Fed.",
-          "Market volatility could increase as investors remain uncertain."
-        ],
-        "report_date": "2026-04-23",
-        "title": "Dollar Nears 1.5-Week High Amid Iran-US Tensions"
-      },
-      "cached_at": "2026-04-24T14:06:14.586057+00:00",
-      "drive_file_id": "1zUP75ku1LdsxU8phlpK5wmBcN8xcNLu-",
-      "drive_web_link": "https://drive.google.com/file/d/1zUP75ku1LdsxU8phlpK5wmBcN8xcNLu-/view?usp=drivesdk",
-      "file_name": "LSEG_FX Daily-20260423.pdf",
-      "local_path": "data/bank_research/files/1zUP75ku1LdsxU8phlpK5wmBcN8xcNLu-_LSEG_FX_Daily-20260423.pdf",
-      "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:26:53.000Z"
-    },
-    {
-      "analysis": {
-        "assets": [
-          {
-            "asset": "S&P 500",
-            "asset_class": "Equity",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "The index rose 1.05% as investors reacted positively to the ceasefire extension."
-          },
-          {
-            "asset": "Dow Jones Industrial Average",
-            "asset_class": "Equity",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "The index increased by 0.69%, reflecting market optimism."
-          },
-          {
-            "asset": "Nasdaq Composite",
-            "asset_class": "Equity",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "The index jumped 1.64%, benefiting from tech sector gains."
+            "reasons": "The euro is under pressure from rising energy prices, which could lead to stagflation in Europe."
           },
           {
             "asset": "Brent Crude Oil",
             "asset_class": "Commodity",
             "confidence": "High",
             "outlook": "Bullish",
-            "reasons": "Prices rose 2.98% due to supply concerns and geopolitical tensions."
-          },
-          {
-            "asset": "West Texas Intermediate (WTI) Oil",
-            "asset_class": "Commodity",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "WTI prices increased by 3.20% following inventory drawdowns."
-          },
-          {
-            "asset": "Gold",
-            "asset_class": "Commodity",
-            "confidence": "Moderate",
-            "outlook": "Bullish",
-            "reasons": "Gold prices rose on bargain buying after previous declines."
-          },
-          {
-            "asset": "Euro/Dollar",
-            "asset_class": "FX",
-            "confidence": "Moderate",
-            "outlook": "Bearish",
-            "reasons": "The euro fell 0.32% against the dollar amid U.S. strength."
-          },
-          {
-            "asset": "Dollar/Yen",
-            "asset_class": "FX",
-            "confidence": "Moderate",
-            "outlook": "Bullish",
-            "reasons": "The dollar gained 0.11% against the yen, reflecting U.S. economic resilience."
-          },
-          {
-            "asset": "Sterling/Dollar",
-            "asset_class": "FX",
-            "confidence": "Low",
-            "outlook": "Neutral",
-            "reasons": "The pair remained stable with minimal change."
-          },
-          {
-            "asset": "Dollar/CAD",
-            "asset_class": "FX",
-            "confidence": "Low",
-            "outlook": "Neutral",
-            "reasons": "The exchange rate showed little movement, reflecting stable Canadian economic conditions."
-          },
-          {
-            "asset": "USD/CNH",
-            "asset_class": "FX",
-            "confidence": "Low",
-            "outlook": "Neutral",
-            "reasons": "The pair remained stable with slight fluctuations."
-          }
-        ],
-        "bank": null,
-        "executive_summary": "Wall Street closed higher as President Trump extended the Iran ceasefire, despite ongoing concerns about its stability. Oil prices surged due to unexpected drawdowns in U.S. fuel inventories and geopolitical tensions in the Strait of Hormuz. The report highlights upcoming economic data releases and corporate earnings expectations amid a cautious market environment.",
-        "geopolitical": {
-          "bank_view_financial_markets": "Financial markets are expected to remain volatile due to geopolitical uncertainties, but there is potential for recovery if tensions ease.",
-          "bank_view_global_economy": "The bank views the global economy as cautious, with geopolitical tensions impacting market sentiment and economic forecasts.",
-          "discussed": true,
-          "summary": "The report discusses ongoing geopolitical tensions, particularly the U.S.-Iran conflict and its implications for market stability."
-        },
-        "key_risks": [
-          "Continued geopolitical tensions in the Middle East affecting oil prices.",
-          "Potential economic slowdown due to rising inflation and interest rates.",
-          "Uncertainty surrounding corporate earnings amid ongoing market volatility."
-        ],
-        "report_date": "2026-04-23",
-        "title": "Market Recap and Economic Outlook"
-      },
-      "cached_at": "2026-04-24T14:06:32.748047+00:00",
-      "drive_file_id": "1Vq30GN3LJucTjUSuZlbiElqDkT3JNPh5",
-      "drive_web_link": "https://drive.google.com/file/d/1Vq30GN3LJucTjUSuZlbiElqDkT3JNPh5/view?usp=drivesdk",
-      "file_name": "LSEG_The Day Ahead-20260423.pdf",
-      "local_path": "data/bank_research/files/1Vq30GN3LJucTjUSuZlbiElqDkT3JNPh5_LSEG_The_Day_Ahead-20260423.pdf",
-      "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:26:47.000Z"
-    },
-    {
-      "analysis": {
-        "assets": [
-          {
-            "asset": "USD/NOK",
-            "asset_class": "FX",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "The USD is expected to strengthen due to energy supply concerns, benefiting from higher oil prices."
-          },
-          {
-            "asset": "Brent Crude Oil",
-            "asset_class": "Commodity",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "Rising prices above $100/barrel are driven by geopolitical tensions and supply disruptions."
-          },
-          {
-            "asset": "EUR/NOK",
-            "asset_class": "FX",
-            "confidence": "Medium",
-            "outlook": "Bearish",
-            "reasons": "The euro has weakened against the NOK, reaching its lowest level since February 2023 due to rising energy prices."
-          },
-          {
-            "asset": "EUR/USD",
-            "asset_class": "FX",
-            "confidence": "Medium",
-            "outlook": "Bearish",
-            "reasons": "The euro is under pressure from energy price shocks and potential stagflation in the euro-zone."
+            "reasons": "Brent crude prices have surged due to geopolitical tensions and supply concerns."
           }
         ],
         "bank": "MUFG",
-        "executive_summary": "The US dollar has strengthened due to fears of prolonged energy supply disruptions linked to the US-Iran conflict, coinciding with a rise in Brent crude oil prices above $100 per barrel. The Norwegian krone has benefited significantly from these developments, outperforming other G10 currencies. The report highlights the potential for stagflation in the euro-zone as energy prices rise, impacting the euro's performance.",
+        "executive_summary": "The US dollar has rebounded, supported by rising oil prices and a hawkish update from the Federal Reserve. The dollar index has surpassed the 99.000 level, driven by Brent crude oil reaching a new high of USD126.41 per barrel. The Fed's shift towards a more neutral policy stance reflects confidence in the US labor market, although geopolitical tensions in the Middle East pose risks to the global economy.",
         "geopolitical": {
-          "bank_view_financial_markets": "Financial markets are expected to remain volatile due to these geopolitical risks, impacting currency and commodity prices.",
-          "bank_view_global_economy": "The bank views the geopolitical tensions as a significant risk to global economic stability, particularly through energy supply channels.",
+          "bank_view_financial_markets": "Financial markets are reacting to the potential for military action in the region, which could further disrupt oil supplies.",
+          "bank_view_global_economy": "The ongoing conflict in the Middle East could exacerbate energy price shocks, impacting global economic stability.",
           "discussed": true,
-          "summary": "The report discusses the ongoing tensions between the US and Iran, particularly regarding the Strait of Hormuz and energy supply disruptions."
+          "summary": "Geopolitical tensions, particularly regarding Iran and the Strait of Hormuz, are contributing to rising oil prices and economic uncertainty."
         },
         "key_risks": [
-          "Prolonged conflict between the US and Iran affecting energy supplies.",
-          "Potential stagflation in the euro-zone due to rising energy prices.",
-          "Market volatility stemming from geopolitical tensions."
+          "Escalation of military conflict in the Middle East affecting oil supply.",
+          "Potential stagflation in Europe due to rising energy prices.",
+          "Uncertainty surrounding future Fed policy changes with new leadership."
         ],
-        "report_date": "2026-04-23",
-        "title": "USD Rebounds Amid Energy Supply Concerns"
+        "report_date": "2026-04-30",
+        "title": "USD Rebound Supported by Higher Oil Prices and Hawkish Fed Update"
       },
-      "cached_at": "2026-04-24T14:06:49.436960+00:00",
-      "drive_file_id": "1zS_faO4EYCngOf4bHLDIj6PAo_yvlVjZ",
-      "drive_web_link": "https://drive.google.com/file/d/1zS_faO4EYCngOf4bHLDIj6PAo_yvlVjZ/view?usp=drivesdk",
-      "file_name": "MUFG_FX Daily Snapshot-20360423.pdf",
-      "local_path": "data/bank_research/files/1zS_faO4EYCngOf4bHLDIj6PAo_yvlVjZ_MUFG_FX_Daily_Snapshot-20360423.pdf",
+      "cached_at": "2026-05-03T20:58:07.906708+00:00",
+      "drive_file_id": "1sn0ijVCbHSLq_g3W2ywQnE-4DRNJcbtm",
+      "drive_web_link": "https://drive.google.com/file/d/1sn0ijVCbHSLq_g3W2ywQnE-4DRNJcbtm/view?usp=drivesdk",
+      "file_name": "MUFG_FX Daily Snapshot-20360430.pdf",
+      "local_path": "data/bank_research/files/1sn0ijVCbHSLq_g3W2ywQnE-4DRNJcbtm_MUFG_FX_Daily_Snapshot-20360430.pdf",
       "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:26:42.000Z"
+      "source_modified_time": "2026-05-01T08:19:03.000Z"
     },
     {
       "analysis": {
         "assets": [
           {
-            "asset": "10y UST",
+            "asset": "GBP/USD",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "The exchange rate is expected to remain stable as the Bank of England holds rates steady amid economic uncertainty."
+          },
+          {
+            "asset": "GBP/EUR",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "Similar to GBP/USD, the rate is likely to be stable due to the Bank's unchanged monetary policy."
+          },
+          {
+            "asset": "UK Bank Rate",
             "asset_class": "Rates",
+            "confidence": "High",
+            "outlook": "Watch",
+            "reasons": "The Bank of England is expected to keep rates unchanged, but market expectations may shift based on inflation developments."
+          },
+          {
+            "asset": "UK CPI",
+            "asset_class": "Macro",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Inflation is projected to rise towards 4% by the end of 2026 due to higher energy prices."
+          },
+          {
+            "asset": "UK GDP Growth",
+            "asset_class": "Macro",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "GDP growth is forecasted to slow to 0.5% in 2026, reflecting the negative impact of rising inflation and geopolitical tensions."
+          },
+          {
+            "asset": "UK Unemployment Rate",
+            "asset_class": "Macro",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Unemployment is expected to rise as economic activity slows and structural issues in the labor market persist."
+          }
+        ],
+        "bank": "Lloyds Banking Group",
+        "executive_summary": "The report outlines a challenging economic outlook for the UK, driven by higher energy prices and geopolitical tensions in the Middle East. GDP growth is expected to slow significantly in 2026, with inflation pressures persisting due to rising energy costs. The Bank of England is anticipated to maintain interest rates unchanged throughout 2026 as it navigates the balance between inflation and economic activity.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Financial markets are expected to face volatility due to geopolitical tensions and their impact on energy prices.",
+          "bank_view_global_economy": "The geopolitical backdrop is seen as a headwind to global growth, with potential stagflationary effects.",
+          "discussed": true,
+          "summary": "The report highlights the ongoing Middle East conflict and its implications for global energy supply and economic stability."
+        },
+        "key_risks": [
+          "Duration of geopolitical conflicts affecting energy supply.",
+          "Potential overvaluation in equity markets leading to corrections.",
+          "Increased public debt burdens impacting fiscal stability.",
+          "Structural changes in the labor market affecting unemployment rates.",
+          "Uncertainty in inflation expectations leading to wage pressures."
+        ],
+        "report_date": "2026-04-30",
+        "title": "Lloyds Market Insights Quarterly 2026 Q1"
+      },
+      "cached_at": "2026-05-03T20:58:25.497788+00:00",
+      "drive_file_id": "1K8Rng_wuQ1K54Hx_DQ8h_85jkwGJWdgc",
+      "drive_web_link": "https://drive.google.com/file/d/1K8Rng_wuQ1K54Hx_DQ8h_85jkwGJWdgc/view?usp=drivesdk",
+      "file_name": "Lloyds_Market Insights Quarterly 2026 Q1-20260430.pdf",
+      "local_path": "data/bank_research/files/1K8Rng_wuQ1K54Hx_DQ8h_85jkwGJWdgc_Lloyds_Market_Insights_Quarterly_2026_Q1-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:19:00.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "GBP",
+            "asset_class": "Currency",
             "confidence": "Moderate",
             "outlook": "Mixed",
-            "reasons": "Yields have increased slightly, reflecting market reactions to geopolitical events."
+            "reasons": "The BoE's decision to hold rates suggests uncertainty in the currency's immediate direction, influenced by inflation risks and economic growth concerns."
           },
           {
-            "asset": "DXY",
-            "asset_class": "Currency",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "The index has edged higher, indicating strength in the US dollar amid global uncertainties."
-          },
-          {
-            "asset": "Brent Crude",
-            "asset_class": "Commodity",
-            "confidence": "Moderate",
-            "outlook": "Bullish",
-            "reasons": "Prices have risen by 1% due to ongoing geopolitical tensions affecting supply."
-          },
-          {
-            "asset": "Gold",
-            "asset_class": "Commodity",
-            "confidence": "Low",
-            "outlook": "Bearish",
-            "reasons": "Gold prices have decreased, suggesting reduced demand for safe-haven assets."
-          },
-          {
-            "asset": "UK Public Sector Net Borrowing",
-            "asset_class": "Equity",
-            "confidence": "Moderate",
-            "outlook": "Neutral",
-            "reasons": "Borrowing figures are slightly below forecasts, indicating stable fiscal management."
-          },
-          {
-            "asset": "Euro Area Composite PMI",
-            "asset_class": "Economic Indicator",
-            "confidence": "Moderate",
-            "outlook": "Bearish",
-            "reasons": "A further softening in sentiment is expected, reflecting economic concerns."
-          },
-          {
-            "asset": "UK Manufacturing PMI",
-            "asset_class": "Economic Indicator",
-            "confidence": "Moderate",
-            "outlook": "Bearish",
-            "reasons": "Anticipated downgrades in the PMI suggest slowing activity in the sector."
-          }
-        ],
-        "bank": "RBC Capital Markets",
-        "executive_summary": "The report discusses recent developments in global markets, including rising UST yields and fluctuating commodity prices amid geopolitical tensions. It highlights the impact of the ongoing conflict in the Middle East on economic indicators, particularly in the UK and Euro area, and anticipates a cautious stance from the MPC in its upcoming meeting.",
-        "geopolitical": {
-          "bank_view_financial_markets": "Financial markets are reacting to geopolitical developments, with increased volatility expected.",
-          "bank_view_global_economy": "The geopolitical situation is creating uncertainty, which may lead to cautious economic growth in the near term.",
-          "discussed": true,
-          "summary": "The report highlights ongoing tensions in the Middle East, particularly between the US and Iran, which are impacting market sentiment and economic indicators."
-        },
-        "key_risks": [
-          "Escalation of geopolitical tensions in the Middle East.",
-          "Unexpected changes in economic data affecting market sentiment.",
-          "Potential for further downgrades in economic indicators."
-        ],
-        "report_date": "2026-04-23",
-        "title": "RBC European Rates & Economics Daily - April 23, 2026"
-      },
-      "cached_at": "2026-04-24T14:07:15.041359+00:00",
-      "drive_file_id": "1KHFMtssvn4ZF4KpXC-sm20uQLzFsCeIM",
-      "drive_web_link": "https://drive.google.com/file/d/1KHFMtssvn4ZF4KpXC-sm20uQLzFsCeIM/view?usp=drivesdk",
-      "file_name": "RBC_European Rates & Economics Daily-20260423.pdf",
-      "local_path": "data/bank_research/files/1KHFMtssvn4ZF4KpXC-sm20uQLzFsCeIM_RBC_European_Rates_Economics_Daily-20260423.pdf",
-      "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:26:35.000Z"
-    },
-    {
-      "analysis": {
-        "assets": [
-          {
-            "asset": "USDCAD",
-            "asset_class": "FX",
-            "confidence": "Moderate",
-            "outlook": "Bearish",
-            "reasons": "The CAD is showing resilience against the USD's advance, with limited domestic news affecting its performance."
-          },
-          {
-            "asset": "EURUSD",
-            "asset_class": "FX",
-            "confidence": "Moderate",
-            "outlook": "Neutral",
-            "reasons": "The EUR is slightly weaker against the USD, influenced by geopolitical factors and mixed PMI data."
-          },
-          {
-            "asset": "GBPUSD",
-            "asset_class": "FX",
-            "confidence": "Moderate",
-            "outlook": "Bullish/Neutral",
-            "reasons": "The GBP is stable against the USD, supported by better-than-expected PMI data despite mixed economic indicators."
-          },
-          {
-            "asset": "USDJPY",
-            "asset_class": "FX",
-            "confidence": "Moderate",
-            "outlook": "Bullish",
-            "reasons": "The JPY is softening against the USD, with intervention concerns and upcoming CPI data influencing market sentiment."
-          },
-          {
-            "asset": "Crude Oil (Brent)",
-            "asset_class": "Commodities",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "Crude prices are rising significantly, reflecting supply stress and geopolitical tensions."
-          }
-        ],
-        "bank": "Scotiabank",
-        "executive_summary": "The USD is gaining strength amid uncertainty surrounding US-Iran peace talks, leading to a defensive market tone. High beta currencies are underperforming as crude prices rise significantly. The report highlights mixed economic data from the US and Europe, impacting various currency pairs differently.",
-        "geopolitical": {
-          "bank_view_financial_markets": "The bank believes that financial markets are reacting defensively to geopolitical developments, particularly in the FX space.",
-          "bank_view_global_economy": "The bank views geopolitical tensions as a significant risk to market stability and economic forecasts.",
-          "discussed": true,
-          "summary": "Ongoing uncertainty regarding US-Iran negotiations is affecting market sentiment and currency performance."
-        },
-        "key_risks": [
-          "Continued geopolitical tensions between the US and Iran.",
-          "Mixed economic data impacting currency valuations.",
-          "Potential for intervention in the JPY market.",
-          "Volatility in crude oil prices affecting broader market sentiment."
-        ],
-        "report_date": "2026-04-23",
-        "title": "G10 FX Daily Update - April 23, 2026"
-      },
-      "cached_at": "2026-04-24T14:07:27.088331+00:00",
-      "drive_file_id": "1cnqBvtL6kom3hllfuFkVxS1npnAfmU68",
-      "drive_web_link": "https://drive.google.com/file/d/1cnqBvtL6kom3hllfuFkVxS1npnAfmU68/view?usp=drivesdk",
-      "file_name": "Scotiabank_G10 FX Daily-20260423.pdf",
-      "local_path": "data/bank_research/files/1cnqBvtL6kom3hllfuFkVxS1npnAfmU68_Scotiabank_G10_FX_Daily-20260423.pdf",
-      "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:26:29.000Z"
-    },
-    {
-      "analysis": {
-        "assets": [
-          {
-            "asset": "BTP Short Term 2.2% Feb28",
-            "asset_class": "Bond",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "The bond offers an attractive carry and roll-down return, remains cheap on the curve, and has benefitted from a decline in rates."
-          },
-          {
-            "asset": "BTPei 2.25% Feb46",
-            "asset_class": "Bond",
-            "confidence": "Medium",
-            "outlook": "Neutral",
-            "reasons": "Recently issued but not expected to be tapped again soon as the Treasury focuses on other maturities."
-          },
-          {
-            "asset": "BTP Valore Mar32",
-            "asset_class": "Bond",
-            "confidence": "Medium",
-            "outlook": "Neutral",
-            "reasons": "Part of the Treasury's issuance but not highlighted for immediate trading opportunities."
-          },
-          {
-            "asset": "2Y OIS Rate",
+            "asset": "Bank Rate",
             "asset_class": "Interest Rate",
             "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "Declining rate hike expectations have improved sentiment and performance in the short-dated segment."
-          }
-        ],
-        "bank": "UniCredit",
-        "executive_summary": "The report highlights the strong performance of short-dated Italian bonds, particularly the BTP Short Term Feb28, which is appealing due to its attractive carry return. The Italian Treasury is actively managing its bond issuance, with plans for new bonds and reopenings, while market conditions are favorable due to declining eurozone rates.",
-        "geopolitical": {
-          "bank_view_financial_markets": "Financial markets are responding positively to the easing of rate hike expectations.",
-          "bank_view_global_economy": "The bank expects continued rate hikes in the eurozone, influenced by geopolitical factors.",
-          "discussed": true,
-          "summary": "The report notes that the 2Y OIS rate has been affected by geopolitical tensions, particularly the US-Iran conflict."
-        },
-        "key_risks": [
-          "Geopolitical tensions may impact market stability.",
-          "Unexpected changes in rate hike expectations could affect bond performance.",
-          "Market sentiment may shift rapidly due to external economic factors."
-        ],
-        "report_date": "2026-04-22",
-        "title": "BTP Short Term Feb28 Offers Attractive Carry Return"
-      },
-      "cached_at": "2026-04-24T14:07:35.779285+00:00",
-      "drive_file_id": "1YKD_a1W3LA-1mRd7oPj_llY_3xGyNjPc",
-      "drive_web_link": "https://drive.google.com/file/d/1YKD_a1W3LA-1mRd7oPj_llY_3xGyNjPc/view?usp=drivesdk",
-      "file_name": "UniCredit_BTP Short Term Feb28 has attractive carry return-20260422.pdf",
-      "local_path": "data/bank_research/files/1YKD_a1W3LA-1mRd7oPj_llY_3xGyNjPc_UniCredit_BTP_Short_Term_Feb28_has_attractive_carry_return-20260422.pdf",
-      "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:26:11.000Z"
-    },
-    {
-      "analysis": {
-        "assets": [
-          {
-            "asset": "TTF Natural Gas",
-            "asset_class": "Commodity",
-            "confidence": "Medium",
-            "outlook": "Mixed",
-            "reasons": "The TTF price is currently restrained but faces potential upward pressure due to low storage levels and geopolitical tensions affecting supply."
-          },
-          {
-            "asset": "Brent Crude",
-            "asset_class": "Commodity",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "Brent crude prices have risen above USD 100/bbl due to geopolitical tensions and supply concerns."
-          },
-          {
-            "asset": "EUR-USD",
-            "asset_class": "FX Pair",
-            "confidence": "High",
-            "outlook": "Bearish",
-            "reasons": "Stalled US-Iran talks and soft eurozone PMIs are likely to drag the EUR-USD lower, with key support levels identified."
-          }
-        ],
-        "bank": "UniCredit",
-        "executive_summary": "The report discusses the challenges facing the European natural gas market amid ongoing geopolitical tensions, particularly the conflict in Iran. Despite a recent decline in TTF gas prices, the outlook remains uncertain as Europe prepares for the summer restocking season with low storage levels and potential demand increases from Asia.",
-        "geopolitical": {
-          "bank_view_financial_markets": "Market volatility is expected to persist as geopolitical tensions influence pricing and demand dynamics.",
-          "bank_view_global_economy": "The geopolitical situation is complicating the economic outlook, particularly for energy-dependent regions.",
-          "discussed": true,
-          "summary": "The ongoing conflict in Iran is impacting global LNG supply and creating volatility in energy markets."
-        },
-        "key_risks": [
-          "Continued geopolitical tensions in the Middle East affecting energy supply.",
-          "Potential for increased competition for LNG between Asian and European markets.",
-          "Volatile market conditions leading to unpredictable price movements."
-        ],
-        "report_date": "2026-04-23",
-        "title": "Coffee Break Daily - Natural Gas Outlook"
-      },
-      "cached_at": "2026-04-24T14:07:43.690818+00:00",
-      "drive_file_id": "1kT1T8MLNl5knsS3KtEiCcuRBgDuKX2IU",
-      "drive_web_link": "https://drive.google.com/file/d/1kT1T8MLNl5knsS3KtEiCcuRBgDuKX2IU/view?usp=drivesdk",
-      "file_name": "UniCredit_Coffee Break Daily-20260423.pdf",
-      "local_path": "data/bank_research/files/1kT1T8MLNl5knsS3KtEiCcuRBgDuKX2IU_UniCredit_Coffee_Break_Daily-20260423.pdf",
-      "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:26:06.000Z"
-    },
-    {
-      "analysis": {
-        "assets": [
-          {
-            "asset": "EUR-USD",
-            "asset_class": "FX",
-            "confidence": "Moderate",
-            "outlook": "Mixed",
-            "reasons": "The pair is sensitive to global risk aversion and geopolitical developments, with potential for movement between 1.15 and 1.20 depending on Middle East tensions."
-          },
-          {
-            "asset": "Brent Oil",
-            "asset_class": "Commodities",
-            "confidence": "High",
-            "outlook": "Bearish",
-            "reasons": "Prices are expected to ease towards USD 90/bbl by end-2026 as risk premiums fade, but remain fragile due to geopolitical risks."
-          },
-          {
-            "asset": "Gold",
-            "asset_class": "Commodities",
-            "confidence": "High",
-            "outlook": "Bullish",
-            "reasons": "Gold is expected to serve as a safe-haven asset amid geopolitical uncertainty, with support from central bank buying."
-          },
-          {
-            "asset": "US Government Bonds",
-            "asset_class": "Fixed Income",
-            "confidence": "Moderate",
-            "outlook": "Bearish",
-            "reasons": "Risks in fixed income, particularly US government bonds, should not be underestimated amid geopolitical tensions."
-          },
-          {
-            "asset": "Chinese Government Bonds (CGBs)",
-            "asset_class": "Fixed Income",
-            "confidence": "Moderate",
             "outlook": "Neutral",
-            "reasons": "CGBs have shown resilience with low volatility, largely held by domestic investors less sensitive to geopolitical developments."
+            "reasons": "The Bank Rate remains unchanged at 3.75%, indicating a cautious stance from the MPC amid rising inflation and economic uncertainty."
           },
           {
-            "asset": "Emerging Market Equities",
-            "asset_class": "Equities",
+            "asset": "Energy Prices",
+            "asset_class": "Commodities",
             "confidence": "High",
             "outlook": "Bullish",
-            "reasons": "Valuations are undemanding, offering growth and stability beyond developed markets amid geopolitical uncertainty."
-          },
-          {
-            "asset": "European Equities",
-            "asset_class": "Equities",
-            "confidence": "Moderate",
-            "outlook": "Bearish",
-            "reasons": "Higher sensitivity to energy prices and geopolitical risks, with weaker earnings momentum compared to the US."
+            "reasons": "Higher global energy prices are expected to contribute to rising inflation, impacting economic conditions."
           }
         ],
-        "bank": "UniCredit",
-        "executive_summary": "The report discusses the evolving geopolitical landscape marked by intensified US-China rivalry, particularly in the context of the Iran conflict. It highlights the implications for global markets, emphasizing the resilience of Chinese equities amidst geopolitical shocks and the need for strategic reorientation in energy security. The report also outlines the potential for increased volatility in trade-exposed sectors and the shifting dynamics in monetary policy across major economies.",
+        "bank": "Lloyds Bank",
+        "executive_summary": "The Bank of England maintained the Bank Rate at 3.75% during its April meeting, reflecting growing concerns over persistent inflation pressures. While one member advocated for an immediate rate hike, the majority opted for a wait-and-see approach, emphasizing the need for clearer evidence of second-round inflation effects before making policy adjustments.",
         "geopolitical": {
-          "bank_view_financial_markets": "Financial markets are experiencing heightened volatility driven by geopolitical events, but core fundamentals remain resilient, particularly in equities.",
-          "bank_view_global_economy": "The global economy is becoming more fragmented and shock-prone, with geopolitical tensions influencing market dynamics and economic policies.",
+          "bank_view_financial_markets": "Financial conditions have tightened significantly due to geopolitical events, affecting market expectations for future rate hikes.",
+          "bank_view_global_economy": "The BoE acknowledges heightened uncertainty due to geopolitical tensions, which are influencing inflation and economic growth.",
           "discussed": true,
-          "summary": "The report discusses the implications of the US-China rivalry and the Iran conflict on global markets, highlighting the geopolitical risks and their impact on asset classes."
+          "summary": "The report highlights the impact of the ongoing Middle East conflict on inflation and economic conditions in the UK."
         },
         "key_risks": [
-          "Escalation of geopolitical tensions in the Middle East affecting oil prices.",
-          "Potential for increased volatility in trade-exposed sectors due to US-China rivalry.",
-          "Weak domestic demand in China impacting global economic growth.",
-          "Risks in fixed income markets, particularly US government bonds and corporate credit."
+          "Persistent inflation pressures may lead to a need for rate hikes.",
+          "Weakening domestic economic conditions could dampen growth.",
+          "Geopolitical tensions may further impact energy prices and inflation."
         ],
-        "report_date": "2026-04-22",
-        "title": "The Checkpoint: The China Factor"
+        "report_date": "2026-04-30",
+        "title": "BoE Holds Rates Amid Inflation Concerns"
       },
-      "cached_at": "2026-04-24T14:08:25.150032+00:00",
-      "drive_file_id": "14q_tVif6tK1ghHn7Lksh8Jb7RWm5yH-I",
-      "drive_web_link": "https://drive.google.com/file/d/14q_tVif6tK1ghHn7Lksh8Jb7RWm5yH-I/view?usp=drivesdk",
-      "file_name": "UniCredit_The Checkpoint The China factor-20260422.pdf",
-      "local_path": "data/bank_research/files/14q_tVif6tK1ghHn7Lksh8Jb7RWm5yH-I_UniCredit_The_Checkpoint_The_China_factor-20260422.pdf",
+      "cached_at": "2026-05-03T20:58:33.741945+00:00",
+      "drive_file_id": "1J2MFPbEwMIMMb96pzNflEfdN9rrb_kkm",
+      "drive_web_link": "https://drive.google.com/file/d/1J2MFPbEwMIMMb96pzNflEfdN9rrb_kkm/view?usp=drivesdk",
+      "file_name": "Lloyds_BoE Rates on hold as MPC assesses second-round risks-20260430.pdf",
+      "local_path": "data/bank_research/files/1J2MFPbEwMIMMb96pzNflEfdN9rrb_kkm_Lloyds_BoE_Rates_on_hold_as_MPC_assesses_second-round_risks-20260430.pdf",
       "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:26:02.000Z"
+      "source_modified_time": "2026-05-01T08:18:54.000Z"
     },
     {
       "analysis": {
         "assets": [
+          {
+            "asset": "Brent Crude Oil",
+            "asset_class": "Commodities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Rising prices are driven by geopolitical tensions and supply shocks."
+          },
+          {
+            "asset": "German 30-year Yield",
+            "asset_class": "Rates",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Yield pressures are increasing due to inflation risks from geopolitical events."
+          },
+          {
+            "asset": "US 30-year Yield",
+            "asset_class": "Rates",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Yield has risen as inflation concerns grow amid geopolitical tensions."
+          },
+          {
+            "asset": "DXY (US Dollar Index)",
+            "asset_class": "FX",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The dollar is gaining strength due to rising oil prices and geopolitical uncertainty."
+          },
           {
             "asset": "EUR/USD",
             "asset_class": "FX",
-            "confidence": "Moderate",
+            "confidence": "Medium",
             "outlook": "Mixed",
-            "reasons": "The ECB's cautious approach may lead to volatility in the euro, especially as inflation data is released."
+            "reasons": "The pair is influenced by both rising oil prices and the potential for ECB rate hikes."
           },
           {
-            "asset": "European natural gas",
-            "asset_class": "Commodity",
+            "asset": "USD/JPY",
+            "asset_class": "FX",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The dollar's strength is supported by rising yields and geopolitical factors."
+          },
+          {
+            "asset": "EUR/GBP",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "Sterling's performance is mixed as both central banks may need to raise rates."
+          },
+          {
+            "asset": "Brazilian Real (USD/BRL)",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "Strengthening of the real is noted, but inflationary pressures remain a concern."
+          }
+        ],
+        "bank": "KBC Bank",
+        "executive_summary": "The report highlights a significant rise in oil prices leading to bear steepening in yields across the Eurozone and the US. The Fed maintained its policy rate amid mixed inflation data, while the ECB and BoE face pressure to respond to inflationary pressures exacerbated by geopolitical tensions. The Brazilian central bank's recent rate cut reflects a complex inflation landscape.",
+        "geopolitical": {
+          "bank_view_financial_markets": "The bank believes that financial markets are reacting to the geopolitical risks, particularly in terms of yields and currency strength.",
+          "bank_view_global_economy": "The bank views the geopolitical tensions as a significant factor influencing inflation and monetary policy decisions.",
+          "discussed": true,
+          "summary": "The report discusses the ongoing conflict in Iran and its economic implications, particularly the costs incurred by the US and the impact on oil prices."
+        },
+        "key_risks": [
+          "Escalation of geopolitical tensions in the Middle East.",
+          "Unexpected inflationary pressures affecting central bank policies.",
+          "Market volatility due to mixed economic data releases.",
+          "Potential for further rate cuts in Brazil impacting the real."
+        ],
+        "report_date": "2026-04-30",
+        "title": "KBC Morning Sunrise Market Commentary - April 30, 2026"
+      },
+      "cached_at": "2026-05-03T20:58:46.492329+00:00",
+      "drive_file_id": "1W2_kYaf5fVDKLV6cwNqbQmDA-X0qHbbK",
+      "drive_web_link": "https://drive.google.com/file/d/1W2_kYaf5fVDKLV6cwNqbQmDA-X0qHbbK/view?usp=drivesdk",
+      "file_name": "KBC_Morning_sunrise_market_commentary-20260430.pdf",
+      "local_path": "data/bank_research/files/1W2_kYaf5fVDKLV6cwNqbQmDA-X0qHbbK_KBC_Morning_sunrise_market_commentary-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:18:51.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "USD/JPY",
+            "asset_class": "FX",
             "confidence": "High",
             "outlook": "Bearish",
-            "reasons": "Natural gas prices have decreased significantly, alleviating immediate inflationary pressures."
+            "reasons": "High energy prices and negative real interest rates in Japan suggest limited potential for a sustained drop in USD/JPY."
+          }
+        ],
+        "bank": "ING",
+        "executive_summary": "The report discusses the potential for Japanese yen intervention amid high oil prices and a hawkish stance from the Federal Reserve. While Japan's Finance Minister signals imminent intervention, its effectiveness may depend on whether the US Treasury participates. The outlook for USD/JPY remains bearish unless joint intervention occurs.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Financial markets are expected to remain volatile, particularly in response to any intervention actions.",
+          "bank_view_global_economy": "The bank views the global economy as facing challenges due to high energy prices and uncertain monetary policy paths.",
+          "discussed": true,
+          "summary": "The report highlights the geopolitical implications of potential FX intervention by Japan and the US, particularly in the context of market reactions and monetary policy."
+        },
+        "key_risks": [
+          "High oil prices may continue to pressure the yen.",
+          "Uncertainty regarding US monetary policy could affect intervention effectiveness.",
+          "Speculative positions on the yen are less extreme than in previous interventions."
+        ],
+        "report_date": "2026-04-30",
+        "title": "JPY Intervention: Unilateral or Joint Will Be Key"
+      },
+      "cached_at": "2026-05-03T21:24:40.969226+00:00",
+      "drive_file_id": "11YEK556cXl813U3eoErMLJLT7Tju_QDU",
+      "drive_web_link": "https://drive.google.com/file/d/11YEK556cXl813U3eoErMLJLT7Tju_QDU/view?usp=drivesdk",
+      "file_name": "ING_JPY-intervention-unilateral-or-joint-will-be-key-20260430.pdf",
+      "local_path": "data/bank_research/files/11YEK556cXl813U3eoErMLJLT7Tju_QDU_ING_JPY-intervention-unilateral-or-joint-will-be-key-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:18:43.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "USD",
+            "asset_class": "Currency",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The dollar is supported by rising oil prices and geopolitical tensions, particularly related to Iran."
+          },
+          {
+            "asset": "USD/JPY",
+            "asset_class": "FX Pair",
+            "confidence": "Medium",
+            "outlook": "Watch",
+            "reasons": "USD/JPY has broken above 160.0, entering the intervention zone, but Japanese authorities may hesitate to act due to volatility."
+          },
+          {
+            "asset": "EUR",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "The ECB is expected to maintain a hawkish hold, but market pricing raises the bar for a positive EUR outcome."
+          },
+          {
+            "asset": "GBP",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "The BoE faces greater dovish risks compared to the ECB, which could lead to a repricing of expectations."
+          },
+          {
+            "asset": "EUR/GBP",
+            "asset_class": "FX Pair",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "Expectations of dovish BoE actions could lift EUR/GBP, especially if the ECB maintains a firmer tone."
+          },
+          {
+            "asset": "EUR/HUF",
+            "asset_class": "FX Pair",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "Despite long-term bullish views on the forint, current pressures from global factors may limit significant upward movement."
+          }
+        ],
+        "bank": "ING",
+        "executive_summary": "The report discusses recent dissent within the FOMC regarding the Fed's easing bias, which may signal a shift towards a more hawkish stance. The dollar is expected to face upside risks due to rising oil prices and geopolitical tensions, particularly concerning Iran. The report also highlights the anticipated ECB and BoE meetings, with expectations for a moderately hawkish tone from the ECB and potential dovish risks from the BoE.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Financial markets are expected to remain volatile, influenced by geopolitical developments and central bank policies.",
+          "bank_view_global_economy": "The bank views the global economy as facing significant risks due to geopolitical tensions, particularly in the Middle East.",
+          "discussed": true,
+          "summary": "The report highlights geopolitical tensions, particularly regarding Iran, which are contributing to market volatility and influencing currency movements."
+        },
+        "key_risks": [
+          "Geopolitical tensions escalating, particularly in the Middle East.",
+          "Potential for unexpected central bank policy shifts.",
+          "Market volatility affecting currency pairs and risk sentiment."
+        ],
+        "report_date": "2026-04-30",
+        "title": "FX Daily: New Era of Policy Dissent?"
+      },
+      "cached_at": "2026-05-03T21:24:55.986119+00:00",
+      "drive_file_id": "1uLCXg5uEdl2Ux1Lq1LGkRqtpugiipiYH",
+      "drive_web_link": "https://drive.google.com/file/d/1uLCXg5uEdl2Ux1Lq1LGkRqtpugiipiYH/view?usp=drivesdk",
+      "file_name": "ING_FX-Daily-new-era-of-policy-dissent-20260430.pdf",
+      "local_path": "data/bank_research/files/1uLCXg5uEdl2Ux1Lq1LGkRqtpugiipiYH_ING_FX-Daily-new-era-of-policy-dissent-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-05-01T08:18:40.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "CNY",
+            "asset_class": "Currency",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Positive policy signals and demand for CNY as a regional anchor support its appreciation."
+          },
+          {
+            "asset": "USD/CNY",
+            "asset_class": "FX Pair",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Expectations of a mild appreciation of CNY against USD due to improved capital flows."
+          },
+          {
+            "asset": "10Y CGB",
+            "asset_class": "Bond",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "Yield expected to rebound modestly as nominal GDP growth picks up, but current low yields may deter demand."
+          },
+          {
+            "asset": "Hong Kong Property Market",
+            "asset_class": "Equity/Real Estate",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Recovery in property turnover and prices driven by increased demand and investor confidence."
+          },
+          {
+            "asset": "Asian Equities",
+            "asset_class": "Equity",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "Strong tech exports support growth, but geopolitical risks may dampen sentiment."
           },
           {
             "asset": "Oil",
             "asset_class": "Commodity",
-            "confidence": "Moderate",
-            "outlook": "Bullish",
-            "reasons": "Oil prices remain elevated, contributing to ongoing inflation concerns."
-          },
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "Rising prices due to supply disruptions from the Iran conflict could negatively impact Asian economies."
+          }
+        ],
+        "bank": "Cr\u00e9dit Agricole CIB",
+        "executive_summary": "The report discusses the impact of the Iran conflict on Asia's economy, highlighting China's resilience due to its energy self-sufficiency and strong export performance, particularly in high-tech sectors. Despite challenges, the outlook for China's GDP growth remains stable, while broader Asian economies face vulnerabilities due to energy supply shocks and geopolitical tensions.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Financial markets are expected to remain volatile due to geopolitical uncertainties, impacting investor sentiment and asset prices.",
+          "bank_view_global_economy": "The bank views the global economy as facing significant risks from geopolitical tensions, particularly in energy markets.",
+          "discussed": true,
+          "summary": "The report highlights the geopolitical tensions stemming from the Iran conflict and its implications for energy supply and trade flows in Asia."
+        },
+        "key_risks": [
+          "Prolonged Iran conflict leading to sustained energy supply disruptions.",
+          "Increased inflationary pressures from rising energy prices.",
+          "Geopolitical tensions affecting trade relations and market stability.",
+          "Potential for renewed tariffs impacting trade dynamics."
+        ],
+        "report_date": "2026-04-29",
+        "title": "Asia: Steering Through the Fog"
+      },
+      "cached_at": "2026-05-03T21:25:17.080192+00:00",
+      "drive_file_id": "16W0iepRXrv5DKsxRb4RDRh_4ugZCC8Ad",
+      "drive_web_link": "https://drive.google.com/file/d/16W0iepRXrv5DKsxRb4RDRh_4ugZCC8Ad/view?usp=drivesdk",
+      "file_name": "CACIB_Asia steering through the fog-20260429.pdf",
+      "local_path": "data/bank_research/files/16W0iepRXrv5DKsxRb4RDRh_4ugZCC8Ad_CACIB_Asia_steering_through_the_fog-20260429.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-04-30T13:06:47.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
           {
-            "asset": "HICP (Harmonized Index of Consumer Prices)",
-            "asset_class": "Economic Indicator",
+            "asset": "USD",
+            "asset_class": "Currency",
             "confidence": "High",
             "outlook": "Bullish",
-            "reasons": "Headline inflation is expected to rise to around 3% in April, indicating persistent inflationary pressures."
+            "reasons": "The USD is expected to benefit from ongoing foreign investment inflows and a favorable economic outlook compared to energy-importing nations."
           },
           {
-            "asset": "Euro area GDP",
-            "asset_class": "Economic Indicator",
+            "asset": "EUR",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "The Eurozone is experiencing persistent outflows from equity markets, contrasting with inflows into US equities."
+          },
+          {
+            "asset": "GBP",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Similar to the EUR, the GBP is under pressure due to concerns about the impact of US policies and market sentiment."
+          },
+          {
+            "asset": "US Equities",
+            "asset_class": "Equities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Foreign demand for US equities has recovered, driven by attractive growth prospects in the technology sector."
+          },
+          {
+            "asset": "UST",
+            "asset_class": "Fixed Income",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "Despite concerns over the US fiscal outlook, recent inflows have favored equities over USTs."
+          }
+        ],
+        "bank": "Cr\u00e9dit Agricole CIB",
+        "executive_summary": "The report discusses the impact of the US-Iran ceasefire on USD dynamics, noting a temporary weakening of the currency followed by a recovery due to rising global energy prices. It maintains a constructive outlook on the USD, driven by expectations of US economic outperformance and continued foreign investment inflows despite geopolitical tensions.",
+        "geopolitical": {
+          "bank_view_financial_markets": "The bank believes that the financial markets are currently reacting to geopolitical developments, with a potential for increased demand for safe-haven assets like the USD.",
+          "bank_view_global_economy": "The bank views the global economy as facing risks from Middle Eastern tensions, which could hinder growth and affect investor sentiment.",
+          "discussed": true,
+          "summary": "The report highlights the ongoing geopolitical tensions in the Middle East, particularly the US-Iran conflict, and its implications for global markets and the USD."
+        },
+        "key_risks": [
+          "Escalation of US-Iran tensions could negatively impact risk sentiment.",
+          "High USD hedging costs may deter foreign investment.",
+          "Potential slowdown in foreign demand for USTs could affect USD stability."
+        ],
+        "report_date": "2026-04-30",
+        "title": "USD Outlook Amid US-Iran Tensions"
+      },
+      "cached_at": "2026-05-03T21:25:31.892966+00:00",
+      "drive_file_id": "1bujZRq9Y3XveNeYPXdG1zBxJBMIFtgiO",
+      "drive_web_link": "https://drive.google.com/file/d/1bujZRq9Y3XveNeYPXdG1zBxJBMIFtgiO/view?usp=drivesdk",
+      "file_name": "CACIB_FX Focus USD - flow wars-20260430.pdf",
+      "local_path": "data/bank_research/files/1bujZRq9Y3XveNeYPXdG1zBxJBMIFtgiO_CACIB_FX_Focus_USD_-_flow_wars-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-04-30T13:06:42.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "2Y Treasury",
+            "asset_class": "Rates",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "The yield has reached 3.94%, indicating a selloff and a flattening curve."
+          },
+          {
+            "asset": "30Y Treasury",
+            "asset_class": "Rates",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "Approaching a resistance level of 5.00%, which has held since last July."
+          },
+          {
+            "asset": "CPI",
+            "asset_class": "Inflation",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "Expected to reach 4.1% YoY in May, with core CPI remaining sticky."
+          }
+        ],
+        "bank": "Cr\u00e9dit Agricole CIB",
+        "executive_summary": "The recent FOMC communication was interpreted as hawkish, with Fed officials showing less concern for the labor market and more focus on inflation driven by high energy prices. The market has adjusted expectations for rate cuts, leading to a bear-flattening of the yield curve. The report suggests a bias towards curve flattening due to persistent inflation pressures.",
+        "geopolitical": {
+          "bank_view_financial_markets": "The Fed's stance suggests limited support for rate cuts, impacting market expectations.",
+          "bank_view_global_economy": "The Fed is less worried about the labor market and more focused on inflation risks.",
+          "discussed": true,
+          "summary": "Developments in the Middle East are contributing to uncertainty about the economic outlook."
+        },
+        "key_risks": [
+          "Inflation remains higher than expected due to energy prices.",
+          "Political pressure may influence Fed rate decisions.",
+          "Potential opposition within the Fed to further rate cuts."
+        ],
+        "report_date": "2026-04-30",
+        "title": "Curve Bear-Flattens on a Hawkish Fed"
+      },
+      "cached_at": "2026-05-03T21:25:40.103426+00:00",
+      "drive_file_id": "125JIhZ4TliECN41HwcQ8En17h9jfa7e7",
+      "drive_web_link": "https://drive.google.com/file/d/125JIhZ4TliECN41HwcQ8En17h9jfa7e7/view?usp=drivesdk",
+      "file_name": "CACIB_Rates Focus Curve bear-flattens on a hawkish Fed-20260430.pdf",
+      "local_path": "data/bank_research/files/125JIhZ4TliECN41HwcQ8En17h9jfa7e7_CACIB_Rates_Focus_Curve_bear-flattens_on_a_hawkish_Fed-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-04-30T13:06:37.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "USD",
+            "asset_class": "Currency",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The US dollar is supported by rising yields and inflation concerns, reinforcing its carry appeal."
+          },
+          {
+            "asset": "KRW",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "The Korean won has weakened due to high oil prices impacting its economy."
+          },
+          {
+            "asset": "THB",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "The Thai baht is under pressure from rising oil prices and a slowdown in growth."
+          },
+          {
+            "asset": "PHP",
+            "asset_class": "Currency",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "The Philippine peso is vulnerable due to its high correlation with oil prices."
+          },
+          {
+            "asset": "USDTHB",
+            "asset_class": "FX Pair",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The pair is rising as the baht weakens against the dollar amid high oil prices."
+          },
+          {
+            "asset": "USDCNH",
+            "asset_class": "FX Pair",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "The USDCNH has stabilized as the PBOC signals a preference for stability in the yuan."
+          },
+          {
+            "asset": "USDIDR",
+            "asset_class": "FX Pair",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "The Indonesian rupiah is weakened by unfavorable fiscal-energy dynamics."
+          },
+          {
+            "asset": "USDINR",
+            "asset_class": "FX Pair",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "The Indian rupee is under pressure from rising oil prices and inflation."
+          },
+          {
+            "asset": "USDJPY",
+            "asset_class": "FX Pair",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The USDJPY is supported by the overall strength of the dollar."
+          },
+          {
+            "asset": "XAU",
+            "asset_class": "Commodity",
             "confidence": "Low",
-            "outlook": "Watch",
-            "reasons": "Upcoming GDP data may disappoint, reflecting underlying economic weaknesses."
+            "outlook": "Mixed",
+            "reasons": "Gold prices are influenced by inflation but face headwinds from rising interest rates."
           }
         ],
         "bank": "MUFG Bank, Ltd.",
-        "executive_summary": "The ECB is expected to maintain its current policy stance at the upcoming meeting, reflecting a reduced urgency for immediate tightening. While inflation pressures are rising, the ECB will likely wait for more data before making any adjustments, with potential rate hikes anticipated in June. The report highlights the balancing act the ECB faces between inflation risks and economic growth.",
+        "executive_summary": "The report discusses the impact of rising oil prices and US interest rates on Asian currencies and the US dollar. Brent crude prices have surged, supporting USD strength, while Asian currencies have weakened against the dollar due to their correlation with oil prices. The outlook for the dollar remains firm amid inflation concerns and hawkish Fed signals.",
         "geopolitical": {
-          "bank_view_financial_markets": "Financial markets are expected to react to inflation data and ECB policy signals, with potential volatility in the euro and commodities.",
-          "bank_view_global_economy": "The bank views the global economy as facing significant inflation risks, particularly from energy prices.",
+          "bank_view_financial_markets": "The bank believes that financial markets are likely to experience volatility due to these geopolitical risks and inflation concerns.",
+          "bank_view_global_economy": "The bank views the global economy as facing inflationary pressures due to rising energy prices and geopolitical tensions.",
           "discussed": true,
-          "summary": "The report mentions geopolitical tensions, particularly the conflict in the Middle East, which could influence inflation dynamics."
+          "summary": "The report highlights the geopolitical tensions between the US and Iran, particularly regarding the Strait of Hormuz, which are contributing to rising oil prices."
         },
         "key_risks": [
-          "Rising inflation expectations may prompt earlier ECB rate hikes than anticipated.",
-          "Geopolitical tensions could exacerbate inflationary pressures.",
-          "Weak economic data could lead to a reassessment of growth prospects."
+          "Prolonged geopolitical tensions affecting oil supply.",
+          "Higher-than-expected inflation leading to aggressive rate hikes.",
+          "Weakening Asian currencies due to rising oil prices.",
+          "Potential for economic slowdown in Asia due to energy price shocks."
         ],
-        "report_date": "2026-04-23",
-        "title": "ECB Preview \u2013 No hurry to act, for now"
+        "report_date": "2026-04-30",
+        "title": "Asia FX Talk - Unfavourable oil and US rate dynamics"
       },
-      "cached_at": "2026-04-24T14:08:35.224007+00:00",
-      "drive_file_id": "1AqPBrt1OMZp1L3e76X-Xg9bjfU0oYGnM",
-      "drive_web_link": "https://drive.google.com/file/d/1AqPBrt1OMZp1L3e76X-Xg9bjfU0oYGnM/view?usp=drivesdk",
-      "file_name": "ECB Preview \u2013 No hurry to act, for now.pdf",
-      "local_path": "data/bank_research/files/1AqPBrt1OMZp1L3e76X-Xg9bjfU0oYGnM_ECB_Preview_No_hurry_to_act_for_now.pdf",
+      "cached_at": "2026-05-03T21:25:53.988531+00:00",
+      "drive_file_id": "1euB--jPef1LcA5sXg76dX8XTp7hOzid2",
+      "drive_web_link": "https://drive.google.com/file/d/1euB--jPef1LcA5sXg76dX8XTp7hOzid2/view?usp=drivesdk",
+      "file_name": "MUFG_Asia FX Talk - Unfavourable oil and US rate dynamics-20260430.pdf",
+      "local_path": "data/bank_research/files/1euB--jPef1LcA5sXg76dX8XTp7hOzid2_MUFG_Asia_FX_Talk_-_Unfavourable_oil_and_US_rate_dynamics-20260430.pdf",
       "mime_type": "application/pdf",
-      "source_modified_time": "2026-04-24T01:25:56.000Z"
+      "source_modified_time": "2026-04-30T13:06:29.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "Brent Crude Oil",
+            "asset_class": "Commodities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Rising prices have surpassed previous peaks, driven by geopolitical tensions."
+          },
+          {
+            "asset": "USD",
+            "asset_class": "Currency",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Strengthening due to rising interest rates and market dynamics."
+          },
+          {
+            "asset": "NOKSEK",
+            "asset_class": "FX Pair",
+            "confidence": "Medium",
+            "outlook": "Bullish",
+            "reasons": "Trading above parity due to higher oil prices."
+          },
+          {
+            "asset": "US Stock Markets",
+            "asset_class": "Equities",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "Mixed performance with tech giants reporting scattered outcomes."
+          },
+          {
+            "asset": "Japan's Nikkei",
+            "asset_class": "Equities",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Currently down by 1.4% amid broader market concerns."
+          },
+          {
+            "asset": "KOSPI",
+            "asset_class": "Equities",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Currently down by 1.3%, reflecting negative market sentiment."
+          }
+        ],
+        "bank": "SEB",
+        "executive_summary": "Oil prices have risen above USD 125 per barrel, surpassing previous highs, while the market remains cautious due to geopolitical tensions involving the US and Iran. Interest rates are increasing, and the dollar has strengthened, impacting various asset classes. The upcoming statements from the Bank of England and ECB regarding the Middle East situation are highly anticipated.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Financial markets are reacting to the geopolitical situation, with rising oil prices influencing currency and equity markets.",
+          "bank_view_global_economy": "The geopolitical tensions are contributing to uncertainty in the global economy, particularly affecting oil prices and inflation expectations.",
+          "discussed": true,
+          "summary": "The report highlights the deadlock between the US and Iran, with potential military measures being considered, impacting market sentiment."
+        },
+        "key_risks": [
+          "Escalation of US-Iran tensions could further impact oil prices.",
+          "Potential for mixed signals from central banks regarding interest rates.",
+          "Weak economic growth in Europe may affect market stability."
+        ],
+        "report_date": "2026-04-30",
+        "title": "Oil Prices Surpass Previous Highs Amid Geopolitical Tensions"
+      },
+      "cached_at": "2026-05-03T21:26:06.769447+00:00",
+      "drive_file_id": "1sVO669ATZuoV-SmBzmqNx-YsX3qY0haf",
+      "drive_web_link": "https://drive.google.com/file/d/1sVO669ATZuoV-SmBzmqNx-YsX3qY0haf/view?usp=drivesdk",
+      "file_name": "SEB_Oil prices pass previous high-20260430.pdf",
+      "local_path": "data/bank_research/files/1sVO669ATZuoV-SmBzmqNx-YsX3qY0haf_SEB_Oil_prices_pass_previous_high-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-04-30T13:06:24.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "AUD/USD",
+            "asset_class": "FX",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "The AUD fell 0.9% against the USD, marking its weakest performance since March due to broad USD strength."
+          },
+          {
+            "asset": "AUD/JPY",
+            "asset_class": "FX",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "The pair declined 0.4%, reflecting the overall weakness of the AUD."
+          },
+          {
+            "asset": "AUD/GBP",
+            "asset_class": "FX",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "The AUD depreciated by 0.6% against the GBP, consistent with the trend against other currencies."
+          },
+          {
+            "asset": "AUD/NZD",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "The pair remained unchanged, indicating a stable relationship amid broader market movements."
+          },
+          {
+            "asset": "AUD/EUR",
+            "asset_class": "FX",
+            "confidence": "High",
+            "outlook": "Bearish",
+            "reasons": "The AUD fell 0.6% against the EUR, contributing to the overall bearish sentiment."
+          },
+          {
+            "asset": "Oil (WTI futures)",
+            "asset_class": "Commodities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "WTI prices surged 7.0% following geopolitical developments, reaching $107/bbl."
+          },
+          {
+            "asset": "Oil (Brent)",
+            "asset_class": "Commodities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Brent crude rose 8.1% to $120/bbl, its highest since 2022, driven by market reactions to Middle East tensions."
+          },
+          {
+            "asset": "Gold",
+            "asset_class": "Commodities",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "Gold prices declined by 1.1%, reflecting a shift in investor sentiment towards riskier assets."
+          },
+          {
+            "asset": "S&P/ASX 200",
+            "asset_class": "Equities",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "The index fell 0.3%, marking its seventh consecutive daily decline amid mixed market sentiment."
+          },
+          {
+            "asset": "US 10-year bond",
+            "asset_class": "Rates",
+            "confidence": "Medium",
+            "outlook": "Mixed",
+            "reasons": "Bond yields rose sharply due to hawkish dissent at the FOMC, indicating mixed market reactions."
+          }
+        ],
+        "bank": "Westpac",
+        "executive_summary": "Market sentiment was mixed as geopolitical tensions in the Middle East influenced trading. The USD strengthened, particularly against the AUD, which saw its weakest performance since March. Oil prices surged following President Trump's rejection of Iran's proposal, while equity markets remained subdued despite strong growth in the tech sector.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Geopolitical developments are contributing to volatility in financial markets, particularly in commodities and FX.",
+          "bank_view_global_economy": "The conflict in the Middle East and US trade policy are seen as significant sources of uncertainty for the global economy.",
+          "discussed": true,
+          "summary": "Tensions in the Middle East escalated as President Trump rejected Iran's proposal, impacting market sentiment."
+        },
+        "key_risks": [
+          "Geopolitical tensions in the Middle East could escalate further.",
+          "Potential shifts in US monetary policy could impact market stability.",
+          "Weakening economic indicators may affect investor confidence."
+        ],
+        "report_date": "2026-04-30",
+        "title": "Mixed Market Sentiment Amid Middle East Tensions"
+      },
+      "cached_at": "2026-05-03T21:26:25.675893+00:00",
+      "drive_file_id": "1f_FRtXhs5Bq5yaROXKlDPvGiXHNTjUHg",
+      "drive_web_link": "https://drive.google.com/file/d/1f_FRtXhs5Bq5yaROXKlDPvGiXHNTjUHg/view?usp=drivesdk",
+      "file_name": "Westpac_Morning Report-20260430.pdf",
+      "local_path": "data/bank_research/files/1f_FRtXhs5Bq5yaROXKlDPvGiXHNTjUHg_Westpac_Morning_Report-20260430.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-04-30T13:06:18.000Z"
+    },
+    {
+      "analysis": {
+        "assets": [
+          {
+            "asset": "USD/INR",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "The Indian Rupee is expected to weaken due to high energy import costs and inflation pressures."
+          },
+          {
+            "asset": "USD/CNY",
+            "asset_class": "FX",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The Chinese Yuan is projected to strengthen as the CNY shows resilience amid geopolitical tensions."
+          },
+          {
+            "asset": "USD/BRL",
+            "asset_class": "FX",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "The Brazilian Real is expected to benefit from strong terms of trade and higher oil prices."
+          },
+          {
+            "asset": "USD/COP",
+            "asset_class": "FX",
+            "confidence": "Medium",
+            "outlook": "Bearish",
+            "reasons": "The Colombian Peso is likely to weaken due to declining hydrocarbon exports and political uncertainty."
+          },
+          {
+            "asset": "MSCI EM",
+            "asset_class": "Equities",
+            "confidence": "High",
+            "outlook": "Bullish",
+            "reasons": "Emerging market equities are rallying on AI optimism and strong performance in tech sectors."
+          },
+          {
+            "asset": "EM swap 2Y",
+            "asset_class": "Rates",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "Short-term rates are stable, reflecting cautious central bank policies."
+          },
+          {
+            "asset": "EM swap 10Y",
+            "asset_class": "Rates",
+            "confidence": "Medium",
+            "outlook": "Neutral",
+            "reasons": "Long-term rates are influenced by geopolitical risks and inflation expectations."
+          }
+        ],
+        "bank": "Cr\u00e9dit Agricole CIB",
+        "executive_summary": "The report discusses the impact of Middle East developments on emerging markets, particularly in relation to oil prices and central bank decisions. It highlights the Fed's likely decision to keep rates unchanged while monitoring economic impacts, and notes significant equity market rallies driven by AI optimism. The report also outlines expected rate changes in Brazil, Colombia, and Poland.",
+        "geopolitical": {
+          "bank_view_financial_markets": "Financial markets are expected to remain volatile due to geopolitical uncertainties, with a cautious outlook on emerging market currencies and equities.",
+          "bank_view_global_economy": "The bank views the global economy as vulnerable to prolonged disruptions from the Middle East, with potential demand destruction and inflation risks.",
+          "discussed": true,
+          "summary": "The report highlights ongoing geopolitical tensions in the Middle East, particularly the Iran conflict, which is affecting energy prices and economic stability in emerging markets."
+        },
+        "key_risks": [
+          "Prolonged geopolitical tensions in the Middle East impacting energy prices.",
+          "Inflationary pressures leading to tighter monetary policies in emerging markets.",
+          "Political uncertainty affecting economic stability in Colombia and Brazil.",
+          "Potential demand destruction in Asian economies due to high energy costs."
+        ],
+        "report_date": "2026-04-29",
+        "title": "Emerging Market Weekly Pulse: Oil Prices, Rate Decisions, and Tech Earnings"
+      },
+      "cached_at": "2026-05-03T21:26:59.078129+00:00",
+      "drive_file_id": "1Cocxeyq-UPfsswHjbiTQe8-MuZhUg6Y4",
+      "drive_web_link": "https://drive.google.com/file/d/1Cocxeyq-UPfsswHjbiTQe8-MuZhUg6Y4/view?usp=drivesdk",
+      "file_name": "CACIB_EM Weekly Oil prices, rate decisions and tech earnings-20260429.pdf",
+      "local_path": "data/bank_research/files/1Cocxeyq-UPfsswHjbiTQe8-MuZhUg6Y4_CACIB_EM_Weekly_Oil_prices_rate_decisions_and_tech_earnings-20260429.pdf",
+      "mime_type": "application/pdf",
+      "source_modified_time": "2026-04-30T13:06:17.000Z"
     }
   ],
   "retention_days": 7

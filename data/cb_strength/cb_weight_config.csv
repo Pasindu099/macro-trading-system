@@ -1,0 +1,9 @@
+country_code,currency_code,mandate_type,inflation_weight,labor_weight,growth_weight,notes,processed_at
+AU,AUD,dual,1.5000,1.0000,0.5000,RBA: inflation + full employment dual mandate,2026-05-03T19:58:36.884106+00:00
+CA,CAD,inflation,1.8000,0.7000,0.5000,BoC: 2% midpoint inflation target primary; employment secondary,2026-05-03T19:58:36.884106+00:00
+CH,CHF,single,2.0000,0.3000,0.5000,SNB: price stability primary; exchange rate as secondary channel,2026-05-03T19:58:36.884106+00:00
+EU,EUR,single,2.0000,0.5000,0.5000,ECB: primary price stability; employment secondary,2026-05-03T19:58:36.884106+00:00
+JP,JPY,dual,1.8000,0.5000,0.8000,BoJ: price stability + financial stability; deflation history raises growth weight,2026-05-03T19:58:36.884106+00:00
+NZ,NZD,dual,1.5000,1.0000,0.5000,RBNZ: inflation + maximum sustainable employment,2026-05-03T19:58:36.884106+00:00
+UK,GBP,inflation,1.8000,0.7000,0.5000,BoE: 2% CPI target primary; employment implicit,2026-05-03T19:58:36.884106+00:00
+US,USD,dual,1.5000,1.0000,0.5000,Fed: equal inflation+employment mandate; Taylor baseline,2026-05-03T19:58:36.884106+00:00

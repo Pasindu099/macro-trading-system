@@ -243,3 +243,155 @@ class IngestionRun(Base):
             f"<IngestionRun id={self.id} type={self.run_type!r} "
             f"status={self.status!r} started={self.started_at.isoformat()}>"
         )
+
+
+class User(Base):
+    """Dashboard user account with role-based access."""
+
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    display_name: Mapped[str] = mapped_column(Text, nullable=False)
+    password_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    role: Mapped[str] = mapped_column(String(20), nullable=False, server_default="viewer")
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=text("true"),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+    last_login_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    def __repr__(self) -> str:
+        return f"<User id={self.id} email={self.email!r} role={self.role!r}>"
+
+
+class CorrelationCache(Base):
+    """Cached monthly series used by the Correlation Lab."""
+
+    __tablename__ = "correlation_cache"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    pair: Mapped[str] = mapped_column(String(10), nullable=False)
+    series_key: Mapped[str] = mapped_column(String(50), nullable=False)
+    month: Mapped[date] = mapped_column(Date, nullable=False)
+    value: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)
+    fetched_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+
+    __table_args__ = (
+        UniqueConstraint("pair", "series_key", "month", name="uq_correlation_cache_series"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<CorrelationCache pair={self.pair!r} "
+            f"series={self.series_key!r} month={self.month.isoformat()}>"
+        )
+
+
+class CBMeeting(Base):
+    """Scheduled central-bank policy meeting."""
+
+    __tablename__ = "cb_meetings"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    bank: Mapped[str] = mapped_column(String(10), nullable=False)
+    meeting_dt: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    is_official: Mapped[bool | None] = mapped_column(
+        Boolean,
+        nullable=True,
+        server_default=text("true"),
+    )
+
+    __table_args__ = (
+        UniqueConstraint("bank", "meeting_dt", name="uq_cb_meetings_bank_dt"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<CBMeeting bank={self.bank!r} meeting_dt={self.meeting_dt.isoformat()}>"
+
+
+class RateSnapshot(Base):
+    """Stored implied-rate snapshot for a bank meeting."""
+
+    __tablename__ = "rate_snapshots"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    bank: Mapped[str] = mapped_column(String(10), nullable=False)
+    snapshot_date: Mapped[date] = mapped_column(Date, nullable=False)
+    meeting_dt: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    implied_rate: Mapped[Decimal] = mapped_column(Numeric(6, 4), nullable=False)
+    cut_prob: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    hold_prob: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    hike_prob: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    delta_bps: Mapped[Decimal | None] = mapped_column(Numeric(7, 2), nullable=True)
+    fetched_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        server_default=text("now()"),
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "bank",
+            "snapshot_date",
+            "meeting_dt",
+            name="uq_rate_snapshots_bank_snapshot_meeting",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<RateSnapshot bank={self.bank!r} snapshot={self.snapshot_date.isoformat()} "
+            f"meeting_dt={self.meeting_dt.isoformat()}>"
+        )
+
+
+class OISCache(Base):
+    """Cached OIS curve point."""
+
+    __tablename__ = "ois_cache"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    bank: Mapped[str] = mapped_column(String(10), nullable=False)
+    curve_date: Mapped[date] = mapped_column(Date, nullable=False)
+    tenor_days: Mapped[int] = mapped_column(Integer, nullable=False)
+    rate: Mapped[Decimal] = mapped_column(Numeric(8, 6), nullable=False)
+    source: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    fetched_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        server_default=text("now()"),
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "bank",
+            "curve_date",
+            "tenor_days",
+            name="uq_ois_cache_bank_curve_tenor",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<OISCache bank={self.bank!r} curve={self.curve_date.isoformat()} "
+            f"tenor_days={self.tenor_days}>"
+        )

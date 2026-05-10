@@ -2,15 +2,15 @@
   "confidence_distribution": [
     {
       "confidence": "high",
-      "theme_days": 4130
+      "theme_days": 4271
     },
     {
       "confidence": "low",
-      "theme_days": 6210
+      "theme_days": 6336
     },
     {
       "confidence": "medium",
-      "theme_days": 6550
+      "theme_days": 6691
     }
   ],
   "config": {
@@ -73,30 +73,30 @@
       "theme": "Growth"
     }
   ],
-  "generated_at": "2026-04-24T19:47:05.866475Z",
+  "generated_at": "2026-04-25T22:26:17.819224Z",
   "low_confidence_reasons": [
     {
       "rejection_reason": "low_correlation",
-      "relationships": 3184
+      "relationships": 3441
     },
     {
       "rejection_reason": "low_sample_and_low_correlation",
-      "relationships": 870
+      "relationships": 896
     },
     {
       "rejection_reason": "low_sample",
-      "relationships": 351
+      "relationships": 277
     },
     {
       "rejection_reason": "not_best_lag",
-      "relationships": 178
+      "relationships": 193
     }
   ],
   "summary": {
-    "index_components": 96707,
-    "low_confidence_relationships": 4583,
-    "selected_relationships": 122,
-    "theme_index_rows": 5630
+    "index_components": 114403,
+    "low_confidence_relationships": 4807,
+    "selected_relationships": 145,
+    "theme_index_rows": 5766
   },
   "top_contributors": [
     {
@@ -256,7 +256,7 @@
       "observation_pairs": 98
     },
     {
-      "assigned_weight": 0.063489,
+      "assigned_weight": 0.064499,
       "candidate_indicator_key": "retail_sales_mom",
       "candidate_indicator_name": "Retail Sales (MoM)",
       "confidence_bucket": "medium",
@@ -268,7 +268,7 @@
       "observation_pairs": 43
     },
     {
-      "assigned_weight": 0.060191,
+      "assigned_weight": 0.061149,
       "candidate_indicator_key": "capacity_utilization",
       "candidate_indicator_name": "Capacity Utilization",
       "confidence_bucket": "medium",
@@ -280,7 +280,7 @@
       "observation_pairs": 41
     },
     {
-      "assigned_weight": 0.058968,
+      "assigned_weight": 0.059906,
       "candidate_indicator_key": "consumer_confidence",
       "candidate_indicator_name": "Consumer Confidence",
       "confidence_bucket": "medium",
@@ -292,7 +292,7 @@
       "observation_pairs": 43
     },
     {
-      "assigned_weight": 0.058814,
+      "assigned_weight": 0.05975,
       "candidate_indicator_key": "reuters_tankan_index",
       "candidate_indicator_name": "Reuters Tankan Index",
       "confidence_bucket": "medium",
@@ -304,7 +304,7 @@
       "observation_pairs": 41
     },
     {
-      "assigned_weight": 0.052405,
+      "assigned_weight": 0.053239,
       "candidate_indicator_key": "imports_yoy",
       "candidate_indicator_name": "Imports (YoY)",
       "confidence_bucket": "medium",
@@ -316,7 +316,7 @@
       "observation_pairs": 41
     },
     {
-      "assigned_weight": 0.048427,
+      "assigned_weight": 0.049198,
       "candidate_indicator_key": "household_spending_mom",
       "candidate_indicator_name": "Household Spending (MoM)",
       "confidence_bucket": "medium",
@@ -328,7 +328,7 @@
       "observation_pairs": 43
     },
     {
-      "assigned_weight": 0.047908,
+      "assigned_weight": 0.048671,
       "candidate_indicator_key": "tertiary_industry_index_mom",
       "candidate_indicator_name": "Tertiary Industry Index (MoM)",
       "confidence_bucket": "medium",
@@ -340,19 +340,7 @@
       "observation_pairs": 43
     },
     {
-      "assigned_weight": 0.044757,
-      "candidate_indicator_key": "leading_economic_index",
-      "candidate_indicator_name": "Leading Economic Index",
-      "confidence_bucket": "high",
-      "correlation": -0.576094,
-      "country_code": "JP",
-      "headline_target_type": "GDP",
-      "lag_months": 4,
-      "macro_theme": "Growth",
-      "observation_pairs": 85
-    },
-    {
-      "assigned_weight": 0.042521,
+      "assigned_weight": 0.043197,
       "candidate_indicator_key": "retail_sales_yoy",
       "candidate_indicator_name": "Retail Sales (YoY)",
       "confidence_bucket": "medium",
@@ -364,7 +352,7 @@
       "observation_pairs": 43
     },
     {
-      "assigned_weight": 0.042209,
+      "assigned_weight": 0.042881,
       "candidate_indicator_key": "industrial_production_mom",
       "candidate_indicator_name": "Industrial Production (MoM)",
       "confidence_bucket": "medium",
@@ -376,7 +364,7 @@
       "observation_pairs": 107
     },
     {
-      "assigned_weight": 0.041741,
+      "assigned_weight": 0.042406,
       "candidate_indicator_key": "household_spending_yoy",
       "candidate_indicator_name": "Household Spending (YoY)",
       "confidence_bucket": "medium",
@@ -388,7 +376,7 @@
       "observation_pairs": 43
     },
     {
-      "assigned_weight": 0.040921,
+      "assigned_weight": 0.041572,
       "candidate_indicator_key": "machinery_orders_mom",
       "candidate_indicator_name": "Machinery Orders (MoM)",
       "confidence_bucket": "medium",
@@ -400,7 +388,7 @@
       "observation_pairs": 45
     },
     {
-      "assigned_weight": 0.039983,
+      "assigned_weight": 0.04062,
       "candidate_indicator_key": "machinery_orders_yoy",
       "candidate_indicator_name": "Machinery Orders (YoY)",
       "confidence_bucket": "medium",
@@ -412,7 +400,7 @@
       "observation_pairs": 45
     },
     {
-      "assigned_weight": 0.039648,
+      "assigned_weight": 0.040279,
       "candidate_indicator_key": "industrial_production_yoy",
       "candidate_indicator_name": "Industrial Production (YoY)",
       "confidence_bucket": "medium",
@@ -424,7 +412,7 @@
       "observation_pairs": 90
     },
     {
-      "assigned_weight": 0.036205,
+      "assigned_weight": 0.036781,
       "candidate_indicator_key": "exports_yoy",
       "candidate_indicator_name": "Exports (YoY)",
       "confidence_bucket": "medium",
@@ -436,7 +424,7 @@
       "observation_pairs": 41
     },
     {
-      "assigned_weight": 0.035025,
+      "assigned_weight": 0.035583,
       "candidate_indicator_key": "tankan_small_manufacturers_index",
       "candidate_indicator_name": "Tankan Small Manufacturers Index",
       "confidence_bucket": "medium",
@@ -448,7 +436,7 @@
       "observation_pairs": 36
     },
     {
-      "assigned_weight": 0.033763,
+      "assigned_weight": 0.0343,
       "candidate_indicator_key": "eco_watchers_outlook",
       "candidate_indicator_name": "Eco Watchers Survey Outlook",
       "confidence_bucket": "medium",
@@ -460,7 +448,7 @@
       "observation_pairs": 43
     },
     {
-      "assigned_weight": 0.033575,
+      "assigned_weight": 0.034109,
       "candidate_indicator_key": "machine_tool_orders_yoy",
       "candidate_indicator_name": "Machine Tool Orders (YoY)",
       "confidence_bucket": "medium",
@@ -472,7 +460,7 @@
       "observation_pairs": 43
     },
     {
-      "assigned_weight": 0.033377,
+      "assigned_weight": 0.033908,
       "candidate_indicator_key": "current_account",
       "candidate_indicator_name": "Current Account",
       "confidence_bucket": "medium",
@@ -484,7 +472,7 @@
       "observation_pairs": 43
     },
     {
-      "assigned_weight": 0.032919,
+      "assigned_weight": 0.033443,
       "candidate_indicator_key": "tankan_large_non_manufacturing_index",
       "candidate_indicator_name": "Tankan Large Non-Manufacturing Index",
       "confidence_bucket": "medium",
@@ -496,7 +484,7 @@
       "observation_pairs": 41
     },
     {
-      "assigned_weight": 0.032781,
+      "assigned_weight": 0.033302,
       "candidate_indicator_key": "eco_watchers_current",
       "candidate_indicator_name": "Eco Watchers Survey Current",
       "confidence_bucket": "medium",
@@ -508,7 +496,7 @@
       "observation_pairs": 41
     },
     {
-      "assigned_weight": 0.032475,
+      "assigned_weight": 0.032992,
       "candidate_indicator_key": "tankan_large_all_industry_capex",
       "candidate_indicator_name": "Tankan Large All Industry Capex",
       "confidence_bucket": "medium",
@@ -520,7 +508,19 @@
       "observation_pairs": 37
     },
     {
-      "assigned_weight": 0.025574,
+      "assigned_weight": 0.029555,
+      "candidate_indicator_key": "leading_economic_index",
+      "candidate_indicator_name": "Leading Economic Index",
+      "confidence_bucket": "high",
+      "correlation": -0.576094,
+      "country_code": "JP",
+      "headline_target_type": "GDP",
+      "lag_months": 4,
+      "macro_theme": "Growth",
+      "observation_pairs": 85
+    },
+    {
+      "assigned_weight": 0.025981,
       "candidate_indicator_key": "composite_pmi",
       "candidate_indicator_name": "S&P Global Composite PMI",
       "confidence_bucket": "medium",
@@ -532,7 +532,7 @@
       "observation_pairs": 85
     },
     {
-      "assigned_weight": 0.022324,
+      "assigned_weight": 0.022679,
       "candidate_indicator_key": "services_pmi",
       "candidate_indicator_name": "S&P Global Services PMI",
       "confidence_bucket": "medium",
@@ -700,7 +700,7 @@
       "observation_pairs": 42
     },
     {
-      "assigned_weight": 0.0778,
+      "assigned_weight": 0.078015,
       "candidate_indicator_key": "employment_change",
       "candidate_indicator_name": "Employment Change",
       "confidence_bucket": "medium",
@@ -712,7 +712,7 @@
       "observation_pairs": 24
     },
     {
-      "assigned_weight": 0.075414,
+      "assigned_weight": 0.075622,
       "candidate_indicator_key": "part_time_employment_change",
       "candidate_indicator_name": "Part-Time Employment Change",
       "confidence_bucket": "medium",
@@ -724,7 +724,7 @@
       "observation_pairs": 24
     },
     {
-      "assigned_weight": 0.068491,
+      "assigned_weight": 0.06868,
       "candidate_indicator_key": "private_sector_credit_mom",
       "candidate_indicator_name": "Private Sector Credit (MoM)",
       "confidence_bucket": "medium",
@@ -736,7 +736,7 @@
       "observation_pairs": 24
     },
     {
-      "assigned_weight": 0.066295,
+      "assigned_weight": 0.066478,
       "candidate_indicator_key": "rba_weighted_median_cpi_yoy",
       "candidate_indicator_name": "RBA Weighted Median CPI (YoY)",
       "confidence_bucket": "medium",
@@ -748,7 +748,7 @@
       "observation_pairs": 24
     },
     {
-      "assigned_weight": 0.06356,
+      "assigned_weight": 0.063735,
       "candidate_indicator_key": "manufacturing_pmi",
       "candidate_indicator_name": "Manufacturing PMI",
       "confidence_bucket": "medium",
@@ -760,7 +760,7 @@
       "observation_pairs": 34
     },
     {
-      "assigned_weight": 0.063125,
+      "assigned_weight": 0.063299,
       "candidate_indicator_key": "unemployment_rate",
       "candidate_indicator_name": "Unemployment Rate",
       "confidence_bucket": "medium",
@@ -772,11 +772,11 @@
       "observation_pairs": 24
     },
     {
-      "assigned_weight": 0.060526,
+      "assigned_weight": 0.060606,
       "candidate_indicator_key": "westpac_consumer_confidence_index",
       "candidate_indicator_name": "Westpac Consumer Confidence Index",
       "confidence_bucket": "medium",
-      "correlation": -0.590551,
+      "correlation": -0.589698,
       "country_code": "AU",
       "headline_target_type": "CPI",
       "lag_months": 5,
@@ -784,7 +784,7 @@
       "observation_pairs": 29
     },
     {
-      "assigned_weight": 0.055983,
+      "assigned_weight": 0.056138,
       "candidate_indicator_key": "full_time_employment_change",
       "candidate_indicator_name": "Full-Time Employment Change",
       "confidence_bucket": "medium",
@@ -796,7 +796,7 @@
       "observation_pairs": 24
     },
     {
-      "assigned_weight": 0.055025,
+      "assigned_weight": 0.055177,
       "candidate_indicator_key": "balance_of_trade",
       "candidate_indicator_name": "Balance of Trade",
       "confidence_bucket": "medium",
@@ -808,7 +808,7 @@
       "observation_pairs": 24
     },
     {
-      "assigned_weight": 0.053711,
+      "assigned_weight": 0.05386,
       "candidate_indicator_key": "retail_sales_mom",
       "candidate_indicator_name": "Retail Sales (MoM)",
       "confidence_bucket": "medium",
@@ -826,8 +826,8 @@
       "country_code": "AU",
       "indicators": 18,
       "macro_theme": "Inflation",
-      "max_weight": 0.0778,
-      "weight_sum": 1.0
+      "max_weight": 0.078015,
+      "weight_sum": 0.999999
     },
     {
       "avg_weight": 0.5,
@@ -846,12 +846,12 @@
       "weight_sum": 1.0
     },
     {
-      "avg_weight": 0.166667,
+      "avg_weight": 0.142857,
       "country_code": "CA",
-      "indicators": 6,
+      "indicators": 7,
       "macro_theme": "Inflation",
-      "max_weight": 0.213193,
-      "weight_sum": 1.0
+      "max_weight": 0.19099,
+      "weight_sum": 0.999999
     },
     {
       "avg_weight": 0.166667,
@@ -882,23 +882,23 @@
       "country_code": "EU",
       "indicators": 9,
       "macro_theme": "Inflation",
-      "max_weight": 0.162838,
-      "weight_sum": 1.0
+      "max_weight": 0.162989,
+      "weight_sum": 1.000001
     },
     {
       "avg_weight": 0.041667,
       "country_code": "JP",
       "indicators": 24,
       "macro_theme": "Growth",
-      "max_weight": 0.063489,
+      "max_weight": 0.064499,
       "weight_sum": 1.0
     },
     {
-      "avg_weight": 0.333333,
+      "avg_weight": 0.25,
       "country_code": "JP",
-      "indicators": 3,
+      "indicators": 4,
       "macro_theme": "Inflation",
-      "max_weight": 0.370499,
+      "max_weight": 0.278578,
       "weight_sum": 1.0
     },
     {
@@ -914,7 +914,7 @@
       "country_code": "NZ",
       "indicators": 2,
       "macro_theme": "Inflation",
-      "max_weight": 0.516494,
+      "max_weight": 0.51675,
       "weight_sum": 1.0
     },
     {
@@ -930,7 +930,7 @@
       "country_code": "UK",
       "indicators": 10,
       "macro_theme": "Inflation",
-      "max_weight": 0.145187,
+      "max_weight": 0.145317,
       "weight_sum": 1.0
     },
     {
@@ -942,19 +942,19 @@
       "weight_sum": 1.0
     },
     {
+      "avg_weight": 0.043478,
+      "country_code": "US",
+      "indicators": 23,
+      "macro_theme": "Inflation",
+      "max_weight": 0.068524,
+      "weight_sum": 1.0
+    },
+    {
       "avg_weight": 0.1,
       "country_code": "US",
       "indicators": 10,
-      "macro_theme": "Inflation",
-      "max_weight": 0.151952,
-      "weight_sum": 0.999999
-    },
-    {
-      "avg_weight": 0.5,
-      "country_code": "US",
-      "indicators": 2,
       "macro_theme": "Labor",
-      "max_weight": 0.557061,
+      "max_weight": 0.130735,
       "weight_sum": 1.0
     }
   ]

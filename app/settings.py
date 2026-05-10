@@ -10,6 +10,7 @@ Required environment variables (set these in .env at project root):
     LOG_LEVEL           Optional, defaults to INFO (DEBUG, INFO, WARNING, ERROR)
 """
 
+import secrets
 from functools import lru_cache
 
 from pydantic import Field
@@ -63,6 +64,28 @@ class Settings(BaseSettings):
         description="Run background ingestion jobs. Disable for tests/scripts.",
     )
 
+    # Authentication
+    auth_enabled: bool = Field(
+        default=True,
+        alias="AUTH_ENABLED",
+        description="Require dashboard users to sign in.",
+    )
+    auth_secret_key: str = Field(
+        default_factory=lambda: secrets.token_urlsafe(48),
+        alias="AUTH_SECRET_KEY",
+        description="Secret used to sign dashboard session cookies.",
+    )
+    auth_session_cookie: str = Field(
+        default="macro_dashboard_session",
+        alias="AUTH_SESSION_COOKIE",
+        description="Cookie name for dashboard sessions.",
+    )
+    auth_session_max_age_seconds: int = Field(
+        default=60 * 60 * 12,
+        alias="AUTH_SESSION_MAX_AGE_SECONDS",
+        description="Session lifetime in seconds.",
+    )
+
     # Bank research ingestion
     google_drive_api_key: str | None = Field(
         default=None,
@@ -89,7 +112,7 @@ class Settings(BaseSettings):
         alias="BANK_RESEARCH_RETENTION_DAYS",
         description="Number of days to keep downloaded bank research files",
     )
-    
+
     # HTTP client behavior
     http_timeout_seconds: float = Field(
         default=30.0,

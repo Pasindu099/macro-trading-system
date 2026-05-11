@@ -1,8 +1,6 @@
 {% extends "base.html" %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/macro_design.css') }}?v=20260507ref">
-{% endblock %}
+{% block extra_head %}{% endblock %}
 
 {% block body %}
 {% set stance_rows = currency_stance[1] if currency_stance and currency_stance[1] else [] %}
@@ -37,66 +35,7 @@
   {% else %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>{% endif %}
 {%- endmacro %}
 
-<div class="app">
-  <aside class="sidebar">
-    <a class="sb-logo" href="/">
-      <div class="mark">M</div>
-      <div class="name">Macro</div>
-    </a>
-    <nav class="sb-nav">
-      <div class="sb-group">
-        <div class="sb-group-label">Markets</div>
-        <a href="/" class="sb-item active">{{ nav_icon("grid") }}<span class="label">Dashboard</span><span class="pip"></span></a>
-        <a href="#fx" class="sb-item">{{ nav_icon("bars") }}<span class="label">FX Strength</span></a>
-        <a href="/news-feed" class="sb-item">{{ nav_icon("feed") }}<span class="label">News Feed</span></a>
-        <a href="/cot" class="sb-item">{{ nav_icon("pie") }}<span class="label">COT</span></a>
-        <a href="#cb" class="sb-item">{{ nav_icon("building") }}<span class="label">CB Terminal</span></a>
-        <a href="/cb-news" class="sb-item">{{ nav_icon("mic") }}<span class="label">CB News</span></a>
-        <a href="/rates" class="sb-item">{{ nav_icon("percent") }}<span class="label">Yields</span></a>
-        <a href="/calendar" class="sb-item">{{ nav_icon("cal") }}<span class="label">Calendar</span></a>
-      </div>
-      <div class="sb-group">
-        <div class="sb-group-label">Research</div>
-        <a href="/countries" class="sb-item">{{ nav_icon("globe") }}<span class="label">Countries</span></a>
-        <a href="/bank-research" class="sb-item">{{ nav_icon("doc") }}<span class="label">Bank Research</span></a>
-        <a href="/brief-builder" class="sb-item">{{ nav_icon("edit") }}<span class="label">Brief Builder</span></a>
-        <a href="/trade-planner" class="sb-item">{{ nav_icon("target") }}<span class="label">Trade Planner</span></a>
-      </div>
-      <div class="sb-group">
-        <div class="sb-group-label">System</div>
-        <a href="/analytics" class="sb-item">{{ nav_icon("chart") }}<span class="label">Analytics</span></a>
-        <a href="/settings" class="sb-item">{{ nav_icon("gear") }}<span class="label">Settings</span></a>
-        {% if request.state.current_user and request.state.current_user.role == "admin" %}
-          <a href="/users" class="sb-item">{{ nav_icon("gear") }}<span class="label">Users</span></a>
-        {% endif %}
-      </div>
-    </nav>
-    <div class="sb-foot">
-      <span>v1.4.2</span>
-      <button class="sb-collapse" onclick="document.querySelector('.app').classList.toggle('collapsed')" title="Toggle sidebar" aria-label="Toggle sidebar">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
-      </button>
-    </div>
-  </aside>
-
-  <main class="main">
-    <div class="topbar">
-      <div class="crumbs"><span>Markets</span><span class="sep">/</span><span class="here">G10 Signal Desk</span></div>
-      <div class="spacer"></div>
-      <div class="clock"><span class="dot"></span><span id="utcclock">--:--:-- UTC</span></div>
-      {% if request.state.current_user %}
-      <div class="topbar-user">
-        <strong>{{ request.state.current_user.display_name }}</strong>
-        <span>{{ request.state.current_user.role }}</span>
-        <form method="post" action="/logout">
-          <button class="btn btn-sm" type="submit">Sign out</button>
-        </form>
-      </div>
-      {% endif %}
-      <button class="btn icon-only" title="Refresh" onclick="window.location.reload()">&#8635;</button>
-    </div>
-
-    <div class="content" id="content">
+<div id="content">
       <div class="kpi-row k5">
         <div class="kpi">
           <span class="label">Top Currency</span>
@@ -441,8 +380,6 @@
           <div class="panel tight" style="background:var(--panel-2);display:flex;flex-direction:column;gap:10px;"><div class="label-xs">AI Stance Analysis</div><button class="btn primary" style="align-self:flex-start;">Analyze Stance</button><div style="font-size:11px;color:var(--text-body);line-height:1.55;font-family:var(--mono)">Fed posture remains <span style="color:var(--hawk);font-weight:600;">moderately hawkish</span>. Front-end yields supported. USD bias positive vs JPY, mixed vs EUR.</div></div>
         </div>
       </div>
-    </div>
-  </main>
 </div>
 
 <script>

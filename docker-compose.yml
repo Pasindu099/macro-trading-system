@@ -31,7 +31,7 @@ services:
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
       - BANK_RESEARCH_DRIVE_FOLDER_URL=${BANK_RESEARCH_DRIVE_FOLDER_URL:-}
       - BANK_RESEARCH_RETENTION_DAYS=${BANK_RESEARCH_RETENTION_DAYS:-7}
-      - AUTH_ENABLED=false
+      - AUTH_ENABLED=true
       - LOG_LEVEL=INFO
     depends_on:
       postgres:

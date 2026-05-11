@@ -27,14 +27,14 @@ Scoring logic per currency
 
 CB watchlist sources
 --------------------
-  Fed   : PCE, Core PCE, NFP, Unemployment, AHE, ISM, Retail Sales
-  ECB   : Core HICP, Headline HICP, Unemployment, GDP, Composite PMI
-  BoE   : CPI, Core CPI, Avg Earnings (ex bonus), Unemployment, GDP, Services PMI
-  BoJ   : Core CPI (ex fresh food), Tokyo Core CPI, Unemployment, GDP, Composite PMI
-  RBA   : Trimmed Mean CPI, Monthly CPI, Employment, Unemployment, Composite PMI
+  Fed   : Core PCE, Core CPI, NFP, Unemployment, Claims, AHE, ISM, Retail Sales
+  ECB   : Core HICP, Headline HICP, expectations, Unemployment, GDP, PMI, German Ifo/PPI
+  BoE   : CPI, Core CPI, Avg Earnings, Claimants, Unemployment, GDP, Services PMI
+  BoJ   : Core CPI, Tokyo Core CPI, Tankan, Unemployment, GDP, Composite PMI
+  RBA   : Trimmed Mean CPI, Monthly CPI, Employment, Unemployment, NAB, Retail Sales
   RBNZ  : CPI, Employment, Labour Cost Index, Unemployment
-  BoC   : CPI-Trim, CPI-Median, CPI-Common, Employment, Unemployment, GDP MoM
-  SNB   : CPI, Producer & Import Prices, Unemployment, GDP
+  BoC   : CPI-Trim, CPI-Median, CPI-Common, RMPI, Employment, Unemployment, GDP MoM
+  SNB   : CPI, Producer & Import Prices, Unemployment, GDP, Retail Sales
 """
 
 from __future__ import annotations
@@ -64,6 +64,7 @@ class CBIndicator:
     weight: float     # relative within-theme importance (3=primary, 2=secondary, 1=supplementary)
     direction: int    # +1 = higher → hawkish/bullish; -1 = higher → dovish/bearish
     notes: str = ""
+    source_country: str | None = None
 
 
 # Mandate weights applied on top of theme scores (same as cb_reaction_score.py)
@@ -97,8 +98,6 @@ CB_WATCHLIST: dict[str, list[CBIndicator]] = {
     "US": [
         CBIndicator("core_pce_price_index_yoy", "Inflation", 3.0, +1,
                     "Fed's primary inflation gauge — targets 2%"),
-        CBIndicator("pce_price_index_yoy",       "Inflation", 2.0, +1,
-                    "Headline PCE — broader basket"),
         CBIndicator("core_cpi_yoy",              "Inflation", 1.0, +1,
                     "Core CPI — widely cited proxy before PCE release"),
         CBIndicator("unemployment_rate",         "Labor",     3.0, -1,
@@ -107,12 +106,14 @@ CB_WATCHLIST: dict[str, list[CBIndicator]] = {
                     "Non-Farm Payrolls — headline jobs print"),
         CBIndicator("avg_hourly_earnings_yoy",   "Labor",     2.0, +1,
                     "Wage inflation — key for persistent inflation channel"),
+        CBIndicator("initial_jobless_claims",    "Labor",     1.0, -1,
+                    "Initial jobless claims — high-frequency labor stress gauge"),
         CBIndicator("ism_manufacturing_pmi",     "Growth",    2.0, +1,
                     "ISM Manufacturing — leading activity indicator"),
-        CBIndicator("retail_sales_mom",          "Growth",    2.0, +1,
+        CBIndicator("retail_sales_mom",          "Growth",    3.0, +1,
                     "Consumer spending — 70% of US GDP"),
-        CBIndicator("sp_global_services_pmi",    "Growth",    1.0, +1,
-                    "Services sector activity"),
+        CBIndicator("ism_services_business_activity", "Growth", 2.0, +1,
+                    "ISM Services Business Activity — Fed-watched services activity proxy"),
     ],
 
     # ── ECB (EU) ──────────────────────────────────────────────────────────────
@@ -123,16 +124,22 @@ CB_WATCHLIST: dict[str, list[CBIndicator]] = {
                     "Core HICP — ECB's focus once supply shocks pass"),
         CBIndicator("cpi_headline_yoy",           "Inflation", 2.0, +1,
                     "Headline HICP — primary ECB mandate target"),
-        CBIndicator("consumer_inflation_expectation", "Inflation", 1.0, +1,
+        CBIndicator("consumer_inflation_expectation", "Inflation", 2.0, +1,
                     "Inflation expectations — key for credibility"),
+        CBIndicator("ppi_yoy",                   "Inflation", 1.0, +1,
+                    "German PPI — pipeline inflation proxy for Eurozone price pressure",
+                    source_country="DE"),
         CBIndicator("unemployment_rate",          "Labor",     3.0, -1,
                     "Euro-area unemployment — secondary mandate"),
         CBIndicator("gdp_qoq",                   "Growth",    2.0, +1,
                     "Euro-area GDP — output gap assessment"),
         CBIndicator("composite_pmi",             "Growth",    2.0, +1,
                     "Composite PMI — real-time activity proxy"),
-        CBIndicator("manufacturing_pmi",         "Growth",    1.0, +1,
+        CBIndicator("manufacturing_pmi",         "Growth",    2.0, +1,
                     "Manufacturing PMI — industrial sector pulse"),
+        CBIndicator("ifo_business_climate",      "Growth",    2.0, +1,
+                    "German Ifo Business Climate — key Eurozone leading indicator",
+                    source_country="DE"),
     ],
 
     # ── BoE (UK) ──────────────────────────────────────────────────────────────
@@ -146,13 +153,17 @@ CB_WATCHLIST: dict[str, list[CBIndicator]] = {
                     "Core CPI — strips volatile food & energy"),
         CBIndicator("avg_earnings_excl_bonus",   "Labor",     3.0, +1,
                     "Regular pay growth — BoE's primary wage gauge"),
+        CBIndicator("claimant_count_change",     "Labor",     2.0, -1,
+                    "Claimant Count Change — higher-frequency labor slack gauge"),
         CBIndicator("unemployment_rate",         "Labor",     2.0, -1,
                     "UK unemployment"),
         CBIndicator("gdp_mom",                   "Growth",    2.0, +1,
                     "Monthly GDP — BoE uses MoM given high-frequency releases"),
+        CBIndicator("gdp_qoq",                   "Growth",    1.0, +1,
+                    "Quarterly GDP — baseline growth context"),
         CBIndicator("services_pmi",              "Growth",    2.0, +1,
                     "Services PMI — UK is 80% services economy"),
-        CBIndicator("retail_sales_mom",          "Growth",    1.0, +1,
+        CBIndicator("retail_sales_mom",          "Growth",    2.0, +1,
                     "Retail sales — consumer demand signal"),
     ],
 
@@ -166,15 +177,19 @@ CB_WATCHLIST: dict[str, list[CBIndicator]] = {
                     "Core CPI ex fresh food — BoJ's preferred measure"),
         CBIndicator("cpi_ex_food_energy_yoy",    "Inflation", 3.0, +1,
                     "Core-core CPI ex food & energy — BoJ's key watch"),
+        CBIndicator("tokyo_core_cpi_yoy",        "Inflation", 2.0, +1,
+                    "Tokyo Core CPI — leading read for national CPI"),
         CBIndicator("cpi_headline_yoy",          "Inflation", 1.0, +1,
                     "Headline CPI"),
-        CBIndicator("unemployment_rate",         "Labor",     2.0, -1,
+        CBIndicator("unemployment_rate",         "Labor",     1.0, -1,
                     "Japan unemployment"),
         CBIndicator("gdp_qoq",                   "Growth",    2.0, +1,
                     "GDP QoQ — output gap matters for BoJ normalisation path"),
+        CBIndicator("tankan_large_manufacturers_index", "Growth", 3.0, +1,
+                    "Tankan Large Manufacturers Index — BoJ-watched activity survey"),
         CBIndicator("composite_pmi",             "Growth",    2.0, +1,
                     "Composite PMI — real-time activity"),
-        CBIndicator("industrial_production_mom", "Growth",    1.0, +1,
+        CBIndicator("industrial_production_mom", "Growth",    2.0, +1,
                     "Industrial production — Japan is export-driven"),
     ],
 
@@ -184,16 +199,16 @@ CB_WATCHLIST: dict[str, list[CBIndicator]] = {
     "AU": [
         CBIndicator("rba_trimmed_mean_cpi_yoy",  "Inflation", 3.0, +1,
                     "RBA Trimmed Mean — primary underlying inflation measure"),
-        CBIndicator("monthly_cpi_indicator",     "Inflation", 2.0, +1,
-                    "Monthly CPI Indicator — higher frequency inflation read"),
+        CBIndicator("monthly_cpi_indicator",     "Inflation", 1.0, +1,
+                    "Monthly CPI Indicator — higher frequency but shorter-history inflation read"),
         CBIndicator("cpi_headline_yoy",          "Inflation", 1.0, +1,
                     "Headline CPI QoQ"),
         CBIndicator("unemployment_rate",         "Labor",     3.0, -1,
                     "Unemployment — dual mandate"),
         CBIndicator("employment_change",         "Labor",     2.0, +1,
                     "Employment change — monthly jobs print"),
-        CBIndicator("composite_pmi",             "Growth",    2.0, +1,
-                    "Composite PMI"),
+        CBIndicator("nab_business_confidence",   "Growth",    2.0, +1,
+                    "NAB Business Confidence — RBA-watched domestic business survey"),
         CBIndicator("retail_sales_mom",          "Growth",    2.0, +1,
                     "Retail sales — consumer demand"),
     ],
@@ -235,9 +250,11 @@ CB_WATCHLIST: dict[str, list[CBIndicator]] = {
                     "Canada unemployment"),
         CBIndicator("employment_change",         "Labor",     2.0, +1,
                     "Employment change"),
-        CBIndicator("gdp_mom",                   "Growth",    3.0, +1,
+        CBIndicator("raw_materials_prices_yoy",  "Inflation", 1.0, +1,
+                    "Raw Materials Price Index — commodity input cost pressure"),
+        CBIndicator("gdp_mom",                   "Growth",    2.0, +1,
                     "Monthly GDP — Canada has monthly GDP unlike most G10"),
-        CBIndicator("ivey_pmi_sa",               "Growth",    2.0, +1,
+        CBIndicator("ivey_pmi_sa",               "Growth",    1.0, +1,
                     "Ivey PMI — BoC-watched activity gauge"),
         CBIndicator("retail_sales_mom",          "Growth",    1.0, +1,
                     "Retail sales"),
@@ -249,14 +266,16 @@ CB_WATCHLIST: dict[str, list[CBIndicator]] = {
     "CH": [
         CBIndicator("cpi_headline_yoy",          "Inflation", 3.0, +1,
                     "Swiss CPI — primary SNB target (0-2% range)"),
-        CBIndicator("producer_import_prices_yoy", "Inflation", 2.0, +1,
+        CBIndicator("producer_import_prices_yoy", "Inflation", 3.0, +1,
                     "Producer & Import Prices — upstream inflation pipeline"),
         CBIndicator("unemployment_rate",         "Labor",     2.0, -1,
                     "Swiss unemployment"),
         CBIndicator("gdp_qoq",                   "Growth",    2.0, +1,
                     "Swiss GDP"),
-        CBIndicator("retail_sales_yoy",          "Growth",    1.0, +1,
+        CBIndicator("retail_sales_yoy",          "Growth",    2.0, +1,
                     "Retail sales"),
+        CBIndicator("consumer_confidence",       "Growth",    1.0, +1,
+                    "Consumer confidence — SECO-style household demand proxy"),
     ],
 }
 
@@ -325,10 +344,11 @@ async def build_cb_preferred_score(
 async def _load_features(session: AsyncSession) -> pd.DataFrame:
     """Load indicator_features rows for all CB-preferred canonical names."""
     all_pairs: list[tuple[str, str]] = [
-        (country, ind.canonical_name)
+        (ind.source_country or country, ind.canonical_name)
         for country, indicators in CB_WATCHLIST.items()
         for ind in indicators
     ]
+    all_pairs = sorted(set(all_pairs))
 
     # Build a VALUES list for the IN filter
     values_sql = ", ".join(f"('{cc}', '{cn}')" for cc, cn in all_pairs)
@@ -387,6 +407,7 @@ def _compute_scores(
                 "weight":         ind.weight,
                 "direction":      ind.direction,
                 "notes":          ind.notes,
+                "source_country": ind.source_country or country,
             })
     config_df = pd.DataFrame(config_rows)
 
@@ -399,12 +420,13 @@ def _compute_scores(
 
     for score_date in all_score_dates:
         for country_code, indicators in CB_WATCHLIST.items():
-            # Slice: only this country, only data released on or before score_date
-            # and within the staleness window
+            # Slice: only data released on or before score_date and within the
+            # staleness window. Most indicators use the CB's country_code, but
+            # some CB watchlists include a regional proxy from another source
+            # country, such as German Ifo for the ECB.
             cutoff = score_date - stale_cutoff
-            country_data = features_df[
-                (features_df["country_code"] == country_code)
-                & (features_df["score_date"] <= score_date)
+            window_data = features_df[
+                (features_df["score_date"] <= score_date)
                 & (features_df["score_date"] > cutoff)
             ]
 
@@ -413,8 +435,10 @@ def _compute_scores(
             contrib_count: dict[str, int] = {}
 
             for ind in indicators:
-                ind_data = country_data[
-                    country_data["canonical_name"] == ind.canonical_name
+                source_country = ind.source_country or country_code
+                ind_data = window_data[
+                    (window_data["country_code"] == source_country)
+                    & (window_data["canonical_name"] == ind.canonical_name)
                 ]
                 if ind_data.empty:
                     continue
@@ -436,6 +460,7 @@ def _compute_scores(
                     "score_date":     score_date,
                     "country_code":   country_code,
                     "currency_code":  latest.get("currency_code", ""),
+                    "source_country": source_country,
                     "theme":          ind.theme,
                     "canonical_name": ind.canonical_name,
                     "raw_signal":     round(float(raw_signal), 6),
@@ -631,6 +656,7 @@ async def _create_schema(session: AsyncSession) -> None:
             score_date       date NOT NULL,
             country_code     varchar(2) NOT NULL,
             currency_code    varchar(3),
+            source_country   varchar(2),
             theme            text NOT NULL,
             canonical_name   text NOT NULL,
             raw_signal       numeric(20,6),
@@ -729,11 +755,11 @@ async def _insert_components(
                 """
                 INSERT INTO processed.cb_preferred_components
                     (score_date, country_code, currency_code, theme,
-                     canonical_name, raw_signal, direction, weight,
+                     source_country, canonical_name, raw_signal, direction, weight,
                      directional_signal, weighted_signal, notes)
                 VALUES
                     (:score_date, :country_code, :currency_code, :theme,
-                     :canonical_name, :raw_signal, :direction, :weight,
+                     :source_country, :canonical_name, :raw_signal, :direction, :weight,
                      :directional_signal, :weighted_signal, :notes)
                 """
             ),
@@ -741,6 +767,7 @@ async def _insert_components(
                 "score_date":   row["score_date"],
                 "country_code": row["country_code"],
                 "currency_code": row.get("currency_code", ""),
+                "source_country": row.get("source_country", row["country_code"]),
                 "theme":        row["theme"],
                 "canonical_name": row["canonical_name"],
                 "raw_signal":   _safe(row.get("raw_signal")),

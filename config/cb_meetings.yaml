@@ -1,6 +1,8 @@
 FED:
   current_rate: 3.75
   step_bps: 25
+  rate_basis_adj: 0.08
+  low_liquidity_curve: false
   meetings:
     - dt: "2026-06-17T14:00:00-04:00"
       official: true
@@ -31,6 +33,8 @@ FED:
 ECB:
   current_rate: 3.00
   step_bps: 25
+  rate_basis_adj: 0.0
+  low_liquidity_curve: false
   meetings:
     - dt: "2026-06-11T14:15:00+02:00"
       official: true
@@ -61,6 +65,8 @@ ECB:
 BOE:
   current_rate: 3.75
   step_bps: 25
+  rate_basis_adj: 0.0
+  low_liquidity_curve: false
   meetings:
     - dt: "2026-06-18T12:00:00+01:00"
       official: true
@@ -90,7 +96,9 @@ BOE:
       official: false
 BOJ:
   current_rate: 0.75
-  step_bps: 25
+  step_bps: 10
+  rate_basis_adj: 0.0
+  low_liquidity_curve: true
   meetings:
     - dt: "2026-06-16T12:00:00+09:00"
       official: true
@@ -121,6 +129,8 @@ BOJ:
 RBA:
   current_rate: 3.60
   step_bps: 25
+  rate_basis_adj: 0.0
+  low_liquidity_curve: false
   meetings:
     - dt: "2026-06-16T14:30:00+10:00"
       official: true
@@ -155,6 +165,8 @@ RBA:
 BOC:
   current_rate: 2.25
   step_bps: 25
+  rate_basis_adj: 0.0
+  low_liquidity_curve: false
   meetings:
     - dt: "2026-06-03T09:45:00-04:00"
       official: true
@@ -185,6 +197,8 @@ BOC:
 RBNZ:
   current_rate: 2.25
   step_bps: 25
+  rate_basis_adj: 0.0
+  low_liquidity_curve: false
   meetings:
     - dt: "2026-05-27T14:00:00+12:00"
       official: true
@@ -213,6 +227,8 @@ RBNZ:
 SNB:
   current_rate: 0.00
   step_bps: 25
+  rate_basis_adj: 0.0
+  low_liquidity_curve: true
   meetings:
     - dt: "2026-06-18T09:30:00+02:00"
       official: true

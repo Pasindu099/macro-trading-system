@@ -47,6 +47,7 @@
         &nbsp;|&nbsp;
         Step:
         <select class="rp-step-select" id="rp-step-select" data-bank="{{ bank }}">
+          <option value="10"{% if summary.step_bps == 10 %} selected{% endif %}>10 bps</option>
           <option value="25"{% if summary.step_bps == 25 %} selected{% endif %}>25 bps</option>
           <option value="50"{% if summary.step_bps == 50 %} selected{% endif %}>50 bps</option>
         </select>

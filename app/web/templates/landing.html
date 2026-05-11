@@ -178,7 +178,7 @@
                 empty = document.createElement("div");
                 empty.className = "news-item selected";
                 empty.dataset.newsEmpty = "true";
-                empty.innerHTML = '<div class="head">No headlines matched these filters.</div><div class="meta"><span class="src">InvestingLive</span><span>Â·</span><span>adjust filters</span><span class="badge beta">Empty</span></div>';
+                empty.innerHTML = '<div class="head">No headlines matched these filters.</div><div class="meta"><span class="src">InvestingLive</span><span>-</span><span>adjust filters</span><span class="badge beta">Empty</span></div>';
                 panel.appendChild(empty);
               }
               empty.hidden = false;
@@ -207,33 +207,33 @@
         })();
       </script>
 
-      <div class="section-title" id="cot">
+      <div class="section-title" id="cot" data-cot-preview>
         <h2>COT Positioning · CFTC Futures</h2>
-        <span class="meta">weekly positioning</span>
+        <span class="meta" data-cot-preview-date>weekly positioning</span>
         <div class="spacer"></div>
         <div class="btn-row">
-          <a class="btn active" href="/cot">EUR/USD</a>
-          <a class="btn" href="/cot">GBP/USD</a>
-          <a class="btn" href="/cot">USD/JPY</a>
-          <a class="btn" href="/cot">AUD/USD</a>
-          <a class="btn" href="/cot">USD/CAD</a>
-          <a class="btn" href="/cot">Gold</a>
+          <button class="btn active" type="button" data-cot-preview-symbol="EUR">EUR/USD</button>
+          <button class="btn" type="button" data-cot-preview-symbol="GBP">GBP/USD</button>
+          <button class="btn" type="button" data-cot-preview-symbol="JPY">USD/JPY</button>
+          <button class="btn" type="button" data-cot-preview-symbol="AUD">AUD/USD</button>
+          <button class="btn" type="button" data-cot-preview-symbol="CAD">USD/CAD</button>
+          <button class="btn" type="button" data-cot-preview-symbol="GOLD">Gold</button>
         </div>
       </div>
       <div class="grid grid-4" style="margin-bottom:12px;">
-        <div class="kpi"><span class="label">Non-Comm Longs</span><span class="value">182,431</span><div class="meta"><span class="delta up">+4,210</span> vs prior</div></div>
-        <div class="kpi"><span class="label">Non-Comm Shorts</span><span class="value">96,144</span><div class="meta"><span class="delta down">-1,802</span> vs prior</div></div>
-        <div class="kpi"><span class="label">Net Position</span><span class="value" style="color:var(--bull)">+86,287</span><div class="meta"><span class="delta up">+6,012</span> vs prior</div></div>
-        <div class="kpi"><span class="label">Sentiment Index</span><span class="value">64.2</span><div class="meta">Bullish · 78th pctile 5y</div></div>
+        <div class="kpi"><span class="label">Non-Comm Longs</span><span class="value" data-cot-preview-long>Loading</span><div class="meta"><span class="delta" data-cot-preview-long-change>--</span> vs prior</div></div>
+        <div class="kpi"><span class="label">Non-Comm Shorts</span><span class="value" data-cot-preview-short>Loading</span><div class="meta"><span class="delta" data-cot-preview-short-change>--</span> vs prior</div></div>
+        <div class="kpi"><span class="label">Net Position</span><span class="value" data-cot-preview-net>Loading</span><div class="meta"><span class="delta" data-cot-preview-net-change>--</span> vs prior</div></div>
+        <div class="kpi"><span class="label">Positioning Index</span><span class="value" data-cot-preview-index>--</span><div class="meta" data-cot-preview-index-meta>Loading CFTC data</div></div>
       </div>
       <div class="grid grid-2" style="margin-bottom:12px;">
         <div class="panel">
-          <div class="panel-header"><span class="title">Net Positioning History</span><span class="meta">156w · weekly</span></div>
+          <div class="panel-header"><span class="title">Net Positioning History</span><span class="meta" data-cot-preview-history-label>156w · weekly</span></div>
           <svg viewBox="0 0 600 220" class="chart-svg">
             <line x1="0" y1="44" x2="600" y2="44" stroke="var(--border)"/><line x1="0" y1="88" x2="600" y2="88" stroke="var(--border)"/><line x1="0" y1="132" x2="600" y2="132" stroke="var(--border)"/><line x1="0" y1="176" x2="600" y2="176" stroke="var(--border)"/>
             <line x1="0" y1="110" x2="600" y2="110" stroke="var(--border-strong)" stroke-dasharray="3 3"/>
-            <path d="M0 144 L50 132 L100 118 L150 125 L200 96 L250 86 L300 104 L350 74 L400 82 L450 58 L500 70 L550 42 L600 54" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
-            <path d="M0 144 L50 132 L100 118 L150 125 L200 96 L250 86 L300 104 L350 74 L400 82 L450 58 L500 70 L550 42 L600 54 L600 110 L0 110 Z" fill="rgba(34,197,94,0.14)"/>
+            <path data-cot-preview-line d="" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+            <path data-cot-preview-area d="" fill="rgba(34,197,94,0.14)"/>
           </svg>
         </div>
         <div class="panel">
@@ -241,14 +241,147 @@
           <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
             <svg viewBox="0 0 300 160" style="width:100%;max-width:340px;">
               <path d="M60 130 A90 90 0 0 1 120 45" stroke="var(--bear)" stroke-width="14" fill="none"/><path d="M120 45 A90 90 0 0 1 180 45" stroke="var(--neutral)" stroke-width="14" fill="none"/><path d="M180 45 A90 90 0 0 1 240 130" stroke="var(--bull)" stroke-width="14" fill="none"/>
-              <line x1="150" y1="130" x2="198" y2="70" stroke="var(--text-heading)" stroke-width="2.5" stroke-linecap="round"/><circle cx="150" cy="130" r="5" fill="var(--text-heading)"/>
+              <line x1="150" y1="130" x2="150" y2="60" stroke="var(--text-heading)" stroke-width="2.5" stroke-linecap="round" data-cot-preview-needle/><circle cx="150" cy="130" r="5" fill="var(--text-heading)"/>
               <text x="30" y="155" fill="var(--text-muted)" font-family="var(--mono)" font-size="10">BEARISH</text><text x="220" y="155" fill="var(--text-muted)" font-family="var(--mono)" font-size="10">BULLISH</text>
             </svg>
-            <div class="mono" style="font-size:24px;color:var(--text-heading);font-weight:600;">64.2</div>
-            <span class="badge bull">Bullish · 78th %ile</span>
+            <div class="mono" style="font-size:24px;color:var(--text-heading);font-weight:600;" data-cot-preview-gauge-value>--</div>
+            <span class="badge" data-cot-preview-badge>Loading</span>
           </div>
         </div>
       </div>
+
+      <script>
+        (() => {
+          const section = document.querySelector("[data-cot-preview]");
+          if (!section) return;
+
+          const fields = {
+            date: document.querySelector("[data-cot-preview-date]"),
+            long: document.querySelector("[data-cot-preview-long]"),
+            short: document.querySelector("[data-cot-preview-short]"),
+            net: document.querySelector("[data-cot-preview-net]"),
+            longChange: document.querySelector("[data-cot-preview-long-change]"),
+            shortChange: document.querySelector("[data-cot-preview-short-change]"),
+            netChange: document.querySelector("[data-cot-preview-net-change]"),
+            index: document.querySelector("[data-cot-preview-index]"),
+            indexMeta: document.querySelector("[data-cot-preview-index-meta]"),
+            historyLabel: document.querySelector("[data-cot-preview-history-label]"),
+            line: document.querySelector("[data-cot-preview-line]"),
+            area: document.querySelector("[data-cot-preview-area]"),
+            needle: document.querySelector("[data-cot-preview-needle]"),
+            gaugeValue: document.querySelector("[data-cot-preview-gauge-value]"),
+            badge: document.querySelector("[data-cot-preview-badge]"),
+          };
+          const pairLabels = { EUR: "EUR/USD", GBP: "GBP/USD", JPY: "USD/JPY", AUD: "AUD/USD", CAD: "USD/CAD", GOLD: "Gold" };
+          const fmt = (value) => Number(value || 0).toLocaleString();
+          const signed = (value) => `${Number(value || 0) >= 0 ? "+" : ""}${fmt(Math.round(Number(value || 0)))}`;
+          const tone = (index) => index >= 60 ? "Bullish" : index <= 40 ? "Bearish" : "Neutral";
+          const badgeClass = (label) => label === "Bullish" ? "bull" : label === "Bearish" ? "bear" : "neutral";
+
+          let rowsBySymbol = {};
+          let active = "EUR";
+
+          const setDelta = (el, value) => {
+            if (!el) return;
+            el.textContent = signed(value);
+            el.classList.toggle("up", Number(value) >= 0);
+            el.classList.toggle("down", Number(value) < 0);
+          };
+
+          const percentileRank = (value, values) => {
+            if (!values.length) return 50;
+            return Math.round((values.filter((item) => item <= value).length / values.length) * 100);
+          };
+
+          const positioningStats = (rows) => {
+            const windowRows = rows.slice(-156);
+            const latest = windowRows[windowRows.length - 1];
+            const values = windowRows.map((row) => Number(row.specNet || 0));
+            const low = Math.min(...values);
+            const high = Math.max(...values);
+            const index = high === low ? 50 : ((Number(latest.specNet || 0) - low) / (high - low)) * 100;
+            return {
+              index: Math.max(0, Math.min(100, index)),
+              percentile: percentileRank(Number(latest.specNet || 0), values),
+            };
+          };
+
+          const drawHistory = (rows) => {
+            const values = rows.slice(-52).map((row) => Number(row.specNet || 0));
+            if (!values.length || !fields.line || !fields.area) return;
+            const min = Math.min(...values, 0);
+            const max = Math.max(...values, 0);
+            const range = max - min || 1;
+            const xStep = values.length > 1 ? 600 / (values.length - 1) : 600;
+            const yFor = (value) => 188 - ((value - min) / range) * 156;
+            const zeroY = yFor(0);
+            const points = values.map((value, index) => `${index === 0 ? "M" : "L"}${(index * xStep).toFixed(1)} ${yFor(value).toFixed(1)}`).join(" ");
+            fields.line.setAttribute("d", points);
+            fields.area.setAttribute("d", `${points} L600 ${zeroY.toFixed(1)} L0 ${zeroY.toFixed(1)} Z`);
+          };
+
+          const setNeedle = (index) => {
+            if (!fields.needle) return;
+            const angle = Math.PI + (Math.max(0, Math.min(100, index)) / 100) * Math.PI;
+            fields.needle.setAttribute("x2", String(150 + Math.cos(angle) * 76));
+            fields.needle.setAttribute("y2", String(130 + Math.sin(angle) * 76));
+          };
+
+          const render = () => {
+            const rows = rowsBySymbol[active] || [];
+            if (rows.length < 2) return;
+            const latest = rows[rows.length - 1];
+            const previous = rows[rows.length - 2];
+            const net = Number(latest.specNet || 0);
+            const previousNet = Number(previous.specNet || 0);
+            const stats = positioningStats(rows);
+            const label = tone(stats.index);
+
+            fields.date.textContent = `${pairLabels[active] || active} · ${latest.date || "latest CFTC week"}`;
+            fields.long.textContent = fmt(latest.specLong);
+            fields.short.textContent = fmt(latest.specShort);
+            fields.net.textContent = signed(net);
+            fields.net.style.color = net >= 0 ? "var(--bull)" : "var(--bear)";
+            setDelta(fields.longChange, Number(latest.specLong || 0) - Number(previous.specLong || 0));
+            setDelta(fields.shortChange, Number(latest.specShort || 0) - Number(previous.specShort || 0));
+            setDelta(fields.netChange, net - previousNet);
+            fields.index.textContent = stats.index.toFixed(1);
+            fields.indexMeta.textContent = `${label} · ${stats.percentile}th pctile 156w`;
+            fields.historyLabel.textContent = `${rows.slice(-156).length}w · weekly`;
+            fields.gaugeValue.textContent = stats.index.toFixed(1);
+            fields.badge.textContent = `${label} · ${stats.percentile}th %ile`;
+            fields.badge.className = `badge ${badgeClass(label)}`;
+            drawHistory(rows);
+            setNeedle(stats.index);
+          };
+
+          section.querySelectorAll("[data-cot-preview-symbol]").forEach((button) => {
+            button.addEventListener("click", () => {
+              active = button.dataset.cotPreviewSymbol || "EUR";
+              section.querySelectorAll("[data-cot-preview-symbol]").forEach((item) => item.classList.toggle("active", item === button));
+              render();
+            });
+          });
+
+          fetch("/api/cot/rows", { cache: "no-store" })
+            .then((response) => {
+              if (!response.ok) throw new Error(`COT endpoint returned ${response.status}`);
+              return response.json();
+            })
+            .then((payload) => {
+              rowsBySymbol = Object.fromEntries(Object.entries(payload).map(([symbol, rows]) => [
+                symbol,
+                Array.isArray(rows) ? rows.sort((a, b) => String(a.date).localeCompare(String(b.date))) : [],
+              ]));
+              render();
+            })
+            .catch(() => {
+              fields.date.textContent = "CFTC data unavailable";
+              fields.indexMeta.textContent = "Open /cot to retry the full COT workspace";
+              fields.badge.textContent = "Unavailable";
+            });
+        })();
+      </script>
 
       <div class="section-title" id="fx">
         <h2>FX Strength Ranking · G10</h2>
@@ -309,8 +442,10 @@
         </div>
         <div class="panel">
           <div class="panel-header"><span class="title">Calendar Preview</span><span class="meta">next 7 days</span></div>
-          <div class="row" style="gap:6px;margin-bottom:10px;flex-wrap:wrap;">
-            <button class="pill active" type="button">All</button><button class="pill" type="button">USD</button><button class="pill" type="button">EUR</button><button class="pill" type="button">High</button><button class="pill" type="button">Med</button>
+          <div class="row" style="gap:6px;margin-bottom:10px;flex-wrap:wrap;" data-calendar-filters>
+            <button class="pill active" type="button" data-calendar-filter-type="all" data-calendar-filter-value="all">All</button>
+            <button class="pill" type="button" data-calendar-filter-type="importance" data-calendar-filter-value="1">High</button>
+            <button class="pill" type="button" data-calendar-filter-type="importance" data-calendar-filter-value="2">Med</button>
           </div>
           <div class="col" style="gap:2px;" data-calendar-preview>
             <div class="row" style="padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;gap:10px;"><span class="muted" style="width:46px;">TBD</span>{{ flag("USD") }}<span style="flex:1;color:var(--text-body)">Loading upcoming events...</span><span class="imp high"></span></div>
@@ -320,30 +455,34 @@
       </div>
 
       <div class="section-title">
-        <h2>Fundamental Meter</h2>
-        <span class="meta">composite stance per currency</span>
-        <div class="spacer"></div>
-        <div class="row" style="gap:12px;"><div class="pills"><button class="pill active" type="button">All</button><button class="pill" type="button">Bull</button><button class="pill" type="button">Neutral</button><button class="pill" type="button">Bear</button></div><select class="select"><option>Sort: Score</option></select></div>
-      </div>
-      <div class="card-grid cg5">
-        {% for row in currency_meter %}
-          {% set stance = "bull" if row.raw_score is not none and row.raw_score >= 0.25 else ("bear" if row.raw_score is not none and row.raw_score <= -0.25 else "neutral") %}
-          <a class="panel" style="padding:14px;" href="/country/{{ row.country_code|lower }}">
-            <div class="between" style="margin-bottom:8px;"><div class="row">{{ flag(row.currency) }}<span class="mono" style="font-size:14px;font-weight:600;color:var(--text-heading);letter-spacing:0.04em;">{{ row.currency }}</span></div><span class="badge {{ stance }}">{{ stance }}</span></div>
-            <div class="bar-track" style="margin-bottom:6px;"><div class="bar-fill {{ stance }}" style="width:{{ row.score_percent }}%"></div></div>
-            <div class="between"><span class="mono" style="font-size:18px;font-weight:600;color:var(--text-heading)">{{ row.score }}</span><span class="label-xs" style="color:var(--{{ stance }})">{{ stance }}</span></div>
-          </a>
-        {% endfor %}
-      </div>
-
-      <div class="section-title">
         <h2>Yields · 10Y Yield Differentials</h2>
         <span class="meta">vs USD · sample 10Y</span>
         <div class="spacer"></div>
-        <div class="row" style="gap:10px;"><div class="tabs" style="margin:0;border:0;"><button class="tab active" type="button">Yield History</button><button class="tab" type="button">Differentials</button><button class="tab" type="button">Spread Ranking</button></div><a class="btn" href="/rates">Open Yields</a></div>
+        <div class="row" style="gap:10px;"><div class="tabs" style="margin:0;border:0;" data-yield-tabs><button class="tab active" type="button" data-yield-tab="history">Yield History</button><button class="tab" type="button" data-yield-tab="differentials">Differentials</button><button class="tab" type="button" data-yield-tab="ranking">Spread Ranking</button></div><a class="btn" href="/rates">Open Yields</a></div>
       </div>
       <div class="panel">
-        <div class="rate-zero-bars">
+        {% if yield_differentials.message %}
+          <div class="muted">{{ yield_differentials.message }}</div>
+        {% endif %}
+        <div data-yield-panel="history">
+          <table class="tbl">
+            <thead><tr><th>Benchmark</th><th class="num">Yield</th><th class="num">5D</th><th class="num">1M</th><th class="num">Date</th></tr></thead>
+            <tbody>
+              {% for row in yield_differentials.rows %}
+                <tr>
+                  <td><div class="row">{{ flag(row.currency) }}<span class="mono" style="font-weight:600;color:var(--text-heading)">{{ row.currency }}</span><span class="muted">{{ row.label }}</span></div></td>
+                  <td class="num">{{ row.yield_display }}</td>
+                  <td class="num {{ row.change_5d_class }}">{{ row.change_5d_display }}</td>
+                  <td class="num {{ row.change_1m_class }}">{{ row.change_1m_display }}</td>
+                  <td class="num"><span class="delta flat">{{ row.date.strftime("%b %d") if row.date else "pending" }}</span></td>
+                </tr>
+              {% else %}
+                <tr><td colspan="5">Yield history data is unavailable.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="rate-zero-bars" data-yield-panel="differentials" hidden>
           {% for row in yield_differentials.rows %}
             {% set spread = row.spread_vs_base_bp if row.spread_vs_base_bp is defined and row.spread_vs_base_bp is not none else 0 %}
             {% set width = [50, (spread|abs / 8)] | min %}
@@ -356,28 +495,50 @@
             <div class="muted">Yield differential data is loading.</div>
           {% endfor %}
         </div>
+        <div class="rate-zero-bars" data-yield-panel="ranking" hidden>
+          {% for pair in yield_differentials.pairs %}
+            {% set spread = pair.spread_bp if pair.spread_bp is defined and pair.spread_bp is not none else 0 %}
+            {% set width = [50, (spread|abs / 8)] | min %}
+            <div class="rate-zero-row">
+              <span class="rate-zero-label"><span class="mono">{{ pair.label }}</span></span>
+              <div class="rate-zero-track"><div class="rate-zero-fill {{ "pos" if spread >= 0 else "neg" }}" style="width:{{ width }}%;"></div></div>
+              <span class="rate-zero-value {{ "pos" if spread >= 0 else "neg" }}">{{ pair.spread_display }}</span>
+            </div>
+          {% else %}
+            <div class="muted">FX pair spread data is unavailable.</div>
+          {% endfor %}
+        </div>
       </div>
 
       <div class="section-title" id="cb">
-        <h2>CB Terminal · Hawk/Dove Spectrum</h2>
-        <span class="meta">8 banks tracked · sentiment composite</span>
+        <h2>CB Terminal - Hawk/Dove Spectrum</h2>
+        <span class="meta">real CB score, feed, surprises and rates links</span>
       </div>
-      <div class="panel">
-        <div class="tabs" style="margin-bottom:18px;">
-          <button class="tab active" type="button">Fed</button><button class="tab" type="button">ECB</button><button class="tab" type="button">BoE</button><button class="tab" type="button">BoJ</button><button class="tab" type="button">RBA</button><button class="tab" type="button">RBNZ</button><button class="tab" type="button">BoC</button><button class="tab" type="button">SNB</button>
+      {% set bank_names = {"USD":"Fed","EUR":"ECB","GBP":"BoE","JPY":"BoJ","AUD":"RBA","NZD":"RBNZ","CAD":"BoC","CHF":"SNB"} %}
+      <div class="panel" data-landing-cb>
+        <div class="tabs" style="margin-bottom:18px;" data-landing-cb-tabs>
+          {% for row in currency_meter %}
+            {% set bank_name = bank_names.get(row.currency, row.currency) %}
+            <button class="tab {% if loop.first %}active{% endif %}" type="button" data-bank="{{ bank_name }}" data-currency="{{ row.currency }}">{{ bank_name }}</button>
+          {% else %}
+            <span class="muted">Central-bank score data has not been built yet.</span>
+          {% endfor %}
         </div>
         <div class="hd-bar">
           <div class="track"></div>
-          <div class="dot" style="left:72%"><div class="lbl">Fed · 72</div></div><div class="dot" style="left:38%"><div class="lbl">ECB · 38</div></div><div class="dot" style="left:58%"><div class="lbl">BoE · 58</div></div><div class="dot" style="left:22%"><div class="lbl">BoJ · 22</div></div><div class="dot" style="left:64%"><div class="lbl">RBA · 64</div></div><div class="dot" style="left:44%"><div class="lbl">RBNZ · 44</div></div><div class="dot" style="left:32%"><div class="lbl">BoC · 32</div></div><div class="dot" style="left:48%"><div class="lbl">SNB · 48</div></div>
+          {% for row in currency_meter %}
+            {% set bank_name = bank_names.get(row.currency, row.currency) %}
+            <div class="dot" style="left:{{ row.score_percent }}%"><div class="lbl">{{ bank_name }} - {{ row.score_percent }}</div></div>
+          {% endfor %}
           <div class="endlbl" style="left:0;">Dovish</div><div class="endlbl" style="right:0;">Hawkish</div>
         </div>
         <div class="grid grid-3" style="margin-top:18px;gap:12px;">
-          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;">Hawk/Dove Sentiment</div><svg viewBox="0 0 280 180" style="width:100%;height:180px;"><line x1="0" y1="45" x2="280" y2="45" stroke="var(--border)"/><line x1="0" y1="90" x2="280" y2="90" stroke="var(--border)"/><line x1="0" y1="135" x2="280" y2="135" stroke="var(--border)"/><circle cx="202" cy="36" r="18" fill="rgba(249,115,22,.3)" stroke="var(--hawk)"/><text x="202" y="39" text-anchor="middle" fill="var(--text-heading)" font-family="var(--mono)" font-size="9" font-weight="600">Fed</text><circle cx="106" cy="63" r="14" fill="rgba(99,102,241,.3)" stroke="var(--dove)"/><text x="106" y="66" text-anchor="middle" fill="var(--text-heading)" font-family="var(--mono)" font-size="9" font-weight="600">ECB</text><circle cx="162" cy="54" r="14" fill="rgba(249,115,22,.3)" stroke="var(--hawk)"/><text x="162" y="57" text-anchor="middle" fill="var(--text-heading)" font-family="var(--mono)" font-size="9" font-weight="600">BoE</text></svg></div>
-          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;">Latest Headlines</div><div class="col" style="gap:6px;font-family:var(--mono);font-size:10px;"><div class="row" style="gap:8px;padding:4px 0;border-bottom:1px dashed var(--border);"><span class="badge hawk" style="font-size:8px;padding:1px 5px;">FED</span><span style="flex:1;color:var(--text-body)">Williams: Disinflation path intact</span><span class="muted">12m</span></div><div class="row" style="gap:8px;padding:4px 0;border-bottom:1px dashed var(--border);"><span class="badge dove" style="font-size:8px;padding:1px 5px;">ECB</span><span style="flex:1;color:var(--text-body)">Cut not pre-committed</span><span class="muted">34m</span></div></div></div>
-          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;">Rate Decisions</div><div class="col" style="gap:0;font-family:var(--mono);font-size:11px;"><div class="row" style="gap:10px;padding:6px 0;"><div style="width:60px;color:var(--text-muted);">Jul 31</div><div style="color:var(--text-body)">Hold 5.50%</div></div><div class="row" style="gap:10px;padding:6px 0;"><div style="width:60px;color:var(--text-muted);">Jun 12</div><div style="color:var(--text-body)">Hold 5.50%</div></div><div class="row" style="gap:10px;padding:6px 0;"><div style="width:60px;color:var(--text-muted);">May 01</div><div style="color:var(--text-body)">Hold 5.50%</div></div></div></div>
-          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;">FX Impact Matrix</div><table style="width:100%;font-family:var(--mono);font-size:11px;"><tr><td style="padding:4px 0;color:var(--text-body)">EURUSD</td><td style="padding:4px 0;text-align:right;color:var(--bear)">-1.62%</td></tr><tr><td style="padding:4px 0;color:var(--text-body)">GBPUSD</td><td style="padding:4px 0;text-align:right;color:var(--bear)">-0.34%</td></tr><tr><td style="padding:4px 0;color:var(--text-body)">USDJPY</td><td style="padding:4px 0;text-align:right;color:var(--bull)">+3.12%</td></tr></table></div>
-          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;">Live Feed · Fed</div><div class="col" style="gap:4px;font-family:var(--mono);font-size:10px;color:var(--text-body);"><div>· Powell speaks Sep 30 14:00</div><div>· Williams Q&A scheduled</div><div>· Beige Book release Oct 1</div><div>· FOMC minutes Oct 8</div></div></div>
-          <div class="panel tight" style="background:var(--panel-2);display:flex;flex-direction:column;gap:10px;"><div class="label-xs">AI Stance Analysis</div><button class="btn primary" style="align-self:flex-start;">Analyze Stance</button><div style="font-size:11px;color:var(--text-body);line-height:1.55;font-family:var(--mono)">Fed posture remains <span style="color:var(--hawk);font-weight:600;">moderately hawkish</span>. Front-end yields supported. USD bias positive vs JPY, mixed vs EUR.</div></div>
+          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;">Hawk/Dove Components</div><div class="col" style="gap:8px;font-family:var(--mono);font-size:11px;" data-cb-components></div></div>
+          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;">Latest CB Feed</div><div class="col" style="gap:6px;font-family:var(--mono);font-size:10px;" data-cb-live-feed>Loading central-bank feed...</div></div>
+          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;">Macro Surprises</div><div class="col" style="gap:0;font-family:var(--mono);font-size:11px;" data-cb-surprises></div></div>
+          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;">Rates / FX Links</div><table style="width:100%;font-family:var(--mono);font-size:11px;" data-cb-fx-links></table></div>
+          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;" data-cb-feed-label>Live Feed</div><div class="col" style="gap:4px;font-family:var(--mono);font-size:10px;color:var(--text-body);" data-cb-feed-summary></div></div>
+          <div class="panel tight" style="background:var(--panel-2);display:flex;flex-direction:column;gap:10px;"><div class="label-xs">AI Stance Analysis</div><button class="btn primary" style="align-self:flex-start;" type="button" data-cb-landing-analyze>Analyze Stance</button><div style="font-size:11px;color:var(--text-body);line-height:1.55;font-family:var(--mono)" data-cb-analysis>Select a bank or run analysis to summarize recent central-bank communications.</div></div>
         </div>
       </div>
 </div>
@@ -393,18 +554,225 @@
   tick();
   setInterval(tick, 1000);
 
+  var cbBanks = [
+    {% for row in currency_meter %}
+      {% set bank_name = bank_names.get(row.currency, row.currency) if bank_names is defined else row.currency %}
+      {
+        bank: {{ bank_name|tojson }},
+        currency: {{ row.currency|tojson }},
+        country: {{ row.country_code|tojson }},
+        score: {{ (row.raw_score|float) if row.raw_score is not none else "null" }},
+        scoreText: {{ row.score|tojson }},
+        percent: {{ row.score_percent if row.score_percent is not none else 50 }},
+        label: {{ row.label|tojson }},
+        latestDate: {{ row.latest_date.strftime("%b %d")|tojson if row.latest_date else '"pending"' }},
+        metrics: [
+          {% for metric in row.metrics %}
+            {% set current = metric.score_values[0] if metric.score_values else none %}
+            {
+              label: {{ metric.label|tojson }},
+              score: {{ current.score|tojson if current else '"N/A"' }},
+              percent: {{ current.bar_percent if current and current.bar_percent is not none else 50 }},
+              raw: {{ (current.raw_score|float) if current and current.raw_score is not none else "null" }}
+            }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        ]
+      }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  var cbSurprises = [
+    {% for s in surprises %}
+      {
+        currency: {{ s.currency_code|tojson }},
+        name: {{ s.display_name|tojson }},
+        actual: {{ (s.actual|string if s.actual is defined and s.actual is not none else "N/A")|tojson }},
+        estimate: {{ (s.estimate|string if s.estimate is defined and s.estimate is not none else "N/A")|tojson }},
+        surprise: {{ (s.surprise|float) if s.surprise is defined and s.surprise is not none else "null" }},
+        date: {{ s.released_at.strftime("%b %d")|tojson if s.released_at is defined and s.released_at else '"recent"' }}
+      }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  var cbYieldPairs = [
+    {% for pair in yield_differentials.pairs %}
+      {
+        label: {{ pair.label|tojson }},
+        left: {{ pair.left_currency|tojson }},
+        right: {{ pair.right_currency|tojson }},
+        display: {{ pair.spread_display|tojson }},
+        value: {{ (pair.spread_bp|float) if pair.spread_bp is defined and pair.spread_bp is not none else 0 }}
+      }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  var cbState = { currency: cbBanks[0] ? cbBanks[0].currency : "" };
+  var cbRoot = document.querySelector("[data-landing-cb]");
+  var htmlEscape = function(value) {
+    return String(value === null || value === undefined ? "" : value).replace(/[&<>"']/g, function(ch) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+    });
+  };
+  var toneClass = function(score) {
+    return Number(score || 0) >= 0.25 ? "bull" : Number(score || 0) <= -0.25 ? "bear" : "neutral";
+  };
+  var signed = function(value) {
+    var n = Number(value || 0);
+    return (n >= 0 ? "+" : "") + n.toFixed(Math.abs(n) >= 10 ? 0 : 1);
+  };
+  var renderCbPreview = function() {
+    if (!cbRoot || !cbBanks.length) return;
+    var bank = cbBanks.find(function(item) { return item.currency === cbState.currency; }) || cbBanks[0];
+    cbState.currency = bank.currency;
+    cbRoot.querySelectorAll("[data-currency]").forEach(function(button) {
+      button.classList.toggle("active", button.dataset.currency === bank.currency);
+    });
+    var components = cbRoot.querySelector("[data-cb-components]");
+    if (components) {
+      components.innerHTML = bank.metrics.slice(0, 4).map(function(metric) {
+        var cls = toneClass(metric.raw);
+        return '<div><div class="between"><span>' + htmlEscape(metric.label) + '</span><strong class="' + cls + '">' + htmlEscape(metric.score) + '</strong></div><div class="bar-track"><div class="bar-fill ' + cls + '" style="width:' + Number(metric.percent || 50) + '%"></div></div></div>';
+      }).join("") + '<div class="muted">Latest score ' + htmlEscape(bank.latestDate) + ' - ' + htmlEscape(bank.label) + '</div>';
+    }
+    var surpriseBox = cbRoot.querySelector("[data-cb-surprises]");
+    if (surpriseBox) {
+      var matched = cbSurprises.filter(function(item) { return item.currency === bank.currency; }).slice(0, 4);
+      surpriseBox.innerHTML = matched.length ? matched.map(function(item) {
+        var cls = Number(item.surprise || 0) >= 0 ? "bull" : "bear";
+        return '<div class="row" style="gap:10px;padding:6px 0;border-bottom:1px dashed var(--border);"><span class="muted" style="width:46px;">' + htmlEscape(item.date) + '</span><span style="flex:1;color:var(--text-body)">' + htmlEscape(item.name) + '</span><span class="' + cls + '">' + signed(item.surprise) + '</span></div>';
+      }).join("") : '<div class="muted">No recent surprises matched ' + htmlEscape(bank.currency) + '.</div>';
+    }
+    var fxLinks = cbRoot.querySelector("[data-cb-fx-links]");
+    if (fxLinks) {
+      var rows = cbYieldPairs.filter(function(pair) { return pair.left === bank.currency || pair.right === bank.currency; }).slice(0, 4);
+      fxLinks.innerHTML = rows.length ? rows.map(function(pair) {
+        var cls = Number(pair.value || 0) >= 0 ? "bull" : "bear";
+        return '<tr><td style="padding:4px 0;color:var(--text-body)">' + htmlEscape(pair.label) + '</td><td class="' + cls + '" style="padding:4px 0;text-align:right;">' + htmlEscape(pair.display) + '</td></tr>';
+      }).join("") : '<tr><td class="muted">No yield pairs matched this bank.</td></tr>';
+    }
+    var analysis = cbRoot.querySelector("[data-cb-analysis]");
+    if (analysis) {
+      analysis.innerHTML = '<strong>' + htmlEscape(bank.bank) + '</strong> is ' + htmlEscape(bank.label.toLowerCase()) + ' with a score of <strong>' + htmlEscape(bank.scoreText) + '</strong>. Feed analysis can refine this with recent communications.';
+    }
+    fetchCbFeed(bank);
+  };
+  var fetchCbFeed = function(bank) {
+    var feedBox = cbRoot && cbRoot.querySelector("[data-cb-live-feed]");
+    var feedSummary = cbRoot && cbRoot.querySelector("[data-cb-feed-summary]");
+    var feedLabel = cbRoot && cbRoot.querySelector("[data-cb-feed-label]");
+    if (!feedBox || !feedSummary) return;
+    if (feedLabel) feedLabel.textContent = "Live Feed - " + bank.bank;
+    feedBox.innerHTML = '<div class="muted">Loading ' + htmlEscape(bank.bank) + ' feed...</div>';
+    feedSummary.innerHTML = "";
+    fetch("/api/cb/feeds?bank=" + encodeURIComponent(bank.currency))
+      .then(function(res) { return res.ok ? res.json() : null; })
+      .then(function(payload) {
+        var feed = payload && payload.feeds && payload.feeds[0];
+        var articles = feed && feed.articles ? feed.articles.slice(0, 4) : [];
+        var markup = articles.length ? articles.map(function(article) {
+          return '<a href="' + htmlEscape(article.link) + '" target="_blank" rel="noopener" style="color:var(--text-body);border-bottom:1px dashed var(--border);padding:4px 0;">' + htmlEscape(article.title) + '</a>';
+        }).join("") : '<div class="muted">No recent feed articles available.</div>';
+        feedBox.innerHTML = markup;
+        feedSummary.innerHTML = articles.length ? articles.slice(0, 3).map(function(article) {
+          return '<div>- ' + htmlEscape(String(article.title || "").slice(0, 82)) + '</div>';
+        }).join("") : '<div class="muted">Feed is empty for this bank.</div>';
+      })
+      .catch(function() {
+        feedBox.innerHTML = '<div class="muted">Central-bank feed unavailable.</div>';
+        feedSummary.innerHTML = '<div class="muted">Feed unavailable.</div>';
+      });
+  };
+  if (cbRoot) {
+    cbRoot.addEventListener("click", function(event) {
+      var tab = event.target.closest("[data-currency]");
+      if (tab) {
+        cbState.currency = tab.dataset.currency || cbState.currency;
+        renderCbPreview();
+        return;
+      }
+      if (event.target.closest("[data-cb-landing-analyze]")) {
+        var bank = cbBanks.find(function(item) { return item.currency === cbState.currency; }) || cbBanks[0];
+        var out = cbRoot.querySelector("[data-cb-analysis]");
+        if (out) out.textContent = "Analyzing recent " + bank.bank + " communications...";
+        fetch("/api/cb/analysis?bank=" + encodeURIComponent(bank.currency), { method: "POST" })
+          .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
+          .then(function(result) {
+            if (!result.ok) throw new Error(result.data && result.data.detail ? result.data.detail : "Analysis failed");
+            var data = result.data || {};
+            var cls = data.stance === "hawkish" ? "bull" : data.stance === "dovish" ? "bear" : "neutral";
+            out.innerHTML = '<span class="' + cls + '">' + htmlEscape(data.stance || "neutral") + '</span> - ' + Number(data.confidence || 0) + '% confidence. ' + htmlEscape(data.summary || "") + (data.fx_implication ? '<br>' + htmlEscape(data.fx_implication) : "");
+          })
+          .catch(function(error) {
+            if (out) out.textContent = error.message || "Analysis unavailable.";
+          });
+      }
+    });
+    renderCbPreview();
+  }
+
+  var yieldTabs = document.querySelector("[data-yield-tabs]");
+  if (yieldTabs) {
+    var yieldPanels = Array.from(document.querySelectorAll("[data-yield-panel]"));
+    yieldTabs.addEventListener("click", function(event) {
+      var button = event.target.closest("[data-yield-tab]");
+      if (!button) return;
+      var target = button.dataset.yieldTab || "history";
+      yieldTabs.querySelectorAll("[data-yield-tab]").forEach(function(tab) {
+        tab.classList.toggle("active", tab === button);
+      });
+      yieldPanels.forEach(function(panel) {
+        panel.hidden = panel.dataset.yieldPanel !== target;
+      });
+    });
+  }
+
   var list = document.querySelector("[data-calendar-preview]");
+  var filters = document.querySelector("[data-calendar-filters]");
   if (!list) return;
-  fetch("/api/calendar?days_back=0&days_forward=7&limit=7").then(function(res){ return res.ok ? res.json() : null; }).then(function(payload){
+  fetch("/api/calendar?days_back=0&days_forward=7&limit=40").then(function(res){ return res.ok ? res.json() : null; }).then(function(payload){
     var events = payload && payload.data && payload.data.events ? payload.data.events : [];
     if (!events.length) return;
-    list.innerHTML = events.map(function(e){
+    var activeFilter = { type: "all", value: "all" };
+    var esc = function(value) {
+      return String(value || "").replace(/[&<>"']/g, function(ch) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+      });
+    };
+    var eventCode = function(e) { return e.currency_code || e.country_code || "USD"; };
+    var renderEvents = function() {
+      var shown = events.filter(function(e) {
+        if (activeFilter.type === "currency") return eventCode(e) === activeFilter.value;
+        if (activeFilter.type === "importance") return String(e.importance || "") === activeFilter.value;
+        return true;
+      });
+      list.innerHTML = shown.length ? shown.slice(0, 7).map(function(e){
       var time = e.released_at ? new Date(e.released_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "TBD";
-      var code = e.currency_code || e.country_code || "USD";
+      var code = eventCode(e);
       var imp = Number(e.importance) === 1 ? "high" : Number(e.importance) === 2 ? "med" : "low";
-      return '<a class="row" href="/calendar" style="padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;gap:10px;"><span class="muted" style="width:46px;">' + time + '</span><span class="flag flag-' + code + '"></span><span style="flex:1;color:var(--text-body)">' + (e.display_name || "Event") + '</span><span class="imp ' + imp + '"></span></a>';
-    }).join("");
+      return '<a class="row" href="/calendar" style="padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;gap:10px;"><span class="muted" style="width:46px;">' + esc(time) + '</span><span class="flag flag-' + esc(code) + '"></span><span style="flex:1;color:var(--text-body)">' + esc(e.display_name || "Event") + '</span><span class="imp ' + imp + '"></span></a>';
+      }).join("") : '<div class="row" style="padding:8px 0;font-family:var(--mono);font-size:11px;color:var(--text-muted);">No events match this filter.</div>';
+    };
+    if (filters) {
+      var currencies = [];
+      events.forEach(function(e) {
+        var code = eventCode(e);
+        if (currencies.indexOf(code) === -1) currencies.push(code);
+      });
+      var staticButtons = filters.innerHTML;
+      filters.innerHTML = staticButtons + currencies.slice(0, 5).map(function(code) {
+        return '<button class="pill" type="button" data-calendar-filter-type="currency" data-calendar-filter-value="' + esc(code) + '">' + esc(code) + '</button>';
+      }).join("");
+      filters.addEventListener("click", function(event) {
+        var button = event.target.closest("[data-calendar-filter-type]");
+        if (!button) return;
+        activeFilter = {
+          type: button.dataset.calendarFilterType || "all",
+          value: button.dataset.calendarFilterValue || "all",
+        };
+        filters.querySelectorAll(".pill").forEach(function(item) { item.classList.toggle("active", item === button); });
+        renderEvents();
+      });
+    }
+    renderEvents();
   }).catch(function(){});
 })();
 </script>
 {% endblock %}
+

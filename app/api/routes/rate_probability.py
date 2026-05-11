@@ -13,6 +13,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_session
 from app.services.meeting_calendar import SUPPORTED_BANKS, get_upcoming_meetings, normalize_bank
 from app.services.rate_probability import (
+    DATA_STATE_NO_CURVE,
+    DATA_STATE_LIVE,
+    LOW_LIQUIDITY_NOTE,
     _bank_config,
     compute_meeting_probabilities,
     get_next_meeting_summary,
@@ -84,6 +87,7 @@ async def rate_summary(
     )
     as_of_date: date | None = as_of_result.scalar_one_or_none()
     market_data = await _market_data_status(bank_key, session)
+    probabilities = await compute_meeting_probabilities(bank_key, db_session=session)
 
     return {
         "bank": bank_key,
@@ -105,6 +109,9 @@ async def rate_summary(
             "description": outlook["description"],
         },
         "step_bps": int(config["step_bps"]),
+        "low_liquidity_curve": bool(config["low_liquidity_curve"]),
+        "curve_confidence_note": LOW_LIQUIDITY_NOTE if config["low_liquidity_curve"] else "",
+        "rate_path": _rate_path_rows(probabilities, config["current_rate"]),
     }
 
 
@@ -115,7 +122,7 @@ async def rate_summary(
 @router.get("/meetings/{bank}")
 async def rate_meetings(
     bank: str,
-    step: int = Query(25, ge=1, le=200, description="Move size in bps"),
+    step: int | None = Query(None, ge=1, le=200, description="Move size in bps"),
     n: int = Query(12, ge=1, le=50, description="Number of meetings to return"),
     session: AsyncSession = SessionDep,
 ) -> dict:
@@ -128,7 +135,7 @@ async def rate_meetings(
     meetings_meta = await get_upcoming_meetings(bank_key, n, session)
     probabilities = await compute_meeting_probabilities(
         bank_key,
-        step_bps=float(step),
+        step_bps=float(step or _bank_config(bank_key)["step_bps"]),
         n_meetings=n,
         db_session=session,
     )
@@ -136,26 +143,10 @@ async def rate_meetings(
     config = _bank_config(bank_key)
 
     rows = []
-    has_market_data = bool(probabilities)
+    has_market_data = any(prob.data_state == DATA_STATE_LIVE for prob in probabilities)
     if probabilities:
         for prob, meta in zip(probabilities, meetings_meta, strict=False):
-            rows.append(
-                {
-                    "meeting_dt": _dt_iso(prob.meeting_dt),
-                    "implied_rate": prob.implied_rate,
-                    "cut_prob": prob.cut_prob,
-                    "hold_prob": prob.hold_prob,
-                    "hike_prob": prob.hike_prob,
-                    "num_moves": prob.num_moves,
-                    "cumulative_num_moves": round(
-                        prob.cumulative_delta_bps / float(step), 4
-                    ) if step else 0.0,
-                    "delta_bps": prob.delta_bps,
-                    "cumulative_delta_bps": prob.cumulative_delta_bps,
-                    "is_official": bool(meta.get("is_official", True)),
-                    "market_data_available": True,
-                }
-            )
+            rows.append(_meeting_probability_row(prob, bool(meta.get("is_official", True)), float(step or config["step_bps"])))
     else:
         rows = _hold_meeting_rows(bank_key, meetings_meta)
 
@@ -165,13 +156,14 @@ async def rate_meetings(
         "market_data": await _market_data_status(bank_key, session),
         "market_data_available": has_market_data,
         "meetings": rows,
+        "rate_path": _rate_path_rows(probabilities, config["current_rate"]),
     }
 
 
 @router.get("/meetings")
 async def rate_meetings_legacy(
     bank: str = Query(..., examples=["FED"]),
-    step: int = Query(25, ge=1, le=200),
+    step: int | None = Query(None, ge=1, le=200),
     n: int = Query(12, ge=1, le=50),
     session: AsyncSession = SessionDep,
 ) -> dict:
@@ -187,18 +179,65 @@ def _hold_meeting_rows(bank_key: str, meetings_meta: list[dict[str, Any]]) -> li
             {
                 "meeting_dt": _dt_iso(meta.get("meeting_dt")),
                 "implied_rate": config["current_rate"],
-                "cut_prob": 0.0,
-                "hold_prob": 1.0,
-                "hike_prob": 0.0,
-                "num_moves": 0.0,
-                "cumulative_num_moves": 0.0,
-                "delta_bps": 0.0,
-                "cumulative_delta_bps": 0.0,
+                "cut_prob": None,
+                "hold_prob": None,
+                "hike_prob": None,
+                "outcome_distribution": None,
+                "num_moves": None,
+                "cumulative_num_moves": None,
+                "delta_bps": None,
+                "cumulative_delta_bps": None,
                 "is_official": bool(meta.get("is_official", True)),
                 "market_data_available": False,
+                "proximity_lock": False,
+                "proximity_warning": "",
+                "low_liquidity_curve": bool(config["low_liquidity_curve"]),
+                "curve_confidence_note": LOW_LIQUIDITY_NOTE if config["low_liquidity_curve"] else "",
+                "data_state": DATA_STATE_NO_CURVE,
+                "data_state_message": f"No OIS/futures curve available for {bank_key}.",
             }
         )
     return rows
+
+
+def _meeting_probability_row(prob: Any, is_official: bool, step_bps: float) -> dict[str, Any]:
+    return {
+        "meeting_dt": _dt_iso(prob.meeting_dt),
+        "implied_rate": prob.implied_rate,
+        "cut_prob": prob.cut_prob,
+        "hold_prob": prob.hold_prob,
+        "hike_prob": prob.hike_prob,
+        "outcome_distribution": prob.outcome_distribution,
+        "num_moves": prob.num_moves,
+        "cumulative_num_moves": (
+            round(prob.cumulative_delta_bps / float(step_bps), 4)
+            if prob.data_state == DATA_STATE_LIVE and step_bps
+            else None
+        ),
+        "delta_bps": prob.delta_bps,
+        "cumulative_delta_bps": prob.cumulative_delta_bps if prob.data_state == DATA_STATE_LIVE else None,
+        "is_official": is_official,
+        "market_data_available": prob.data_state == DATA_STATE_LIVE,
+        "proximity_lock": prob.proximity_lock,
+        "proximity_warning": prob.proximity_warning,
+        "low_liquidity_curve": prob.low_liquidity_curve,
+        "curve_confidence_note": prob.curve_confidence_note,
+        "data_state": prob.data_state,
+        "data_state_message": prob.data_state_message,
+    }
+
+
+def _rate_path_rows(probabilities: list[Any], current_policy_rate: float) -> list[dict[str, Any]]:
+    return [
+        {
+            "meeting_date": prob.meeting_dt.date().isoformat(),
+            "implied_rate": prob.implied_rate,
+            "delta_bps": prob.delta_bps,
+            "current_policy_rate": current_policy_rate,
+        }
+        for prob in probabilities
+        if prob.data_state == DATA_STATE_LIVE
+    ]
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -225,16 +264,14 @@ async def rate_path(
 
     meetings_meta = await get_upcoming_meetings(bank_key, 12, session)
     probabilities = await compute_meeting_probabilities(bank_key, db_session=session)
+    live_probabilities = [prob for prob in probabilities if prob.data_state == DATA_STATE_LIVE]
     current_points = (
         [
             {"meeting_dt": _dt_iso(prob.meeting_dt), "implied_rate": prob.implied_rate}
-            for prob in probabilities
+            for prob in live_probabilities
         ]
-        if probabilities
-        else [
-            {"meeting_dt": _dt_iso(meta.get("meeting_dt")), "implied_rate": config["current_rate"]}
-            for meta in meetings_meta
-        ]
+        if live_probabilities
+        else []
     )
 
     series: list[dict[str, Any]] = [
@@ -300,6 +337,8 @@ async def rate_path(
         "bank": bank_key,
         "current_rate": config["current_rate"],
         "series": series,
+        "rate_path": _rate_path_rows(probabilities, config["current_rate"]),
+        "data_state": DATA_STATE_LIVE if live_probabilities else DATA_STATE_NO_CURVE,
     }
 
 
@@ -352,11 +391,13 @@ async def _next_summary_or_hold(
         return {
             "meeting_dt": meeting_dt,
             "seconds_until": seconds_until,
-            "dominant_outcome": "HOLD",
-            "dominant_prob_pct": 100.0,
-            "implied_delta_bps": 0.0,
+            "dominant_outcome": "N/A",
+            "dominant_prob_pct": None,
+            "implied_delta_bps": None,
             "current_rate": config["current_rate"],
             "last_ois_rate": config["current_rate"],
+            "data_state": DATA_STATE_NO_CURVE,
+            "data_state_message": f"No OIS/futures curve available for {bank_key}.",
         }
 
 

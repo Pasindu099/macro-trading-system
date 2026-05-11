@@ -30,6 +30,8 @@ from app.api.routes.public import (
 from app.db.models import Country, Indicator, IndicatorRelease, IngestionRun
 from app.services.meeting_calendar import SUPPORTED_BANKS, normalize_bank, get_upcoming_meetings
 from app.services.rate_probability import (
+    DATA_STATE_LIVE,
+    DATA_STATE_NO_CURVE,
     _bank_config,
     compute_meeting_probabilities,
     get_next_meeting_summary,
@@ -2506,8 +2508,15 @@ async def rate_probability_page(
     meetings: list[dict] = []
     if probabilities_list:
         for prob, meta in zip(probabilities_list, meetings_meta, strict=False):
-            outcomes = {"HIKE": prob.hike_prob, "HOLD": prob.hold_prob, "CUT": prob.cut_prob}
-            dom = max(outcomes, key=lambda k: outcomes[k])
+            if prob.data_state == DATA_STATE_LIVE:
+                outcomes = {"HIKE": prob.hike_prob or 0.0, "HOLD": prob.hold_prob or 0.0, "CUT": prob.cut_prob or 0.0}
+                dom = max(outcomes, key=lambda k: outcomes[k])
+                dominant_prob = outcomes[dom]
+                market_data_available = True
+            else:
+                dom = "N/A"
+                dominant_prob = None
+                market_data_available = False
             meetings.append(
                 {
                     "meeting_date": prob.meeting_dt.strftime("%b %d, %Y"),
@@ -2515,16 +2524,25 @@ async def rate_probability_page(
                     "cut_prob": prob.cut_prob,
                     "hold_prob": prob.hold_prob,
                     "hike_prob": prob.hike_prob,
+                    "outcome_distribution": prob.outcome_distribution,
                     "dominant_outcome": dom,
-                    "dominant_prob": outcomes[dom],
+                    "dominant_prob": dominant_prob,
                     "num_moves": prob.num_moves,
                     "cumulative_num_moves": (
-                        round(prob.cumulative_delta_bps / float(step_bps), 4) if step_bps else 0.0
+                        round(prob.cumulative_delta_bps / float(step_bps), 4)
+                        if market_data_available and step_bps
+                        else None
                     ),
                     "delta_bps": prob.delta_bps,
-                    "cumulative_delta_bps": prob.cumulative_delta_bps,
+                    "cumulative_delta_bps": prob.cumulative_delta_bps if market_data_available else None,
                     "is_official": bool(meta.get("is_official", True)),
-                    "market_data_available": True,
+                    "market_data_available": market_data_available,
+                    "proximity_lock": prob.proximity_lock,
+                    "proximity_warning": prob.proximity_warning,
+                    "low_liquidity_curve": prob.low_liquidity_curve,
+                    "curve_confidence_note": prob.curve_confidence_note,
+                    "data_state": prob.data_state,
+                    "data_state_message": prob.data_state_message,
                 }
             )
     else:
@@ -2534,17 +2552,27 @@ async def rate_probability_page(
                 {
                     "meeting_date": meeting_dt.strftime("%b %d, %Y"),
                     "implied_rate": current_rate,
-                    "cut_prob": 0.0,
-                    "hold_prob": 0.0,
-                    "hike_prob": 0.0,
+                    "cut_prob": None,
+                    "hold_prob": None,
+                    "hike_prob": None,
+                    "outcome_distribution": None,
                     "dominant_outcome": "N/A",
-                    "dominant_prob": 0.0,
-                    "num_moves": 0.0,
-                    "cumulative_num_moves": 0.0,
-                    "delta_bps": 0.0,
-                    "cumulative_delta_bps": 0.0,
+                    "dominant_prob": None,
+                    "num_moves": None,
+                    "cumulative_num_moves": None,
+                    "delta_bps": None,
+                    "cumulative_delta_bps": None,
                     "is_official": bool(meta.get("is_official", True)),
                     "market_data_available": False,
+                    "proximity_lock": False,
+                    "proximity_warning": "",
+                    "low_liquidity_curve": bool(config["low_liquidity_curve"]),
+                    "curve_confidence_note": (
+                        "Indicative only — OIS market for this currency has limited liquidity. "
+                        "Probabilities may be less reliable than G3 currencies."
+                    ) if config["low_liquidity_curve"] else "",
+                    "data_state": DATA_STATE_NO_CURVE,
+                    "data_state_message": f"No OIS/futures curve available for {bank}.",
                 }
             )
 

@@ -72,13 +72,18 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
             "https://www.bankofengland.co.uk/rss/publications",
         ],
     },
-    "JPY": {"name": "BoJ", "urls": ["https://www.boj.or.jp/en/rss/news.xml"]},
+    "JPY": {
+        "name": "BoJ",
+        "urls": ["https://www.boj.or.jp/rss/whatsnew.xml"],
+        "listing_url": "https://www.boj.or.jp/en/whatsnew/",
+    },
     "AUD": {
         "name": "RBA",
         "urls": [
             "https://www.rba.gov.au/rss/rss-cb-media-releases.xml",
             "https://www.rba.gov.au/rss/rss-cb-speeches.xml",
         ],
+        "listing_url": "https://www.rba.gov.au/media-releases/",
     },
     "CAD": {"name": "BoC", "urls": ["https://www.bankofcanada.ca/feed/"]},
     "CHF": {

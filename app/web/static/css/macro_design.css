@@ -308,7 +308,19 @@ table.tbl td {
 table.tbl tbody tr:nth-child(even) { background: rgba(255,255,255,0.012); }
 table.tbl tbody tr:hover { background: rgba(59,130,246,0.04); }
 table.tbl td.num, table.tbl th.num { text-align: right; font-variant-numeric: tabular-nums; }
-.flag { width: 18px; height: 13px; border-radius: 2px; display: inline-block; vertical-align: middle; }
+.flag {
+  width: 20px;
+  height: 16px;
+  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  background: transparent;
+  font-size: 16px;
+  line-height: 1;
+}
+.flag::before { content: ""; }
 
 /* ============== DATA STYLES =============== */
 .delta { display: inline-flex; align-items: center; gap: 3px; font-family: var(--mono); }
@@ -651,18 +663,32 @@ table.tbl td.num, table.tbl th.num { text-align: right; font-variant-numeric: ta
 .imp.low { background: var(--text-muted); }
 
 /* App integration helpers */
-.flag.flag-USD { background: linear-gradient(180deg,#b22234 0%,#b22234 50%,#fff 50%,#fff 100%); }
-.flag.flag-EUR { background: radial-gradient(circle, #ffcc00 12%, #003399 12%); }
-.flag.flag-GBP { background: linear-gradient(135deg,#012169 40%,#fff 40%,#fff 60%,#c8102e 60%); }
-.flag.flag-JPY { background: radial-gradient(circle, #bc002d 25%, #fff 26%); }
-.flag.flag-AUD { background: linear-gradient(180deg,#012169 50%,#012169 50%); }
-.flag.flag-NZD { background: linear-gradient(180deg,#012169 50%,#012169 50%); }
-.flag.flag-CAD { background: linear-gradient(90deg,#d52b1e 25%,#fff 25%,#fff 75%,#d52b1e 75%); }
-.flag.flag-CHF { background: radial-gradient(circle, #fff 22%, #d52b1e 22%); }
-.flag.flag-SEK { background: linear-gradient(90deg,#006aa7 30%,#fecc00 30%,#fecc00 38%,#006aa7 38%); }
-.flag.flag-NOK { background: linear-gradient(90deg,#ef2b2d 30%,#fff 30%,#fff 32%,#002868 32%,#002868 40%,#fff 40%,#fff 42%,#ef2b2d 42%); }
-.flag.flag-CNY { background: linear-gradient(180deg,#de2910 100%,#de2910); }
-.flag.flag-MXN { background: linear-gradient(90deg,#006847 33%,#fff 33%,#fff 66%,#ce1126 66%); }
+.flag.flag-USD::before,
+.flag.flag-US::before { content: "🇺🇸"; }
+.flag.flag-EUR::before,
+.flag.flag-EU::before { content: "🇪🇺"; }
+.flag.flag-GBP::before,
+.flag.flag-UK::before { content: "🇬🇧"; }
+.flag.flag-JPY::before,
+.flag.flag-JP::before { content: "🇯🇵"; }
+.flag.flag-AUD::before,
+.flag.flag-AU::before { content: "🇦🇺"; }
+.flag.flag-NZD::before,
+.flag.flag-NZ::before { content: "🇳🇿"; }
+.flag.flag-CAD::before,
+.flag.flag-CA::before { content: "🇨🇦"; }
+.flag.flag-CHF::before,
+.flag.flag-CH::before { content: "🇨🇭"; }
+.flag.flag-DE::before { content: "🇩🇪"; }
+.flag.flag-FR::before { content: "🇫🇷"; }
+.flag.flag-SEK::before,
+.flag.flag-SE::before { content: "🇸🇪"; }
+.flag.flag-NOK::before,
+.flag.flag-NO::before { content: "🇳🇴"; }
+.flag.flag-CNY::before,
+.flag.flag-CN::before { content: "🇨🇳"; }
+.flag.flag-MXN::before,
+.flag.flag-MX::before { content: "🇲🇽"; }
 
 .metric-grid-6 { grid-template-columns: repeat(6, 1fr); }
 .chart-svg { width: 100%; height: 220px; }

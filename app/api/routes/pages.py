@@ -118,19 +118,21 @@ YIELD_MATURITY_SUFFIXES = {
 }
 BANK_RESEARCH_ADMIN_STATE_PATH = BANK_RESEARCH_DIR / "admin_state.json"
 COUNTRY_FLAGS = {
-    "US": "🇺🇸",
-    "EU": "🇪🇺",
-    "UK": "🇬🇧",
-    "JP": "🇯🇵",
-    "AU": "🇦🇺",
-    "NZ": "🇳🇿",
-    "CA": "🇨🇦",
-    "CH": "🇨🇭",
+    "US": "\U0001F1FA\U0001F1F8",
+    "EU": "\U0001F1EA\U0001F1FA",
+    "DE": "\U0001F1E9\U0001F1EA",
+    "FR": "\U0001F1EB\U0001F1F7",
+    "UK": "\U0001F1EC\U0001F1E7",
+    "JP": "\U0001F1EF\U0001F1F5",
+    "AU": "\U0001F1E6\U0001F1FA",
+    "NZ": "\U0001F1F3\U0001F1FF",
+    "CA": "\U0001F1E8\U0001F1E6",
+    "CH": "\U0001F1E8\U0001F1ED",
 }
 
 
 def _flag_for_country(country_code: str) -> str:
-    return COUNTRY_FLAGS.get(country_code, "🏳️")
+    return COUNTRY_FLAGS.get(country_code, "\U0001F3F3\ufe0f")
 
 
 def _format_value(value: float | None, unit: str | None) -> str:

@@ -179,7 +179,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: ASGIApp) -> None:
         super().__init__(app)
         self.public_prefixes = ("/static",)
-        self.public_paths = {"/health", "/login", "/logout", "/setup"}
+        self.public_paths = {"/", "/health", "/login", "/logout", "/setup", "/api/calendar"}
         self.admin_prefixes = ("/api/admin", "/users", "/bank-research/admin")
         self.analyst_write_prefixes = (
             "/api/cb/analysis",

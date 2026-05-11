@@ -8,6 +8,7 @@ import html
 import json
 import re
 from typing import Any
+from urllib.parse import urljoin
 from xml.etree import ElementTree
 
 import httpx
@@ -60,15 +61,40 @@ NEWS_SENTIMENT_MODEL = "gpt-4.1"
 INVESTINGLIVE_RSS_URL = "https://investinglive.com/feed/"
 
 CB_FEED_CACHE_TTL = 900  # 15 minutes
-CB_RSS_FEEDS: dict[str, dict[str, str]] = {
-    "USD": {"name": "Fed",  "url": "https://www.federalreserve.gov/feeds/press_all.xml"},
-    "EUR": {"name": "ECB",  "url": "https://www.ecb.europa.eu/rss/press.html"},
-    "GBP": {"name": "BoE",  "url": "https://www.bankofengland.co.uk/rss/publications"},
-    "JPY": {"name": "BoJ",  "url": "https://www.boj.or.jp/en/rss/news.xml"},
-    "AUD": {"name": "RBA",  "url": "https://www.rba.gov.au/rss/rss-cb-speeches.xml"},
-    "CAD": {"name": "BoC",  "url": "https://www.bankofcanada.ca/feed/"},
-    "CHF": {"name": "SNB",  "url": "https://www.snb.ch/en/media-news/rss-news"},
-    "NZD": {"name": "RBNZ", "url": "https://www.rbnz.govt.nz/hub/news/rss"},
+CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
+    "USD": {"name": "Fed", "urls": ["https://www.federalreserve.gov/feeds/press_all.xml"]},
+    "EUR": {"name": "ECB", "urls": ["https://www.ecb.europa.eu/rss/press.html"]},
+    "GBP": {
+        "name": "BoE",
+        "urls": [
+            "https://www.bankofengland.co.uk/rss/news",
+            "https://www.bankofengland.co.uk/rss/speeches",
+            "https://www.bankofengland.co.uk/rss/publications",
+        ],
+    },
+    "JPY": {"name": "BoJ", "urls": ["https://www.boj.or.jp/en/rss/news.xml"]},
+    "AUD": {
+        "name": "RBA",
+        "urls": [
+            "https://www.rba.gov.au/rss/rss-cb-media-releases.xml",
+            "https://www.rba.gov.au/rss/rss-cb-speeches.xml",
+        ],
+    },
+    "CAD": {"name": "BoC", "urls": ["https://www.bankofcanada.ca/feed/"]},
+    "CHF": {
+        "name": "SNB",
+        "urls": [
+            "https://www.snb.ch/public/en/rss/news",
+            "https://www.snb.ch/public/en/rss/news/publications/media-releases",
+            "https://www.snb.ch/public/en/rss/news/publications/speeches",
+        ],
+        "listing_url": "https://www.snb.ch/en/news-publications/news",
+    },
+    "NZD": {
+        "name": "RBNZ",
+        "urls": ["https://www.rbnz.govt.nz/hub/news/rss"],
+        "listing_url": "https://www.rbnz.govt.nz/news-and-events/news",
+    },
 }
 _cb_feed_cache: dict[str, dict[str, Any]] = {}
 
@@ -1027,48 +1053,77 @@ async def get_news_feed(
 
 
 def _parse_cb_feed(xml_body: str, currency: str, bank_name: str, *, limit: int = 12) -> list[dict[str, Any]]:
-    """Parse RSS 2.0 or Atom 1.0 feed into normalized article list."""
+    """Parse RSS/RDF/Atom feeds into normalized article rows."""
     try:
         root = ElementTree.fromstring(xml_body)
     except ElementTree.ParseError:
         return []
 
     articles: list[dict[str, Any]] = []
-    atom_ns = "http://www.w3.org/2005/Atom"
-    is_atom = root.tag == f"{{{atom_ns}}}feed" or "feed" in root.tag.lower()
+    is_atom = root.tag.endswith("feed")
+
+    def child_text(node: ElementTree.Element, names: tuple[str, ...]) -> str:
+        for child in node:
+            local_name = child.tag.rsplit("}", 1)[-1]
+            if local_name in names and child.text:
+                return child.text.strip()
+        return ""
+
+    def first_link(node: ElementTree.Element) -> str:
+        for child in node:
+            if child.tag.rsplit("}", 1)[-1] != "link":
+                continue
+            href = child.get("href", "") or child.text or ""
+            if href:
+                return href.strip()
+        about = node.get("{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about", "")
+        return about.strip()
 
     if is_atom:
-        for entry in root.findall(f"{{{atom_ns}}}entry"):
-            title_el = entry.find(f"{{{atom_ns}}}title")
-            title = (title_el.text or "").strip() if title_el is not None else "Untitled"
-
-            link_el = entry.find(f"{{{atom_ns}}}link")
-            link = ""
-            if link_el is not None:
-                link = link_el.get("href", "") or (link_el.text or "")
+        for entry in root.findall(".//{*}entry"):
+            title = child_text(entry, ("title",)) or "Untitled"
+            link = first_link(entry)
             if not link:
                 continue
-
-            summary_el = entry.find(f"{{{atom_ns}}}summary") or entry.find(f"{{{atom_ns}}}content")
-            description = _strip_html((summary_el.text or "") if summary_el is not None else "")
-
-            pub_el = entry.find(f"{{{atom_ns}}}published") or entry.find(f"{{{atom_ns}}}updated")
-            pub_date = (pub_el.text or "").strip() if pub_el is not None else ""
-
+            description = _strip_html(child_text(entry, ("summary", "content", "description")))
+            pub_date = child_text(entry, ("published", "updated", "date"))
             articles.append({"title": title, "link": link, "pubDate": pub_date, "description": description[:500], "currency": currency, "bank": bank_name})
             if len(articles) >= limit:
                 break
     else:
-        for item in root.findall(".//item"):
-            title = _rss_node_text(item, "title") or "Untitled"
-            link = _rss_node_text(item, "link")
+        for item in root.findall(".//{*}item") or root.findall(".//item"):
+            title = child_text(item, ("title",)) or "Untitled"
+            link = first_link(item)
             if not link:
                 continue
-            description = _strip_html(_rss_node_text(item, "description"))
-            articles.append({"title": title, "link": link, "pubDate": _rss_node_text(item, "pubDate"), "description": description[:500], "currency": currency, "bank": bank_name})
+            description = _strip_html(child_text(item, ("description", "summary", "content")))
+            pub_date = child_text(item, ("pubDate", "date", "dc:date"))
+            articles.append({"title": title, "link": link, "pubDate": pub_date, "description": description[:500], "currency": currency, "bank": bank_name})
             if len(articles) >= limit:
                 break
 
+    return articles
+
+
+def _parse_cb_listing(html_body: str, currency: str, bank_name: str, base_url: str, *, limit: int = 12) -> list[dict[str, Any]]:
+    """Fallback parser for official central-bank listing pages when RSS is unavailable."""
+    anchors = re.findall(r'<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', html_body, flags=re.IGNORECASE | re.DOTALL)
+    articles: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for href, raw_title in anchors:
+        title = _strip_html(raw_title)
+        if len(title) < 12:
+            continue
+        link = urljoin(base_url, html.unescape(href))
+        if link in seen:
+            continue
+        title_l = title.lower()
+        if not any(token in title_l for token in ("rate", "policy", "inflation", "speech", "statement", "release", "financial", "stability", "monetary", "bank")):
+            continue
+        seen.add(link)
+        articles.append({"title": title[:220], "link": link, "pubDate": "", "description": "", "currency": currency, "bank": bank_name})
+        if len(articles) >= limit:
+            break
     return articles
 
 
@@ -1079,19 +1134,44 @@ async def _fetch_one_cb_feed(currency: str, now: datetime) -> dict[str, Any]:
     if cached and (now - cached["fetched_at"]).total_seconds() < CB_FEED_CACHE_TTL:
         return cached
 
-    try:
-        async with httpx.AsyncClient(timeout=8.0) as client:
-            response = await client.get(
-                config["url"],
-                headers={"User-Agent": "MacroDashboard/1.0 (macro research dashboard)"},
-                follow_redirects=True,
-            )
-            response.raise_for_status()
-            articles = _parse_cb_feed(response.text, currency, config["name"])
-    except Exception:
-        articles = []
+    articles: list[dict[str, Any]] = []
+    errors: list[str] = []
+    async with httpx.AsyncClient(timeout=8.0, follow_redirects=True) as client:
+        for url in config.get("urls", [config.get("url")]):
+            if not url:
+                continue
+            try:
+                response = await client.get(
+                    url,
+                    headers={"User-Agent": "MacroDashboard/1.0 (macro research dashboard)"},
+                )
+                response.raise_for_status()
+                articles.extend(_parse_cb_feed(response.text, currency, config["name"]))
+            except Exception as exc:
+                errors.append(f"{url}: {type(exc).__name__}")
+            if len(articles) >= 12:
+                break
 
-    result: dict[str, Any] = {"currency": currency, "name": config["name"], "articles": articles, "fetched_at": now}
+        if not articles and config.get("listing_url"):
+            try:
+                listing_url = str(config["listing_url"])
+                response = await client.get(
+                    listing_url,
+                    headers={"User-Agent": "MacroDashboard/1.0 (macro research dashboard)"},
+                )
+                response.raise_for_status()
+                articles = _parse_cb_listing(response.text, currency, config["name"], listing_url)
+            except Exception as exc:
+                errors.append(f"{config['listing_url']}: {type(exc).__name__}")
+
+    result: dict[str, Any] = {
+        "currency": currency,
+        "name": config["name"],
+        "articles": articles[:12],
+        "fetched_at": now,
+        "status": "ok" if articles else "empty",
+        "error": "; ".join(errors[-2:]) if errors and not articles else "",
+    }
     _cb_feed_cache[currency] = result
     return result
 
@@ -1103,7 +1183,14 @@ async def get_cb_feeds(bank: str | None = Query(default=None)) -> dict[str, Any]
     currencies = [bank.upper()] if bank and bank.upper() in CB_RSS_FEEDS else list(CB_RSS_FEEDS.keys())
     results = await asyncio.gather(*[_fetch_one_cb_feed(c, now) for c in currencies], return_exceptions=True)
     feeds = [
-        {"currency": r["currency"], "name": r["name"], "articles": r["articles"], "fetchedAt": r["fetched_at"].isoformat()}
+        {
+            "currency": r["currency"],
+            "name": r["name"],
+            "articles": r["articles"],
+            "fetchedAt": r["fetched_at"].isoformat(),
+            "status": r.get("status", "ok"),
+            "error": r.get("error", ""),
+        }
         for r in results
         if isinstance(r, dict)
     ]

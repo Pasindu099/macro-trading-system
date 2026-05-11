@@ -162,9 +162,16 @@
         }
 
         if (!items.length) {
+            const errors = feedData
+                .filter((f) => f.error)
+                .map((f) => `${f.name || f.currency}: ${f.error}`)
+                .slice(0, 3);
             el.innerHTML = feedData.length
                 ? '<div class="cbn-empty">No articles match filter.</div>'
-                : '<div class="cbn-empty">Fetching live feeds…</div>';
+                : '<div class="cbn-empty">Fetching live feeds...</div>';
+            if (feedData.length && errors.length && allArticles.length === 0) {
+                el.innerHTML = `<div class="cbn-empty">No CB feed articles loaded. ${esc(errors.join(" | "))}</div>`;
+            }
             return;
         }
 

@@ -922,6 +922,15 @@ async def _build_fundamental_currency_meter(
         result = await session.execute(
             text(
                 f"""
+                WITH latest AS (
+                    SELECT date
+                    FROM processed.cb_preferred_score
+                    WHERE currency IN ({currency_list})
+                    GROUP BY date
+                    HAVING count(DISTINCT currency) = {len(CURRENCY_METER_ORDER)}
+                    ORDER BY date DESC
+                    LIMIT 1
+                )
                 SELECT
                     date,
                     country_code,
@@ -933,6 +942,7 @@ async def _build_fundamental_currency_meter(
                     strength_label
                 FROM processed.cb_preferred_score
                 WHERE currency IN ({currency_list})
+                    AND date <= (SELECT date FROM latest)
                 ORDER BY currency, date
                 """
             )
@@ -944,6 +954,16 @@ async def _build_fundamental_currency_meter(
             result = await session.execute(
                 text(
                     f"""
+                    WITH latest AS (
+                        SELECT date
+                        FROM processed.currency_stance
+                        WHERE window_months = 3
+                            AND currency IN ({currency_list})
+                        GROUP BY date
+                        HAVING count(DISTINCT currency) = {len(CURRENCY_METER_ORDER)}
+                        ORDER BY date DESC
+                        LIMIT 1
+                    )
                     SELECT
                         date,
                         country_code,
@@ -959,6 +979,7 @@ async def _build_fundamental_currency_meter(
                     FROM processed.currency_stance
                     WHERE window_months = 3
                         AND currency IN ({currency_list})
+                        AND date <= (SELECT date FROM latest)
                     ORDER BY currency, date
                     """
                 )
@@ -966,8 +987,50 @@ async def _build_fundamental_currency_meter(
         except Exception:
             return []
 
+    raw_rows = [dict(row) for row in result.mappings().all()]
+    if not raw_rows and not use_legacy_stance:
+        use_legacy_stance = True
+        try:
+            result = await session.execute(
+                text(
+                    f"""
+                    WITH latest AS (
+                        SELECT date
+                        FROM processed.currency_stance
+                        WHERE window_months = 3
+                            AND currency IN ({currency_list})
+                        GROUP BY date
+                        HAVING count(DISTINCT currency) = {len(CURRENCY_METER_ORDER)}
+                        ORDER BY date DESC
+                        LIMIT 1
+                    )
+                    SELECT
+                        date,
+                        country_code,
+                        currency,
+                        inflation_score,
+                        labor_score,
+                        growth_score,
+                        inflation_direction,
+                        labor_direction,
+                        growth_direction,
+                        overall_stance_score,
+                        overall_stance_label
+                    FROM processed.currency_stance
+                    WHERE window_months = 3
+                        AND currency IN ({currency_list})
+                        AND date <= (SELECT date FROM latest)
+                    ORDER BY currency, date
+                    """
+                )
+            )
+            raw_rows = [dict(row) for row in result.mappings().all()]
+        except Exception:
+            await session.rollback()
+            return []
+
     rows_by_currency: dict[str, list[dict[str, Any]]] = {}
-    for row in result.mappings().all():
+    for row in raw_rows:
         rows_by_currency.setdefault(str(row["currency"]), []).append(dict(row))
 
     metrics = (

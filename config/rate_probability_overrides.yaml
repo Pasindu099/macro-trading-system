@@ -180,3 +180,214 @@ BOE:
       cut_prob: 0.000
       hold_prob: 0.920
       hike_prob: 0.080
+
+BOJ:
+  as_of_date: "2026-05-15"
+  source: "terminal_reference"
+  current:
+    - meeting_dt: "2026-06-16T12:00:00+09:00"
+      cumulative_delta_bps: 18.4
+      delta_bps: 18.4
+      cut_prob: 0.000
+      hold_prob: 0.263
+      hike_prob: 0.737
+    - meeting_dt: "2026-07-31T12:00:00+09:00"
+      cumulative_delta_bps: 22.6
+      delta_bps: 4.2
+      cut_prob: 0.000
+      hold_prob: 0.833
+      hike_prob: 0.167
+    - meeting_dt: "2026-09-18T12:00:00+09:00"
+      cumulative_delta_bps: 29.9
+      delta_bps: 7.3
+      cut_prob: 0.000
+      hold_prob: 0.708
+      hike_prob: 0.292
+    - meeting_dt: "2026-10-30T12:00:00+09:00"
+      cumulative_delta_bps: 36.5
+      delta_bps: 6.6
+      cut_prob: 0.000
+      hold_prob: 0.737
+      hike_prob: 0.263
+    - meeting_dt: "2026-12-18T12:00:00+09:00"
+      cumulative_delta_bps: 49.3
+      delta_bps: 12.9
+      cut_prob: 0.000
+      hold_prob: 0.486
+      hike_prob: 0.514
+
+SNB:
+  as_of_date: "2026-05-15"
+  source: "terminal_reference"
+  current:
+    - meeting_dt: "2026-06-18T09:30:00+02:00"
+      cumulative_delta_bps: 0.4
+      delta_bps: 0.4
+      cut_prob: 0.000
+      hold_prob: 0.986
+      hike_prob: 0.014
+    - meeting_dt: "2026-09-24T09:30:00+02:00"
+      cumulative_delta_bps: 10.7
+      delta_bps: 10.4
+      cut_prob: 0.000
+      hold_prob: 0.586
+      hike_prob: 0.414
+    - meeting_dt: "2026-12-10T09:30:00+01:00"
+      cumulative_delta_bps: 21.9
+      delta_bps: 11.2
+      cut_prob: 0.000
+      hold_prob: 0.551
+      hike_prob: 0.449
+    - meeting_dt: "2027-03-18T09:30:00+01:00"
+      cumulative_delta_bps: 38.4
+      delta_bps: 16.4
+      cut_prob: 0.000
+      hold_prob: 0.344
+      hike_prob: 0.656
+    - meeting_dt: "2027-06-24T09:30:00+02:00"
+      cumulative_delta_bps: 43.8
+      delta_bps: 5.4
+      cut_prob: 0.000
+      hold_prob: 0.783
+      hike_prob: 0.217
+    - meeting_dt: "2027-09-23T09:30:00+02:00"
+      cumulative_delta_bps: 49.2
+      delta_bps: 5.4
+      cut_prob: 0.000
+      hold_prob: 0.785
+      hike_prob: 0.215
+    - meeting_dt: "2027-12-16T09:30:00+01:00"
+      cumulative_delta_bps: 55.7
+      delta_bps: 6.5
+      cut_prob: 0.000
+      hold_prob: 0.740
+      hike_prob: 0.260
+
+RBA:
+  as_of_date: "2026-05-15"
+  source: "terminal_reference"
+  current:
+    - meeting_dt: "2026-06-16T14:30:00+10:00"
+      cumulative_delta_bps: 6.5
+      delta_bps: 6.5
+      cut_prob: 0.000
+      hold_prob: 0.741
+      hike_prob: 0.259
+    - meeting_dt: "2026-08-11T14:30:00+10:00"
+      cumulative_delta_bps: 22.8
+      delta_bps: 16.4
+      cut_prob: 0.000
+      hold_prob: 0.346
+      hike_prob: 0.654
+    - meeting_dt: "2026-09-29T14:30:00+10:00"
+      cumulative_delta_bps: 31.3
+      delta_bps: 8.5
+      cut_prob: 0.000
+      hold_prob: 0.660
+      hike_prob: 0.340
+    - meeting_dt: "2026-11-03T14:30:00+11:00"
+      cumulative_delta_bps: 36.8
+      delta_bps: 5.5
+      cut_prob: 0.000
+      hold_prob: 0.782
+      hike_prob: 0.218
+    - meeting_dt: "2026-12-08T14:30:00+11:00"
+      cumulative_delta_bps: 40.7
+      delta_bps: 3.9
+      cut_prob: 0.000
+      hold_prob: 0.845
+      hike_prob: 0.155
+
+RBNZ:
+  as_of_date: "2026-05-15"
+  source: "terminal_reference"
+  current:
+    - meeting_dt: "2026-05-27T14:00:00+12:00"
+      cumulative_delta_bps: 8.6
+      delta_bps: 8.6
+      cut_prob: 0.000
+      hold_prob: 0.654
+      hike_prob: 0.346
+    - meeting_dt: "2026-07-08T14:00:00+12:00"
+      cumulative_delta_bps: 25.2
+      delta_bps: 16.6
+      cut_prob: 0.000
+      hold_prob: 0.337
+      hike_prob: 0.663
+    - meeting_dt: "2026-09-02T14:00:00+12:00"
+      cumulative_delta_bps: 45.7
+      delta_bps: 20.5
+      cut_prob: 0.000
+      hold_prob: 0.182
+      hike_prob: 0.818
+    - meeting_dt: "2026-10-28T14:00:00+13:00"
+      cumulative_delta_bps: 63.9
+      delta_bps: 18.2
+      cut_prob: 0.000
+      hold_prob: 0.272
+      hike_prob: 0.728
+    - meeting_dt: "2026-12-09T14:00:00+13:00"
+      cumulative_delta_bps: 82.9
+      delta_bps: 19.0
+      cut_prob: 0.000
+      hold_prob: 0.240
+      hike_prob: 0.760
+    - meeting_dt: "2027-02-10T14:00:00+13:00"
+      cumulative_delta_bps: 100.5
+      delta_bps: 17.6
+      cut_prob: 0.000
+      hold_prob: 0.295
+      hike_prob: 0.705
+    - meeting_dt: "2027-03-17T14:00:00+13:00"
+      cumulative_delta_bps: 115.6
+      delta_bps: 15.1
+      cut_prob: 0.000
+      hold_prob: 0.396
+      hike_prob: 0.604
+    - meeting_dt: "2027-05-05T14:00:00+12:00"
+      cumulative_delta_bps: 113.7
+      delta_bps: -1.9
+      cut_prob: 0.077
+      hold_prob: 0.923
+      hike_prob: 0.000
+    - meeting_dt: "2027-06-16T14:00:00+12:00"
+      cumulative_delta_bps: 116.7
+      delta_bps: 3.0
+      cut_prob: 0.000
+      hold_prob: 0.880
+      hike_prob: 0.120
+
+BOC:
+  as_of_date: "2026-05-15"
+  source: "terminal_reference"
+  current:
+    - meeting_dt: "2026-06-10T09:45:00-04:00"
+      cumulative_delta_bps: 0.1
+      delta_bps: 0.1
+      cut_prob: 0.000
+      hold_prob: 0.998
+      hike_prob: 0.002
+    - meeting_dt: "2026-07-15T09:45:00-04:00"
+      cumulative_delta_bps: 7.8
+      delta_bps: 7.7
+      cut_prob: 0.000
+      hold_prob: 0.691
+      hike_prob: 0.309
+    - meeting_dt: "2026-09-02T09:45:00-04:00"
+      cumulative_delta_bps: 22.0
+      delta_bps: 14.2
+      cut_prob: 0.000
+      hold_prob: 0.431
+      hike_prob: 0.569
+    - meeting_dt: "2026-10-28T09:45:00-04:00"
+      cumulative_delta_bps: 35.3
+      delta_bps: 13.3
+      cut_prob: 0.000
+      hold_prob: 0.470
+      hike_prob: 0.530
+    - meeting_dt: "2026-12-09T09:45:00-05:00"
+      cumulative_delta_bps: 52.5
+      delta_bps: 17.2
+      cut_prob: 0.000
+      hold_prob: 0.310
+      hike_prob: 0.690

@@ -774,9 +774,32 @@ def _release_sort_key(release: IndicatorRelease) -> tuple[date | None, datetime,
 def _pick_revision_row(
     releases: list[IndicatorRelease],
     revision_mode: str,
+    *,
+    actual_only: bool = False,
 ) -> IndicatorRelease:
+    eligible_releases = [
+        release for release in releases
+        if not actual_only or release.actual is not None
+    ]
+    if eligible_releases:
+        releases = eligible_releases
+
     if revision_mode == "latest":
-        latest = next((release for release in releases if release.is_latest), None)
+        latest_releases = [
+            release for release in releases
+            if release.is_latest
+        ]
+        latest = (
+            sorted(
+                latest_releases,
+                key=lambda release: (
+                    release.retrieved_at or release.released_at,
+                    release.id,
+                ),
+                reverse=True,
+            )[0]
+            if latest_releases else None
+        )
         if latest is not None:
             return latest
         return sorted(releases, key=lambda release: release.id, reverse=True)[0]
@@ -852,7 +875,7 @@ async def get_indicator_explorer_payload(
         grouped.setdefault(key, []).append(release)
 
     picked_releases = [
-        _pick_revision_row(group_releases, revision_mode)
+        _pick_revision_row(group_releases, revision_mode, actual_only=True)
         for group_releases in grouped.values()
     ]
     picked_releases.sort(key=_release_sort_key)

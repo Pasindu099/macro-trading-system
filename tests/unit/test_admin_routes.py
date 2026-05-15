@@ -11,6 +11,7 @@ from app.api.routes.public import (
     EconomicCalendarEvent,
     _dedupe_calendar_events,
     _normalize_category_filter,
+    _pick_revision_row,
     _parse_rss_articles,
 )
 
@@ -290,6 +291,32 @@ def test_calendar_category_filter_accepts_ui_categories() -> None:
     assert _normalize_category_filter("Monetary Policy") == "Monetary Policy"
     assert _normalize_category_filter("trade") == "Trade"
     assert _normalize_category_filter("Sentiment") == "Sentiment"
+
+
+def test_pick_revision_row_prefers_actual_latest_for_chart_series() -> None:
+    retrieved_at = datetime(2026, 5, 9, 14, tzinfo=timezone.utc)
+    null_latest = SimpleNamespace(
+        id=17020,
+        actual=None,
+        is_latest=True,
+        released_at=datetime(2026, 3, 25, tzinfo=timezone.utc),
+        retrieved_at=retrieved_at,
+    )
+    actual_latest = SimpleNamespace(
+        id=17018,
+        actual=0.2,
+        is_latest=True,
+        released_at=datetime(2026, 3, 25, tzinfo=timezone.utc),
+        retrieved_at=retrieved_at,
+    )
+
+    picked = _pick_revision_row(
+        [null_latest, actual_latest],
+        "latest",
+        actual_only=True,
+    )
+
+    assert picked is actual_latest
 
 
 def test_parse_rss_articles_normalizes_investinglive_items() -> None:

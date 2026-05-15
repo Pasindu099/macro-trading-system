@@ -5,6 +5,9 @@ Results are canonicalized and written to the database.
 
 Resumable: progress is checkpointed to .backfill_progress.json. If the
 script crashes or you Ctrl+C, re-running picks up where it left off.
+Before a checkpointed chunk is skipped, the database is checked for stored
+rows in that country/date window so a stale checkpoint cannot hide missing
+history.
 
 Usage:
     python scripts/run_backfill.py
@@ -31,6 +34,8 @@ import sys
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
+
+from sqlalchemy import text
 
 from app.db import session_scope
 from app.ingestion.canonicalizer import Canonicalizer
@@ -67,6 +72,14 @@ def parse_args() -> argparse.Namespace:
                    help="Ignore any existing checkpoint and start fresh")
     p.add_argument("--countries", nargs="+", default=None,
                    help=f"Subset of countries (default: all {sorted(ALLOWED_COUNTRIES)})")
+    p.add_argument(
+        "--no-checkpoint-db-validation",
+        action="store_true",
+        help=(
+            "Trust the checkpoint file without confirming matching rows exist "
+            "in Postgres. Not recommended for production backfills."
+        ),
+    )
     return p.parse_args()
 
 
@@ -122,6 +135,34 @@ def save_checkpoint(progress: dict[str, list[str]]) -> None:
 
 def chunk_key(c_from: date, c_to: date) -> str:
     return f"{c_from.isoformat()}_{c_to.isoformat()}"
+
+
+async def count_stored_chunk_rows(country: str, c_from: date, c_to: date) -> int:
+    """Count stored releases for a country/release-date chunk.
+
+    The checkpoint file is only a resume hint. The database is the source of
+    truth, so a completed checkpoint should be trusted only when rows exist
+    for the same country and date range. We include mapped rows via the
+    indicator country and unmapped rows via raw_payload->>'country'.
+    """
+    async with session_scope() as session:
+        result = await session.execute(
+            text(
+                """
+                SELECT count(*)::int
+                FROM indicator_releases r
+                LEFT JOIN indicators i ON i.id = r.indicator_id
+                WHERE (i.country_code = :country OR r.raw_payload->>'country' = :country)
+                  AND r.released_at::date BETWEEN :from_date AND :to_date
+                """
+            ),
+            {
+                "country": country,
+                "from_date": c_from,
+                "to_date": c_to,
+            },
+        )
+        return int(result.scalar_one() or 0)
 
 
 async def backfill_one_chunk(
@@ -187,6 +228,8 @@ async def main_async(args: argparse.Namespace) -> int:
         "events_fetched": 0, "inserted": 0, "updated": 0,
         "skipped_same": 0, "unmapped": 0, "errors_count": 0,
     }
+    checkpoint_rows_checked = 0
+    stale_checkpoint_chunks = 0
 
     async with EODHDClient() as client:
         for country in countries:
@@ -195,8 +238,34 @@ async def main_async(args: argparse.Namespace) -> int:
             for c_from, c_to in chunks:
                 key = chunk_key(c_from, c_to)
                 if key in done_keys:
-                    logger.debug("Skipping %s %s (already done)", country, key)
-                    continue
+                    if args.no_checkpoint_db_validation:
+                        logger.debug("Skipping %s %s (checkpoint trusted)", country, key)
+                        continue
+
+                    stored_rows = await count_stored_chunk_rows(country, c_from, c_to)
+                    checkpoint_rows_checked += stored_rows
+                    if stored_rows > 0:
+                        logger.debug(
+                            "Skipping %s %s (checkpoint valid, %d stored rows)",
+                            country,
+                            key,
+                            stored_rows,
+                        )
+                        continue
+
+                    stale_checkpoint_chunks += 1
+                    done_keys.remove(key)
+                    progress[country] = [
+                        completed_key
+                        for completed_key in progress.get(country, [])
+                        if completed_key != key
+                    ]
+                    save_checkpoint(progress)
+                    logger.warning(
+                        "Checkpoint for %s %s is stale: no stored rows found; refetching",
+                        country,
+                        key,
+                    )
 
                 logger.info("Fetching %s %s..%s", country, c_from, c_to)
                 try:
@@ -228,6 +297,8 @@ async def main_async(args: argparse.Namespace) -> int:
     logger.info("BACKFILL COMPLETE")
     for k, v in grand_totals.items():
         logger.info("  %s: %d", k, v)
+    logger.info("  checkpoint_rows_checked: %d", checkpoint_rows_checked)
+    logger.info("  stale_checkpoint_chunks_refetched: %d", stale_checkpoint_chunks)
     logger.info("══════════════════════════════════════════════════")
     return 0
 

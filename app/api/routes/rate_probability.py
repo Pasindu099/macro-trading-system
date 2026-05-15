@@ -266,7 +266,20 @@ async def _resolve_snapshot_date(
         ),
         {"bank": bank_key, "target_date": target_date},
     )
-    return result.scalar_one_or_none()
+    resolved = result.scalar_one_or_none()
+    if resolved is not None:
+        return resolved
+    fallback_result = await session.execute(
+        text(
+            """
+            SELECT min(snapshot_date)
+            FROM rate_snapshots
+            WHERE bank = :bank
+            """
+        ),
+        {"bank": bank_key},
+    )
+    return fallback_result.scalar_one_or_none()
 
 
 async def _resolve_curve_date(
@@ -285,7 +298,20 @@ async def _resolve_curve_date(
         ),
         {"bank": bank_key, "target_date": target_date},
     )
-    return result.scalar_one_or_none()
+    resolved = result.scalar_one_or_none()
+    if resolved is not None:
+        return resolved
+    fallback_result = await session.execute(
+        text(
+            """
+            SELECT min(curve_date)
+            FROM ois_cache
+            WHERE bank = :bank
+            """
+        ),
+        {"bank": bank_key},
+    )
+    return fallback_result.scalar_one_or_none()
 
 
 def _rate_path_rows(probabilities: list[Any], current_policy_rate: float) -> list[dict[str, Any]]:

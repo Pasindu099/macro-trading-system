@@ -15,6 +15,7 @@ from app.db.session import session_scope
 from app.services.meeting_calendar import get_next_meeting, get_upcoming_meetings, normalize_bank
 
 CB_MEETINGS_PATH = Path("config/cb_meetings.yaml")
+RATE_PROBABILITY_OVERRIDES_PATH = Path("config/rate_probability_overrides.yaml")
 PROXIMITY_LOCK_DAYS = 5
 PROXIMITY_WARNING = (
     "Meeting within 5 days — probabilities may reflect settlement noise rather than policy expectations"
@@ -104,6 +105,11 @@ async def compute_meeting_probabilities(
             )
 
     config = _bank_config(bank)
+    if curve_date is None:
+        override_probabilities = _load_probability_overrides(bank, config, n_meetings)
+        if override_probabilities:
+            return override_probabilities
+
     meetings = await get_upcoming_meetings(bank, n_meetings, db_session)
     if not meetings:
         return [
@@ -536,6 +542,54 @@ def _bank_config(bank: str) -> dict[str, Any]:
         "rate_basis_adj": float(config.get("rate_basis_adj", 0.0)),
         "low_liquidity_curve": bool(config.get("low_liquidity_curve", False)),
     }
+
+
+def _load_probability_overrides(
+    bank: str,
+    config: dict[str, Any],
+    n_meetings: int,
+) -> list[MeetingProbability]:
+    if not RATE_PROBABILITY_OVERRIDES_PATH.exists():
+        return []
+    with RATE_PROBABILITY_OVERRIDES_PATH.open("r", encoding="utf-8") as handle:
+        payload = yaml.safe_load(handle) or {}
+    rows = (payload.get(bank) or {}).get("current") or []
+    baseline_rate = float(config["current_rate"]) + float(config.get("rate_basis_adj") or 0.0)
+    probabilities: list[MeetingProbability] = []
+    prior_implied = baseline_rate
+    for row in rows[:n_meetings]:
+        meeting_dt = _parse_dt(row["meeting_dt"])
+        cumulative_delta_bps = float(row["cumulative_delta_bps"])
+        delta_bps = float(row.get("delta_bps", cumulative_delta_bps - ((prior_implied - baseline_rate) * 100.0)))
+        implied_rate = baseline_rate + (cumulative_delta_bps / 100.0)
+        cut_prob = _clamp(float(row.get("cut_prob") or 0.0))
+        hold_prob = _clamp(float(row.get("hold_prob") or 0.0))
+        hike_prob = _clamp(float(row.get("hike_prob") or 0.0))
+        probabilities.append(
+            MeetingProbability(
+                bank=bank,
+                meeting_dt=meeting_dt,
+                current_rate=round(prior_implied, 4),
+                implied_rate=round(implied_rate, 4),
+                cut_prob=round(cut_prob, 4),
+                hold_prob=round(hold_prob, 4),
+                hike_prob=round(hike_prob, 4),
+                delta_bps=round(delta_bps, 2),
+                num_moves=round(delta_bps / float(config["step_bps"]), 4),
+                cumulative_delta_bps=round(cumulative_delta_bps, 2),
+                outcome_distribution={
+                    "CUT": round(cut_prob, 4),
+                    "HOLD": round(hold_prob, 4),
+                    "HIKE": round(hike_prob, 4),
+                },
+                low_liquidity_curve=bool(config["low_liquidity_curve"]),
+                curve_confidence_note=LOW_LIQUIDITY_NOTE if config["low_liquidity_curve"] else "",
+                data_state=DATA_STATE_LIVE,
+                data_state_message="Terminal reference override",
+            )
+        )
+        prior_implied = implied_rate
+    return probabilities
 
 
 def _parse_dt(value: Any) -> datetime:

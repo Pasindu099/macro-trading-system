@@ -175,6 +175,17 @@ def test_low_liquidity_config_for_jpy_chf():
     assert rate_probability._bank_config("BOJ")["step_bps"] == 10
 
 
+def test_terminal_reference_override_for_fed():
+    config = {"current_rate": 3.75, "step_bps": 25, "rate_basis_adj": 0.08, "low_liquidity_curve": False}
+    rows = rate_probability._load_probability_overrides("FED", config, 2)
+
+    assert rows[0].meeting_dt.date().isoformat() == "2026-06-17"
+    assert rows[0].cumulative_delta_bps == pytest.approx(0.6)
+    assert rows[0].hold_prob == pytest.approx(0.976)
+    assert rows[0].hike_prob == pytest.approx(0.024)
+    assert rows[1].cumulative_delta_bps == pytest.approx(5.6)
+
+
 @pytest.mark.asyncio
 async def test_cumulative_vs_per_meeting(monkeypatch):
     """Third meeting cumulative_delta is vs today, not vs second meeting."""
@@ -233,6 +244,7 @@ async def test_no_curve_returns_explicit_no_data(monkeypatch):
         return meetings[:n]
 
     monkeypatch.setattr(rate_probability, "get_upcoming_meetings", fake_meetings)
+    monkeypatch.setattr(rate_probability, "RATE_PROBABILITY_OVERRIDES_PATH", rate_probability.Path("missing-overrides.yaml"))
     monkeypatch.setattr(
         rate_probability,
         "_bank_config",
@@ -273,6 +285,7 @@ async def test_near_meeting_uses_proximity_snapshot(monkeypatch):
 
     monkeypatch.setattr(rate_probability, "date", FakeDate)
     monkeypatch.setattr(rate_probability, "get_upcoming_meetings", fake_meetings)
+    monkeypatch.setattr(rate_probability, "RATE_PROBABILITY_OVERRIDES_PATH", rate_probability.Path("missing-overrides.yaml"))
     monkeypatch.setattr(
         rate_probability,
         "_bank_config",

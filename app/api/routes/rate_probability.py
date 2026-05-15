@@ -124,7 +124,7 @@ async def rate_meetings(
     bank: str,
     step: int | None = Query(None, ge=1, le=200, description="Move size in bps"),
     n: int = Query(12, ge=1, le=50, description="Number of meetings to return"),
-    snapshot: str = Query("current", pattern="^(current|previous_day|one_week_ago)$"),
+    snapshot: str = Query("current", pattern="^(current|previous_day|one_week_ago|one_month_ago)$"),
     session: AsyncSession = SessionDep,
 ) -> dict:
     """Full meeting-by-meeting probability table for one bank."""
@@ -149,9 +149,18 @@ async def rate_meetings(
     snapshot_label = "Current"
     selected_probabilities = probabilities
     if snapshot != "current":
-        target_date = today - timedelta(days=1 if snapshot == "previous_day" else 7)
+        target_days = {
+            "previous_day": 1,
+            "one_week_ago": 7,
+            "one_month_ago": 30,
+        }[snapshot]
+        target_date = today - timedelta(days=target_days)
         snapshot_date = await _resolve_curve_date(bank_key, target_date, session)
-        snapshot_label = "Previous Day" if snapshot == "previous_day" else "1 Week Ago"
+        snapshot_label = {
+            "previous_day": "Previous Day",
+            "one_week_ago": "1 Week Ago",
+            "one_month_ago": "1 Month Ago",
+        }[snapshot]
         if snapshot_date is not None:
             selected_probabilities = await compute_meeting_probabilities(
                 bank_key,

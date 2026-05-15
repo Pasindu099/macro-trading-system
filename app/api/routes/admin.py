@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel, Field
 from sqlalchemy import and_, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,6 +33,14 @@ from app.db.session import get_session
 from app.settings import get_settings
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
+
+
+class IndicatorSeriesRefreshRequest(BaseModel):
+    """Admin maintenance request for one canonical indicator series."""
+
+    country_code: str = Field(min_length=2, max_length=2)
+    canonical_name: str = Field(min_length=1, max_length=200)
+    repair_latest_flags: bool = True
 
 
 def _now() -> datetime:
@@ -53,6 +62,33 @@ def _build_unmapped_where(country: str | None) -> tuple[str, dict[str, str]]:
         params["country"] = normalized_country
 
     return " AND ".join(where_clauses), params
+
+
+def _series_group_key(release: IndicatorRelease) -> tuple[object, ...]:
+    return (
+        release.period,
+        release.period_start_date,
+        release.released_at
+        if release.period is None and release.period_start_date is None
+        else None,
+    )
+
+
+def _pick_series_latest(releases: list[IndicatorRelease]) -> IndicatorRelease:
+    actual_latest_rows = [
+        release for release in releases
+        if release.actual is not None and release.is_latest
+    ]
+    actual_rows = [release for release in releases if release.actual is not None]
+    eligible = actual_latest_rows or actual_rows or releases
+    return sorted(
+        eligible,
+        key=lambda release: (
+            release.retrieved_at or release.released_at,
+            release.id,
+        ),
+        reverse=True,
+    )[0]
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -317,3 +353,114 @@ async def admin_unmapped_events(
         groups=groups,
     )
     return Envelope(data=payload, meta=_meta())
+
+
+@router.post("/maintenance/indicator-series-refresh")
+async def admin_refresh_indicator_series(
+    payload: IndicatorSeriesRefreshRequest,
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, object]:
+    """Repair/report duplicate latest rows for one canonical indicator series.
+
+    EODHD can return duplicate same-period rows where a null-actual row and an
+    actual row are both marked latest. This action clears those null latest
+    flags while preserving actual latest rows for the chart API.
+    """
+    country_code = payload.country_code.upper()
+    canonical_name = payload.canonical_name.strip()
+
+    indicator_q = await session.execute(
+        select(Indicator).where(
+            Indicator.country_code == country_code,
+            Indicator.canonical_name == canonical_name,
+        )
+    )
+    indicator = indicator_q.scalar_one_or_none()
+    if indicator is None:
+        return {
+            "ok": False,
+            "message": "Indicator not found.",
+            "country_code": country_code,
+            "canonical_name": canonical_name,
+        }
+
+    releases_q = await session.execute(
+        select(IndicatorRelease)
+        .where(IndicatorRelease.indicator_id == indicator.id)
+        .order_by(
+            IndicatorRelease.period_start_date.desc().nullslast(),
+            desc(IndicatorRelease.released_at),
+            desc(IndicatorRelease.retrieved_at),
+            desc(IndicatorRelease.id),
+        )
+    )
+    releases = list(releases_q.scalars().all())
+
+    grouped: dict[tuple[object, ...], list[IndicatorRelease]] = {}
+    for release in releases:
+        grouped.setdefault(_series_group_key(release), []).append(release)
+
+    selected_ids: set[int] = set()
+    duplicate_groups = 0
+    rows_updated = 0
+    for group_releases in grouped.values():
+        if len(group_releases) > 1:
+            duplicate_groups += 1
+        selected = _pick_series_latest(group_releases)
+        selected_ids.add(selected.id)
+        if payload.repair_latest_flags:
+            has_actual_latest = any(
+                release.is_latest and release.actual is not None
+                for release in group_releases
+            )
+            if has_actual_latest:
+                repair_rows = [
+                    release for release in group_releases
+                    if release.is_latest and release.actual is None
+                ]
+            else:
+                repair_rows = [
+                    release for release in group_releases
+                    if release.is_latest != (release.id == selected.id)
+                ]
+
+            for release in repair_rows:
+                should_be_latest = not has_actual_latest and release.id == selected.id
+                if release.is_latest != should_be_latest:
+                    release.is_latest = should_be_latest
+                    rows_updated += 1
+
+    if payload.repair_latest_flags and rows_updated:
+        await session.commit()
+
+    now = _now()
+    chartable_prints = [
+        release for release in releases
+        if release.id in selected_ids
+        and release.actual is not None
+        and release.released_at <= now
+    ]
+    chartable_prints.sort(
+        key=lambda release: (
+            release.period_start_date or datetime.min.date(),
+            release.released_at,
+            release.id,
+        )
+    )
+
+    latest_print = chartable_prints[-1] if chartable_prints else None
+    return {
+        "ok": True,
+        "message": "Series refreshed." if payload.repair_latest_flags else "Series checked.",
+        "indicator_id": indicator.id,
+        "country_code": country_code,
+        "canonical_name": canonical_name,
+        "display_name": indicator.display_name,
+        "stored_rows": len(releases),
+        "period_groups": len(grouped),
+        "duplicate_groups": duplicate_groups,
+        "rows_updated": rows_updated,
+        "chartable_prints": len(chartable_prints),
+        "latest_period": latest_print.period if latest_print else None,
+        "latest_actual": float(latest_print.actual) if latest_print else None,
+    }

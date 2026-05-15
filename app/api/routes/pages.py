@@ -705,6 +705,34 @@ async def _build_analytics_snapshot(session: AsyncSession) -> dict[str, Any]:
         for run in recent_runs_q.scalars().all()
     ]
 
+    maintenance_indicators_q = await session.execute(
+        select(
+            Indicator.country_code,
+            Country.currency_code,
+            Indicator.canonical_name,
+            Indicator.display_name,
+        )
+        .join(Country, Country.code == Indicator.country_code)
+        .order_by(
+            Country.currency_code.asc(),
+            Indicator.display_name.asc(),
+            Indicator.canonical_name.asc(),
+        )
+    )
+    maintenance_indicators = [
+        {
+            "country_code": row.country_code,
+            "currency_code": row.currency_code,
+            "canonical_name": row.canonical_name,
+            "display_name": row.display_name,
+            "label": (
+                f"{row.currency_code} · {row.display_name} "
+                f"({row.canonical_name})"
+            ),
+        }
+        for row in maintenance_indicators_q.all()
+    ]
+
     headline_stats = [
         {"label": "Countries", "value": _format_int(country_total), "detail": "tracked markets"},
         {"label": "Indicators", "value": _format_int(indicator_total), "detail": "canonical series"},
@@ -743,6 +771,7 @@ async def _build_analytics_snapshot(session: AsyncSession) -> dict[str, Any]:
         "frequency_rows": frequency_rows,
         "importance_rows": importance_rows,
         "recent_runs": recent_runs,
+        "maintenance_indicators": maintenance_indicators,
         "total_releases": total_releases,
         "ingestion_run_total": int(ingestion_run_total or 0),
         "first_release_at": totals.first_release_at,

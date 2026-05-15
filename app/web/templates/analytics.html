@@ -56,6 +56,51 @@
         </div>
     </section>
 
+    {% if request.state.current_user and request.state.current_user.role == "admin" %}
+        <section class="analytics-panel">
+            <div class="analytics-section-heading">
+                <div>
+                    <p class="eyebrow">Maintenance</p>
+                    <h2>Indicator Series Refresh</h2>
+                </div>
+                <p class="panel-copy" data-maintenance-state>Ready.</p>
+            </div>
+            <form class="maintenance-refresh-form" data-maintenance-refresh-form>
+                <label>
+                    <span>Series</span>
+                    <select name="series" data-maintenance-series>
+                        {% for item in analytics.maintenance_indicators %}
+                            <option
+                                value="{{ item.country_code }}|{{ item.canonical_name }}"
+                                {% if item.country_code == "AU" and item.canonical_name == "cpi_headline_mom" %}selected{% endif %}
+                            >
+                                {{ item.label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <button class="primary-action" type="submit">Refresh Series</button>
+            </form>
+            <div class="maintenance-result-grid" data-maintenance-result hidden>
+                <div class="analytics-kpi">
+                    <span class="analytics-kpi__label">Stored Rows</span>
+                    <strong data-maintenance-field="stored_rows">0</strong>
+                    <span data-maintenance-field="period_groups">0 periods</span>
+                </div>
+                <div class="analytics-kpi">
+                    <span class="analytics-kpi__label">Duplicates</span>
+                    <strong data-maintenance-field="duplicate_groups">0</strong>
+                    <span data-maintenance-field="rows_updated">0 rows updated</span>
+                </div>
+                <div class="analytics-kpi">
+                    <span class="analytics-kpi__label">Chart Prints</span>
+                    <strong data-maintenance-field="chartable_prints">0</strong>
+                    <span data-maintenance-field="latest_print">No latest print</span>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
     <section class="analytics-card-grid">
         <div class="analytics-panel analytics-panel--tight">
             <div class="analytics-section-heading">
@@ -205,4 +250,83 @@
         </div>
     </section>
 </main>
+
+{% if request.state.current_user and request.state.current_user.role == "admin" %}
+    <script>
+        (() => {
+            const form = document.querySelector("[data-maintenance-refresh-form]");
+            const select = document.querySelector("[data-maintenance-series]");
+            const state = document.querySelector("[data-maintenance-state]");
+            const result = document.querySelector("[data-maintenance-result]");
+            const fields = Object.fromEntries(
+                Array.from(document.querySelectorAll("[data-maintenance-field]")).map((node) => [
+                    node.dataset.maintenanceField,
+                    node,
+                ])
+            );
+
+            const setText = (key, value) => {
+                if (fields[key]) {
+                    fields[key].textContent = value;
+                }
+            };
+
+            form?.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const [countryCode, canonicalName] = String(select?.value || "|").split("|");
+                if (!countryCode || !canonicalName) {
+                    if (state) {
+                        state.textContent = "Select a series.";
+                    }
+                    return;
+                }
+
+                if (state) {
+                    state.textContent = "Refreshing…";
+                }
+                form.querySelector("button")?.setAttribute("disabled", "disabled");
+
+                try {
+                    const response = await fetch("/api/admin/maintenance/indicator-series-refresh", {
+                        method: "POST",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({
+                            country_code: countryCode,
+                            canonical_name: canonicalName,
+                            repair_latest_flags: true,
+                        }),
+                    });
+                    const payload = await response.json();
+                    if (!response.ok || !payload.ok) {
+                        throw new Error(payload.message || `HTTP ${response.status}`);
+                    }
+
+                    if (result) {
+                        result.hidden = false;
+                    }
+                    setText("stored_rows", Number(payload.stored_rows || 0).toLocaleString());
+                    setText("period_groups", `${Number(payload.period_groups || 0).toLocaleString()} periods`);
+                    setText("duplicate_groups", Number(payload.duplicate_groups || 0).toLocaleString());
+                    setText("rows_updated", `${Number(payload.rows_updated || 0).toLocaleString()} rows updated`);
+                    setText("chartable_prints", Number(payload.chartable_prints || 0).toLocaleString());
+                    setText(
+                        "latest_print",
+                        payload.latest_period
+                            ? `${payload.latest_period} · ${payload.latest_actual ?? "N/A"}`
+                            : "No latest print"
+                    );
+                    if (state) {
+                        state.textContent = `${payload.display_name} refreshed.`;
+                    }
+                } catch (error) {
+                    if (state) {
+                        state.textContent = error.message || "Refresh failed.";
+                    }
+                } finally {
+                    form.querySelector("button")?.removeAttribute("disabled");
+                }
+            });
+        })();
+    </script>
+{% endif %}
 {% endblock %}

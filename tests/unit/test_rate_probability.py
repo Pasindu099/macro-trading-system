@@ -142,6 +142,18 @@ def test_interpolation_between_tenors():
     assert result == pytest.approx(4.25)
 
 
+def test_interpolation_anchors_front_tenor_to_current_rate():
+    curve_date = date(2026, 1, 1)
+    result = interpolate_ois_rate(
+        curve_date=curve_date,
+        curve={30: 4.0, 90: 4.5},
+        target_date=curve_date + timedelta(days=15),
+        current_rate=4.5,
+    )
+
+    assert result == pytest.approx(4.25)
+
+
 def test_step_implied_rates_apply_basis_before_delta():
     meetings = [datetime(2026, 1, 31, tzinfo=UTC)]
     result = compute_step_implied_rates(

@@ -172,19 +172,26 @@
     }).join("");
   }
 
-  async function fetchAndRenderMeetings(bank, step, currentRate) {
+  async function fetchAndRenderMeetings(bank, step, currentRate, snapshotMode) {
     const tbody = document.getElementById("rp-meetings-body");
     if (!tbody) return;
+    const snapshotLabel = document.getElementById("rp-snapshot-label");
     tbody.style.opacity = "0.4";
     try {
       const res = await fetch("/api/rate-prob/meetings/" + encodeURIComponent(bank) +
-                              "?step=" + encodeURIComponent(step) + "&n=12");
+                              "?step=" + encodeURIComponent(step) +
+                              "&n=12&snapshot=" + encodeURIComponent(snapshotMode || "current"));
       if (!res.ok) throw new Error("HTTP " + res.status);
       const data = await res.json();
       tbody.innerHTML = buildTableRows(data.meetings || [], currentRate);
+      if (snapshotLabel) {
+        const label = data.snapshot_label || "Current";
+        snapshotLabel.textContent = data.snapshot_date ? label + " · " + data.snapshot_date : label;
+      }
     } catch (err) {
       tbody.innerHTML =
         '<tr><td colspan="7" style="color:var(--rp-cut);padding:16px 12px">Failed to load: ' + err.message + "</td></tr>";
+      if (snapshotLabel) snapshotLabel.textContent = "Load failed";
     } finally {
       tbody.style.opacity = "1";
     }
@@ -466,10 +473,19 @@
     startCountdown(meetingIso);
 
     const stepSelect = document.getElementById("rp-step-select");
+    const comparisonSelect = document.getElementById("rp-comparison-select");
+    function refreshMeetingsTable() {
+      const step = stepSelect ? parseInt(stepSelect.value, 10) || 25 : 25;
+      const snapshotMode = comparisonSelect ? comparisonSelect.value || "current" : "current";
+      fetchAndRenderMeetings(bank, step, currentRate, snapshotMode);
+    }
     if (stepSelect) {
       stepSelect.addEventListener("change", function () {
-        fetchAndRenderMeetings(bank, parseInt(this.value, 10) || 25, currentRate);
+        refreshMeetingsTable();
       });
+    }
+    if (comparisonSelect) {
+      comparisonSelect.addEventListener("change", refreshMeetingsTable);
     }
 
     fetchAndRenderAll(bank);

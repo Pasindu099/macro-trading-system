@@ -257,6 +257,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .rp-section-title {
@@ -270,6 +271,21 @@
 .rp-table-hint {
   font-size: 0.78rem;
   color: var(--muted);
+}
+
+.rp-table-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.rp-table-controls label {
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .rp-table-wrap {

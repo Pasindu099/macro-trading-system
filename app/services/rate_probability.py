@@ -308,8 +308,13 @@ def interpolate_ois_rate(
         raise ValueError("curve cannot be empty")
     target_tenor = (target_date - curve_date).days
     points = sorted((int(tenor), float(rate)) for tenor, rate in curve.items())
-    if target_tenor < points[0][0]:
+    if target_tenor <= 0:
         return float(current_rate)
+    if target_tenor < points[0][0]:
+        left_days, left_rate = 0, float(current_rate)
+        right_days, right_rate = points[0]
+        weight = target_tenor / right_days
+        return left_rate + ((right_rate - left_rate) * weight)
     if target_tenor >= points[-1][0]:
         return points[-1][1]
     for (left_days, left_rate), (right_days, right_rate) in zip(points, points[1:], strict=True):
@@ -365,8 +370,13 @@ def interpolate_ois_rate_by_tenor(
     if not curve:
         raise ValueError("curve cannot be empty")
     points = sorted((int(tenor), float(rate)) for tenor, rate in curve.items())
-    if target_tenor_days < points[0][0]:
+    if target_tenor_days <= 0:
         return float(current_rate)
+    if target_tenor_days < points[0][0]:
+        left_days, left_rate = 0, float(current_rate)
+        right_days, right_rate = points[0]
+        weight = target_tenor_days / right_days
+        return left_rate + ((right_rate - left_rate) * weight)
     if target_tenor_days >= points[-1][0]:
         return points[-1][1]
     for (left_days, left_rate), (right_days, right_rate) in zip(points, points[1:], strict=True):

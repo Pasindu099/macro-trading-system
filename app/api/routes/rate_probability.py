@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -124,6 +124,7 @@ async def rate_meetings(
     bank: str,
     step: int | None = Query(None, ge=1, le=200, description="Move size in bps"),
     n: int = Query(12, ge=1, le=50, description="Number of meetings to return"),
+    snapshot: str = Query("current", pattern="^(current|previous_day|one_week_ago)$"),
     session: AsyncSession = SessionDep,
 ) -> dict:
     """Full meeting-by-meeting probability table for one bank."""
@@ -141,11 +142,30 @@ async def rate_meetings(
     )
 
     config = _bank_config(bank_key)
+    today = date.today()
 
     rows = []
-    has_market_data = any(prob.data_state == DATA_STATE_LIVE for prob in probabilities)
-    if probabilities:
-        for prob, meta in zip(probabilities, meetings_meta, strict=False):
+    snapshot_date: date | None = None
+    snapshot_label = "Current"
+    selected_probabilities = probabilities
+    if snapshot != "current":
+        target_date = today - timedelta(days=1 if snapshot == "previous_day" else 7)
+        snapshot_date = await _resolve_curve_date(bank_key, target_date, session)
+        snapshot_label = "Previous Day" if snapshot == "previous_day" else "1 Week Ago"
+        if snapshot_date is not None:
+            selected_probabilities = await compute_meeting_probabilities(
+                bank_key,
+                step_bps=float(step or config["step_bps"]),
+                curve_date=snapshot_date,
+                n_meetings=n,
+                db_session=session,
+            )
+        else:
+            selected_probabilities = []
+
+    has_market_data = any(prob.data_state == DATA_STATE_LIVE for prob in selected_probabilities)
+    if selected_probabilities:
+        for prob, meta in zip(selected_probabilities, meetings_meta, strict=False):
             rows.append(_meeting_probability_row(prob, bool(meta.get("is_official", True)), float(step or config["step_bps"])))
     else:
         rows = _hold_meeting_rows(bank_key, meetings_meta)
@@ -153,8 +173,11 @@ async def rate_meetings(
     return {
         "bank": bank_key,
         "current_rate": config["current_rate"],
+        "snapshot_mode": snapshot,
+        "snapshot_label": snapshot_label,
+        "snapshot_date": snapshot_date.isoformat() if snapshot_date else None,
         "market_data": await _market_data_status(bank_key, session),
-        "market_data_available": has_market_data,
+        "market_data_available": has_market_data if snapshot == "current" else snapshot_date is not None,
         "meetings": rows,
         "rate_path": _rate_path_rows(probabilities, config["current_rate"]),
     }
@@ -227,6 +250,44 @@ def _meeting_probability_row(prob: Any, is_official: bool, step_bps: float) -> d
     }
 
 
+async def _resolve_snapshot_date(
+    bank_key: str,
+    target_date: date,
+    session: AsyncSession,
+) -> date | None:
+    result = await session.execute(
+        text(
+            """
+            SELECT max(snapshot_date)
+            FROM rate_snapshots
+            WHERE bank = :bank
+              AND snapshot_date <= :target_date
+            """
+        ),
+        {"bank": bank_key, "target_date": target_date},
+    )
+    return result.scalar_one_or_none()
+
+
+async def _resolve_curve_date(
+    bank_key: str,
+    target_date: date,
+    session: AsyncSession,
+) -> date | None:
+    result = await session.execute(
+        text(
+            """
+            SELECT max(curve_date)
+            FROM ois_cache
+            WHERE bank = :bank
+              AND curve_date <= :target_date
+            """
+        ),
+        {"bank": bank_key, "target_date": target_date},
+    )
+    return result.scalar_one_or_none()
+
+
 def _rate_path_rows(probabilities: list[Any], current_policy_rate: float) -> list[dict[str, Any]]:
     return [
         {
@@ -294,18 +355,12 @@ async def rate_path(
                 continue
 
         if requested_dates:
-            available_result = await session.execute(
-                text(
-                    "SELECT DISTINCT snapshot_date FROM rate_snapshots "
-                    "WHERE bank = :bank ORDER BY snapshot_date DESC"
-                ),
-                {"bank": bank_key},
-            )
-            available_dates: set[date] = {row.snapshot_date for row in available_result.all()}
-
+            used_dates: set[date] = set()
             for snap_date in requested_dates:
-                if snap_date not in available_dates:
+                resolved_date = await _resolve_snapshot_date(bank_key, snap_date, session)
+                if resolved_date is None or resolved_date in used_dates:
                     continue
+                used_dates.add(resolved_date)
                 snap_result = await session.execute(
                     text(
                         """
@@ -315,7 +370,7 @@ async def rate_path(
                         ORDER BY meeting_dt
                         """
                     ),
-                    {"bank": bank_key, "snap_date": snap_date},
+                    {"bank": bank_key, "snap_date": resolved_date},
                 )
                 points = [
                     {
@@ -327,8 +382,8 @@ async def rate_path(
                 if points:
                     series.append(
                         {
-                            "label": _snapshot_label(snap_date, today),
-                            "snapshot_date": snap_date.isoformat(),
+                            "label": _snapshot_label(resolved_date, today),
+                            "snapshot_date": resolved_date.isoformat(),
                             "points": points,
                         }
                     )

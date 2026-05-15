@@ -141,6 +141,15 @@
         {% endif %}
       </span>
       <span class="rp-table-hint">Step dropdown re-fetches this table</span>
+      <div class="rp-table-controls">
+        <label for="rp-comparison-select">Snapshot</label>
+        <select class="rp-step-select" id="rp-comparison-select" data-bank="{{ bank }}">
+          <option value="current" selected>Current</option>
+          <option value="previous_day">Previous Day</option>
+          <option value="one_week_ago">1 Week Ago</option>
+        </select>
+        <span class="rp-table-hint" id="rp-snapshot-label">Current</span>
+      </div>
     </div>
 
     <div class="rp-table-wrap" id="rp-table-wrap">

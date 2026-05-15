@@ -109,6 +109,7 @@ YIELD_MATURITIES = (
     {"key": "5y", "label": "5Y", "name": "5 years"},
     {"key": "10y", "label": "10Y", "name": "10 years"},
 )
+COUNTRY_INDICATOR_HISTORY_LIMIT = 500
 YIELD_MATURITY_SUFFIXES = {
     "1m": "1M",
     "3m": "3M",
@@ -1651,7 +1652,7 @@ async def _build_country_rows(
                 desc(IndicatorRelease.retrieved_at),
                 desc(IndicatorRelease.id),
             )
-            .limit(50)
+            .limit(COUNTRY_INDICATOR_HISTORY_LIMIT)
         )
         history_rows_by_period: dict[tuple[Any, ...], IndicatorRelease] = {}
         for row in history_q.scalars().all():
@@ -1681,11 +1682,28 @@ async def _build_country_rows(
             if latest_release is not None and latest_release.actual is not None
             else None
         )
-        previous_value = (
+        previous_db_value = (
+            float(latest_release.previous)
+            if latest_release is not None
+            and getattr(latest_release, "previous", None) is not None
+            else None
+        )
+        previous_history_value = (
             float(previous_release.actual)
             if previous_release is not None and previous_release.actual is not None
             else None
         )
+        previous_value = (
+            previous_db_value
+            if previous_db_value is not None
+            else previous_history_value
+        )
+        if (
+            latest_value is not None
+            and previous_db_value is not None
+            and len(sparkline_values) < 2
+        ):
+            sparkline_values = [previous_db_value, latest_value]
         rows.append({
             "id": indicator.id,
             "canonical_name": indicator.canonical_name,

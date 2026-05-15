@@ -118,9 +118,21 @@ async def test_build_country_rows_returns_one_row_per_indicator() -> None:
         secondary_categories=["Inflation"],
     )
     history_rows = [
-        SimpleNamespace(actual=3.0, released_at=datetime(2026, 4, 10, tzinfo=timezone.utc)),
-        SimpleNamespace(actual=3.5, released_at=datetime(2026, 4, 11, tzinfo=timezone.utc)),
-        SimpleNamespace(actual=3.8, released_at=datetime(2026, 4, 12, tzinfo=timezone.utc)),
+        SimpleNamespace(
+            actual=3.0,
+            previous=None,
+            released_at=datetime(2026, 4, 10, tzinfo=timezone.utc),
+        ),
+        SimpleNamespace(
+            actual=3.5,
+            previous=None,
+            released_at=datetime(2026, 4, 11, tzinfo=timezone.utc),
+        ),
+        SimpleNamespace(
+            actual=3.8,
+            previous=None,
+            released_at=datetime(2026, 4, 12, tzinfo=timezone.utc),
+        ),
     ]
     session = _FakeSession([
         _ExecuteResult([indicator]),
@@ -146,9 +158,21 @@ async def test_build_country_rows_ignores_upcoming_na_release_for_latest_value()
         secondary_categories=[],
     )
     history_rows = [
-        SimpleNamespace(actual=3.4, released_at=datetime(2026, 1, 29, tzinfo=timezone.utc)),
-        SimpleNamespace(actual=3.7, released_at=datetime(2026, 4, 15, tzinfo=timezone.utc)),
-        SimpleNamespace(actual=None, released_at=datetime(2026, 4, 29, tzinfo=timezone.utc)),
+        SimpleNamespace(
+            actual=3.4,
+            previous=None,
+            released_at=datetime(2026, 1, 29, tzinfo=timezone.utc),
+        ),
+        SimpleNamespace(
+            actual=3.7,
+            previous=None,
+            released_at=datetime(2026, 4, 15, tzinfo=timezone.utc),
+        ),
+        SimpleNamespace(
+            actual=None,
+            previous=3.7,
+            released_at=datetime(2026, 4, 29, tzinfo=timezone.utc),
+        ),
     ]
     session = _FakeSession([
         _ExecuteResult([indicator]),
@@ -174,11 +198,13 @@ async def test_build_country_rows_does_not_require_latest_flag() -> None:
     history_rows = [
         SimpleNamespace(
             actual=4.1,
+            previous=None,
             is_latest=False,
             released_at=datetime(2026, 3, 20, tzinfo=timezone.utc),
         ),
         SimpleNamespace(
             actual=4.2,
+            previous=None,
             is_latest=False,
             released_at=datetime(2026, 4, 17, tzinfo=timezone.utc),
         ),
@@ -192,6 +218,72 @@ async def test_build_country_rows_does_not_require_latest_flag() -> None:
 
     assert rows[0]["latest_value"] == "4.2 %"
     assert rows[0]["sparkline_values"] == [4.1, 4.2]
+
+
+@pytest.mark.asyncio
+async def test_build_country_rows_uses_release_previous_from_database() -> None:
+    indicator = SimpleNamespace(
+        id=404,
+        canonical_name="headline_cpi_mom",
+        display_name="Headline CPI (MoM)",
+        country_code="AU",
+        unit="%",
+        secondary_categories=[],
+    )
+    latest_release = SimpleNamespace(
+        actual=1.1,
+        previous=0.2,
+        released_at=datetime(2026, 4, 29, tzinfo=timezone.utc),
+    )
+    session = _FakeSession([
+        _ExecuteResult([indicator]),
+        _ExecuteResult([latest_release]),
+    ])
+
+    rows = await _build_country_rows(session, "AU", "Inflation")
+
+    assert rows[0]["latest_value"] == "1.1 %"
+    assert rows[0]["previous_value"] == "0.2 %"
+    assert rows[0]["sparkline_values"] == [0.2, 1.1]
+
+
+@pytest.mark.asyncio
+async def test_build_country_rows_finds_prior_period_after_duplicate_releases() -> None:
+    indicator = SimpleNamespace(
+        id=505,
+        canonical_name="headline_cpi_mom",
+        display_name="Headline CPI (MoM)",
+        country_code="AU",
+        unit="%",
+        secondary_categories=[],
+    )
+    latest_period_duplicates = [
+        SimpleNamespace(
+            actual=1.1,
+            previous=None,
+            period="Mar",
+            period_start_date=datetime(2026, 3, 1, tzinfo=timezone.utc).date(),
+            released_at=datetime(2026, 4, 29, tzinfo=timezone.utc),
+        )
+        for _ in range(75)
+    ]
+    prior_period = SimpleNamespace(
+        actual=0.2,
+        previous=0.4,
+        period="Feb",
+        period_start_date=datetime(2026, 2, 1, tzinfo=timezone.utc).date(),
+        released_at=datetime(2026, 3, 26, tzinfo=timezone.utc),
+    )
+    session = _FakeSession([
+        _ExecuteResult([indicator]),
+        _ExecuteResult([*latest_period_duplicates, prior_period]),
+    ])
+
+    rows = await _build_country_rows(session, "AU", "Inflation")
+
+    assert rows[0]["latest_value"] == "1.1 %"
+    assert rows[0]["previous_value"] == "0.2 %"
+    assert rows[0]["sparkline_values"] == [0.2, 1.1]
 
 
 def test_calendar_category_filter_accepts_ui_categories() -> None:

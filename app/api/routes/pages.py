@@ -1698,6 +1698,8 @@ async def _build_country_rows(
             if row.actual is not None
             and getattr(row, "released_at", now) <= now
         ]
+        if not released_history_rows:
+            continue
         sparkline_values = [float(row.actual) for row in released_history_rows]
         latest_release = released_history_rows[-1] if released_history_rows else None
         previous_release = (

@@ -1,67 +1,109 @@
 {% extends "base.html" %}
 
 {% block body %}
-<main class="shell dashboard-tool-shell">
-    <header class="tool-hero">
-        <div>
-            <a href="/">Dashboard</a>
-            <span>/</span>
-            <strong>FX Outlook</strong>
-        </div>
-        <section>
-            <div>
-                <h1>FX Outlook</h1>
-                <p>Retail positioning outlook powered by Myfxbook.</p>
-            </div>
-            <a href="/trade-planner">Trade Planner</a>
-        </section>
-    </header>
+<main class="fx-sentiment-shell" data-fx-outlook>
+    <div class="fx-alert-pill">Retail Sentiment Alerts</div>
 
-    <section class="black-panel myfxbook-outlook-panel" data-fx-outlook>
-        <header class="black-panel__head">
-            <span>Myfxbook Outlook</span>
-            <em data-fx-outlook-status>loading retail sentiment</em>
+    <section class="fx-sentiment-panel fx-sentiment-panel--ranking">
+        <header class="fx-sentiment-head">
+            <div>
+                <h1>Retail sentiment</h1>
+                <div class="fx-segment-row" aria-label="Time range">
+                    <button class="is-active" type="button" data-fx-range="current">Current</button>
+                    <button type="button" data-fx-range="1w">1W</button>
+                    <button type="button" data-fx-range="1m">1M</button>
+                </div>
+            </div>
+            <nav class="fx-category-tabs" aria-label="Asset category">
+                <button class="is-active" type="button" data-fx-category="all">All</button>
+                <button type="button" data-fx-category="forex">Forex</button>
+                <button type="button" data-fx-category="indices">Indices</button>
+                <button type="button" data-fx-category="commodities">Commodities</button>
+                <button type="button" data-fx-category="crypto">Crypto</button>
+            </nav>
         </header>
 
-        <div class="fx-outlook-native" data-fx-outlook-native>
-            <div class="fx-outlook-summary">
-                <article>
-                    <span>Pairs loaded</span>
-                    <strong data-fx-pair-count>--</strong>
-                </article>
-                <article>
-                    <span>Most popular</span>
-                    <strong data-fx-most-popular>--</strong>
-                </article>
-                <article>
-                    <span>Strongest crowd skew</span>
-                    <strong data-fx-strongest-skew>--</strong>
-                </article>
+        <div class="fx-ranking-tools">
+            <div class="fx-sort-toggle" aria-label="Sort ranking">
+                <button class="is-active" type="button" data-fx-sort="rank">Rank</button>
+                <button type="button" data-fx-sort="az">A-Z</button>
             </div>
-
-            <div class="fx-outlook-table-wrap">
-                <table class="fx-outlook-table">
-                    <thead>
-                        <tr>
-                            <th>Symbol</th>
-                            <th>Community trend</th>
-                            <th>Popularity</th>
-                            <th>Avg short</th>
-                            <th>Avg long</th>
-                            <th>Price</th>
-                        </tr>
-                    </thead>
-                    <tbody data-fx-outlook-rows>
-                        <tr><td colspan="6">Waiting for Myfxbook data...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+            <label class="fx-search">
+                <span class="sr-only">Search asset</span>
+                <input type="search" placeholder="Search asset..." data-fx-search>
+            </label>
         </div>
 
-        <details class="myfxbook-source-toggle">
-            <summary>Raw Myfxbook widget</summary>
-            <div class="myfxbook-widget-wrap" data-myfxbook-source>
-            <!-- myfxbook.com outlook widget - Start -->
+        <p class="fx-meta" data-fx-outlook-status>Loading retail sentiment...</p>
+
+        <div class="fx-ranking-list" data-fx-ranking-list>
+            <div class="fx-empty">Waiting for Myfxbook data...</div>
+        </div>
+    </section>
+
+    <aside class="fx-sentiment-side">
+        <section class="fx-sentiment-panel fx-history-card">
+            <header class="fx-card-head">
+                <h2>Sentiment history</h2>
+                <select data-fx-asset-select aria-label="Select asset">
+                    <option>Loading...</option>
+                </select>
+                <button type="button" data-fx-save>Save Snapshot</button>
+            </header>
+            <div class="fx-chart-wrap">
+                <canvas data-fx-history-chart></canvas>
+            </div>
+        </section>
+
+        <section class="fx-sentiment-panel fx-details-card">
+            <header class="fx-details-head">
+                <div>
+                    <h2>Sentiment details</h2>
+                    <strong data-fx-detail-title>--</strong>
+                </div>
+                <div>
+                    <span data-fx-detail-asof>As of: --</span>
+                    <b data-fx-detail-bias>Neutral</b>
+                </div>
+            </header>
+
+            <article class="fx-meaning">
+                <span>What this means</span>
+                <p data-fx-detail-meaning>Retail positioning details will appear after the widget loads.</p>
+                <small>Rule-of-thumb: Net (L-S) &lt; 0 = net short (bullish contrarian) | Net &gt; 0 = net long (bearish contrarian).</small>
+            </article>
+
+            <div class="fx-snapshot">
+                <span>Snapshot</span>
+                <dl>
+                    <div>
+                        <dt>Long / Short <i title="Percent of traders long versus short">?</i></dt>
+                        <dd data-fx-detail-longshort>--</dd>
+                    </div>
+                    <div>
+                        <dt>Total positions <i title="Relative popularity from the source widget">?</i></dt>
+                        <dd data-fx-detail-total>--</dd>
+                    </div>
+                    <div>
+                        <dt>Net (L-S) <i title="Long percentage minus short percentage">?</i></dt>
+                        <dd data-fx-detail-net>--</dd>
+                    </div>
+                    <div>
+                        <dt>Avg long / Avg short <i title="Average entry prices from the source widget">?</i></dt>
+                        <dd data-fx-detail-average>--</dd>
+                    </div>
+                    <div>
+                        <dt>Crowding (extremeness) <i title="Absolute distance from balanced positioning">?</i></dt>
+                        <dd data-fx-detail-crowding>--</dd>
+                    </div>
+                </dl>
+            </div>
+        </section>
+    </aside>
+
+    <details class="myfxbook-source-toggle fx-source-raw">
+        <summary>Raw Myfxbook widget</summary>
+        <div class="myfxbook-widget-wrap" data-myfxbook-source>
             <div class="myfxbook-widget-source">
                 <script class="powered" type="text/javascript"
                         src="https://widgets.myfxbook.com/scripts/fxOutlook.js?type=1&symbols=,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,18,19,20,21,22,23,24,25,26,27,28,29,31,34,36,37,38,40,41,42,43,45,46,47,48,49,50,51,103,107,131,137,1233,1234,1236,1245,1246,1247,1815,1863,1893,2012,2076,2090,2114,2115,2119,2521,2603,2872,3005,3240,3473,5079,5435,5779"></script>
@@ -72,11 +114,9 @@
                 </a>
             </div>
             <script type="text/javascript">showOutlookWidget()</script>
-            <!-- myfxbook.com outlook widget - End -->
-            </div>
-        </details>
-    </section>
+        </div>
+    </details>
 </main>
 
-<script src="{{ url_for('static', path='js/fx_outlook.js') }}?v=20260509theme" defer></script>
+<script src="{{ url_for('static', path='js/fx_outlook.js') }}?v=20260520sentiment" defer></script>
 {% endblock %}

@@ -16,6 +16,7 @@ ENV/
 # Environment variables
 .env
 data/bank_research/admin_state.json
+data/retail_sentiment_history/
 .env.local
 
 # Testing

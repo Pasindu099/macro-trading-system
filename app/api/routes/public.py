@@ -37,6 +37,14 @@ from app.api.schemas import (
 from app.db.models import Country, Indicator, IndicatorRelease, IngestionRun
 from app.db.session import get_session
 from app.processing.cot import COT_PAIRS, get_all_cot_rows, get_cot_payload, normalize_cot_pair
+from app.services.retail_sentiment import (
+    configure_myfxbook,
+    get_retail_sentiment,
+    get_retail_sentiment_symbol,
+    load_history,
+    refresh_retail_sentiment,
+    source_status,
+)
 from app.settings import get_settings
 
 router = APIRouter(prefix="/api", tags=["public"])
@@ -59,6 +67,14 @@ CALENDAR_CATEGORIES = (
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
 NEWS_SENTIMENT_MODEL = "gpt-4.1"
 INVESTINGLIVE_RSS_URL = "https://investinglive.com/feed/"
+
+RETAIL_SENTIMENT_CATEGORIES = {"all", "forex", "indices", "commodities", "crypto"}
+RETAIL_SENTIMENT_SORTS = {"rank", "az", "long", "short", "net"}
+
+
+class MyfxbookConfigRequest(BaseModel):
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=1)
 
 CB_FEED_CACHE_TTL = 900  # 15 minutes
 CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
@@ -1002,6 +1018,63 @@ async def get_biggest_surprises(
         items=await list_biggest_surprises(session, days=days, limit=limit),
     )
     return Envelope(data=payload, meta=await _meta(session))
+
+
+@router.get("/retail-sentiment")
+async def retail_sentiment_snapshot(
+    category: str = Query(default="all"),
+    sort: str = Query(default="rank"),
+    limit: int = Query(default=100, ge=1, le=300),
+) -> dict[str, Any]:
+    """Return merged retail positioning from Myfxbook, OANDA, Binance, and IG."""
+    category = category.lower()
+    sort = sort.lower()
+    if category not in RETAIL_SENTIMENT_CATEGORIES:
+        raise HTTPException(status_code=400, detail="Invalid retail sentiment category")
+    if sort not in RETAIL_SENTIMENT_SORTS:
+        raise HTTPException(status_code=400, detail="Invalid retail sentiment sort")
+    return await get_retail_sentiment(category=category, sort=sort, limit=limit)
+
+
+@router.get("/retail-sentiment/sources")
+async def retail_sentiment_sources() -> dict[str, Any]:
+    """Return source availability and cache state for retail sentiment feeds."""
+    return source_status()
+
+
+@router.post("/retail-sentiment/refresh")
+async def retail_sentiment_refresh() -> dict[str, str]:
+    """Force a retail sentiment cache refresh."""
+    await refresh_retail_sentiment(force=True)
+    return {"status": "ok", "message": "Retail sentiment refreshed"}
+
+
+@router.post("/retail-sentiment/config/myfxbook")
+async def retail_sentiment_config_myfxbook(payload: MyfxbookConfigRequest) -> dict[str, str]:
+    """Authenticate Myfxbook for the current process and refresh sentiment data."""
+    ok = await configure_myfxbook(payload.username.strip(), payload.password.strip())
+    if not ok:
+        raise HTTPException(status_code=401, detail="Myfxbook login failed")
+    return {"status": "ok", "message": "Myfxbook authenticated"}
+
+
+@router.get("/retail-sentiment/history/{symbol}")
+async def retail_sentiment_history(
+    symbol: str,
+    days: int = Query(default=30, ge=1, le=365),
+) -> dict[str, Any]:
+    """Return persisted retail sentiment history for one symbol."""
+    history = await load_history(symbol, days=days)
+    return {"symbol": symbol.upper(), "days": days, "count": len(history), "history": history}
+
+
+@router.get("/retail-sentiment/{symbol}")
+async def retail_sentiment_symbol(symbol: str) -> dict[str, Any]:
+    """Return one retail sentiment snapshot plus persisted history."""
+    payload = await get_retail_sentiment_symbol(symbol)
+    if payload is None:
+        raise HTTPException(status_code=404, detail=f"Symbol '{symbol.upper()}' not found")
+    return payload
 
 
 @router.get("/calendar", response_model=Envelope[EconomicCalendarPayload])

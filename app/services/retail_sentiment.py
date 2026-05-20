@@ -177,6 +177,7 @@ _cache: dict[str, Any] = {
     "data": None,
     "fetched_at": 0.0,
     "myfxbook_session": None,
+    "myfxbook_env_attempted": False,
     "sources": {},
 }
 _lock = asyncio.Lock()
@@ -485,6 +486,13 @@ async def refresh_retail_sentiment(force: bool = False) -> dict[str, Any]:
         cached = _cache.get("data")
         if cached and not force and (now - float(_cache["fetched_at"])) < CACHE_TTL_SECONDS:
             return cached
+
+        if not _cache.get("myfxbook_session") and not _cache.get("myfxbook_env_attempted"):
+            _cache["myfxbook_env_attempted"] = True
+            username = os.getenv("MYFXBOOK_USER", "").strip()
+            password = os.getenv("MYFXBOOK_PASS", "").strip()
+            if username and password:
+                _cache["myfxbook_session"] = await myfxbook_login(username, password)
 
         result = await fetch_all_sources(_cache.get("myfxbook_session"))
         _cache["data"] = result

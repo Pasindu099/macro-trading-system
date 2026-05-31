@@ -39,6 +39,7 @@ from typing import Any
 import yaml
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 
 from app.db.session import session_scope
 from app.ingestion.canonicalizer import Canonicalizer
@@ -46,6 +47,7 @@ from app.ingestion.eodhd_client import ALLOWED_COUNTRIES, EODHDClient, EODHDErro
 from app.ingestion.ingest_service import IngestService
 from app.ingestion.run_logger import run_logger
 from app.services.meeting_calendar import SUPPORTED_BANKS
+from app.services.news_monitor import run_news_monitor
 from app.services.rate_fetchers import fetch_all, should_fetch_on_startup
 from app.services.rate_probability import save_snapshot
 
@@ -120,6 +122,39 @@ class Scheduler:
             misfire_grace_time=60 * 60,
         )
         logger.info("  Registered rate probability OIS/futures fetch at 06:00 UTC")
+
+        self._scheduler.add_job(
+            run_news_monitor,
+            trigger=IntervalTrigger(minutes=5, timezone="UTC"),
+            args=[1],
+            id="news_monitor_tier1",
+            name="Tier 1 news monitor",
+            replace_existing=True,
+            misfire_grace_time=60 * 5,
+        )
+        logger.info("  Registered Tier 1 news monitor every 5 minutes")
+
+        self._scheduler.add_job(
+            run_news_monitor,
+            trigger=IntervalTrigger(minutes=15, timezone="UTC"),
+            args=[2],
+            id="news_monitor_tier2",
+            name="Tier 2 news monitor",
+            replace_existing=True,
+            misfire_grace_time=60 * 15,
+        )
+        logger.info("  Registered Tier 2 news monitor every 15 minutes")
+
+        self._scheduler.add_job(
+            run_news_monitor,
+            trigger=IntervalTrigger(minutes=30, timezone="UTC"),
+            args=[3],
+            id="news_monitor_tier3",
+            name="Tier 3 news monitor",
+            replace_existing=True,
+            misfire_grace_time=60 * 30,
+        )
+        logger.info("  Registered Tier 3 news monitor every 30 minutes")
 
         self._scheduler.start()
         await self._run_rate_probability_fetch_if_empty()

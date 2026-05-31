@@ -13,6 +13,65 @@
     <script src="{{ url_for('static', path='js/chart.umd.min.js') }}" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js" defer></script>
     <script src="{{ url_for('static', path='js/charts.js') }}?v=20260507ds" defer></script>
+    <style>
+.news-alert-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 500;
+  animation: slideDown 0.3s ease;
+}
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.news-alert-critical {
+  background: rgba(239,68,68,0.15);
+  border-bottom: 1px solid rgba(239,68,68,0.3);
+  color: #fca5a5;
+}
+.news-alert-high {
+  background: rgba(245,158,11,0.15);
+  border-bottom: 1px solid rgba(245,158,11,0.3);
+  color: #fcd34d;
+}
+.news-alert-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.1);
+  flex-shrink: 0;
+}
+.news-alert-text {
+  flex: 1;
+}
+.news-alert-currencies {
+  font-size: 11px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.news-alert-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+.news-alert-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.5;
+  font-size: 12px;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+.news-alert-dismiss:hover { opacity: 1; }
+</style>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="{% if request is defined and request.url.path not in ['/login', '/setup'] %}has-reference-shell{% endif %}">
@@ -147,6 +206,11 @@
       {% endif %}
       <button class="btn icon-only" title="Refresh" onclick="window.location.reload()">&#8635;</button>
     </div>
+    <div id="news-alert-banner"
+         hx-get="/api/intelligence/alerts/latest"
+         hx-trigger="every 60s"
+         hx-swap="outerHTML">
+    </div>
     <div class="content wide">
 {% endif %}
 {% block body %}{% endblock %}
@@ -165,6 +229,38 @@
   }
   tick();
   setInterval(tick, 1000);
+})();
+</script>
+<script>
+(function() {
+  function playAlertSound() {
+    try {
+      var ctx = new (window.AudioContext ||
+                     window.webkitAudioContext)();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(
+        0.001, ctx.currentTime + 0.5);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.5);
+    } catch(e) {}
+  }
+
+  document.body.addEventListener(
+    'htmx:afterSwap', function(evt) {
+      var trigger = document.getElementById(
+        'news-alert-sound-trigger');
+      if (trigger &&
+          trigger.dataset.critical === 'true') {
+        playAlertSound();
+      }
+    }
+  );
 })();
 </script>
 </body>

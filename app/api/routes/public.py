@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import date, datetime, timedelta, timezone
 import html
 import json
 import re
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from urllib.parse import urljoin
 from xml.etree import ElementTree
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, asc, desc, func, select
+from sqlalchemy import and_, asc, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas import (
@@ -48,6 +49,7 @@ from app.services.retail_sentiment import (
 from app.settings import get_settings
 
 router = APIRouter(prefix="/api", tags=["public"])
+DB_SESSION = Depends(get_session)
 RANGE_LOOKBACK_DAYS = {
     "1y": 365,
     "3y": 365 * 3,
@@ -316,7 +318,7 @@ def pct_from(value: Any) -> int:
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 async def _meta(session: AsyncSession) -> ResponseMeta:
@@ -365,11 +367,11 @@ def _calendar_event_rank(event: EconomicCalendarEvent) -> tuple[int, int, int, i
     period_quality = 0
     if event.period:
         normalized_period = event.period.strip()
-        if re.fullmatch(r"[A-Z][a-z]{2}", normalized_period):
-            period_quality = 2
-        elif re.fullmatch(r"Q[1-4](?:[ /-]\d{2,4})?", normalized_period):
-            period_quality = 2
-        elif re.fullmatch(r"\d{4}-\d{2}-\d{2}", normalized_period):
+        if (
+            re.fullmatch(r"[A-Z][a-z]{2}", normalized_period)
+            or re.fullmatch(r"Q[1-4](?:[ /-]\d{2,4})?", normalized_period)
+            or re.fullmatch(r"\d{4}-\d{2}-\d{2}", normalized_period)
+        ):
             period_quality = 2
         elif len(normalized_period) <= 8 and "(" not in normalized_period and ")" not in normalized_period:
             period_quality = 1
@@ -999,7 +1001,7 @@ async def get_country_detail_payload(
 
 @router.get("/countries", response_model=Envelope[CountriesPayload])
 async def list_countries(
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = DB_SESSION,
 ) -> Envelope[CountriesPayload]:
     """List all tracked countries with lightweight landing-page summaries."""
     payload = CountriesPayload(countries=await list_country_summaries(session))
@@ -1010,7 +1012,7 @@ async def list_countries(
 async def get_biggest_surprises(
     days: int = Query(default=7, ge=1, le=30),
     limit: int = Query(default=5, ge=1, le=10),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = DB_SESSION,
 ) -> Envelope[BiggestSurprisesPayload]:
     """Return the most significant recent surprises for landing-page use."""
     payload = BiggestSurprisesPayload(
@@ -1077,6 +1079,84 @@ async def retail_sentiment_symbol(symbol: str) -> dict[str, Any]:
     return payload
 
 
+@router.get("/intelligence/alerts/latest", response_class=HTMLResponse)
+async def latest_intelligence_alerts(
+    session: AsyncSession = DB_SESSION,
+) -> HTMLResponse:
+    """Return the latest surfaced news alert banner fragment for HTMX polling."""
+    result = await session.execute(
+        text(
+            """
+            SELECT
+                alert_text,
+                severity,
+                affected_currencies,
+                detected_at
+            FROM intelligence.news_alerts
+            WHERE was_surfaced = true
+              AND detected_at >= NOW() - interval '30 minutes'
+            ORDER BY detected_at DESC
+            LIMIT 3
+            """
+        )
+    )
+    alerts = [dict(row) for row in result.mappings().all()]
+    return HTMLResponse(content=_render_news_alert_banner(alerts), media_type="text/html")
+
+
+def _render_news_alert_banner(alerts: list[dict[str, Any]]) -> str:
+    if not alerts:
+        return '<div id="news-alert-banner"></div>'
+
+    bars = []
+    has_critical = False
+    now = datetime.now(UTC)
+    for alert in alerts:
+        severity = str(alert.get("severity") or "").upper()
+        has_critical = has_critical or severity == "CRITICAL"
+        detected_at = _as_utc_datetime(alert.get("detected_at")) or now
+        minutes_ago = max(0, int((now - detected_at).total_seconds() // 60))
+        currencies = " ".join(str(code) for code in alert.get("affected_currencies") or [])
+        bars.append(
+            "\n".join(
+                [
+                    f'<div class="news-alert-bar news-alert-{html.escape(severity.lower())}">',
+                    f'  <span class="news-alert-label">{html.escape(severity)}</span>',
+                    "  <span class=\"news-alert-text\">"
+                    f"{html.escape(str(alert.get('alert_text') or ''))}</span>",
+                    "  <span class=\"news-alert-currencies\">"
+                    f"{html.escape(currencies)}</span>",
+                    f'  <span class="news-alert-time">{minutes_ago}m ago</span>',
+                    '  <button class="news-alert-dismiss" '
+                    'onclick="this.parentElement.parentElement.remove()">✕</button>',
+                    "</div>",
+                ]
+            )
+        )
+
+    sound_trigger = (
+        '<div id="news-alert-sound-trigger" data-critical="true"></div>'
+        if has_critical
+        else ""
+    )
+    return "\n".join(
+        [
+            '<div id="news-alert-banner">',
+            *bars,
+            sound_trigger,
+            "</div>",
+        ]
+    )
+
+
+def _as_utc_datetime(value: Any) -> datetime | None:
+    if not isinstance(value, datetime):
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
+
+
 @router.get("/calendar", response_model=Envelope[EconomicCalendarPayload])
 async def get_economic_calendar(
     days_back: int = Query(default=1, ge=0, le=14),
@@ -1091,7 +1171,7 @@ async def get_economic_calendar(
     ),
     importance: int | None = Query(default=None, ge=1, le=3),
     limit: int = Query(default=200, ge=1, le=500),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = DB_SESSION,
 ) -> Envelope[EconomicCalendarPayload]:
     """Return upcoming and recent calendar events from ingested EODHD data."""
     events = await list_calendar_events(
@@ -1441,7 +1521,7 @@ async def analyze_news_sentiment(
 @router.get("/countries/{country_code}", response_model=Envelope[CountryDetailPayload])
 async def get_country_detail(
     country_code: str,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = DB_SESSION,
 ) -> Envelope[CountryDetailPayload]:
     """Return one country plus its indicators and current values."""
     payload = await get_country_detail_payload(session, country_code)
@@ -1454,7 +1534,7 @@ async def get_country_detail(
 async def get_indicator_detail(
     indicator_id: int,
     history_limit: int = Query(default=24, ge=1, le=240),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = DB_SESSION,
 ) -> Envelope[IndicatorDetailPayload]:
     """Return indicator metadata plus the most recent release history."""
     indicator_q = await session.execute(
@@ -1522,7 +1602,7 @@ async def get_indicator_explorer(
     canonical_name: str,
     revision_mode: str = Query(default="latest", pattern="^(latest|as_reported)$"),
     range_key: str = Query(default="all", pattern="^(1y|3y|5y|all)$"),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = DB_SESSION,
 ) -> Envelope[IndicatorExplorerPayload]:
     """Return chart-ready indicator detail data for the Step 6 page."""
     payload = await get_indicator_explorer_payload(

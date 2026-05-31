@@ -1,6 +1,6 @@
 """Add intelligence news alerts table.
 
-Revision ID: 0005_add_intelligence_news_alerts
+Revision ID: 0005_news_alerts
 Revises: 0004_add_rate_probability_tables
 Create Date: 2026-05-31
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision = "0005_add_intelligence_news_alerts"
+revision = "0005_news_alerts"
 down_revision = "0004_add_rate_probability_tables"
 branch_labels = None
 depends_on = None

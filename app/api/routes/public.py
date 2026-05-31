@@ -1223,14 +1223,84 @@ async def get_cot_rows() -> dict[str, Any]:
 
 @router.get("/news/feed")
 async def get_news_feed(
-    limit: int = Query(default=40, ge=1, le=80),
+    limit: int = Query(default=40, ge=1, le=100),
+    session: AsyncSession = DB_SESSION,
 ) -> dict[str, Any]:
-    """Return normalized InvestingLive RSS headlines for the dashboard feed."""
+    """Return scored intelligence monitor headlines for the dashboard feed."""
+    result = await session.execute(
+        text(
+            """
+            SELECT
+                headline,
+                source,
+                url,
+                detected_at,
+                relevance_score,
+                severity,
+                affected_currencies,
+                implied_tier,
+                alert_text
+            FROM intelligence.news_alerts
+            WHERE detected_at >= NOW() - INTERVAL '24 hours'
+            ORDER BY detected_at DESC
+            LIMIT :limit
+            """
+        ),
+        {"limit": limit},
+    )
+    articles = [
+        _news_alert_row_to_article(row)
+        for row in result.mappings().all()
+    ]
     return {
-        "source": "investinglive.com",
-        "articles": await fetch_investinglive_articles(limit=limit),
+        "source": "intelligence_monitor",
+        "articles": articles,
         "fetched_at": _now().isoformat(),
     }
+
+
+def _news_alert_row_to_article(row: Any) -> dict[str, Any]:
+    title = str(row.get("headline") or "Untitled headline")
+    detected_at = _as_utc_datetime(row.get("detected_at")) or _now()
+    description = str(row.get("alert_text") or title)
+    return {
+        "title": title,
+        "link": str(row.get("url") or ""),
+        "pubDate": detected_at.isoformat(),
+        "description": description,
+        "category": _news_alert_category(row.get("implied_tier"), row.get("source")),
+        "source": str(row.get("source") or ""),
+        "score": int(row.get("relevance_score") or 0),
+        "severity": str(row.get("severity") or ""),
+        "currencies": list(row.get("affected_currencies") or []),
+    }
+
+
+def _news_alert_category(implied_tier: Any, source: Any) -> str:
+    tier_map = {
+        "GEOPOLITICAL_SHOCK": "Geopolitical",
+        "RISK_SENTIMENT": "Macro",
+        "CB_POLICY_DIVERGENCE": "Central banks",
+        "ECONOMIC_DATA": "Macro",
+        "POSITIONING": "FX",
+        "TECHNICAL": "FX",
+    }
+    tier = str(implied_tier or "").upper()
+    if tier in tier_map:
+        return tier_map[tier]
+
+    normalized_source = str(source or "").casefold()
+    if any(
+        token in normalized_source
+        for token in ("financialjuice.com", "financial juice", "forexlive.com", "forexlive", "investing.com", "investinglive")
+    ):
+        return "FX"
+    if any(
+        token in normalized_source
+        for token in ("reuters.com", "reuters", "apnews.com", "ap news", "bbc.co.uk", "bbc", "aljazeera.com", "al jazeera")
+    ):
+        return "Geopolitical"
+    return "Macro"
 
 
 def _parse_cb_feed(xml_body: str, currency: str, bank_name: str, *, limit: int = 12) -> list[dict[str, Any]]:

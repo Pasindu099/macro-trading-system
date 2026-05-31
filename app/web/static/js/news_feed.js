@@ -1,6 +1,4 @@
 (() => {
-    const RSS_URL = "https://investinglive.com/feed/";
-    const PROXY = `https://api.allorigins.win/get?url=${encodeURIComponent(RSS_URL)}`;
     const REFRESH_MS = 90000;
     const sentimentCache = new Map();
     let articles = [];
@@ -34,76 +32,25 @@
         return `${Math.floor(diffHours / 24)} d ago`;
     };
 
-    const stripHtml = (html) => {
-        try {
-            const div = document.createElement("div");
-            div.innerHTML = html;
-            return (div.textContent || div.innerText || "").replace(/\s+/g, " ").trim();
-        } catch {
-            return (html || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-        }
-    };
-
-    const classifyCategory = (text) => {
-        const t = text.toLowerCase();
-        if (/war|sanction|conflict|military|nato|\bun\b|treaty|tariff|trade war|election|government|ministry|president|prime minister|diplomacy|geopolit|invasion|coup|protest|border|embargo/.test(t)) return "Geopolitical";
-        if (/\bfed\b|ecb|boj|boe|rba|rbnz|snb|central bank|rate decision|interest rate|monetary policy|powell|lagarde|inflation|taper|\bqe\b|\bqt\b/.test(t)) return "Central banks";
-        if (/\beur\b|\bgbp\b|\bjpy\b|\baud\b|\bcad\b|\bchf\b|\bnzd\b|forex|currency|\busd\b|dollar|pound|yen|euro/.test(t)) return "FX";
-        if (/stock|shares|earnings|s&p|nasdaq|dow|ftse|dax|\bipo\b|dividend|equity|market cap/.test(t)) return "Equities";
-        return "Macro";
-    };
-
-    const nodeText = (parent, tagName) => {
-        const el = parent.getElementsByTagName(tagName)[0];
-        return el ? (el.textContent || "").trim() : "";
-    };
-
-    const parseRssItems = (xmlString) => {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(xmlString, "text/xml");
-        if (doc.querySelector("parsererror")) throw new Error("Feed returned invalid XML");
-        return Array.from(doc.getElementsByTagName("item")).map((item) => {
-            const title = nodeText(item, "title") || "Untitled headline";
-            const link = nodeText(item, "link");
-            if (!link) return null;
-            const pubDate = nodeText(item, "pubDate");
-            const description = stripHtml(nodeText(item, "description"));
-            const categoryNodes = Array.from(item.getElementsByTagName("category"));
-            const cats = categoryNodes.map((c) => (c.textContent || "").trim()).filter(Boolean);
-            const category = classifyCategory([...cats, title, description].join(" "));
-            return { title, link, pubDate, description, category, source: "investinglive.com" };
-        }).filter(Boolean);
-    };
-
     const fetchFeed = async () => {
         stateEl.textContent = "refreshing";
 
-        // Primary: try the backend proxy endpoint (server-side fetch + JSON)
         try {
             const resp = await fetch("/api/news/feed?limit=40", { cache: "no-store" });
             if (resp.ok) {
                 const data = await resp.json();
-                if (Array.isArray(data.articles) && data.articles.length > 0) {
-                    articles = data.articles.filter((item) => item.link).slice(0, 40);
-                    stateEl.textContent = "investinglive.com";
-                    renderNewsList();
-                    if (!selectedUrl && articles.length) selectArticle(articles[0]);
-                    return;
-                }
+                articles = Array.isArray(data.articles)
+                    ? data.articles.filter((item) => item.link).slice(0, 40)
+                    : [];
+                stateEl.textContent = data.source || "intelligence_monitor";
+                renderNewsList();
+                if (!selectedUrl && articles.length) selectArticle(articles[0]);
+                return;
             }
-        } catch {
-            // fall through to CORS proxy
+        } catch (error) {
+            throw new Error(error.message || "News feed unavailable");
         }
-
-        // Fallback: browser-side fetch through allorigins CORS proxy
-        const proxyResp = await fetch(PROXY, { cache: "no-store" });
-        if (!proxyResp.ok) throw new Error("RSS feed unavailable");
-        const proxyData = await proxyResp.json();
-        if (!proxyData.contents) throw new Error("RSS feed returned empty response");
-        articles = parseRssItems(proxyData.contents).slice(0, 40);
-        stateEl.textContent = "investinglive.com";
-        renderNewsList();
-        if (!selectedUrl && articles.length) selectArticle(articles[0]);
+        throw new Error("News feed unavailable");
     };
 
     const categoryClass = (category) => {
@@ -281,7 +228,7 @@
 
     fetchFeed().catch((error) => {
         stateEl.textContent = "feed error";
-        listEl.innerHTML = `<div class="black-empty">${escapeHtml(error.message || "Unable to load investinglive.com feed.")}</div>`;
+        listEl.innerHTML = `<div class="black-empty">${escapeHtml(error.message || "Unable to load intelligence monitor feed.")}</div>`;
     });
     window.setInterval(() => {
         fetchFeed().catch(() => {

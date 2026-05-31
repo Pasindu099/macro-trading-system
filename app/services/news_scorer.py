@@ -11,10 +11,10 @@ SYSTEM_PROMPT = """
 You are an FX market analyst. Score each headline
 for FX market relevance.
 
-Return a JSON array only. No other text. No markdown.
-One object per headline in the same order received.
+Return a JSON object only. No other text. No markdown.
+The object must have a "results" array with one object per headline in the same order received.
 
-Each object:
+Each results object:
 {
   "score": integer 1-10,
   "severity": "CRITICAL|HIGH|MEDIUM|LOW",
@@ -91,24 +91,33 @@ async def score_headlines(headlines: list[dict]) -> list[dict]:
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": _build_user_message([headline for _, headline in passed])},
             ],
-            max_tokens=1000,
+            max_tokens=4000,
             temperature=0,
             response_format={
                 "type": "json_schema",
                 "json_schema": {
                     "name": "headline_scores",
                     "schema": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "additionalProperties": True,
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "results": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "additionalProperties": True,
+                                },
+                            },
                         },
+                        "required": ["results"],
                     },
                 },
             },
         )
         content = response.choices[0].message.content or ""
         parsed = json.loads(content)
+        if isinstance(parsed, dict):
+            parsed = parsed.get("results")
         if not isinstance(parsed, list):
             raise ValueError("OpenAI response was not a JSON array.")
     except Exception:
@@ -129,7 +138,7 @@ async def score_headlines(headlines: list[dict]) -> list[dict]:
 
 def _build_user_message(headlines: list[dict]) -> str:
     lines = [
-        "Score each headline below. Return a JSON array with one object per headline in the same order.",
+        'Score each headline below. Return {"results": [...]} with one object per headline in the same order.',
         "",
     ]
     lines.extend(

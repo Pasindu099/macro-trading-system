@@ -49,7 +49,7 @@ COT_PAIRS = {
     "NZD": {
         "label": "NZD",
         "pair_label": "NZD/USD",
-        "market": "NEW ZEALAND DOLLAR",
+        "market": "NZ DOLLAR",
     },
     "MXN": {
         "label": "MXN",
@@ -59,7 +59,7 @@ COT_PAIRS = {
     "USD": {
         "label": "USD",
         "pair_label": "USD Index",
-        "market": "U.S. DOLLAR INDEX",
+        "market": "USD INDEX",
     },
     "GOLD": {
         "label": "GOLD",
@@ -69,7 +69,7 @@ COT_PAIRS = {
     "OIL": {
         "label": "OIL",
         "pair_label": "Crude Oil (WTI)",
-        "market": "CRUDE OIL, LIGHT SWEET",
+        "market": "CRUDE OIL, LIGHT SWEET-WTI",
     },
 }
 

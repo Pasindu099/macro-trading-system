@@ -5,13 +5,30 @@
     const BEAR = "#D85A30";
     const NEUTRAL = "#888780";
     const FX_SYMBOLS = ["EUR", "GBP", "JPY", "CHF", "CAD", "AUD", "NZD"];
+    const MAP_SYMBOLS = [...FX_SYMBOLS, "USD"];
     const ALL_SYMBOLS = [...FX_SYMBOLS, "USD", "GOLD", "OIL"];
+    const PRICE_PAIR_BY_SYMBOL = {
+        EUR: "EURUSD",
+        GBP: "GBPUSD",
+        JPY: "USDJPY",
+        CHF: "USDCHF",
+        CAD: "USDCAD",
+        AUD: "AUDUSD",
+        NZD: "NZDUSD",
+        USD: "DXY",
+    };
+    const AUTO_PRICE_ENDPOINTS = [
+        (pair) => `/api/fx-data?pair=${encodeURIComponent(pair)}&weeks=52`,
+        (pair) => `/api/rates?pair=${encodeURIComponent(pair)}&weeks=52`,
+    ];
     const root = document.querySelector("[data-cot-dashboard]");
     if (!root) return;
 
     let active = "EUR";
     let cotRows = {};
     let priceSeriesBySymbol = {};
+    let positioningMapChart = null;
+    let autoPriceEndpointAvailable = null;
     const charts = {};
 
     const $ = (selector) => root.querySelector(selector);
@@ -103,6 +120,18 @@
         localStorage.setItem(CACHE_KEY, JSON.stringify({ fetchedAt: Date.now(), rows: data }));
     };
 
+    const setPriceStatus = (message) => {
+        const status = $("[data-cot-price-status]");
+        if (status) status.textContent = message;
+    };
+
+    const setManualPriceVisible = (visible) => {
+        const input = $("[data-cot-price-input]");
+        const button = $("[data-cot-apply-price]");
+        if (input) input.hidden = !visible;
+        if (button) button.hidden = !visible;
+    };
+
     const setLoading = (isLoading) => {
         $("[data-cot-loading]").hidden = !isLoading;
     };
@@ -159,6 +188,69 @@
             const value = number(parts.length > 1 ? parts[parts.length - 1] : parts[0]);
             return value || null;
         }).filter((value) => value !== null);
+    };
+
+    const normalizePriceRows = (payload) => {
+        const candidates = [
+            payload?.prices,
+            payload?.history,
+            payload?.series,
+            payload?.data?.prices,
+            payload?.data?.history,
+            payload?.data?.series,
+            payload?.data,
+        ];
+        const rows = candidates.find((item) => Array.isArray(item));
+        if (!rows) return [];
+        return rows.map((row) => {
+            if (Array.isArray(row)) return number(row[row.length - 1]);
+            if (row && typeof row === "object") {
+                return number(row.close ?? row.adjusted_close ?? row.value ?? row.price ?? row.y);
+            }
+            return number(row);
+        }).filter((value) => value > 0);
+    };
+
+    const loadAutomaticPriceOverlay = async (symbol) => {
+        const pair = PRICE_PAIR_BY_SYMBOL[symbol];
+        if (!pair) {
+            setManualPriceVisible(true);
+            setPriceStatus("Auto-price coming soon. Paste weekly closes in format: date,price (one per line)");
+            return false;
+        }
+
+        if (priceSeriesBySymbol[symbol]?.length) {
+            setManualPriceVisible(false);
+            setPriceStatus("Price data loaded automatically");
+            return true;
+        }
+
+        if (autoPriceEndpointAvailable === false) {
+            setManualPriceVisible(true);
+            setPriceStatus("Auto-price coming soon. Paste weekly closes in format: date,price (one per line)");
+            return false;
+        }
+
+        for (const endpointForPair of AUTO_PRICE_ENDPOINTS) {
+            try {
+                const response = await fetch(endpointForPair(pair), { cache: "no-store" });
+                if (!response.ok) continue;
+                const prices = normalizePriceRows(await response.json()).slice(-52);
+                if (!prices.length) continue;
+                priceSeriesBySymbol[symbol] = prices;
+                autoPriceEndpointAvailable = true;
+                setManualPriceVisible(false);
+                setPriceStatus("Price data loaded automatically");
+                return true;
+            } catch {
+                // Keep manual paste fallback when no compatible price endpoint is available.
+            }
+        }
+
+        autoPriceEndpointAvailable = false;
+        setManualPriceVisible(true);
+        setPriceStatus("Auto-price coming soon. Paste weekly closes in format: date,price (one per line)");
+        return false;
     };
 
     const alignedPrice = (symbol) => {
@@ -247,6 +339,98 @@
             <strong style="color:${colorForIndex(current.index)}">${active} ${pct(current.index)}/100</strong>
             <span>${signed(current.current)} net contracts</span>
         `;
+    };
+
+    const mapColorForPercentile = (percentile) => {
+        if (percentile > 60) return "#22c55e";
+        if (percentile < 40) return "#ef4444";
+        return "#f59e0b";
+    };
+
+    const renderPositioningMap = () => {
+        const el = document.getElementById("cot-map-chart");
+        const insight = $("[data-insight='map']");
+        if (!el || !window.echarts) {
+            if (insight) insight.textContent = "Positioning map is unavailable because ECharts did not load.";
+            return;
+        }
+
+        const rows = MAP_SYMBOLS
+            .filter((symbol) => (cotRows[symbol] || []).length)
+            .map((symbol) => {
+                const stats = extremeStats(symbol);
+                const current = latest(symbol);
+                const percentile = Math.round(stats.index);
+                return {
+                    symbol,
+                    netPosition: current?.specNet || 0,
+                    percentile,
+                    value: (percentile - 50) * 2,
+                    color: mapColorForPercentile(percentile),
+                    bias: percentile > 60 ? "bullish" : percentile < 40 ? "bearish" : "neutral",
+                };
+            })
+            .sort((a, b) => b.percentile - a.percentile);
+
+        if (!rows.length) {
+            if (insight) insight.textContent = "Waiting for COT rows before drawing the all-currency positioning map.";
+            return;
+        }
+
+        positioningMapChart = window.echarts.getInstanceByDom(el) || window.echarts.init(el, null, { renderer: "canvas" });
+        positioningMapChart.setOption({
+            backgroundColor: "transparent",
+            grid: { left: 48, right: 54, top: 12, bottom: 28, containLabel: true },
+            tooltip: {
+                trigger: "axis",
+                axisPointer: { type: "shadow" },
+                backgroundColor: root.classList.contains("cot-light") ? "#ffffff" : "#101318",
+                borderColor: getGridColor(),
+                textStyle: { color: getTextColor(), fontSize: 11 },
+                formatter: (items) => {
+                    const item = Array.isArray(items) ? items[0] : items;
+                    const row = rows[item.dataIndex];
+                    return `${row.symbol}<br/>COT Index: ${row.percentile}%<br/>Net position: ${signed(row.netPosition)}<br/>Bias: ${row.bias}`;
+                },
+            },
+            xAxis: {
+                type: "value",
+                min: -100,
+                max: 100,
+                axisLabel: { color: getMutedColor(), formatter: "{value}" },
+                axisLine: { lineStyle: { color: getGridColor() } },
+                splitLine: { lineStyle: { color: getGridColor() } },
+            },
+            yAxis: {
+                type: "category",
+                data: rows.map((row) => row.symbol),
+                axisTick: { show: false },
+                axisLine: { show: false },
+                axisLabel: { color: getTextColor(), fontWeight: 700 },
+            },
+            series: [{
+                type: "bar",
+                data: rows.map((row) => ({
+                    value: row.value,
+                    itemStyle: { color: row.color, borderWidth: 0 },
+                    label: { formatter: `${row.percentile}%` },
+                })),
+                barWidth: 16,
+                label: {
+                    show: true,
+                    position: "right",
+                    color: getTextColor(),
+                    fontSize: 11,
+                    fontWeight: 700,
+                },
+            }],
+        });
+
+        if (insight) {
+            const high = rows[0];
+            const low = rows[rows.length - 1];
+            insight.textContent = `${high.symbol} is the most crowded long at ${high.percentile}%, while ${low.symbol} is the most crowded short at ${low.percentile}%.`;
+        }
     };
 
     const renderSpreadChart = (symbol) => {
@@ -410,6 +594,7 @@
         renderDivergence(active);
         renderStrengthTable();
         renderUsdChart();
+        renderPositioningMap();
         renderInsights(active);
     };
 
@@ -432,9 +617,11 @@
                 writeCache(cotRows);
                 setUpdated(Date.now());
             }
+            await loadAutomaticPriceOverlay(active);
             renderSelected();
             window.requestAnimationFrame(() => {
                 Object.values(charts).forEach((chart) => chart?.resize?.());
+                positioningMapChart?.resize?.();
                 window.scrollTo({ top: 0, left: 0 });
             });
         } catch (error) {
@@ -449,6 +636,8 @@
         $("[data-cot-theme-toggle]").textContent = mode === "light" ? "Dark mode" : "Light mode";
         localStorage.setItem("macro_cot_theme", mode);
         Object.keys(charts).forEach((key) => destroyChart(key));
+        positioningMapChart?.dispose?.();
+        positioningMapChart = null;
         if (Object.keys(cotRows).length) renderSelected();
     };
 
@@ -458,6 +647,9 @@
             active = tab.dataset.cotSymbol || "EUR";
             $$("[data-cot-symbol]").forEach((button) => button.classList.toggle("is-active", button === tab));
             renderSelected();
+            loadAutomaticPriceOverlay(active).then((loaded) => {
+                if (loaded) renderSelected();
+            });
         }
 
         if (event.target.closest("[data-cot-refresh]")) {
@@ -467,6 +659,9 @@
 
         if (event.target.closest("[data-cot-apply-price]")) {
             priceSeriesBySymbol[active] = parsePriceInput();
+            if (priceSeriesBySymbol[active].length) {
+                setPriceStatus("Manual price overlay applied");
+            }
             renderSelected();
         }
 
@@ -474,6 +669,29 @@
             applyTheme(root.classList.contains("cot-light") ? "dark" : "light");
         }
     });
+
+    // Help panel toggle
+    document.querySelectorAll(".cot-help-btn")
+        .forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const key = btn.dataset.help;
+                const panel = document.querySelector(
+                    `[data-help-panel="${key}"]`);
+                if (!panel) return;
+                const isHidden = panel.hidden;
+                document.querySelectorAll(".cot-help-panel")
+                    .forEach((p) => { p.hidden = true; });
+                panel.hidden = !isHidden;
+            });
+        });
+
+    document.querySelectorAll(".cot-help-close")
+        .forEach((btn) => {
+            btn.addEventListener("click", () => {
+                btn.closest(".cot-help-panel").hidden = true;
+            });
+        });
 
     applyTheme(localStorage.getItem("macro_cot_theme") || "dark");
     loadData();

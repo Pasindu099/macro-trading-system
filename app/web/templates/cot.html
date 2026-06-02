@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/cot.css') }}?v=20260509fix">
+<link rel="stylesheet" href="{{ url_for('static', path='css/cot.css') }}?v=20260602auto">
 {% endblock %}
 
 {% block body %}
@@ -30,6 +30,22 @@
         </div>
     </section>
 
+    <article class="cot-panel cot-panel--wide" id="cot-positioning-map">
+        <header>
+            <span>Currency Positioning Map</span>
+            <em>All markets - current COT Index percentile</em>
+            <button class="cot-help-btn" data-help="map" aria-label="How to use this section" title="How to use this section">?</button>
+        </header>
+        <div class="cot-help-panel" data-help-panel="map" hidden>
+            <div class="cot-help-content">
+                <button class="cot-help-close" aria-label="Close">x</button>
+                <p>This map shows all currencies simultaneously ranked by their COT Index percentile. Green bars mean specs are net long, red means net short. Bar length shows how extreme positioning is relative to the past 52 weeks. Currencies at the far left (below 20) or far right (above 80) are at contrarian extremes. Use this to find pairs with maximum divergence - the best positioning-based trade setups.</p>
+            </div>
+        </div>
+        <div id="cot-map-chart" style="height:280px;width:100%"></div>
+        <p class="cot-insight" data-insight="map"></p>
+    </article>
+
     <nav class="cot-tabs" aria-label="COT market selector" data-cot-tabs>
         <button class="is-active" type="button" data-cot-symbol="EUR">EUR</button>
         <button type="button" data-cot-symbol="GBP">GBP</button>
@@ -47,17 +63,30 @@
         <label for="cot-price-text">Optional price overlay</label>
         <textarea id="cot-price-text" data-cot-price-input placeholder="Paste one price per line, newest last. Optional formats: 1.0920 or 2025-12-30,1.0920"></textarea>
         <button type="button" data-cot-apply-price>Apply price overlay</button>
+        <p class="cot-price-note" data-cot-price-status>Auto-price coming soon. Paste weekly closes in format: date,price (one per line)</p>
     </section>
 
     <section class="cot-grid cot-grid--two">
         <article class="cot-panel">
-            <header><span>1. Net Positioning Chart</span><em data-cot-active-label>EUR</em></header>
+            <header><span>1. Net Positioning Chart</span><em data-cot-active-label>EUR</em><button class="cot-help-btn" data-help="net" aria-label="How to use this section" title="How to use this section">?</button></header>
+            <div class="cot-help-panel" data-help-panel="net" hidden>
+                <div class="cot-help-content">
+                    <button class="cot-help-close" aria-label="Close">x</button>
+                    <p>Speculative Net Position shows how many contracts large hedge funds and money managers are long versus short. When the bar is deeply negative, specs are heavily short - this is often a contrarian bullish signal because crowded shorts unwind fast. When deeply positive, specs are heavily long - watch for potential reversals. The key insight is not the absolute number but the direction of change week over week.</p>
+                </div>
+            </div>
             <div class="cot-chart-box"><canvas data-chart="net"></canvas></div>
             <p class="cot-insight" data-insight="net"></p>
         </article>
 
         <article class="cot-panel">
-            <header><span>2. Extremes Index</span><em>52-week range</em></header>
+            <header><span>2. Extremes Index</span><em>52-week range</em><button class="cot-help-btn" data-help="extreme" aria-label="How to use this section" title="How to use this section">?</button></header>
+            <div class="cot-help-panel" data-help-panel="extreme" hidden>
+                <div class="cot-help-content">
+                    <button class="cot-help-close" aria-label="Close">x</button>
+                    <p>The Extremes Index (COT Index) ranks current speculative positioning against the past 52 weeks as a percentile. Above 80 means specs are more long than 80% of the past year - historically a warning that the long trade is crowded and a reversal is likely. Below 20 means specs are historically very short - a potential contrarian long opportunity. Professional traders use the 80/20 levels as high-conviction reversal zones, not entry signals on their own.</p>
+                </div>
+            </div>
             <div class="cot-extreme-current" data-current-extreme></div>
             <div class="cot-extreme-list" data-extreme-bars></div>
             <p class="cot-insight" data-insight="extreme"></p>
@@ -66,13 +95,25 @@
 
     <section class="cot-grid cot-grid--two">
         <article class="cot-panel">
-            <header><span>3. Commercial vs Speculator Spread</span><em>Net gap</em></header>
+            <header><span>3. Commercial vs Speculator Spread</span><em>Net gap</em><button class="cot-help-btn" data-help="spread" aria-label="How to use this section" title="How to use this section">?</button></header>
+            <div class="cot-help-panel" data-help-panel="spread" hidden>
+                <div class="cot-help-content">
+                    <button class="cot-help-close" aria-label="Close">x</button>
+                    <p>Commercials are businesses hedging real exposure - exporters, importers, central banks. They are always on the opposite side of speculators and they are considered the smart money. When the gap between commercial net and speculator net reaches an extreme, it means specs are maximally positioned against the smart money. Historically these extreme gaps precede spec capitulation and sharp price reversals. Watch for the lines to converge after a wide gap.</p>
+                </div>
+            </div>
             <div class="cot-chart-box"><canvas data-chart="spread"></canvas></div>
             <p class="cot-insight" data-insight="spread"></p>
         </article>
 
         <article class="cot-panel">
-            <header><span>4. Open Interest Trend</span><em>Weekly participation</em></header>
+            <header><span>4. Open Interest Trend</span><em>Weekly participation</em><button class="cot-help-btn" data-help="oi" aria-label="How to use this section" title="How to use this section">?</button></header>
+            <div class="cot-help-panel" data-help-panel="oi" hidden>
+                <div class="cot-help-content">
+                    <button class="cot-help-close" aria-label="Close">x</button>
+                    <p>Open Interest is the total number of outstanding contracts. Rising open interest with rising price confirms a strong trend - new money is entering. Rising open interest with falling price confirms a strong downtrend. Falling open interest means traders are closing positions - the trend may be exhausting. A sudden spike in open interest often marks a turning point as one side gets caught.</p>
+                </div>
+            </div>
             <div class="cot-chart-box"><canvas data-chart="oi"></canvas></div>
             <p class="cot-insight" data-insight="oi"></p>
         </article>
@@ -80,13 +121,25 @@
 
     <section class="cot-grid cot-grid--two">
         <article class="cot-panel">
-            <header><span>5. Weekly Positioning Delta</span><em>Spec net WoW</em></header>
+            <header><span>5. Weekly Positioning Delta</span><em>Spec net WoW</em><button class="cot-help-btn" data-help="delta" aria-label="How to use this section" title="How to use this section">?</button></header>
+            <div class="cot-help-panel" data-help-panel="delta" hidden>
+                <div class="cot-help-content">
+                    <button class="cot-help-close" aria-label="Close">x</button>
+                    <p>Weekly Positioning Delta shows how much specs changed their net position in a single week. Large sudden changes are more significant than gradual moves. A large negative delta (rapid short increase) after a long period of longs suggests a sentiment shift - institutional money is turning bearish. Three consecutive weeks of the same direction delta is a momentum confirmation.</p>
+                </div>
+            </div>
             <div class="cot-chart-box"><canvas data-chart="delta"></canvas></div>
             <p class="cot-insight" data-insight="delta"></p>
         </article>
 
         <article class="cot-panel">
-            <header><span>6. Divergence Detector</span><em>8-week direction</em></header>
+            <header><span>6. Divergence Detector</span><em>8-week direction</em><button class="cot-help-btn" data-help="divergence" aria-label="How to use this section" title="How to use this section">?</button></header>
+            <div class="cot-help-panel" data-help-panel="divergence" hidden>
+                <div class="cot-help-content">
+                    <button class="cot-help-close" aria-label="Close">x</button>
+                    <p>Divergence occurs when price makes a new high or low but speculative positioning does not confirm it. This is one of the highest-conviction reversal signals in the COT framework. If price makes a new high but specs are reducing longs - distribution is happening. Smart money is selling into retail buying. Divergences do not give you a precise entry but they tell you the trend is weakening before price confirms it.</p>
+                </div>
+            </div>
             <div class="cot-divergence-card" data-divergence-card></div>
             <div class="cot-signal-list" data-divergence-history></div>
             <p class="cot-insight" data-insight="divergence"></p>
@@ -95,7 +148,13 @@
 
     <section class="cot-grid cot-grid--two">
         <article class="cot-panel cot-panel--wide">
-            <header><span>7. Multi-Currency Relative Strength</span><em>All major FX futures</em></header>
+            <header><span>7. Multi-Currency Relative Strength</span><em>All major FX futures</em><button class="cot-help-btn" data-help="table" aria-label="How to use this section" title="How to use this section">?</button></header>
+            <div class="cot-help-panel" data-help-panel="table" hidden>
+                <div class="cot-help-content">
+                    <button class="cot-help-close" aria-label="Close">x</button>
+                    <p>The Multi-Currency Relative Strength table shows all currencies simultaneously ranked by their COT Index percentile. Use this to identify pairs with maximum divergence - for example if AUD is at the 5th percentile (extremely short) and USD is at the 90th percentile (extremely long), that is a high conviction SHORT AUD/USD setup from a positioning perspective. Always combine with fundamental and trend analysis.</p>
+                </div>
+            </div>
             <div class="cot-table-wrap">
                 <table class="cot-table">
                     <thead>
@@ -116,12 +175,18 @@
         </article>
 
         <article class="cot-panel">
-            <header><span>8. USD Composite Index</span><em>7-contract aggregate</em></header>
+            <header><span>8. USD Composite Index</span><em>7-contract aggregate</em><button class="cot-help-btn" data-help="usd" aria-label="How to use this section" title="How to use this section">?</button></header>
+            <div class="cot-help-panel" data-help-panel="usd" hidden>
+                <div class="cot-help-content">
+                    <button class="cot-help-close" aria-label="Close">x</button>
+                    <p>The USD Composite Index aggregates speculative positioning across all USD pairs to give a single view of how institutions are positioned on the dollar overall. When this index is at an extreme it affects all USD pairs simultaneously. A deeply negative USD composite means specs are very short dollars across the board - a potential dollar squeeze is building. Use this as a macro filter before trading any USD pair.</p>
+                </div>
+            </div>
             <div class="cot-chart-box"><canvas data-chart="usd"></canvas></div>
             <p class="cot-insight" data-insight="usd"></p>
         </article>
     </section>
 </main>
 
-<script src="{{ url_for('static', path='js/cot.js') }}?v=20260509b" defer></script>
+<script src="{{ url_for('static', path='js/cot.js') }}?v=20260602auto" defer></script>
 {% endblock %}

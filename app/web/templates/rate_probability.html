@@ -1,71 +1,67 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/rate_probability.css') }}?v=20260510e">
+<link rel="stylesheet" href="{{ url_for('static', path='css/rate_probability.css') }}?v=20260626rp">
 {% endblock %}
 
 {% block body %}
 <div class="rp-page" id="rp-content">
 
-  {# ── Bank switcher tabs ──────────────────────────────────────────── #}
-  <nav class="rp-tabs" aria-label="Central bank selector">
-    {% for b in valid_banks %}
-    <a href="/rate-prob/{{ b }}"
-       class="rp-tab{% if b == bank %} is-active{% endif %}"
-       aria-current="{% if b == bank %}page{% else %}false{% endif %}">
-      {{ b }}
-    </a>
-    {% endfor %}
-  </nav>
-
-  {# ── Header row ──────────────────────────────────────────────────── #}
-  <header class="rp-header">
-    <div class="rp-header-left">
-      <h1 class="rp-bank-name">{{ summary.bank_full_name }}</h1>
-      <div class="rp-header-subtitle">
-        {{ summary.rate_label }}&nbsp;&mdash;&nbsp;Twelve-Month Market Pricing
+  {# ── Hero ──────────────────────────────────────────────────────────── #}
+  <div class="rp-hero">
+    <div class="rp-hero__left">
+      <div class="rp-hero__eyebrow">
+        <span class="intel-dot"></span>
+        <span>OIS curve · 12-month market pricing · G8 banks</span>
       </div>
-      <div class="rp-header-meta">
-        As of: {{ summary.as_of_date }}
-        &nbsp;|&nbsp;
+      <h1 class="rp-hero__title">{{ summary.bank_full_name }}</h1>
+      <p class="rp-hero__sub">{{ summary.rate_label }} — twelve-month market expectation via OIS pricing</p>
+      <div class="rp-hero__meta">
+        <span>As of: <strong>{{ summary.as_of_date }}</strong></span>
+        <span style="color:var(--border-strong)">·</span>
         {% if bank == "ECB" %}
-        Deposit Facility: <strong>{{ "%.2f"|format(summary.deposit_rate) }}%</strong>
-        &nbsp;|&nbsp;
-        Main Refinancing Rate: <strong>{{ "%.2f"|format(summary.main_rate) }}%</strong>
-        &nbsp;|&nbsp;
-        Marginal Lending: <strong>{{ "%.2f"|format(summary.lending_rate) }}%</strong>
+        <span>Deposit: <strong>{{ "%.2f"|format(summary.deposit_rate) }}%</strong></span>
+        <span style="color:var(--border-strong)">·</span>
+        <span>MRO: <strong>{{ "%.2f"|format(summary.main_rate) }}%</strong></span>
         {% else %}
-        {{ summary.rate_label }}: <strong>{{ "%.2f"|format(summary.current_rate) }}%</strong>
+        <span>{{ summary.rate_label }}: <strong>{{ "%.2f"|format(summary.current_rate) }}%</strong></span>
         {% endif %}
-      </div>
-      <div class="rp-header-ois">
-        Last OIS:&nbsp;<strong>{{ "%.3f"|format(summary.last_ois_rate) }}%</strong>
-        &nbsp;|&nbsp;
+        <span style="color:var(--border-strong)">·</span>
+        <span>Last OIS: <strong>{{ "%.3f"|format(summary.last_ois_rate) }}%</strong></span>
         <span class="rp-data-badge{% if not summary.market_data.available %} is-missing{% elif summary.market_data.is_proxy %} is-proxy{% endif %}">
           {{ summary.market_data.label }}
         </span>
-        &nbsp;|&nbsp;
+      </div>
+    </div>
+    <div class="rp-hero__right">
+      <nav class="rp-tabs" aria-label="Central bank selector">
+        {% for b in valid_banks %}
+        <a href="/rate-prob/{{ b }}"
+           class="rp-tab{% if b == bank %} is-active{% endif %}"
+           aria-current="{% if b == bank %}page{% else %}false{% endif %}">
+          {{ b }}
+        </a>
+        {% endfor %}
+      </nav>
+      <div class="rp-header-ois">
         Step:
         <select class="rp-step-select" id="rp-step-select" data-bank="{{ bank }}">
           <option value="10"{% if summary.step_bps == 10 %} selected{% endif %}>10 bps</option>
           <option value="25"{% if summary.step_bps == 25 %} selected{% endif %}>25 bps</option>
           <option value="50"{% if summary.step_bps == 50 %} selected{% endif %}>50 bps</option>
         </select>
+        <button class="rp-refresh-btn"
+                hx-get="/rate-prob/{{ bank }}"
+                hx-target="#rp-content"
+                hx-swap="outerHTML"
+                hx-select="#rp-content"
+                title="Refresh data">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
       </div>
     </div>
-
-    <div class="rp-header-right">
-      <button class="btn rp-refresh-btn"
-              hx-get="/rate-prob/{{ bank }}"
-              hx-target="#rp-content"
-              hx-swap="outerHTML"
-              hx-select="#rp-content"
-              title="Refresh data">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        Refresh
-      </button>
-    </div>
-  </header>
+  </div>
 
   {# ── No-data notice ──────────────────────────────────────────────── #}
   {% if summary.no_data %}
@@ -279,5 +275,5 @@
   window._rpBank        = {{ bank | tojson }};
   window._rpCurrentRate = {{ summary.current_rate | tojson }};
 </script>
-<script src="{{ url_for('static', path='js/rate_probability.js') }}?v=20260510e" defer></script>
+<script src="{{ url_for('static', path='js/rate_probability.js') }}?v=20260626rp" defer></script>
 {% endblock %}

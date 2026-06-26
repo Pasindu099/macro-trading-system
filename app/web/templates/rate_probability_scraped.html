@@ -316,7 +316,8 @@
   letter-spacing: .06em;
   margin-bottom: .85rem;
 }
-#rps-chart { height: 200px; }
+.rps-chart-wrap { position: relative; height: 220px; }
+#rps-chart { position: absolute; inset: 0; }
 
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 768px) {
@@ -471,7 +472,7 @@
   {# ── Implied-rate path chart for active bank ──────── #}
   <div class="rps-chart-section">
     <div class="rps-chart-title" id="rps-chart-title">Implied Rate Path</div>
-    <canvas id="rps-chart"></canvas>
+    <div class="rps-chart-wrap"><canvas id="rps-chart"></canvas></div>
   </div>
 
 </div>{# /rps-page #}

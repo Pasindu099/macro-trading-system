@@ -4,556 +4,264 @@
 
 {% block body %}
 {% set stance_rows = currency_stance[1] if currency_stance and currency_stance[1] else [] %}
-{% set top_row = stance_rows[0] if stance_rows else none %}
-{% set bottom_row = stance_rows[-1] if stance_rows else none %}
-{% set latest_meter = currency_meter[0] if currency_meter else none %}
-{% set top_meter_rows = currency_meter | selectattr("currency", "equalto", top_row.currency) | list if top_row else [] %}
-{% set focus_meter = top_meter_rows[0] if top_meter_rows else latest_meter %}
-{% set focus_inflation = focus_meter.metrics[0].score_values[0] if focus_meter and focus_meter.metrics|length > 0 and focus_meter.metrics[0].score_values else none %}
-{% set focus_growth = focus_meter.metrics[1].score_values[0] if focus_meter and focus_meter.metrics|length > 1 and focus_meter.metrics[1].score_values else none %}
-{% set focus_labor = focus_meter.metrics[2].score_values[0] if focus_meter and focus_meter.metrics|length > 2 and focus_meter.metrics[2].score_values else none %}
+{% set bank_names = {"USD":"Fed","EUR":"ECB","GBP":"BoE","JPY":"BoJ","AUD":"RBA","NZD":"RBNZ","CAD":"BoC","CHF":"SNB"} %}
 
 {% macro flag(code, big=false) -%}
   <span class="flag flag-{{ code }}" style="{% if big %}width:36px;height:27px;{% endif %}"></span>
 {%- endmacro %}
 
-{% macro nav_icon(name) -%}
-  {% if name == "grid" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-  {% elif name == "bars" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="4" y2="10"/><line x1="10" y1="20" x2="10" y2="4"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="22" y1="20" x2="22" y2="6"/></svg>
-  {% elif name == "pulse" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-  {% elif name == "feed" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
-  {% elif name == "pie" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-  {% elif name == "building" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20"/><line x1="9" y1="22" x2="9" y2="18"/><line x1="15" y1="22" x2="15" y2="18"/><line x1="8" y1="6" x2="10" y2="6"/><line x1="14" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/></svg>
-  {% elif name == "mic" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
-  {% elif name == "target" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-  {% elif name == "percent" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
-  {% elif name == "globe" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z"/></svg>
-  {% elif name == "doc" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-  {% elif name == "chart" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-  {% elif name == "edit" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-  {% elif name == "cal" %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-  {% else %}<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>{% endif %}
-{%- endmacro %}
-
 <div id="content">
-      <div class="kpi-row k5">
-        <div class="kpi">
-          <span class="label">Top Currency</span>
-          <div class="row" style="gap:10px;align-items:baseline;">
-            <span class="value">{{ top_row.currency if top_row else "N/A" }}</span>
-            <span class="badge bull">Bull</span>
-          </div>
-          <div class="meta">{{ top_row.label if top_row else "No stance data" }}</div>
-        </div>
-        <div class="kpi">
-          <span class="label">Weakest Currency</span>
-          <div class="row" style="gap:10px;align-items:baseline;">
-            <span class="value">{{ bottom_row.currency if bottom_row else "N/A" }}</span>
-            <span class="badge bear">Bear</span>
-          </div>
-          <div class="meta">{{ bottom_row.label if bottom_row else "No stance data" }}</div>
-        </div>
-        <div class="kpi">
-          <span class="label">CB Inflation Score</span>
-          <span class="value" style="color:var(--hawk)">{{ focus_inflation.score if focus_inflation else "N/A" }}</span>
-          <div class="meta">{{ focus_meter.currency if focus_meter else "G10" }} central-bank preferred</div>
-        </div>
-        <div class="kpi">
-          <span class="label">CB Unemployment Score</span>
-          <span class="value" style="color:var(--dove)">{{ focus_labor.score if focus_labor else "N/A" }}</span>
-          <div class="meta">{{ focus_meter.currency if focus_meter else "G10" }} labor score</div>
-        </div>
-        <div class="kpi">
-          <span class="label">CB Growth Score</span>
-          <span class="value" style="color:var(--neutral)">{{ focus_growth.score if focus_growth else "N/A" }}</span>
-          <div class="meta">{{ focus_meter.currency if focus_meter else "G10" }} growth score</div>
-        </div>
+
+  {# ── 1. News Feed + Calendar (65/35) ─────────────────────────────── #}
+  <div class="grid grid-65-35">
+
+    {# News Feed #}
+    <div class="panel">
+      <div class="panel-header">
+        <span class="title">InvestingLive · Tape</span>
+        <span class="badge info">Live</span>
+        <span class="meta">last sync now</span>
+        <button class="btn btn-sm" type="button" onclick="window.location.reload()">Refresh</button>
       </div>
-
-      <div style="margin-top:18px;"></div>
-      <div class="grid grid-65-35">
-        <div class="panel">
-          <div class="panel-header">
-            <span class="title">InvestingLive · Tape</span>
-            <span class="badge info">Live</span>
-            <span class="meta">last sync now</span>
-            <button class="btn btn-sm" type="button" onclick="window.location.reload()">Refresh</button>
-          </div>
-          <div class="pills" style="margin-bottom:8px;" data-landing-news-filters="category">
-            <button class="pill active" type="button" data-news-category="All">All</button>
-            <button class="pill" type="button" data-news-category="Macro">Macro</button>
-            <button class="pill" type="button" data-news-category="FX">FX</button>
-            <button class="pill" type="button" data-news-category="Equities">Equities</button>
-            <button class="pill" type="button" data-news-category="Central banks">Central Banks</button>
-            <button class="pill" type="button" data-news-category="Geopolitical">Geopolitical</button>
-          </div>
-          <div class="pills" style="margin-bottom:12px;" data-landing-news-filters="source">
-            <button class="pill active" type="button" data-news-source="All">All Sources</button>
-            <button class="pill" type="button" data-news-source="investinglive.com">InvestingLive</button>
-          </div>
-          <div class="col" style="gap:8px;max-height:480px;overflow-y:auto;padding-right:4px;" data-landing-news-list>
-            {% for item in news_items %}
-              <a class="news-item {% if loop.first %}selected{% endif %}" href="{{ item.link }}" target="_blank" rel="noopener" data-news-item data-news-category="{{ item.category }}" data-news-source="{{ item.source }}">
-                <div class="head">{{ item.title }}</div>
-                <div class="meta">
-                  <span class="src">{{ item.source }}</span>
-                  <span>·</span>
-                  <span>{{ item.published_at if item.published_at else "Live" }}</span>
-                  <span class="badge info">{{ item.category }}</span>
-                </div>
-              </a>
-            {% else %}
-              <div class="news-item selected">
-                <div class="head">Live market tape is waiting for the next macro headline.</div>
-                <div class="meta"><span class="src">Macro Dashboard</span><span>·</span><span>now</span><span class="badge beta">Idle</span></div>
-              </div>
-            {% endfor %}
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <span class="title">AI Sentiment</span>
-            <span class="badge beta">Beta</span>
-            <span class="meta">Haiku 4.5</span>
-          </div>
-          {% set first_news = news_items[0] if news_items else none %}
-          <div style="background:var(--panel-2);border-left:2px solid var(--accent);padding:10px 12px;border-radius:0 4px 4px 0;font-size:12px;color:var(--text-body);line-height:1.5;">
-            "{{ first_news.title if first_news else "Select a headline to analyze market impact." }}"
-          </div>
-          <div class="row" style="margin-top:14px;gap:10px;">
-            <span class="label-xs">Verdict</span>
-            <span class="badge hawk lg">{{ top_row.currency if top_row else "USD" }} Bull</span>
-          </div>
-          <div class="row" style="margin-top:6px;">
-            <span class="label-xs">Confidence</span>
-            <div class="bar-track" style="flex:1;"><div class="bar-fill" style="width:78%;background:var(--hawk)"></div></div>
-            <span class="mono" style="font-size:11px;color:var(--text-body)">78%</span>
-          </div>
-          <div style="margin-top:14px;">
-            <div class="label-xs" style="margin-bottom:6px;">Key Assets Mentioned</div>
-            <span class="tag">USD</span><span class="tag">UST 10Y</span><span class="tag">DXY</span>
-            <span class="tag">EUR/USD</span><span class="tag">SPX</span>
-          </div>
-          <div style="margin-top:12px;">
-            <div class="label-xs" style="margin-bottom:6px;">Macro Themes</div>
-            <div class="col" style="gap:4px;font-family:var(--mono);font-size:11px;color:var(--text-body)">
-              <div>· Sticky services inflation</div>
-              <div>· Higher-for-longer bias</div>
-              <div>· Real rates extension</div>
+      <div class="pills" style="margin-bottom:8px;" data-landing-news-filters="category">
+        <button class="pill active" type="button" data-news-category="All">All</button>
+        <button class="pill" type="button" data-news-category="Macro">Macro</button>
+        <button class="pill" type="button" data-news-category="FX">FX</button>
+        <button class="pill" type="button" data-news-category="Equities">Equities</button>
+        <button class="pill" type="button" data-news-category="Central banks">Central Banks</button>
+        <button class="pill" type="button" data-news-category="Geopolitical">Geopolitical</button>
+      </div>
+      <div class="pills" style="margin-bottom:12px;" data-landing-news-filters="source">
+        <button class="pill active" type="button" data-news-source="All">All Sources</button>
+        <button class="pill" type="button" data-news-source="investinglive.com">InvestingLive</button>
+      </div>
+      <div class="col" style="gap:8px;max-height:520px;overflow-y:auto;padding-right:4px;" data-landing-news-list>
+        {% for item in news_items %}
+          <a class="news-item {% if loop.first %}selected{% endif %}" href="{{ item.link }}" target="_blank" rel="noopener"
+             data-news-item data-news-category="{{ item.category }}" data-news-source="{{ item.source }}">
+            <div class="head">{{ item.title }}</div>
+            <div class="meta">
+              <span class="src">{{ item.source }}</span>
+              <span>·</span>
+              <span>{{ item.published_at if item.published_at else "Live" }}</span>
+              <span class="badge info">{{ item.category }}</span>
             </div>
+          </a>
+        {% else %}
+          <div class="news-item selected">
+            <div class="head">Live market tape is waiting for the next macro headline.</div>
+            <div class="meta"><span class="src">Macro Dashboard</span><span>·</span><span>now</span><span class="badge beta">Idle</span></div>
           </div>
-          <div style="margin-top:12px;">
-            <div class="label-xs" style="margin-bottom:6px;">FX Implication</div>
-            <div style="font-size:12px;line-height:1.55;color:var(--text-body)">
-              Marginal {{ top_row.currency if top_row else "USD" }} positive across G10. Watch rate differentials and macro surprise momentum.
-            </div>
-          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Calendar Preview #}
+    <div class="panel">
+      <div class="panel-header">
+        <span class="title">Calendar Preview</span>
+        <span class="meta">next 7 days</span>
+        <a href="/calendar" class="btn btn-sm" style="margin-left:auto;">Full calendar</a>
+      </div>
+      <div class="row" style="gap:6px;margin-bottom:12px;flex-wrap:wrap;" data-calendar-filters>
+        <button class="pill active" type="button" data-calendar-filter-type="all" data-calendar-filter-value="all">All</button>
+        <button class="pill" type="button" data-calendar-filter-type="importance" data-calendar-filter-value="1">High</button>
+        <button class="pill" type="button" data-calendar-filter-type="importance" data-calendar-filter-value="2">Med</button>
+      </div>
+      <div class="col" style="gap:2px;" data-calendar-preview>
+        <div class="row" style="padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;gap:10px;">
+          <span class="muted" style="width:46px;">TBD</span>
+          {{ flag("USD") }}
+          <span style="flex:1;color:var(--text-body)">Loading upcoming events...</span>
+          <span class="imp high"></span>
         </div>
       </div>
+    </div>
 
-      <script>
-        (() => {
-          const panel = document.querySelector("[data-landing-news-list]");
-          if (!panel) return;
+  </div>
 
-          const state = { category: "All", source: "All" };
-          const items = Array.from(panel.querySelectorAll("[data-news-item]"));
-          const normalize = (value) => String(value || "").trim().toLowerCase();
-
-          const applyFilters = () => {
-            let visibleCount = 0;
-            items.forEach((item) => {
-              const categoryOk = state.category === "All" || normalize(item.dataset.newsCategory) === normalize(state.category);
-              const sourceOk = state.source === "All" || normalize(item.dataset.newsSource) === normalize(state.source);
-              const visible = categoryOk && sourceOk;
-              item.hidden = !visible;
-              item.classList.toggle("selected", visible && visibleCount === 0);
-              if (visible) visibleCount += 1;
-            });
-
-            let empty = panel.querySelector("[data-news-empty]");
-            if (!visibleCount) {
-              if (!empty) {
-                empty = document.createElement("div");
-                empty.className = "news-item selected";
-                empty.dataset.newsEmpty = "true";
-                empty.innerHTML = '<div class="head">No headlines matched these filters.</div><div class="meta"><span class="src">InvestingLive</span><span>-</span><span>adjust filters</span><span class="badge beta">Empty</span></div>';
-                panel.appendChild(empty);
-              }
-              empty.hidden = false;
-            } else if (empty) {
-              empty.hidden = true;
-            }
-          };
-
-          document.querySelectorAll("[data-news-category]").forEach((button) => {
-            button.addEventListener("click", () => {
-              state.category = button.dataset.newsCategory || "All";
-              button.closest("[data-landing-news-filters]")?.querySelectorAll(".pill").forEach((pill) => pill.classList.remove("active"));
-              button.classList.add("active");
-              applyFilters();
-            });
-          });
-
-          document.querySelectorAll("[data-news-source]").forEach((button) => {
-            button.addEventListener("click", () => {
-              state.source = button.dataset.newsSource || "All";
-              button.closest("[data-landing-news-filters]")?.querySelectorAll(".pill").forEach((pill) => pill.classList.remove("active"));
-              button.classList.add("active");
-              applyFilters();
-            });
-          });
-        })();
-      </script>
-
-      <div class="section-title" id="cot" data-cot-preview>
-        <h2>COT Positioning · CFTC Futures</h2>
-        <span class="meta" data-cot-preview-date>weekly positioning</span>
-        <div class="spacer"></div>
-        <div class="btn-row">
-          <button class="btn active" type="button" data-cot-preview-symbol="EUR">EUR/USD</button>
-          <button class="btn" type="button" data-cot-preview-symbol="GBP">GBP/USD</button>
-          <button class="btn" type="button" data-cot-preview-symbol="JPY">USD/JPY</button>
-          <button class="btn" type="button" data-cot-preview-symbol="AUD">AUD/USD</button>
-          <button class="btn" type="button" data-cot-preview-symbol="CAD">USD/CAD</button>
-          <button class="btn" type="button" data-cot-preview-symbol="GOLD">Gold</button>
-        </div>
-      </div>
-      <div class="grid grid-4" style="margin-bottom:12px;">
-        <div class="kpi"><span class="label">Non-Comm Longs</span><span class="value" data-cot-preview-long>Loading</span><div class="meta"><span class="delta" data-cot-preview-long-change>--</span> vs prior</div></div>
-        <div class="kpi"><span class="label">Non-Comm Shorts</span><span class="value" data-cot-preview-short>Loading</span><div class="meta"><span class="delta" data-cot-preview-short-change>--</span> vs prior</div></div>
-        <div class="kpi"><span class="label">Net Position</span><span class="value" data-cot-preview-net>Loading</span><div class="meta"><span class="delta" data-cot-preview-net-change>--</span> vs prior</div></div>
-        <div class="kpi"><span class="label">Positioning Index</span><span class="value" data-cot-preview-index>--</span><div class="meta" data-cot-preview-index-meta>Loading CFTC data</div></div>
-      </div>
-      <div class="grid grid-2" style="margin-bottom:12px;">
-        <div class="panel">
-          <div class="panel-header"><span class="title">Net Positioning History</span><span class="meta" data-cot-preview-history-label>156w · weekly</span></div>
-          <svg viewBox="0 0 600 220" class="chart-svg">
-            <line x1="0" y1="44" x2="600" y2="44" stroke="var(--border)"/><line x1="0" y1="88" x2="600" y2="88" stroke="var(--border)"/><line x1="0" y1="132" x2="600" y2="132" stroke="var(--border)"/><line x1="0" y1="176" x2="600" y2="176" stroke="var(--border)"/>
-            <line x1="0" y1="110" x2="600" y2="110" stroke="var(--border-strong)" stroke-dasharray="3 3"/>
-            <path data-cot-preview-line d="" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
-            <path data-cot-preview-area d="" fill="rgba(34,197,94,0.14)"/>
-          </svg>
-        </div>
-        <div class="panel">
-          <div class="panel-header"><span class="title">Sentiment Gauge</span><span class="meta">composite</span></div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
-            <svg viewBox="0 0 300 160" style="width:100%;max-width:340px;">
-              <path d="M60 130 A90 90 0 0 1 120 45" stroke="var(--bear)" stroke-width="14" fill="none"/><path d="M120 45 A90 90 0 0 1 180 45" stroke="var(--neutral)" stroke-width="14" fill="none"/><path d="M180 45 A90 90 0 0 1 240 130" stroke="var(--bull)" stroke-width="14" fill="none"/>
-              <line x1="150" y1="130" x2="150" y2="60" stroke="var(--text-heading)" stroke-width="2.5" stroke-linecap="round" data-cot-preview-needle/><circle cx="150" cy="130" r="5" fill="var(--text-heading)"/>
-              <text x="30" y="155" fill="var(--text-muted)" font-family="var(--mono)" font-size="10">BEARISH</text><text x="220" y="155" fill="var(--text-muted)" font-family="var(--mono)" font-size="10">BULLISH</text>
-            </svg>
-            <div class="mono" style="font-size:24px;color:var(--text-heading);font-weight:600;" data-cot-preview-gauge-value>--</div>
-            <span class="badge" data-cot-preview-badge>Loading</span>
-          </div>
-        </div>
-      </div>
-
-      <script>
-        (() => {
-          const section = document.querySelector("[data-cot-preview]");
-          if (!section) return;
-
-          const fields = {
-            date: document.querySelector("[data-cot-preview-date]"),
-            long: document.querySelector("[data-cot-preview-long]"),
-            short: document.querySelector("[data-cot-preview-short]"),
-            net: document.querySelector("[data-cot-preview-net]"),
-            longChange: document.querySelector("[data-cot-preview-long-change]"),
-            shortChange: document.querySelector("[data-cot-preview-short-change]"),
-            netChange: document.querySelector("[data-cot-preview-net-change]"),
-            index: document.querySelector("[data-cot-preview-index]"),
-            indexMeta: document.querySelector("[data-cot-preview-index-meta]"),
-            historyLabel: document.querySelector("[data-cot-preview-history-label]"),
-            line: document.querySelector("[data-cot-preview-line]"),
-            area: document.querySelector("[data-cot-preview-area]"),
-            needle: document.querySelector("[data-cot-preview-needle]"),
-            gaugeValue: document.querySelector("[data-cot-preview-gauge-value]"),
-            badge: document.querySelector("[data-cot-preview-badge]"),
-          };
-          const pairLabels = { EUR: "EUR/USD", GBP: "GBP/USD", JPY: "USD/JPY", AUD: "AUD/USD", CAD: "USD/CAD", GOLD: "Gold" };
-          const fmt = (value) => Number(value || 0).toLocaleString();
-          const signed = (value) => `${Number(value || 0) >= 0 ? "+" : ""}${fmt(Math.round(Number(value || 0)))}`;
-          const tone = (index) => index >= 60 ? "Bullish" : index <= 40 ? "Bearish" : "Neutral";
-          const badgeClass = (label) => label === "Bullish" ? "bull" : label === "Bearish" ? "bear" : "neutral";
-
-          let rowsBySymbol = {};
-          let active = "EUR";
-
-          const setDelta = (el, value) => {
-            if (!el) return;
-            el.textContent = signed(value);
-            el.classList.toggle("up", Number(value) >= 0);
-            el.classList.toggle("down", Number(value) < 0);
-          };
-
-          const percentileRank = (value, values) => {
-            if (!values.length) return 50;
-            return Math.round((values.filter((item) => item <= value).length / values.length) * 100);
-          };
-
-          const positioningStats = (rows) => {
-            const windowRows = rows.slice(-156);
-            const latest = windowRows[windowRows.length - 1];
-            const values = windowRows.map((row) => Number(row.specNet || 0));
-            const low = Math.min(...values);
-            const high = Math.max(...values);
-            const index = high === low ? 50 : ((Number(latest.specNet || 0) - low) / (high - low)) * 100;
-            return {
-              index: Math.max(0, Math.min(100, index)),
-              percentile: percentileRank(Number(latest.specNet || 0), values),
-            };
-          };
-
-          const drawHistory = (rows) => {
-            const values = rows.slice(-52).map((row) => Number(row.specNet || 0));
-            if (!values.length || !fields.line || !fields.area) return;
-            const min = Math.min(...values, 0);
-            const max = Math.max(...values, 0);
-            const range = max - min || 1;
-            const xStep = values.length > 1 ? 600 / (values.length - 1) : 600;
-            const yFor = (value) => 188 - ((value - min) / range) * 156;
-            const zeroY = yFor(0);
-            const points = values.map((value, index) => `${index === 0 ? "M" : "L"}${(index * xStep).toFixed(1)} ${yFor(value).toFixed(1)}`).join(" ");
-            fields.line.setAttribute("d", points);
-            fields.area.setAttribute("d", `${points} L600 ${zeroY.toFixed(1)} L0 ${zeroY.toFixed(1)} Z`);
-          };
-
-          const setNeedle = (index) => {
-            if (!fields.needle) return;
-            const angle = Math.PI + (Math.max(0, Math.min(100, index)) / 100) * Math.PI;
-            fields.needle.setAttribute("x2", String(150 + Math.cos(angle) * 76));
-            fields.needle.setAttribute("y2", String(130 + Math.sin(angle) * 76));
-          };
-
-          const render = () => {
-            const rows = rowsBySymbol[active] || [];
-            if (rows.length < 2) return;
-            const latest = rows[rows.length - 1];
-            const previous = rows[rows.length - 2];
-            const net = Number(latest.specNet || 0);
-            const previousNet = Number(previous.specNet || 0);
-            const stats = positioningStats(rows);
-            const label = tone(stats.index);
-
-            fields.date.textContent = `${pairLabels[active] || active} · ${latest.date || "latest CFTC week"}`;
-            fields.long.textContent = fmt(latest.specLong);
-            fields.short.textContent = fmt(latest.specShort);
-            fields.net.textContent = signed(net);
-            fields.net.style.color = net >= 0 ? "var(--bull)" : "var(--bear)";
-            setDelta(fields.longChange, Number(latest.specLong || 0) - Number(previous.specLong || 0));
-            setDelta(fields.shortChange, Number(latest.specShort || 0) - Number(previous.specShort || 0));
-            setDelta(fields.netChange, net - previousNet);
-            fields.index.textContent = stats.index.toFixed(1);
-            fields.indexMeta.textContent = `${label} · ${stats.percentile}th pctile 156w`;
-            fields.historyLabel.textContent = `${rows.slice(-156).length}w · weekly`;
-            fields.gaugeValue.textContent = stats.index.toFixed(1);
-            fields.badge.textContent = `${label} · ${stats.percentile}th %ile`;
-            fields.badge.className = `badge ${badgeClass(label)}`;
-            drawHistory(rows);
-            setNeedle(stats.index);
-          };
-
-          section.querySelectorAll("[data-cot-preview-symbol]").forEach((button) => {
-            button.addEventListener("click", () => {
-              active = button.dataset.cotPreviewSymbol || "EUR";
-              section.querySelectorAll("[data-cot-preview-symbol]").forEach((item) => item.classList.toggle("active", item === button));
-              render();
-            });
-          });
-
-          fetch("/api/cot/rows", { cache: "no-store" })
-            .then((response) => {
-              if (!response.ok) throw new Error(`COT endpoint returned ${response.status}`);
-              return response.json();
-            })
-            .then((payload) => {
-              rowsBySymbol = Object.fromEntries(Object.entries(payload).map(([symbol, rows]) => [
-                symbol,
-                Array.isArray(rows) ? rows.sort((a, b) => String(a.date).localeCompare(String(b.date))) : [],
-              ]));
-              render();
-            })
-            .catch(() => {
-              fields.date.textContent = "CFTC data unavailable";
-              fields.indexMeta.textContent = "Open /cot to retry the full COT workspace";
-              fields.badge.textContent = "Unavailable";
-            });
-        })();
-      </script>
-
-      <div class="section-title" id="fx">
-        <h2>FX Strength Ranking · G10</h2>
-        <span class="meta">composite macro signal meter</span>
-      </div>
-      <div class="panel" style="padding:0;overflow:hidden;">
-        <div class="table-wrap">
-          <table class="tbl">
-            <thead>
-              <tr><th style="width:40px;">#</th><th>Currency</th><th class="num">Score</th><th style="width:140px;">Visual</th><th>Stance</th><th class="num">INF</th><th class="num">GRW</th><th class="num">LAB</th><th class="num">Date</th></tr>
-            </thead>
-            <tbody>
-              {% for row in currency_meter %}
-                {% set stance = "bull" if row.raw_score is not none and row.raw_score >= 0.25 else ("bear" if row.raw_score is not none and row.raw_score <= -0.25 else "neutral") %}
-                <tr>
-                  <td class="muted">{{ "%02d"|format(loop.index) }}</td>
-                  <td><a class="row" href="/country/{{ row.country_code|lower }}">{{ flag(row.currency) }}<span style="font-weight:600;color:var(--text-heading);letter-spacing:0.04em;">{{ row.currency }}</span></a></td>
-                  <td class="num" style="color:var(--text-heading);font-weight:600;">{{ row.score }}</td>
-                  <td><div class="bar-track"><div class="bar-fill {{ stance }}" style="width:{{ row.score_percent }}%"></div></div></td>
-                  <td><span class="badge {{ stance }}">{{ stance }}</span></td>
-                  <td class="num">{{ row.metrics[0].score_values[0].score if row.metrics|length > 0 and row.metrics[0].score_values else "N/A" }}</td>
-                  <td class="num">{{ row.metrics[1].score_values[0].score if row.metrics|length > 1 and row.metrics[1].score_values else "N/A" }}</td>
-                  <td class="num">{{ row.metrics[2].score_values[0].score if row.metrics|length > 2 and row.metrics[2].score_values else "N/A" }}</td>
-                  <td class="num"><span class="delta flat">{{ row.latest_date.strftime("%b %d") if row.latest_date else "pending" }}</span></td>
-                </tr>
-              {% else %}
-                <tr><td colspan="9">Currency meter data has not been built yet.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="grid grid-60-40" id="macro" style="margin-top:24px;">
-        <div class="panel" style="padding:0;overflow:hidden;">
-          <div class="panel-header" style="padding:14px 16px 12px;margin-bottom:0;">
-            <span class="title">Recent Macro Surprises</span>
-            <span class="meta">last 7 days</span>
-          </div>
-          <table class="tbl">
-            <thead><tr><th></th><th>Indicator</th><th class="num">Actual</th><th class="num">Est</th><th class="num">Surprise</th><th>Result</th></tr></thead>
-            <tbody>
-              {% for s in surprises %}
-                {% set beat = s.surprise is defined and s.surprise is not none and s.surprise >= 0 %}
-                <tr>
-                  <td><div class="row">{{ flag(s.currency_code) }}<span class="mono" style="font-weight:600;color:var(--text-heading)">{{ s.currency_code }}</span></div></td>
-                  <td>{{ s.display_name }}</td>
-                  <td class="num">{{ s.actual if s.actual is defined and s.actual is not none else "N/A" }}</td>
-                  <td class="num muted">{{ s.estimate if s.estimate is defined and s.estimate is not none else "N/A" }}</td>
-                  <td class="num" style="color:{{ "var(--bull)" if beat else "var(--bear)" }};font-weight:600;">{{ "%+.1f"|format(s.surprise) if s.surprise is defined and s.surprise is not none else "N/A" }}</td>
-                  <td><span class="badge {{ "beat" if beat else "miss" }}">{{ "Beat" if beat else "Miss" }}</span></td>
-                </tr>
-              {% else %}
-                <tr><td colspan="6">No recent surprises found.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <div class="panel">
-          <div class="panel-header"><span class="title">Calendar Preview</span><span class="meta">next 7 days</span></div>
-          <div class="row" style="gap:6px;margin-bottom:10px;flex-wrap:wrap;" data-calendar-filters>
-            <button class="pill active" type="button" data-calendar-filter-type="all" data-calendar-filter-value="all">All</button>
-            <button class="pill" type="button" data-calendar-filter-type="importance" data-calendar-filter-value="1">High</button>
-            <button class="pill" type="button" data-calendar-filter-type="importance" data-calendar-filter-value="2">Med</button>
-          </div>
-          <div class="col" style="gap:2px;" data-calendar-preview>
-            <div class="row" style="padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;gap:10px;"><span class="muted" style="width:46px;">TBD</span>{{ flag("USD") }}<span style="flex:1;color:var(--text-body)">Loading upcoming events...</span><span class="imp high"></span></div>
-          </div>
-          <a href="/calendar" class="btn btn-sm" style="margin-top:10px;">View full calendar -></a>
-        </div>
-      </div>
-
-      <div class="section-title">
-        <h2>Yields · 10Y Yield Differentials</h2>
-        <span class="meta">vs USD · sample 10Y</span>
-        <div class="spacer"></div>
-        <div class="row" style="gap:10px;"><div class="tabs" style="margin:0;border:0;" data-yield-tabs><button class="tab active" type="button" data-yield-tab="history">Yield History</button><button class="tab" type="button" data-yield-tab="differentials">Differentials</button><button class="tab" type="button" data-yield-tab="ranking">Spread Ranking</button></div><a class="btn" href="/rates">Open Yields</a></div>
-      </div>
-      <div class="panel">
-        {% if yield_differentials.message %}
-          <div class="muted">{{ yield_differentials.message }}</div>
-        {% endif %}
-        <div data-yield-panel="history">
-          <table class="tbl">
-            <thead><tr><th>Benchmark</th><th class="num">Yield</th><th class="num">5D</th><th class="num">1M</th><th class="num">Date</th></tr></thead>
-            <tbody>
-              {% for row in yield_differentials.rows %}
-                <tr>
-                  <td><div class="row">{{ flag(row.currency) }}<span class="mono" style="font-weight:600;color:var(--text-heading)">{{ row.currency }}</span><span class="muted">{{ row.label }}</span></div></td>
-                  <td class="num">{{ row.yield_display }}</td>
-                  <td class="num {{ row.change_5d_class }}">{{ row.change_5d_display }}</td>
-                  <td class="num {{ row.change_1m_class }}">{{ row.change_1m_display }}</td>
-                  <td class="num"><span class="delta flat">{{ row.date.strftime("%b %d") if row.date else "pending" }}</span></td>
-                </tr>
-              {% else %}
-                <tr><td colspan="5">Yield history data is unavailable.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <div class="rate-zero-bars" data-yield-panel="differentials" hidden>
-          {% for row in yield_differentials.rows %}
-            {% set spread = row.spread_vs_base_bp if row.spread_vs_base_bp is defined and row.spread_vs_base_bp is not none else 0 %}
-            {% set width = [50, (spread|abs / 8)] | min %}
-            <div class="rate-zero-row">
-              <span class="rate-zero-label">{{ flag(row.currency) }}<span style="margin-left:6px;">{{ row.currency }}</span></span>
-              <div class="rate-zero-track"><div class="rate-zero-fill {{ "pos" if spread >= 0 else "neg" }}" style="width:{{ width }}%;"></div></div>
-              <span class="rate-zero-value {{ "pos" if spread >= 0 else "neg" }}">{{ row.spread_display }}</span>
-            </div>
-          {% else %}
-            <div class="muted">Yield differential data is loading.</div>
-          {% endfor %}
-        </div>
-        <div class="rate-zero-bars" data-yield-panel="ranking" hidden>
-          {% for pair in yield_differentials.pairs %}
-            {% set spread = pair.spread_bp if pair.spread_bp is defined and pair.spread_bp is not none else 0 %}
-            {% set width = [50, (spread|abs / 8)] | min %}
-            <div class="rate-zero-row">
-              <span class="rate-zero-label"><span class="mono">{{ pair.label }}</span></span>
-              <div class="rate-zero-track"><div class="rate-zero-fill {{ "pos" if spread >= 0 else "neg" }}" style="width:{{ width }}%;"></div></div>
-              <span class="rate-zero-value {{ "pos" if spread >= 0 else "neg" }}">{{ pair.spread_display }}</span>
-            </div>
-          {% else %}
-            <div class="muted">FX pair spread data is unavailable.</div>
-          {% endfor %}
-        </div>
-      </div>
-
-      <div class="section-title" id="cb">
-        <h2>CB Terminal - Hawk/Dove Spectrum</h2>
-        <span class="meta">real CB score, feed, surprises and rates links</span>
-      </div>
-      {% set bank_names = {"USD":"Fed","EUR":"ECB","GBP":"BoE","JPY":"BoJ","AUD":"RBA","NZD":"RBNZ","CAD":"BoC","CHF":"SNB"} %}
-      <div class="panel" data-landing-cb>
-        <div class="tabs" style="margin-bottom:18px;" data-landing-cb-tabs>
+  {# ── 2. FX Strength Ranking ───────────────────────────────────────── #}
+  <div class="section-title" style="margin-top:24px;">
+    <h2>FX Strength Ranking · G10</h2>
+    <span class="meta">composite macro signal meter</span>
+  </div>
+  <div class="panel" style="padding:0;overflow:hidden;">
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th>Currency</th>
+            <th class="num">Score</th>
+            <th style="width:140px;">Visual</th>
+            <th>Stance</th>
+            <th class="num">INF</th>
+            <th class="num">GRW</th>
+            <th class="num">LAB</th>
+            <th class="num">Date</th>
+          </tr>
+        </thead>
+        <tbody>
           {% for row in currency_meter %}
-            {% set bank_name = bank_names.get(row.currency, row.currency) %}
-            <button class="tab {% if loop.first %}active{% endif %}" type="button" data-bank="{{ bank_name }}" data-currency="{{ row.currency }}">{{ bank_name }}</button>
+            {% set stance = "bull" if row.raw_score is not none and row.raw_score >= 0.25 else ("bear" if row.raw_score is not none and row.raw_score <= -0.25 else "neutral") %}
+            <tr>
+              <td class="muted">{{ "%02d"|format(loop.index) }}</td>
+              <td>
+                <a class="row" href="/country/{{ row.country_code|lower }}">
+                  {{ flag(row.currency) }}
+                  <span style="font-weight:600;color:var(--text-heading);letter-spacing:0.04em;">{{ row.currency }}</span>
+                </a>
+              </td>
+              <td class="num" style="color:var(--text-heading);font-weight:600;">{{ row.score }}</td>
+              <td><div class="bar-track"><div class="bar-fill {{ stance }}" style="width:{{ row.score_percent }}%"></div></div></td>
+              <td><span class="badge {{ stance }}">{{ stance }}</span></td>
+              <td class="num">{{ row.metrics[0].score_values[0].score if row.metrics|length > 0 and row.metrics[0].score_values else "N/A" }}</td>
+              <td class="num">{{ row.metrics[1].score_values[0].score if row.metrics|length > 1 and row.metrics[1].score_values else "N/A" }}</td>
+              <td class="num">{{ row.metrics[2].score_values[0].score if row.metrics|length > 2 and row.metrics[2].score_values else "N/A" }}</td>
+              <td class="num"><span class="delta flat">{{ row.latest_date.strftime("%b %d") if row.latest_date else "pending" }}</span></td>
+            </tr>
           {% else %}
-            <span class="muted">Central-bank score data has not been built yet.</span>
+            <tr><td colspan="9">Currency meter data has not been built yet.</td></tr>
           {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {# ── 3. Hawk/Dove Spectrum + Components ──────────────────────────── #}
+  <div class="section-title" style="margin-top:24px;" id="cb">
+    <h2>CB Terminal · Hawk/Dove Spectrum</h2>
+    <span class="meta">policy divergence across G10 central banks</span>
+  </div>
+  <div class="panel" data-landing-cb>
+    <div class="tabs" style="margin-bottom:18px;" data-landing-cb-tabs>
+      {% for row in currency_meter %}
+        {% set bank_name = bank_names.get(row.currency, row.currency) %}
+        <button class="tab {% if loop.first %}active{% endif %}" type="button"
+                data-bank="{{ bank_name }}" data-currency="{{ row.currency }}">{{ bank_name }}</button>
+      {% else %}
+        <span class="muted">Central-bank score data has not been built yet.</span>
+      {% endfor %}
+    </div>
+    <div class="hd-bar">
+      <div class="track"></div>
+      {% for row in currency_meter %}
+        {% set bank_name = bank_names.get(row.currency, row.currency) %}
+        <div class="dot" style="left:{{ row.score_percent }}%">
+          <div class="lbl">{{ bank_name }} - {{ row.score_percent }}</div>
         </div>
-        <div class="hd-bar">
-          <div class="track"></div>
-          {% for row in currency_meter %}
-            {% set bank_name = bank_names.get(row.currency, row.currency) %}
-            <div class="dot" style="left:{{ row.score_percent }}%"><div class="lbl">{{ bank_name }} - {{ row.score_percent }}</div></div>
-          {% endfor %}
-          <div class="endlbl" style="left:0;">Dovish</div><div class="endlbl" style="right:0;">Hawkish</div>
-        </div>
-        <div class="grid grid-3" style="margin-top:18px;gap:12px;">
-          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;">Hawk/Dove Components</div><div class="col" style="gap:8px;font-family:var(--mono);font-size:11px;" data-cb-components></div></div>
-          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;">Latest CB Feed</div><div class="col" style="gap:6px;font-family:var(--mono);font-size:10px;" data-cb-live-feed>Loading central-bank feed...</div></div>
-          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;">Macro Surprises</div><div class="col" style="gap:0;font-family:var(--mono);font-size:11px;" data-cb-surprises></div></div>
-          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;">Rates / FX Links</div><table style="width:100%;font-family:var(--mono);font-size:11px;" data-cb-fx-links></table></div>
-          <div class="panel tight" style="background:var(--panel-2);"><div class="label-xs" style="margin-bottom:8px;" data-cb-feed-label>Live Feed</div><div class="col" style="gap:4px;font-family:var(--mono);font-size:10px;color:var(--text-body);" data-cb-feed-summary></div></div>
-          <div class="panel tight" style="background:var(--panel-2);display:flex;flex-direction:column;gap:10px;"><div class="label-xs">AI Stance Analysis</div><button class="btn primary" style="align-self:flex-start;" type="button" data-cb-landing-analyze>Analyze Stance</button><div style="font-size:11px;color:var(--text-body);line-height:1.55;font-family:var(--mono)" data-cb-analysis>Select a bank or run analysis to summarize recent central-bank communications.</div></div>
+      {% endfor %}
+      <div class="endlbl" style="left:0;">Dovish</div>
+      <div class="endlbl" style="right:0;">Hawkish</div>
+    </div>
+    <div class="grid grid-3" style="margin-top:18px;gap:12px;">
+      <div class="panel tight" style="background:var(--panel-2);">
+        <div class="label-xs" style="margin-bottom:8px;">Hawk/Dove Components</div>
+        <div class="col" style="gap:8px;font-family:var(--mono);font-size:11px;" data-cb-components></div>
+      </div>
+      <div class="panel tight" style="background:var(--panel-2);">
+        <div class="label-xs" style="margin-bottom:8px;">Macro Surprises</div>
+        <div class="col" style="gap:0;font-family:var(--mono);font-size:11px;" data-cb-surprises></div>
+      </div>
+      <div class="panel tight" style="background:var(--panel-2);display:flex;flex-direction:column;gap:10px;">
+        <div class="label-xs">AI Stance Analysis</div>
+        <button class="btn primary" style="align-self:flex-start;" type="button" data-cb-landing-analyze>Analyze Stance</button>
+        <div style="font-size:11px;color:var(--text-body);line-height:1.55;font-family:var(--mono)" data-cb-analysis>
+          Select a bank or run analysis to summarize recent central-bank communications.
         </div>
       </div>
-</div>
+    </div>
+  </div>
+
+</div>{# /content #}
 
 <script>
-(function(){
-  var el = document.getElementById("utcclock");
-  function tick(){
-    if (!el) return;
-    var d = new Date();
-    el.textContent = String(d.getUTCHours()).padStart(2, "0") + ":" + String(d.getUTCMinutes()).padStart(2, "0") + ":" + String(d.getUTCSeconds()).padStart(2, "0") + " UTC";
-  }
-  tick();
-  setInterval(tick, 1000);
+(function () {
 
+  /* ── News feed filters ─────────────────────────────────────────────── */
+  const panel = document.querySelector("[data-landing-news-list]");
+  if (panel) {
+    const state = { category: "All", source: "All" };
+    const items = Array.from(panel.querySelectorAll("[data-news-item]"));
+    const normalize = (v) => String(v || "").trim().toLowerCase();
+    const applyFilters = () => {
+      let count = 0;
+      items.forEach((item) => {
+        const ok = (state.category === "All" || normalize(item.dataset.newsCategory) === normalize(state.category))
+                && (state.source === "All" || normalize(item.dataset.newsSource) === normalize(state.source));
+        item.hidden = !ok;
+        item.classList.toggle("selected", ok && count === 0);
+        if (ok) count++;
+      });
+      let empty = panel.querySelector("[data-news-empty]");
+      if (!count) {
+        if (!empty) {
+          empty = document.createElement("div");
+          empty.className = "news-item selected";
+          empty.dataset.newsEmpty = "true";
+          empty.innerHTML = '<div class="head">No headlines matched these filters.</div><div class="meta"><span class="src">InvestingLive</span><span>-</span><span>adjust filters</span><span class="badge beta">Empty</span></div>';
+          panel.appendChild(empty);
+        }
+        empty.hidden = false;
+      } else if (empty) {
+        empty.hidden = true;
+      }
+    };
+    document.querySelectorAll("[data-news-category]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.category = btn.dataset.newsCategory || "All";
+        btn.closest("[data-landing-news-filters]")?.querySelectorAll(".pill").forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        applyFilters();
+      });
+    });
+    document.querySelectorAll("[data-news-source]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.source = btn.dataset.newsSource || "All";
+        btn.closest("[data-landing-news-filters]")?.querySelectorAll(".pill").forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        applyFilters();
+      });
+    });
+  }
+
+  /* ── Calendar preview ──────────────────────────────────────────────── */
+  const calList = document.querySelector("[data-calendar-preview]");
+  const calFilters = document.querySelector("[data-calendar-filters]");
+  if (calList) {
+    fetch("/api/calendar?days_back=0&days_forward=7&limit=40")
+      .then((r) => r.ok ? r.json() : null)
+      .then((payload) => {
+        const events = payload?.data?.events || [];
+        if (!events.length) return;
+        const esc = (v) => String(v || "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+        const code = (e) => e.currency_code || e.country_code || "USD";
+        let active = { type: "all", value: "all" };
+        const render = () => {
+          const shown = events.filter((e) => {
+            if (active.type === "importance") return String(e.importance || "") === active.value;
+            return true;
+          });
+          calList.innerHTML = shown.length ? shown.slice(0, 10).map((e) => {
+            const time = e.released_at ? new Date(e.released_at).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) : "TBD";
+            const imp = Number(e.importance) === 1 ? "high" : Number(e.importance) === 2 ? "med" : "low";
+            return `<a class="row" href="/calendar" style="padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;gap:10px;"><span class="muted" style="width:46px;">${esc(time)}</span><span class="flag flag-${esc(code(e))}"></span><span style="flex:1;color:var(--text-body)">${esc(e.display_name||"Event")}</span><span class="imp ${imp}"></span></a>`;
+          }).join("") : '<div style="padding:8px 0;font-family:var(--mono);font-size:11px;color:var(--text-muted);">No events match this filter.</div>';
+        };
+        if (calFilters) {
+          calFilters.addEventListener("click", (evt) => {
+            const btn = evt.target.closest("[data-calendar-filter-type]");
+            if (!btn) return;
+            active = { type: btn.dataset.calendarFilterType || "all", value: btn.dataset.calendarFilterValue || "all" };
+            calFilters.querySelectorAll(".pill").forEach((p) => p.classList.toggle("active", p === btn));
+            render();
+          });
+        }
+        render();
+      }).catch(() => {});
+  }
+
+  /* ── CB Terminal ───────────────────────────────────────────────────── */
   var cbBanks = [
     {% for row in currency_meter %}
       {% set bank_name = bank_names.get(row.currency, row.currency) if bank_names is defined else row.currency %}
@@ -585,194 +293,69 @@
       {
         currency: {{ s.currency_code|tojson }},
         name: {{ s.display_name|tojson }},
-        actual: {{ (s.actual|string if s.actual is defined and s.actual is not none else "N/A")|tojson }},
-        estimate: {{ (s.estimate|string if s.estimate is defined and s.estimate is not none else "N/A")|tojson }},
         surprise: {{ (s.surprise|float) if s.surprise is defined and s.surprise is not none else "null" }},
         date: {{ s.released_at.strftime("%b %d")|tojson if s.released_at is defined and s.released_at else '"recent"' }}
       }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
-  var cbYieldPairs = [
-    {% for pair in yield_differentials.pairs %}
-      {
-        label: {{ pair.label|tojson }},
-        left: {{ pair.left_currency|tojson }},
-        right: {{ pair.right_currency|tojson }},
-        display: {{ pair.spread_display|tojson }},
-        value: {{ (pair.spread_bp|float) if pair.spread_bp is defined and pair.spread_bp is not none else 0 }}
-      }{% if not loop.last %},{% endif %}
-    {% endfor %}
-  ];
+
   var cbState = { currency: cbBanks[0] ? cbBanks[0].currency : "" };
   var cbRoot = document.querySelector("[data-landing-cb]");
-  var htmlEscape = function(value) {
-    return String(value === null || value === undefined ? "" : value).replace(/[&<>"']/g, function(ch) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
-    });
-  };
-  var toneClass = function(score) {
-    return Number(score || 0) >= 0.25 ? "bull" : Number(score || 0) <= -0.25 ? "bear" : "neutral";
-  };
-  var signed = function(value) {
-    var n = Number(value || 0);
-    return (n >= 0 ? "+" : "") + n.toFixed(Math.abs(n) >= 10 ? 0 : 1);
-  };
-  var renderCbPreview = function() {
+  var esc = (v) => String(v === null || v === undefined ? "" : v).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  var toneClass = (s) => Number(s||0) >= 0.25 ? "bull" : Number(s||0) <= -0.25 ? "bear" : "neutral";
+  var signed = (v) => { var n = Number(v||0); return (n >= 0 ? "+" : "") + n.toFixed(Math.abs(n) >= 10 ? 0 : 1); };
+
+  var renderCb = function () {
     if (!cbRoot || !cbBanks.length) return;
-    var bank = cbBanks.find(function(item) { return item.currency === cbState.currency; }) || cbBanks[0];
+    var bank = cbBanks.find((b) => b.currency === cbState.currency) || cbBanks[0];
     cbState.currency = bank.currency;
-    cbRoot.querySelectorAll("[data-currency]").forEach(function(button) {
-      button.classList.toggle("active", button.dataset.currency === bank.currency);
-    });
+    cbRoot.querySelectorAll("[data-currency]").forEach((btn) => btn.classList.toggle("active", btn.dataset.currency === bank.currency));
+
     var components = cbRoot.querySelector("[data-cb-components]");
     if (components) {
-      components.innerHTML = bank.metrics.slice(0, 4).map(function(metric) {
-        var cls = toneClass(metric.raw);
-        return '<div><div class="between"><span>' + htmlEscape(metric.label) + '</span><strong class="' + cls + '">' + htmlEscape(metric.score) + '</strong></div><div class="bar-track"><div class="bar-fill ' + cls + '" style="width:' + Number(metric.percent || 50) + '%"></div></div></div>';
-      }).join("") + '<div class="muted">Latest score ' + htmlEscape(bank.latestDate) + ' - ' + htmlEscape(bank.label) + '</div>';
+      components.innerHTML = bank.metrics.slice(0, 4).map((m) => {
+        var cls = toneClass(m.raw);
+        return `<div><div class="between"><span>${esc(m.label)}</span><strong class="${cls}">${esc(m.score)}</strong></div><div class="bar-track"><div class="bar-fill ${cls}" style="width:${Number(m.percent||50)}%"></div></div></div>`;
+      }).join("") + `<div class="muted" style="margin-top:4px;">Latest score ${esc(bank.latestDate)} — ${esc(bank.label)}</div>`;
     }
+
     var surpriseBox = cbRoot.querySelector("[data-cb-surprises]");
     if (surpriseBox) {
-      var matched = cbSurprises.filter(function(item) { return item.currency === bank.currency; }).slice(0, 4);
-      surpriseBox.innerHTML = matched.length ? matched.map(function(item) {
-        var cls = Number(item.surprise || 0) >= 0 ? "bull" : "bear";
-        return '<div class="row" style="gap:10px;padding:6px 0;border-bottom:1px dashed var(--border);"><span class="muted" style="width:46px;">' + htmlEscape(item.date) + '</span><span style="flex:1;color:var(--text-body)">' + htmlEscape(item.name) + '</span><span class="' + cls + '">' + signed(item.surprise) + '</span></div>';
-      }).join("") : '<div class="muted">No recent surprises matched ' + htmlEscape(bank.currency) + '.</div>';
+      var matched = cbSurprises.filter((s) => s.currency === bank.currency).slice(0, 5);
+      surpriseBox.innerHTML = matched.length ? matched.map((s) => {
+        var cls = Number(s.surprise||0) >= 0 ? "bull" : "bear";
+        return `<div class="row" style="gap:10px;padding:6px 0;border-bottom:1px dashed var(--border);"><span class="muted" style="width:46px;">${esc(s.date)}</span><span style="flex:1;color:var(--text-body)">${esc(s.name)}</span><span class="${cls}">${signed(s.surprise)}</span></div>`;
+      }).join("") : `<div class="muted">No recent surprises for ${esc(bank.currency)}.</div>`;
     }
-    var fxLinks = cbRoot.querySelector("[data-cb-fx-links]");
-    if (fxLinks) {
-      var rows = cbYieldPairs.filter(function(pair) { return pair.left === bank.currency || pair.right === bank.currency; }).slice(0, 4);
-      fxLinks.innerHTML = rows.length ? rows.map(function(pair) {
-        var cls = Number(pair.value || 0) >= 0 ? "bull" : "bear";
-        return '<tr><td style="padding:4px 0;color:var(--text-body)">' + htmlEscape(pair.label) + '</td><td class="' + cls + '" style="padding:4px 0;text-align:right;">' + htmlEscape(pair.display) + '</td></tr>';
-      }).join("") : '<tr><td class="muted">No yield pairs matched this bank.</td></tr>';
-    }
+
     var analysis = cbRoot.querySelector("[data-cb-analysis]");
     if (analysis) {
-      analysis.innerHTML = '<strong>' + htmlEscape(bank.bank) + '</strong> is ' + htmlEscape(bank.label.toLowerCase()) + ' with a score of <strong>' + htmlEscape(bank.scoreText) + '</strong>. Feed analysis can refine this with recent communications.';
+      analysis.innerHTML = `<strong>${esc(bank.bank)}</strong> is ${esc(bank.label.toLowerCase())} with a score of <strong>${esc(bank.scoreText)}</strong>.`;
     }
-    fetchCbFeed(bank);
   };
-  var fetchCbFeed = function(bank) {
-    var feedBox = cbRoot && cbRoot.querySelector("[data-cb-live-feed]");
-    var feedSummary = cbRoot && cbRoot.querySelector("[data-cb-feed-summary]");
-    var feedLabel = cbRoot && cbRoot.querySelector("[data-cb-feed-label]");
-    if (!feedBox || !feedSummary) return;
-    if (feedLabel) feedLabel.textContent = "Live Feed - " + bank.bank;
-    feedBox.innerHTML = '<div class="muted">Loading ' + htmlEscape(bank.bank) + ' feed...</div>';
-    feedSummary.innerHTML = "";
-    fetch("/api/cb/feeds?bank=" + encodeURIComponent(bank.currency))
-      .then(function(res) { return res.ok ? res.json() : null; })
-      .then(function(payload) {
-        var feed = payload && payload.feeds && payload.feeds[0];
-        var articles = feed && feed.articles ? feed.articles.slice(0, 4) : [];
-        var markup = articles.length ? articles.map(function(article) {
-          return '<a href="' + htmlEscape(article.link) + '" target="_blank" rel="noopener" style="color:var(--text-body);border-bottom:1px dashed var(--border);padding:4px 0;">' + htmlEscape(article.title) + '</a>';
-        }).join("") : '<div class="muted">No recent feed articles available.</div>';
-        feedBox.innerHTML = markup;
-        feedSummary.innerHTML = articles.length ? articles.slice(0, 3).map(function(article) {
-          return '<div>- ' + htmlEscape(String(article.title || "").slice(0, 82)) + '</div>';
-        }).join("") : '<div class="muted">Feed is empty for this bank.</div>';
-      })
-      .catch(function() {
-        feedBox.innerHTML = '<div class="muted">Central-bank feed unavailable.</div>';
-        feedSummary.innerHTML = '<div class="muted">Feed unavailable.</div>';
-      });
-  };
+
   if (cbRoot) {
-    cbRoot.addEventListener("click", function(event) {
-      var tab = event.target.closest("[data-currency]");
-      if (tab) {
-        cbState.currency = tab.dataset.currency || cbState.currency;
-        renderCbPreview();
-        return;
-      }
-      if (event.target.closest("[data-cb-landing-analyze]")) {
-        var bank = cbBanks.find(function(item) { return item.currency === cbState.currency; }) || cbBanks[0];
+    cbRoot.addEventListener("click", (evt) => {
+      var tab = evt.target.closest("[data-currency]");
+      if (tab) { cbState.currency = tab.dataset.currency || cbState.currency; renderCb(); return; }
+      if (evt.target.closest("[data-cb-landing-analyze]")) {
+        var bank = cbBanks.find((b) => b.currency === cbState.currency) || cbBanks[0];
         var out = cbRoot.querySelector("[data-cb-analysis]");
-        if (out) out.textContent = "Analyzing recent " + bank.bank + " communications...";
+        if (out) out.textContent = `Analyzing ${bank.bank} communications...`;
         fetch("/api/cb/analysis?bank=" + encodeURIComponent(bank.currency), { method: "POST" })
-          .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
-          .then(function(result) {
-            if (!result.ok) throw new Error(result.data && result.data.detail ? result.data.detail : "Analysis failed");
-            var data = result.data || {};
-            var cls = data.stance === "hawkish" ? "bull" : data.stance === "dovish" ? "bear" : "neutral";
-            out.innerHTML = '<span class="' + cls + '">' + htmlEscape(data.stance || "neutral") + '</span> - ' + Number(data.confidence || 0) + '% confidence. ' + htmlEscape(data.summary || "") + (data.fx_implication ? '<br>' + htmlEscape(data.fx_implication) : "");
+          .then((r) => r.json().then((d) => ({ ok: r.ok, d })))
+          .then(({ ok, d }) => {
+            if (!ok) throw new Error(d?.detail || "Analysis failed");
+            var cls = d.stance === "hawkish" ? "bull" : d.stance === "dovish" ? "bear" : "neutral";
+            out.innerHTML = `<span class="${cls}">${esc(d.stance||"neutral")}</span> — ${Number(d.confidence||0)}% confidence. ${esc(d.summary||"")}${d.fx_implication ? "<br>" + esc(d.fx_implication) : ""}`;
           })
-          .catch(function(error) {
-            if (out) out.textContent = error.message || "Analysis unavailable.";
-          });
+          .catch((e) => { if (out) out.textContent = e.message || "Analysis unavailable."; });
       }
     });
-    renderCbPreview();
+    renderCb();
   }
 
-  var yieldTabs = document.querySelector("[data-yield-tabs]");
-  if (yieldTabs) {
-    var yieldPanels = Array.from(document.querySelectorAll("[data-yield-panel]"));
-    yieldTabs.addEventListener("click", function(event) {
-      var button = event.target.closest("[data-yield-tab]");
-      if (!button) return;
-      var target = button.dataset.yieldTab || "history";
-      yieldTabs.querySelectorAll("[data-yield-tab]").forEach(function(tab) {
-        tab.classList.toggle("active", tab === button);
-      });
-      yieldPanels.forEach(function(panel) {
-        panel.hidden = panel.dataset.yieldPanel !== target;
-      });
-    });
-  }
-
-  var list = document.querySelector("[data-calendar-preview]");
-  var filters = document.querySelector("[data-calendar-filters]");
-  if (!list) return;
-  fetch("/api/calendar?days_back=0&days_forward=7&limit=40").then(function(res){ return res.ok ? res.json() : null; }).then(function(payload){
-    var events = payload && payload.data && payload.data.events ? payload.data.events : [];
-    if (!events.length) return;
-    var activeFilter = { type: "all", value: "all" };
-    var esc = function(value) {
-      return String(value || "").replace(/[&<>"']/g, function(ch) {
-        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
-      });
-    };
-    var eventCode = function(e) { return e.currency_code || e.country_code || "USD"; };
-    var renderEvents = function() {
-      var shown = events.filter(function(e) {
-        if (activeFilter.type === "currency") return eventCode(e) === activeFilter.value;
-        if (activeFilter.type === "importance") return String(e.importance || "") === activeFilter.value;
-        return true;
-      });
-      list.innerHTML = shown.length ? shown.slice(0, 7).map(function(e){
-      var time = e.released_at ? new Date(e.released_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "TBD";
-      var code = eventCode(e);
-      var imp = Number(e.importance) === 1 ? "high" : Number(e.importance) === 2 ? "med" : "low";
-      return '<a class="row" href="/calendar" style="padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;gap:10px;"><span class="muted" style="width:46px;">' + esc(time) + '</span><span class="flag flag-' + esc(code) + '"></span><span style="flex:1;color:var(--text-body)">' + esc(e.display_name || "Event") + '</span><span class="imp ' + imp + '"></span></a>';
-      }).join("") : '<div class="row" style="padding:8px 0;font-family:var(--mono);font-size:11px;color:var(--text-muted);">No events match this filter.</div>';
-    };
-    if (filters) {
-      var currencies = [];
-      events.forEach(function(e) {
-        var code = eventCode(e);
-        if (currencies.indexOf(code) === -1) currencies.push(code);
-      });
-      var staticButtons = filters.innerHTML;
-      filters.innerHTML = staticButtons + currencies.slice(0, 5).map(function(code) {
-        return '<button class="pill" type="button" data-calendar-filter-type="currency" data-calendar-filter-value="' + esc(code) + '">' + esc(code) + '</button>';
-      }).join("");
-      filters.addEventListener("click", function(event) {
-        var button = event.target.closest("[data-calendar-filter-type]");
-        if (!button) return;
-        activeFilter = {
-          type: button.dataset.calendarFilterType || "all",
-          value: button.dataset.calendarFilterValue || "all",
-        };
-        filters.querySelectorAll(".pill").forEach(function(item) { item.classList.toggle("active", item === button); });
-        renderEvents();
-      });
-    }
-    renderEvents();
-  }).catch(function(){});
 })();
 </script>
-{% endblock %}
 
+{% endblock %}

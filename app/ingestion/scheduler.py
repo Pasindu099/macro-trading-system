@@ -125,6 +125,16 @@ class Scheduler:
         logger.info("  Registered rate probability OIS/futures fetch at 06:00 UTC")
 
         self._scheduler.add_job(
+            _run_rp_scrape,
+            trigger=CronTrigger(hour="0,8,16", minute=30, timezone="UTC"),
+            id="rate_probability_scrape",
+            name="Rate probability scraper (rateprobability.com)",
+            replace_existing=True,
+            misfire_grace_time=60 * 60,
+        )
+        logger.info("  Registered rateprobability.com scraper at 00:30, 08:30, 16:30 UTC")
+
+        self._scheduler.add_job(
             _poll_cb_feeds,
             trigger=IntervalTrigger(minutes=10, timezone="UTC"),
             id="cb_feed_poll",
@@ -368,6 +378,17 @@ def _add_minutes(hour: int, minute: int, delta: int) -> tuple[int, int]:
     """Add `delta` minutes to (hour, minute), wrapping around 24h."""
     total = (hour * 60 + minute + delta) % (24 * 60)
     return divmod(total, 60)
+
+
+async def _run_rp_scrape() -> None:
+    """Background job: scrape rateprobability.com for all 8 banks."""
+    try:
+        from scraper.rate_probability_scraper import run_scraper_async
+        statuses = await run_scraper_async()
+        ok = sum(1 for s in statuses.values() if s == "ok")
+        logger.info("rateprobability.com scrape: %d/8 ok — %s", ok, statuses)
+    except Exception:
+        logger.exception("rateprobability.com scrape job failed.")
 
 
 async def _poll_cb_feeds() -> None:

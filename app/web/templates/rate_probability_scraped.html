@@ -1,0 +1,621 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<style>
+/* ── Design tokens ───────────────────────────────────── */
+:root {
+  --rps-bg:      #0d0b09;
+  --rps-panel:   rgba(255,255,255,0.035);
+  --rps-border:  rgba(255,255,255,0.07);
+  --rps-accent:  #f97316;
+  --rps-bull:    #22c55e;
+  --rps-bear:    #ef4444;
+  --rps-neutral: #94a3b8;
+  --rps-text:    #e2e8f0;
+  --rps-muted:   #64748b;
+  --rps-mono:    "JetBrains Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+  --glass-blur:  blur(16px) saturate(160%);
+  --glass-shadow:0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* ── Page shell ─────────────────────────────────────── */
+.rps-page {
+  padding: 1.5rem 1.75rem 3rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── Hero ───────────────────────────────────────────── */
+.rps-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+.rps-hero__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--rps-accent);
+  margin-bottom: .45rem;
+}
+.rps-hero__title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--rps-text);
+  margin: 0 0 .3rem;
+  letter-spacing: -.02em;
+}
+.rps-hero__sub {
+  font-size: .82rem;
+  color: var(--rps-muted);
+  margin: 0;
+}
+.rps-hero__meta {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+  margin-top: .75rem;
+  font-size: .78rem;
+  color: var(--rps-muted);
+}
+.rps-hero__meta strong { color: var(--rps-text); }
+.rps-hero__right {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-shrink: 0;
+}
+.rps-scrape-btn {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .45rem .9rem;
+  background: rgba(249,115,22,.12);
+  border: 1px solid rgba(249,115,22,.3);
+  border-radius: 8px;
+  color: var(--rps-accent);
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.rps-scrape-btn:hover {
+  background: rgba(249,115,22,.2);
+  border-color: rgba(249,115,22,.5);
+}
+.rps-source-badge {
+  font-size: .7rem;
+  padding: .25rem .6rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--rps-border);
+  border-radius: 6px;
+  color: var(--rps-muted);
+}
+.rps-source-badge a { color: var(--rps-accent); text-decoration: none; }
+.rps-source-badge a:hover { text-decoration: underline; }
+
+/* ── Notice ─────────────────────────────────────────── */
+.rps-notice {
+  background: rgba(249,115,22,.08);
+  border: 1px solid rgba(249,115,22,.25);
+  border-radius: 10px;
+  padding: .9rem 1.2rem;
+  color: var(--rps-accent);
+  font-size: .82rem;
+  margin-bottom: 1.75rem;
+}
+
+/* ── Bank cards grid ─────────────────────────────────── */
+.rps-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: .9rem;
+  margin-bottom: 2rem;
+}
+.rps-card {
+  background: var(--rps-panel);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--rps-border);
+  border-radius: 12px;
+  padding: 1rem 1.1rem .9rem;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, transform .1s;
+  position: relative;
+  overflow: hidden;
+}
+.rps-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--rps-neutral);
+  opacity: .25;
+}
+.rps-card.is-active {
+  border-color: var(--rps-accent);
+  background: rgba(249,115,22,.07);
+}
+.rps-card.is-active::before { background: var(--rps-accent); opacity: 1; }
+.rps-card.rps-card--cut::before  { background: var(--rps-bear); opacity: 1; }
+.rps-card.rps-card--hike::before { background: var(--rps-bull); opacity: 1; }
+.rps-card:hover:not(.is-active) {
+  border-color: rgba(255,255,255,.14);
+  background: rgba(255,255,255,.05);
+  transform: translateY(-1px);
+}
+.rps-card__code {
+  font-family: var(--rps-mono);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--rps-accent);
+  margin-bottom: .25rem;
+}
+.rps-card__rate {
+  font-family: var(--rps-mono);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--rps-text);
+  line-height: 1.15;
+}
+.rps-card__rate span { font-size: .75rem; color: var(--rps-muted); font-weight: 400; }
+.rps-card__meeting {
+  font-size: .68rem;
+  color: var(--rps-muted);
+  margin-top: .3rem;
+}
+.rps-card__dom {
+  margin-top: .55rem;
+  font-size: .82rem;
+  font-weight: 700;
+  font-family: var(--rps-mono);
+}
+.rps-card__dom.rps-cut  { color: var(--rps-bear); }
+.rps-card__dom.rps-hike { color: var(--rps-bull); }
+.rps-card__dom.rps-hold { color: var(--rps-neutral); }
+.rps-card__nodata {
+  font-size: .72rem;
+  color: var(--rps-muted);
+  font-style: italic;
+  margin-top: .5rem;
+}
+
+/* ── Main panel ─────────────────────────────────────── */
+.rps-main {
+  background: var(--rps-panel);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--rps-border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.rps-main-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.3rem;
+  border-bottom: 1px solid var(--rps-border);
+  flex-wrap: wrap;
+}
+.rps-main-header__title {
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--rps-text);
+  flex: 1;
+}
+.rps-main-header__sub {
+  font-size: .75rem;
+  color: var(--rps-muted);
+}
+
+/* ── Table ───────────────────────────────────────────── */
+.rps-table-wrap {
+  overflow-x: auto;
+}
+.rps-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+}
+.rps-table thead th {
+  padding: .65rem 1rem;
+  text-align: left;
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--rps-muted);
+  border-bottom: 1px solid var(--rps-border);
+  white-space: nowrap;
+  background: rgba(0,0,0,.15);
+}
+.rps-table thead th.rps-th-num { text-align: right; }
+.rps-table tbody tr { border-bottom: 1px solid rgba(255,255,255,.04); }
+.rps-table tbody tr:last-child { border-bottom: none; }
+.rps-table tbody tr:hover { background: rgba(255,255,255,.025); }
+.rps-table td {
+  padding: .6rem 1rem;
+  color: var(--rps-text);
+  vertical-align: middle;
+}
+.rps-td-mono {
+  font-family: var(--rps-mono);
+  font-size: .8rem;
+  text-align: right;
+}
+.rps-td-date { white-space: nowrap; color: var(--rps-muted); }
+.rps-pill {
+  display: inline-block;
+  padding: .2rem .55rem;
+  border-radius: 999px;
+  font-family: var(--rps-mono);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+.rps-cut  { color: var(--rps-bear); }
+.rps-hike { color: var(--rps-bull); }
+.rps-hold { color: var(--rps-neutral); }
+.rps-pill.rps-cut  { background: rgba(239,68,68,.12);  border: 1px solid rgba(239,68,68,.3); }
+.rps-pill.rps-hike { background: rgba(34,197,94,.12);  border: 1px solid rgba(34,197,94,.3); }
+.rps-pill.rps-hold { background: rgba(148,163,184,.08);border: 1px solid rgba(148,163,184,.2); }
+.rps-prob-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  min-width: 90px;
+}
+.rps-prob-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,.07);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.rps-prob-fill { display: block; height: 100%; border-radius: 999px; }
+.rps-prob-fill.rps-cut  { background: var(--rps-bear); }
+.rps-prob-fill.rps-hike { background: var(--rps-bull); }
+.rps-prob-fill.rps-hold { background: var(--rps-neutral); }
+.rps-prob-val {
+  font-family: var(--rps-mono);
+  font-size: .76rem;
+  color: var(--rps-text);
+  min-width: 36px;
+  text-align: right;
+}
+.rps-empty {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--rps-muted);
+  font-size: .85rem;
+  font-style: italic;
+}
+
+/* ── Chart ───────────────────────────────────────────── */
+.rps-chart-section {
+  margin-top: 1.5rem;
+  background: var(--rps-panel);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--rps-border);
+  border-radius: 14px;
+  padding: 1.1rem 1.3rem 1.3rem;
+}
+.rps-chart-title {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--rps-muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: .85rem;
+}
+#rps-chart { height: 200px; }
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  .rps-page { padding: 1rem 1rem 2rem; }
+  .rps-hero { gap: 1rem; }
+  .rps-hero__title { font-size: 1.35rem; }
+  .rps-cards { grid-template-columns: repeat(2, 1fr); gap: .65rem; }
+  .rps-table thead th,
+  .rps-table td { padding: .5rem .7rem; }
+}
+@media (max-width: 480px) {
+  .rps-cards { grid-template-columns: 1fr 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="rps-page" id="rps-content">
+
+  {# ── Hero ─────────────────────────────────────────── #}
+  <div class="rps-hero">
+    <div>
+      <div class="rps-hero__eyebrow">
+        <span class="intel-dot"></span>
+        <span>OIS market pricing · G8 central banks · scraped every 8 hours</span>
+      </div>
+      <h1 class="rps-hero__title">Rate Probability Monitor</h1>
+      <p class="rps-hero__sub">Market-implied cut / hold / hike probabilities per upcoming CB meeting</p>
+      <div class="rps-hero__meta">
+        <span>Last updated: <strong id="rps-updated">{{ updated_at }}</strong></span>
+      </div>
+    </div>
+    <div class="rps-hero__right">
+      <span class="rps-source-badge">Source: <a href="{{ source_url }}" target="_blank" rel="noopener">rateprobability.com</a></span>
+      <button class="rps-scrape-btn" id="rps-scrape-btn" title="Trigger a fresh scrape">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  {# ── No-data notice ───────────────────────────────── #}
+  {% if no_data %}
+  <div class="rps-notice">
+    No scraped data found. Click <strong>Refresh</strong> above to trigger the first scrape, or wait for the scheduled run (every 8 hours).
+  </div>
+  {% endif %}
+
+  {# ── Bank cards ───────────────────────────────────── #}
+  <div class="rps-cards" id="rps-cards">
+    {% for card in bank_cards %}
+    <div class="{{ card.card_class }}{% if loop.first %} is-active{% endif %}"
+         data-bank="{{ card.bank }}"
+         onclick="rpsSelectBank('{{ card.bank }}', this)">
+      <div class="rps-card__code">{{ card.bank }}</div>
+      {% if card.has_data %}
+        <div class="rps-card__rate">
+          {% if card.current_rate is not none %}{{ "%.2f"|format(card.current_rate) }}<span>%</span>{% else %}—{% endif %}
+        </div>
+        <div class="rps-card__meeting">{{ card.next_meeting }}</div>
+        {% if card.dominant_prob is not none %}
+        <div class="rps-card__dom {{ card.dominant.lower() if card.dominant in ['CUT','HOLD','HIKE'] else '' }}">
+          {{ "%.0f"|format(card.dominant_prob) }}% {{ card.dominant }}
+        </div>
+        {% endif %}
+      {% else %}
+        <div class="rps-card__nodata">No data</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  {# ── Meeting tables — one per bank, shown/hidden via JS ── #}
+  {% for bank in bank_order %}
+  <div class="rps-main" id="rps-panel-{{ bank }}" style="{{ 'display:none;' if not loop.first else '' }}">
+    <div class="rps-main-header">
+      <div>
+        <div class="rps-main-header__title">{{ bank_names[bank] }} ({{ bank }})</div>
+        {% set s = bank_cards | selectattr("bank", "equalto", bank) | first %}
+        {% if s and s.current_rate is not none %}
+        <div class="rps-main-header__sub">Current rate: {{ "%.2f"|format(s.current_rate) }}%</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="rps-table-wrap">
+      {% set rows = bank_tables[bank] %}
+      {% if rows %}
+      <table class="rps-table">
+        <thead>
+          <tr>
+            <th>Meeting</th>
+            <th class="rps-th-num">Implied Rate</th>
+            <th class="rps-th-num">Delta (bps)</th>
+            <th>Probable Move</th>
+            <th colspan="2">Cut Prob</th>
+            <th colspan="2">Hold Prob</th>
+            <th colspan="2">Hike Prob</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td class="rps-td-date">{{ row.date_fmt }}</td>
+            <td class="rps-td-mono">
+              {% if row.implied_rate is not none %}{{ "%.3f"|format(row.implied_rate) }}%{% else %}—{% endif %}
+            </td>
+            <td class="rps-td-mono {{ row.dominant_class if row.delta_bps is not none else '' }}">
+              {% if row.delta_bps is not none %}{% if row.delta_bps > 0 %}+{% endif %}{{ "%.1f"|format(row.delta_bps) }}{% else %}—{% endif %}
+            </td>
+            <td>
+              <span class="rps-pill {{ row.dominant_class }}">{{ row.dominant }}</span>
+            </td>
+            {# Cut #}
+            <td class="rps-td-mono rps-cut">
+              {% if row.cut_prob is not none %}{{ "%.1f"|format(row.cut_prob) }}{% else %}—{% endif %}
+            </td>
+            <td style="min-width:80px">
+              {% if row.cut_prob is not none %}
+              <div class="rps-prob-track"><span class="rps-prob-fill rps-cut" style="width:{{ row.cut_prob | round(1) }}%"></span></div>
+              {% endif %}
+            </td>
+            {# Hold #}
+            <td class="rps-td-mono rps-hold">
+              {% if row.hold_prob is not none %}{{ "%.1f"|format(row.hold_prob) }}{% else %}—{% endif %}
+            </td>
+            <td style="min-width:80px">
+              {% if row.hold_prob is not none %}
+              <div class="rps-prob-track"><span class="rps-prob-fill rps-hold" style="width:{{ row.hold_prob | round(1) }}%"></span></div>
+              {% endif %}
+            </td>
+            {# Hike #}
+            <td class="rps-td-mono rps-hike">
+              {% if row.hike_prob is not none %}{{ "%.1f"|format(row.hike_prob) }}{% else %}—{% endif %}
+            </td>
+            <td style="min-width:80px">
+              {% if row.hike_prob is not none %}
+              <div class="rps-prob-track"><span class="rps-prob-fill rps-hike" style="width:{{ row.hike_prob | round(1) }}%"></span></div>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="rps-empty">No upcoming meeting data for {{ bank }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  {# ── Implied-rate path chart for active bank ──────── #}
+  <div class="rps-chart-section">
+    <div class="rps-chart-title" id="rps-chart-title">Implied Rate Path</div>
+    <canvas id="rps-chart"></canvas>
+  </div>
+
+</div>{# /rps-page #}
+
+{# Embed meeting data for JS #}
+<script>
+window._rpsBankTables = {{ bank_tables | tojson }};
+window._rpsBankOrder  = {{ bank_order  | tojson }};
+</script>
+
+<script>
+(function () {
+  let activeChart = null;
+  const ACCENT = "#f97316", BULL = "#22c55e", BEAR = "#ef4444", GRID = "rgba(255,255,255,0.07)";
+
+  function rpsSelectBank(bank, cardEl) {
+    // Toggle card active state
+    document.querySelectorAll(".rps-card").forEach(c => c.classList.remove("is-active"));
+    cardEl.classList.add("is-active");
+
+    // Show correct panel
+    window._rpsBankOrder.forEach(b => {
+      const panel = document.getElementById("rps-panel-" + b);
+      if (panel) panel.style.display = b === bank ? "" : "none";
+    });
+
+    // Update chart
+    renderChart(bank);
+  }
+
+  // Expose to onclick attributes
+  window.rpsSelectBank = rpsSelectBank;
+
+  function renderChart(bank) {
+    const rows = window._rpsBankTables[bank] || [];
+    const labels = rows.map(r => r.date_fmt || r.date || "");
+    const implied = rows.map(r => r.implied_rate != null ? r.implied_rate : null);
+    const cutProb  = rows.map(r => r.cut_prob  != null ? r.cut_prob  : null);
+    const hikeProb = rows.map(r => r.hike_prob != null ? r.hike_prob : null);
+
+    const ctx = document.getElementById("rps-chart").getContext("2d");
+    if (activeChart) activeChart.destroy();
+
+    document.getElementById("rps-chart-title").textContent = "Implied Rate Path — " + bank;
+
+    activeChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Implied Rate (%)",
+            data: implied,
+            type: "line",
+            borderColor: ACCENT,
+            backgroundColor: "rgba(249,115,22,0.08)",
+            borderWidth: 2,
+            pointRadius: 4,
+            pointBackgroundColor: ACCENT,
+            tension: 0.3,
+            yAxisID: "yRate",
+          },
+          {
+            label: "Cut Prob (%)",
+            data: cutProb,
+            backgroundColor: "rgba(239,68,68,0.35)",
+            borderColor: "rgba(239,68,68,0.6)",
+            borderWidth: 1,
+            borderRadius: 3,
+            yAxisID: "yProb",
+          },
+          {
+            label: "Hike Prob (%)",
+            data: hikeProb,
+            backgroundColor: "rgba(34,197,94,0.3)",
+            borderColor: "rgba(34,197,94,0.55)",
+            borderWidth: 1,
+            borderRadius: 3,
+            yAxisID: "yProb",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: {
+            labels: { color: "#94a3b8", font: { size: 11 } },
+          },
+          tooltip: {
+            backgroundColor: "rgba(13,11,9,0.92)",
+            borderColor: "rgba(255,255,255,0.1)",
+            borderWidth: 1,
+            titleColor: "#e2e8f0",
+            bodyColor: "#94a3b8",
+          },
+        },
+        scales: {
+          x: {
+            ticks: { color: "#64748b", font: { size: 10 } },
+            grid: { color: GRID },
+          },
+          yRate: {
+            position: "left",
+            ticks: { color: ACCENT, font: { size: 10 }, callback: v => v.toFixed(2) + "%" },
+            grid: { color: GRID },
+            title: { display: true, text: "Rate (%)", color: ACCENT, font: { size: 10 } },
+          },
+          yProb: {
+            position: "right",
+            min: 0, max: 100,
+            ticks: { color: "#64748b", font: { size: 10 }, callback: v => v + "%" },
+            grid: { drawOnChartArea: false },
+            title: { display: true, text: "Probability (%)", color: "#64748b", font: { size: 10 } },
+          },
+        },
+      },
+    });
+  }
+
+  // Scrape button
+  document.getElementById("rps-scrape-btn").addEventListener("click", async function () {
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = "Scraping…";
+    try {
+      const resp = await fetch("/api/rate-probability/scrape", { method: "POST" });
+      const data = await resp.json();
+      btn.textContent = "Scrape started — reload in ~30s";
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refresh';
+      }, 35000);
+    } catch (e) {
+      btn.textContent = "Error";
+      btn.disabled = false;
+    }
+  });
+
+  // Init: render chart for first bank with data
+  const firstBank = window._rpsBankOrder.find(b => (window._rpsBankTables[b] || []).length > 0)
+                 || window._rpsBankOrder[0];
+  renderChart(firstBank);
+})();
+</script>
+{% endblock %}

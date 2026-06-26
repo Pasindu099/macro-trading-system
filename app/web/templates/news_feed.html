@@ -1,54 +1,249 @@
 {% extends "base.html" %}
 
 {% block body %}
-<main class="shell dashboard-tool-shell">
-    <header class="tool-hero">
-        <div>
-            <a href="/">Dashboard</a>
-            <span>/</span>
-            <strong>News Feed</strong>
+<div id="content" class="intel-page">
+
+  <div class="intel-hero">
+    <div class="intel-hero__left">
+      <div class="intel-hero__eyebrow">
+        <span class="intel-dot"></span>
+        <span>Live · Auto-refreshes every 90s</span>
+      </div>
+      <h1 class="intel-hero__title">Intelligence Monitor</h1>
+      <p class="intel-hero__sub">Real-time macro headlines with AI sentiment analysis. Click any story to trigger deep analysis.</p>
+    </div>
+    <div class="intel-hero__right">
+      <span class="intel-badge" data-news-refresh-state>connecting</span>
+    </div>
+  </div>
+
+  <div class="intel-layout" data-news-feed-section>
+
+    {# ── Left: feed ──────────────────────────────────────────────── #}
+    <div class="intel-feed panel">
+      <div class="panel-header">
+        <span class="title">Headlines</span>
+        <div class="intel-filters" data-news-filter>
+          <button class="pill is-active" type="button" data-category="All">All</button>
+          <button class="pill" type="button" data-category="Macro">Macro</button>
+          <button class="pill" type="button" data-category="FX">FX</button>
+          <button class="pill" type="button" data-category="Equities">Equities</button>
+          <button class="pill" type="button" data-category="Central banks">CB</button>
+          <button class="pill" type="button" data-category="Geopolitical">Geo</button>
         </div>
-        <section>
-            <div>
-                <h1>Live News Feed</h1>
-                <p>InvestingLive macro headlines with category filters and server-side AI sentiment analysis for selected stories.</p>
-            </div>
-            <a href="/calendar">Calendar</a>
-        </section>
-    </header>
+      </div>
+      <div class="intel-list" data-news-list>
+        <div class="intel-empty">Connecting to intelligence feed…</div>
+      </div>
+    </div>
 
-    <section id="live-news-feed" class="black-panel black-panel--news-feed" data-news-feed-section>
-        <div class="news-feed-layout">
-            <article class="news-feed-column">
-                <header class="black-panel__head">
-                    <span>Live News Feed</span>
-                    <em data-news-refresh-state>investinglive.com</em>
-                </header>
-                <div class="news-filter" data-news-filter>
-                    <button class="is-active" type="button" data-category="All">All</button>
-                    <button type="button" data-category="Macro">Macro</button>
-                    <button type="button" data-category="FX">FX</button>
-                    <button type="button" data-category="Equities">Equities</button>
-                    <button type="button" data-category="Central banks">Central banks</button>
-                    <button type="button" data-category="Geopolitical">Geopolitical</button>
-                </div>
-                <div class="news-list-scroll" data-news-list>
-                    <div class="black-empty">Loading investinglive.com feed...</div>
-                </div>
-            </article>
-
-            <aside class="sentiment-panel" data-sentiment-panel>
-                <header class="black-panel__head">
-                    <span>AI Sentiment</span>
-                    <em>OpenAI</em>
-                </header>
-                <div class="sentiment-panel__body" data-sentiment-body>
-                    <div class="black-empty">Select a headline to analyze market impact.</div>
-                </div>
-            </aside>
+    {# ── Right: AI analysis ──────────────────────────────────────── #}
+    <div class="intel-analysis panel" data-sentiment-panel>
+      <div class="panel-header">
+        <span class="title">AI Analysis</span>
+        <span class="badge beta">Haiku 4.5</span>
+      </div>
+      <div class="intel-analysis__body" data-sentiment-body>
+        <div class="intel-analysis__idle">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;color:var(--accent);opacity:0.5;">
+            <circle cx="24" cy="24" r="10"/><path d="M24 4v6M24 38v6M4 24h6M38 24h6M8.93 8.93l4.24 4.24M34.83 34.83l4.24 4.24M8.93 39.07l4.24-4.24M34.83 13.17l4.24-4.24"/>
+          </svg>
+          <p>Select a headline to run<br>AI market analysis</p>
         </div>
-    </section>
-</main>
+      </div>
+    </div>
 
-<script src="{{ url_for('static', path='js/news_feed.js') }}?v=20260601a" defer></script>
+  </div>
+</div>
+
+<style>
+/* ── Intelligence Monitor page ───────────────────────────────────────── */
+.intel-page { display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
+
+.intel-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 0 4px;
+  border-bottom: 1px solid var(--border);
+}
+.intel-hero__eyebrow {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px;
+  color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.intel-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: intel-pulse 2s ease-in-out infinite;
+}
+@keyframes intel-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent); }
+  50%       { opacity: 0.5; box-shadow: 0 0 20px var(--accent); }
+}
+.intel-hero__title {
+  margin: 0 0 6px; font-size: 1.9rem; font-weight: 800;
+  color: var(--text-heading); letter-spacing: -0.02em;
+}
+.intel-hero__sub { margin: 0; font-size: 0.84rem; color: var(--text-muted); }
+.intel-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 14px; border-radius: 999px;
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.30);
+  color: var(--accent); font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+/* ── Two-column layout ──────────────────────────────────────────────── */
+.intel-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 1100px) { .intel-layout { grid-template-columns: 1fr; } }
+
+/* ── Feed column ────────────────────────────────────────────────────── */
+.intel-filters { display: flex; gap: 5px; flex-wrap: wrap; }
+
+.intel-list {
+  display: flex; flex-direction: column;
+  max-height: 640px; overflow-y: auto;
+  margin: 0 -16px -16px;
+  padding: 0 0 8px;
+}
+
+.intel-empty {
+  padding: 32px 20px; text-align: center;
+  font-size: 13px; color: var(--text-muted); font-family: var(--mono);
+}
+
+/* ── News item ──────────────────────────────────────────────────────── */
+.intel-item {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 12px 16px;
+  border: 0; border-bottom: 1px solid var(--border);
+  border-left: 2px solid transparent;
+  background: transparent; color: var(--text-heading);
+  cursor: pointer; text-align: left;
+  transition: background 0.15s, border-left-color 0.15s;
+}
+.intel-item:hover { background: rgba(249,115,22,0.05); }
+.intel-item.is-selected {
+  background: rgba(249,115,22,0.08);
+  border-left-color: var(--accent);
+}
+.intel-item__row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.intel-item__title { font-size: 13.5px; font-weight: 500; line-height: 1.4; color: var(--text-heading); }
+.intel-item__src { font-size: 10px; color: var(--text-muted); font-family: var(--mono); letter-spacing: 0.05em; }
+.intel-item__time { font-size: 10px; color: var(--text-muted); font-family: var(--mono); white-space: nowrap; }
+
+/* Category pills */
+.intel-pill {
+  display: inline-flex; align-items: center;
+  padding: 2px 7px; border-radius: 4px; border: 1px solid;
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.intel-pill--macro        { border-color: rgba(249,115,22,0.35); color: var(--accent); background: rgba(249,115,22,0.08); }
+.intel-pill--fx           { border-color: rgba(139,92,246,0.35); color: #a78bfa;      background: rgba(139,92,246,0.08); }
+.intel-pill--equities     { border-color: rgba(34,197,94,0.35);  color: var(--bull);  background: rgba(34,197,94,0.08);  }
+.intel-pill--central-banks{ border-color: rgba(251,191,36,0.35); color: #fbbf24;      background: rgba(251,191,36,0.08); }
+.intel-pill--geopolitical { border-color: rgba(239,68,68,0.35);  color: var(--bear);  background: rgba(239,68,68,0.08);  }
+
+/* ── Analysis panel ─────────────────────────────────────────────────── */
+.intel-analysis { position: sticky; top: 80px; }
+.intel-analysis__body { min-height: 320px; }
+
+.intel-analysis__idle {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; min-height: 280px;
+  font-size: 13px; color: var(--text-muted); text-align: center; line-height: 1.6;
+}
+
+/* Selected headline strip */
+.intel-sel {
+  padding: 10px 12px; margin-bottom: 14px;
+  background: rgba(249,115,22,0.07);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+}
+.intel-sel__label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-family: var(--mono); margin-bottom: 4px; }
+.intel-sel__title { font-size: 13px; color: var(--text-heading); line-height: 1.4; font-weight: 500; }
+
+/* Verdict row */
+.intel-verdict {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+}
+.intel-verdict__badge {
+  display: inline-flex; align-items: center;
+  padding: 4px 12px; border-radius: 999px; border: 1px solid;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.intel-verdict__badge.is-positive { border-color: rgba(34,197,94,0.4);  color: var(--bull); background: rgba(34,197,94,0.10);  }
+.intel-verdict__badge.is-negative { border-color: rgba(239,68,68,0.4);  color: var(--bear); background: rgba(239,68,68,0.10);  }
+.intel-verdict__badge.is-neutral  { border-color: rgba(251,191,36,0.4); color: #fbbf24;     background: rgba(251,191,36,0.10); }
+.intel-verdict__conf { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-left: auto; }
+
+/* Sentiment bars */
+.intel-bars { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+.intel-bar-row { display: grid; grid-template-columns: 62px 1fr 34px; align-items: center; gap: 8px; font-size: 11px; font-family: var(--mono); }
+.intel-bar-row span { color: var(--text-muted); }
+.intel-bar-row em { text-align: right; color: var(--text-muted); }
+.intel-bar-track { height: 5px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.intel-bar-fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+.intel-bar-fill.is-positive { background: var(--bull); }
+.intel-bar-fill.is-negative { background: var(--bear); }
+.intel-bar-fill.is-neutral  { background: #fbbf24; }
+
+/* Summary text */
+.intel-summary {
+  font-size: 12.5px; line-height: 1.65; color: var(--text-body);
+  margin-bottom: 14px; padding: 10px 12px;
+  background: var(--panel-2); border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+/* Assets & themes */
+.intel-section-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); font-family: var(--mono); margin-bottom: 6px;
+}
+.intel-assets { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.intel-asset-row { display: grid; grid-template-columns: 52px 1fr 60px; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; }
+.intel-asset-row strong { color: var(--text-heading); font-weight: 600; }
+.intel-asset-row em { text-align: right; color: var(--text-muted); }
+
+.intel-themes { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+
+/* Skeleton */
+.intel-skeleton { display: flex; flex-direction: column; gap: 10px; padding: 8px 0; }
+.intel-skeleton i {
+  display: block; border-radius: 4px;
+  background: linear-gradient(90deg, var(--panel) 25%, rgba(255,255,255,0.04) 50%, var(--panel) 75%);
+  background-size: 200% 100%;
+  animation: intel-shimmer 1.4s infinite;
+}
+.intel-skeleton i:nth-child(1) { height: 14px; width: 80%; }
+.intel-skeleton i:nth-child(2) { height: 14px; width: 60%; }
+.intel-skeleton i:nth-child(3) { height: 10px; width: 90%; }
+.intel-skeleton i:nth-child(4) { height: 10px; width: 50%; }
+@keyframes intel-shimmer { from { background-position: 200% 0 } to { background-position: -200% 0 } }
+
+/* Error / retry */
+.intel-error { font-size: 12px; color: var(--bear); margin-bottom: 10px; line-height: 1.5; }
+.intel-retry {
+  display: inline-flex; align-items: center;
+  padding: 6px 14px; border-radius: 6px;
+  background: var(--panel-2); border: 1px solid var(--border);
+  color: var(--text-body); font-size: 12px; cursor: pointer;
+  transition: border-color 0.15s;
+}
+.intel-retry:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+
+<script src="{{ url_for('static', path='js/news_feed.js') }}?v=20260626intel" defer></script>
 {% endblock %}

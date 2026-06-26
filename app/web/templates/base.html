@@ -94,8 +94,8 @@
           <span class="label">FX Strength</span>
         </a>
         <a href="/news-feed" class="sb-item {% if request.url.path.startswith('/news-feed') %}active{% endif %}">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
-          <span class="label">News Feed</span>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          <span class="label">Intelligence</span>
         </a>
         <a href="/cot" class="sb-item {% if request.url.path.startswith('/cot') %}active{% endif %}">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
@@ -176,7 +176,7 @@
         <span>{{ "Markets" if request.url.path == "/" or request.url.path in ["/rates", "/news-feed", "/cot", "/cb-news", "/fx-outlook", "/calendar", "/rate-prob/FED", "/rate-prob/ECB", "/rate-prob/BOE", "/rate-prob/BOJ", "/rate-prob/RBA", "/rate-prob/BOC", "/rate-prob/RBNZ", "/rate-prob/SNB"] else "System" if request.url.path in ["/settings", "/analytics"] or request.url.path.startswith('/users') else "Research" }}</span>
         <span class="sep">/</span>
         <span class="here">
-          {% if request.url.path.startswith('/news-feed') %}News Feed
+          {% if request.url.path.startswith('/news-feed') %}Intelligence Monitor
           {% elif request.url.path.startswith('/cot') %}COT
           {% elif request.url.path.startswith('/cb-news') %}CB News
           {% elif request.url.path.startswith('/fx-outlook') %}FX Outlook

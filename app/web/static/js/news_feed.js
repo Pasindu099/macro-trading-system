@@ -8,56 +8,32 @@
     const section = document.querySelector("[data-news-feed-section]");
     if (!section) return;
 
-    const listEl = section.querySelector("[data-news-list]");
-    const filterEl = section.querySelector("[data-news-filter]");
-    const stateEl = section.querySelector("[data-news-refresh-state]");
+    const listEl    = section.querySelector("[data-news-list]");
+    const filterEl  = section.querySelector("[data-news-filter]");
+    const stateEl   = document.querySelector("[data-news-refresh-state]");
     const sentimentBody = section.querySelector("[data-sentiment-body]");
 
-    const escapeHtml = (value) => String(value || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    const esc = (v) => String(v || "")
+        .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 
-    const relativeTime = (dateValue) => {
-        const date = new Date(dateValue);
+    const relTime = (d) => {
+        const date = new Date(d);
         if (Number.isNaN(date.getTime())) return "recent";
-        const diffSeconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
-        if (diffSeconds < 60) return "now";
-        const diffMinutes = Math.floor(diffSeconds / 60);
-        if (diffMinutes < 60) return `${diffMinutes} min ago`;
-        const diffHours = Math.floor(diffMinutes / 60);
-        if (diffHours < 24) return `${diffHours} hr ago`;
-        return `${Math.floor(diffHours / 24)} d ago`;
+        const s = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+        if (s < 60) return "now";
+        const m = Math.floor(s / 60);
+        if (m < 60) return `${m} min ago`;
+        const h = Math.floor(m / 60);
+        if (h < 24) return `${h} hr ago`;
+        return `${Math.floor(h / 24)} d ago`;
     };
 
-    const fetchFeed = async () => {
-        stateEl.textContent = "refreshing";
-
-        try {
-            const resp = await fetch("/api/news/feed?limit=40", { cache: "no-store" });
-            if (resp.ok) {
-                const data = await resp.json();
-                articles = Array.isArray(data.articles)
-                    ? data.articles.filter((item) => item.link).slice(0, 40)
-                    : [];
-                stateEl.textContent = data.source || "intelligence_monitor";
-                renderNewsList();
-                if (!selectedUrl && articles.length) selectArticle(articles[0]);
-                return;
-            }
-        } catch (error) {
-            throw new Error(error.message || "News feed unavailable");
-        }
-        throw new Error("News feed unavailable");
-    };
-
-    const categoryClass = (category) => {
-        if (category === "FX") return "fx";
-        if (category === "Equities") return "equities";
-        if (category === "Central banks") return "central-banks";
-        if (category === "Geopolitical") return "geopolitical";
+    const catClass = (c) => {
+        if (c === "FX") return "fx";
+        if (c === "Equities") return "equities";
+        if (c === "Central banks") return "central-banks";
+        if (c === "Geopolitical") return "geopolitical";
         return "macro";
     };
 
@@ -70,29 +46,47 @@
         return "macro";
     };
 
-    const renderNewsList = () => {
+    const fetchFeed = async () => {
+        if (stateEl) stateEl.textContent = "refreshing";
+        try {
+            const resp = await fetch("/api/news/feed?limit=40", { cache: "no-store" });
+            if (resp.ok) {
+                const data = await resp.json();
+                articles = Array.isArray(data.articles)
+                    ? data.articles.filter((a) => a.link).slice(0, 40)
+                    : [];
+                if (stateEl) stateEl.textContent = data.source || "intelligence_monitor";
+                renderList();
+                if (!selectedUrl && articles.length) selectArticle(articles[0]);
+                return;
+            }
+        } catch (e) { throw new Error(e.message || "Feed unavailable"); }
+        throw new Error("Feed unavailable");
+    };
+
+    const renderList = () => {
         const visible = activeCategory === "All"
             ? articles
-            : articles.filter((item) => item.category === activeCategory);
+            : articles.filter((a) => a.category === activeCategory);
         if (!visible.length) {
-            listEl.innerHTML = '<div class="black-empty">No headlines matched this filter.</div>';
+            listEl.innerHTML = '<div class="intel-empty">No headlines matched this filter.</div>';
             return;
         }
-        listEl.innerHTML = visible.map((item) => `
-            <button class="news-item ${item.link === selectedUrl ? "is-selected" : ""}" type="button" data-url="${escapeHtml(item.link)}">
-                <span class="news-item__meta">
-                    <i class="news-pill news-pill--${categoryClass(item.category)}">${escapeHtml(item.category)}</i>
-                    <em>${escapeHtml(relativeTime(item.pubDate))}</em>
-                </span>
-                <strong>${escapeHtml(item.title)}</strong>
-                <small>${escapeHtml(item.source)}</small>
+        listEl.innerHTML = visible.map((a) => `
+            <button class="intel-item ${a.link === selectedUrl ? "is-selected" : ""}" type="button" data-url="${esc(a.link)}">
+                <div class="intel-item__row">
+                    <i class="intel-pill intel-pill--${catClass(a.category)}">${esc(a.category)}</i>
+                    <span class="intel-item__time">${esc(relTime(a.pubDate))}</span>
+                </div>
+                <div class="intel-item__title">${esc(a.title)}</div>
+                <span class="intel-item__src">${esc(a.source)}</span>
             </button>
         `).join("");
     };
 
     const selectArticle = (article) => {
         selectedUrl = article.link;
-        renderNewsList();
+        renderList();
         if (sentimentCache.has(article.link)) {
             renderSentiment(sentimentCache.get(article.link), article);
             return;
@@ -103,136 +97,122 @@
     const analyzeArticle = async (article) => {
         renderSkeleton(article);
         try {
-            const response = await fetch("/api/news/sentiment", {
+            const res = await fetch("/api/news/sentiment", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    headline: article.title,
-                    description: article.description,
-                }),
+                body: JSON.stringify({ headline: article.title, description: article.description }),
             });
-            if (!response.ok) {
-                const payload = await response.json().catch(() => ({}));
-                throw new Error(payload.detail || "Sentiment call failed");
+            if (!res.ok) {
+                const p = await res.json().catch(() => ({}));
+                throw new Error(p.detail || "Analysis failed");
             }
-            const result = await response.json();
+            const result = await res.json();
             sentimentCache.set(article.link, result);
             renderSentiment(result, article);
-        } catch (error) {
-            renderError(article, error);
+        } catch (e) {
+            renderError(article, e);
         }
     };
 
-    const sentimentClass = (sentiment) => {
-        if (sentiment === "bullish") return "is-positive";
-        if (sentiment === "bearish") return "is-negative";
-        return "is-neutral";
+    const sentCls = (s) => s === "bullish" ? "is-positive" : s === "bearish" ? "is-negative" : "is-neutral";
+    const sentLabel = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+    const barRow = (label, value, cls) => {
+        const pct = Math.max(0, Math.min(100, Number(value || 0)));
+        return `<div class="intel-bar-row">
+            <span>${label}</span>
+            <div class="intel-bar-track"><div class="intel-bar-fill ${cls}" style="width:${pct}%"></div></div>
+            <em>${pct}%</em>
+        </div>`;
+    };
+
+    const assetRow = (a) => {
+        const impact = Math.max(0, Math.min(100, Number(a.impact || 0)));
+        const cls = impact >= 70 ? "is-negative" : impact >= 45 ? "is-neutral" : "is-positive";
+        return `<div class="intel-asset-row">
+            <strong>${esc(a.symbol || "MKT")}</strong>
+            <div class="intel-bar-track"><div class="intel-bar-fill ${cls}" style="width:${impact}%"></div></div>
+            <em>${esc(a.label || "~ Mixed")}</em>
+        </div>`;
     };
 
     const renderSkeleton = (article) => {
         sentimentBody.innerHTML = `
-            <div class="sentiment-selected">
-                <span>Analyzing</span>
-                <strong>${escapeHtml(article.title)}</strong>
+            <div class="intel-sel">
+                <div class="intel-sel__label">Analyzing</div>
+                <div class="intel-sel__title">${esc(article.title)}</div>
             </div>
-            <div class="sentiment-skeleton"><i></i><i></i><i></i><i></i></div>
-        `;
+            <div class="intel-skeleton"><i></i><i></i><i></i><i></i></div>`;
     };
 
-    const renderError = (article, error) => {
+    const renderError = (article, err) => {
         sentimentBody.innerHTML = `
-            <div class="sentiment-selected">
-                <span>Analysis failed</span>
-                <strong>${escapeHtml(article.title)}</strong>
+            <div class="intel-sel">
+                <div class="intel-sel__label">Analysis failed</div>
+                <div class="intel-sel__title">${esc(article.title)}</div>
             </div>
-            <p class="sentiment-error">${escapeHtml(error.message || "Unable to analyze this headline.")}</p>
-            <button class="sentiment-retry" type="button" data-retry-url="${escapeHtml(article.link)}">Retry</button>
-        `;
+            <p class="intel-error">${esc(err.message || "Unable to analyze this headline.")}</p>
+            <button class="intel-retry" type="button" data-retry-url="${esc(article.link)}">Retry analysis</button>`;
     };
 
     const renderSentiment = (data, article) => {
         const sentiment = String(data.sentiment || "neutral").toLowerCase();
+        const cls = sentCls(sentiment);
         sentimentBody.innerHTML = `
-            <div class="sentiment-selected">
-                <span>Selected headline</span>
-                <strong>${escapeHtml(article.title)}</strong>
+            <div class="intel-sel">
+                <div class="intel-sel__label">Selected headline</div>
+                <div class="intel-sel__title">${esc(article.title)}</div>
             </div>
-            <div class="sentiment-header">
-                <span class="sentiment-badge ${sentimentClass(sentiment)}">${escapeHtml(sentimentLabel(sentiment))}</span>
-                <strong>${Number(data.confidence || 0)}% confidence</strong>
+            <div class="intel-verdict">
+                <span class="intel-verdict__badge ${cls}">${esc(sentLabel(sentiment))}</span>
+                <span class="intel-verdict__conf">${Number(data.confidence || 0)}% confidence</span>
             </div>
-            <div class="sentiment-bars">
+            <div class="intel-bars">
                 ${barRow("Bearish", data.bearish_pct, "is-negative")}
                 ${barRow("Neutral", data.neutral_pct, "is-neutral")}
                 ${barRow("Bullish", data.bullish_pct, "is-positive")}
             </div>
-            <p class="ai-summary">${escapeHtml(data.summary || "No summary returned.")}</p>
-            <section class="asset-impact-list">
-                <span>Assets affected</span>
-                ${(data.assets || []).length ? data.assets.map(assetRow).join("") : '<small>No specific assets identified.</small>'}
-            </section>
-            <section class="theme-pills">
-                <span>Key themes</span>
-                <div>${(data.themes || []).map((theme) => `<i class="news-pill--${classifyTheme(theme)}">${escapeHtml(theme)}</i>`).join("") || "<small>No themes returned.</small>"}</div>
-            </section>
-        `;
-    };
-
-    const sentimentLabel = (sentiment) => sentiment.charAt(0).toUpperCase() + sentiment.slice(1);
-
-    const barRow = (label, value, className) => {
-        const pct = Math.max(0, Math.min(100, Number(value || 0)));
-        return `
-            <div>
-                <span>${label}</span>
-                <b><i class="${className}" style="width: ${pct}%;"></i></b>
-                <em>${pct}%</em>
+            <div class="intel-summary">${esc(data.summary || "No summary returned.")}</div>
+            <div class="intel-section-label">Assets affected</div>
+            <div class="intel-assets">
+                ${(data.assets || []).length
+                    ? data.assets.map(assetRow).join("")
+                    : '<div style="font-size:11px;color:var(--text-muted);font-family:var(--mono)">No specific assets identified.</div>'}
             </div>
-        `;
+            <div class="intel-section-label">Key themes</div>
+            <div class="intel-themes">
+                ${(data.themes || []).map((t) => `<i class="intel-pill intel-pill--${classifyTheme(t)}">${esc(t)}</i>`).join("") || '<span style="font-size:11px;color:var(--text-muted)">No themes returned.</span>'}
+            </div>`;
     };
 
-    const assetRow = (asset) => {
-        const impact = Math.max(0, Math.min(100, Number(asset.impact || 0)));
-        const impactClass = impact >= 70 ? "is-negative" : impact >= 45 ? "is-warning" : "is-positive";
-        return `
-            <div class="asset-impact">
-                <strong>${escapeHtml(asset.symbol || "Market")}</strong>
-                <b><i class="${impactClass}" style="width: ${impact}%;"></i></b>
-                <em>${escapeHtml(asset.label || "~ Mixed")}</em>
-            </div>
-        `;
-    };
-
-    filterEl?.addEventListener("click", (event) => {
-        const button = event.target.closest("[data-category]");
-        if (!button) return;
-        activeCategory = button.dataset.category || "All";
-        filterEl.querySelectorAll("button").forEach((item) => item.classList.remove("is-active"));
-        button.classList.add("is-active");
-        renderNewsList();
+    filterEl?.addEventListener("click", (evt) => {
+        const btn = evt.target.closest("[data-category]");
+        if (!btn) return;
+        activeCategory = btn.dataset.category || "All";
+        filterEl.querySelectorAll("button").forEach((b) => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+        renderList();
     });
 
-    listEl?.addEventListener("click", (event) => {
-        const item = event.target.closest("[data-url]");
+    listEl?.addEventListener("click", (evt) => {
+        const item = evt.target.closest("[data-url]");
         if (!item) return;
-        const article = articles.find((entry) => entry.link === item.dataset.url);
+        const article = articles.find((a) => a.link === item.dataset.url);
         if (article) selectArticle(article);
     });
 
-    sentimentBody?.addEventListener("click", (event) => {
-        const retry = event.target.closest("[data-retry-url]");
+    sentimentBody?.addEventListener("click", (evt) => {
+        const retry = evt.target.closest("[data-retry-url]");
         if (!retry) return;
-        const article = articles.find((entry) => entry.link === retry.dataset.retryUrl);
+        const article = articles.find((a) => a.link === retry.dataset.retryUrl);
         if (article) analyzeArticle(article);
     });
 
-    fetchFeed().catch((error) => {
-        stateEl.textContent = "feed error";
-        listEl.innerHTML = `<div class="black-empty">${escapeHtml(error.message || "Unable to load intelligence monitor feed.")}</div>`;
+    fetchFeed().catch((err) => {
+        if (stateEl) stateEl.textContent = "feed error";
+        listEl.innerHTML = `<div class="intel-empty">${esc(err.message || "Unable to load intelligence monitor feed.")}</div>`;
     });
     window.setInterval(() => {
-        fetchFeed().catch(() => {
-            stateEl.textContent = "feed error";
-        });
+        fetchFeed().catch(() => { if (stateEl) stateEl.textContent = "feed error"; });
     }, REFRESH_MS);
 })();

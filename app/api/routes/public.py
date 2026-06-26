@@ -78,10 +78,29 @@ class MyfxbookConfigRequest(BaseModel):
     username: str = Field(min_length=1)
     password: str = Field(min_length=1)
 
-CB_FEED_CACHE_TTL = 900  # 15 minutes
+CB_FEED_CACHE_TTL = 600  # 10 minutes
 CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
-    "USD": {"name": "Fed", "urls": ["https://www.federalreserve.gov/feeds/press_all.xml"]},
-    "EUR": {"name": "ECB", "urls": ["https://www.ecb.europa.eu/rss/press.html"]},
+    "USD": {
+        "name": "Fed",
+        "urls": [
+            "https://www.federalreserve.gov/feeds/press_all.xml",
+            "https://www.federalreserve.gov/feeds/speeches.xml",
+        ],
+        "members": ["Powell", "Jefferson", "Waller", "Cook", "Kugler", "Barr",
+                    "Williams", "Daly", "Kashkari", "Bostic", "Barkin", "Goolsbee",
+                    "Musalem", "Schmid", "Collins", "Logan"],
+    },
+    "EUR": {
+        "name": "ECB",
+        "urls": [
+            "https://www.ecb.europa.eu/rss/press.html",
+            "https://www.ecb.europa.eu/rss/speech.html",
+        ],
+        "members": ["Lagarde", "de Guindos", "Lane", "Schnabel", "Cipollone",
+                    "Nagel", "Villeroy", "Wunsch", "Knot", "Centeno",
+                    "Holzmann", "Kazimir", "Muller", "Vasle", "Simkus",
+                    "Stournaras", "Rehn", "Herodotou"],
+    },
     "GBP": {
         "name": "BoE",
         "urls": [
@@ -89,11 +108,18 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
             "https://www.bankofengland.co.uk/rss/speeches",
             "https://www.bankofengland.co.uk/rss/publications",
         ],
+        "members": ["Bailey", "Broadbent", "Ramsden", "Mann", "Haskel",
+                    "Greene", "Dhingra", "Taylor", "Lombardelli"],
     },
     "JPY": {
         "name": "BoJ",
-        "urls": ["https://www.boj.or.jp/rss/whatsnew.xml"],
+        "urls": [
+            "https://www.boj.or.jp/rss/whatsnew.xml",
+            "https://www.boj.or.jp/rss/speech.xml",
+        ],
         "listing_url": "https://www.boj.or.jp/en/whatsnew/",
+        "members": ["Ueda", "Himino", "Uchida", "Tamura", "Nakamura",
+                    "Noguchi", "Adachi", "Takata", "Nakagawa"],
     },
     "AUD": {
         "name": "RBA",
@@ -102,8 +128,17 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
             "https://www.rba.gov.au/rss/rss-cb-speeches.xml",
         ],
         "listing_url": "https://www.rba.gov.au/media-releases/",
+        "members": ["Bullock", "Hauser", "Hunter", "Kohler", "Jones",
+                    "Hu", "Kent", "Schwartz"],
     },
-    "CAD": {"name": "BoC", "urls": ["https://www.bankofcanada.ca/feed/"]},
+    "CAD": {
+        "name": "BoC",
+        "urls": [
+            "https://www.bankofcanada.ca/feed/",
+            "https://www.bankofcanada.ca/publications/speeches/feed/",
+        ],
+        "members": ["Macklem", "Rogers", "Gravelle", "Kozicki", "Mendes", "Selody"],
+    },
     "CHF": {
         "name": "SNB",
         "urls": [
@@ -112,11 +147,16 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
             "https://www.snb.ch/public/en/rss/news/publications/speeches",
         ],
         "listing_url": "https://www.snb.ch/en/news-publications/news",
+        "members": ["Schlegel", "Tschannen", "Danthine"],
     },
     "NZD": {
         "name": "RBNZ",
-        "urls": ["https://www.rbnz.govt.nz/hub/news/rss"],
+        "urls": [
+            "https://www.rbnz.govt.nz/hub/news/rss",
+            "https://www.rbnz.govt.nz/hub/speeches/rss",
+        ],
         "listing_url": "https://www.rbnz.govt.nz/news-and-events/news",
+        "members": ["Orr", "Hawkesby", "Silk", "Conway", "Ranchhod"],
     },
 }
 _cb_feed_cache: dict[str, dict[str, Any]] = {}
@@ -1330,6 +1370,15 @@ def _parse_cb_feed(xml_body: str, currency: str, bank_name: str, *, limit: int =
         about = node.get("{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about", "")
         return about.strip()
 
+    members: list[str] = CB_RSS_FEEDS.get(currency, {}).get("members", [])
+
+    def tag_speaker(title: str, description: str) -> str | None:
+        text_blob = f"{title} {description}".lower()
+        for member in members:
+            if member.lower() in text_blob:
+                return member
+        return None
+
     if is_atom:
         for entry in root.findall(".//{*}entry"):
             title = child_text(entry, ("title",)) or "Untitled"
@@ -1338,7 +1387,13 @@ def _parse_cb_feed(xml_body: str, currency: str, bank_name: str, *, limit: int =
                 continue
             description = _strip_html(child_text(entry, ("summary", "content", "description")))
             pub_date = child_text(entry, ("published", "updated", "date"))
-            articles.append({"title": title, "link": link, "pubDate": pub_date, "description": description[:500], "currency": currency, "bank": bank_name})
+            speaker = tag_speaker(title, description)
+            articles.append({
+                "title": title, "link": link, "pubDate": pub_date,
+                "description": description[:500], "currency": currency,
+                "bank": bank_name, "speaker": speaker,
+                "is_speech": speaker is not None or "speech" in title.lower(),
+            })
             if len(articles) >= limit:
                 break
     else:
@@ -1349,7 +1404,13 @@ def _parse_cb_feed(xml_body: str, currency: str, bank_name: str, *, limit: int =
                 continue
             description = _strip_html(child_text(item, ("description", "summary", "content")))
             pub_date = child_text(item, ("pubDate", "date", "dc:date"))
-            articles.append({"title": title, "link": link, "pubDate": pub_date, "description": description[:500], "currency": currency, "bank": bank_name})
+            speaker = tag_speaker(title, description)
+            articles.append({
+                "title": title, "link": link, "pubDate": pub_date,
+                "description": description[:500], "currency": currency,
+                "bank": bank_name, "speaker": speaker,
+                "is_speech": speaker is not None or "speech" in title.lower(),
+            })
             if len(articles) >= limit:
                 break
 

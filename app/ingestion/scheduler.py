@@ -31,8 +31,9 @@ we call shutdown().
 
 from __future__ import annotations
 
+import asyncio
 import logging
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -122,6 +123,16 @@ class Scheduler:
             misfire_grace_time=60 * 60,
         )
         logger.info("  Registered rate probability OIS/futures fetch at 06:00 UTC")
+
+        self._scheduler.add_job(
+            _poll_cb_feeds,
+            trigger=IntervalTrigger(minutes=10, timezone="UTC"),
+            id="cb_feed_poll",
+            name="CB member speech feed poller",
+            replace_existing=True,
+            misfire_grace_time=60 * 10,
+        )
+        logger.info("  Registered CB feed poller every 10 minutes")
 
         self._scheduler.add_job(
             run_news_monitor,
@@ -357,3 +368,19 @@ def _add_minutes(hour: int, minute: int, delta: int) -> tuple[int, int]:
     """Add `delta` minutes to (hour, minute), wrapping around 24h."""
     total = (hour * 60 + minute + delta) % (24 * 60)
     return divmod(total, 60)
+
+
+async def _poll_cb_feeds() -> None:
+    """Background job: refresh all CB speech feeds into the in-memory cache."""
+    try:
+        from app.api.routes.public import CB_RSS_FEEDS, _fetch_one_cb_feed
+        now = datetime.now(UTC)
+        currencies = list(CB_RSS_FEEDS.keys())
+        results = await asyncio.gather(
+            *[_fetch_one_cb_feed(c, now) for c in currencies],
+            return_exceptions=True,
+        )
+        ok = sum(1 for r in results if isinstance(r, dict) and r.get("status") == "ok")
+        logger.info("CB feed poll: %d/%d banks refreshed", ok, len(currencies))
+    except Exception:
+        logger.exception("CB feed background poll failed.")

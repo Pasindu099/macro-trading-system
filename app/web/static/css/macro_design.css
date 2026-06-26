@@ -64,6 +64,22 @@ html, body {
 button { font-family: inherit; cursor: pointer; }
 a { color: inherit; text-decoration: none; }
 
+/* ── Global scrollbar ─────────────────────────────────────────────────────── */
+/* Firefox */
+* { scrollbar-width: thin; scrollbar-color: rgba(249,115,22,0.25) transparent; }
+
+/* Webkit (Chrome, Edge, Safari) */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(249,115,22,0.22);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(249,115,22,0.45);
+}
+::-webkit-scrollbar-corner { background: transparent; }
+
 /* numeric */
 .num, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 

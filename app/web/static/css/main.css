@@ -352,7 +352,7 @@
     flex: 1;
     overflow-y: auto;
     padding: 16px 0 2px;
-    scrollbar-color: #333 transparent;
+    scrollbar-color: rgba(249,115,22,0.25) transparent;
 }
 
 .fx-rank-row {
@@ -1329,7 +1329,7 @@
 }
 
 .black-content::-webkit-scrollbar-thumb {
-    background: var(--bt-border2);
+    background: rgba(249,115,22,0.22);
 }
 
 .black-kpi-row {
@@ -8412,12 +8412,12 @@ body.has-black-global-sidebar {
     padding: 16px 22px;
     overflow-x: auto;
     scrollbar-width: thin;
-    scrollbar-color: rgba(61, 70, 86, 0.5) transparent;
+    scrollbar-color: rgba(249,115,22,0.25) transparent;
 }
 
 .term-surprise-strip::-webkit-scrollbar { height: 4px; }
 .term-surprise-strip::-webkit-scrollbar-track { background: transparent; }
-.term-surprise-strip::-webkit-scrollbar-thumb { background: rgba(61, 70, 86, 0.5); border-radius: 2px; }
+.term-surprise-strip::-webkit-scrollbar-thumb { background: rgba(249,115,22,0.22); border-radius: 999px; }
 
 .term-surprise-card {
     flex: 0 0 210px;
@@ -11019,7 +11019,7 @@ body.has-black-global-sidebar {
   overflow-x: hidden;
   padding: 10px 0;
   scrollbar-width: thin;
-  scrollbar-color: var(--ds-border) transparent;
+  scrollbar-color: rgba(249,115,22,0.25) transparent;
 }
 .ds-sb-group { margin-bottom: 18px; }
 .ds-sb-group-label {

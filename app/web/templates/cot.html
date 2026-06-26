@@ -57,6 +57,7 @@
         <button type="button" data-cot-symbol="USD">USD</button>
         <button type="button" data-cot-symbol="GOLD">GOLD</button>
         <button type="button" data-cot-symbol="OIL">OIL</button>
+        <button type="button" data-cot-symbol="DIFF" class="cot-tab-diff">DIFFERENTIALS</button>
     </nav>
 
     <section class="cot-price-input">
@@ -184,6 +185,89 @@
             </div>
             <div class="cot-chart-box"><canvas data-chart="usd"></canvas></div>
             <p class="cot-insight" data-insight="usd"></p>
+        </article>
+    </section>
+
+    <section class="cot-diff-panel" id="cot-diff-panel" hidden>
+        <article class="cot-panel cot-panel--wide">
+            <header>
+                <span>COT Pair Differential Matrix</span>
+                <em>Spec positioning differential per pair</em>
+                <button class="cot-help-btn" data-help="diff-matrix" aria-label="How to use this section" title="How to use this section">?</button>
+            </header>
+            <div class="cot-help-panel" data-help-panel="diff-matrix" hidden>
+                <div class="cot-help-content">
+                    <button class="cot-help-close" aria-label="Close">x</button>
+                    <p>The differential is calculated by subtracting the quote currency COT Index percentile from the base currency percentile. A large positive number means specs are much more long the base than the quote - a positioning-based bullish signal for the pair. A large negative number means specs favour the quote currency. Values beyond +40 or -40 represent high-conviction positioning. The Commercial differential shows what the smart money hedgers are doing - they are always opposite to specs and are considered more reliable at extremes.</p>
+                </div>
+            </div>
+            <div class="cot-table-wrap">
+                <table class="cot-table" id="cot-diff-table">
+                    <thead>
+                        <tr>
+                            <th>Pair</th>
+                            <th>Spec Diff</th>
+                            <th>Commercial Diff</th>
+                            <th>Small Spec Diff</th>
+                            <th>Base Percentile</th>
+                            <th>Quote Percentile</th>
+                            <th>Signal</th>
+                            <th>Conviction</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cot-diff-tbody"></tbody>
+                </table>
+            </div>
+            <p class="cot-insight" data-insight="diff-matrix"></p>
+        </article>
+
+        <div class="cot-grid cot-grid--two">
+            <article class="cot-panel">
+                <header>
+                    <span>Squeeze Risk Monitor</span>
+                    <em>Pairs at risk of spec capitulation</em>
+                    <button class="cot-help-btn" data-help="squeeze" aria-label="How to use this section" title="How to use this section">?</button>
+                </header>
+                <div class="cot-help-panel" data-help-panel="squeeze" hidden>
+                    <div class="cot-help-content">
+                        <button class="cot-help-close" aria-label="Close">x</button>
+                        <p>Squeeze risk is highest when specs are extremely positioned on both legs of a pair simultaneously. If specs are at the 5th percentile on AUD and at the 95th percentile on USD, any catalyst can trigger a violent reversal as both sides unwind at once. High squeeze risk does not mean the trade is wrong - but it means the reversal when it comes will be fast. Size down on high squeeze risk pairs.</p>
+                    </div>
+                </div>
+                <div id="cot-squeeze-list"></div>
+                <p class="cot-insight" data-insight="squeeze"></p>
+            </article>
+
+            <article class="cot-panel">
+                <header>
+                    <span>Commercial vs Spec Alignment</span>
+                    <em>Smart money vs crowd by pair</em>
+                    <button class="cot-help-btn" data-help="alignment" aria-label="How to use this section" title="How to use this section">?</button>
+                </header>
+                <div class="cot-help-panel" data-help-panel="alignment" hidden>
+                    <div class="cot-help-content">
+                        <button class="cot-help-close" aria-label="Close">x</button>
+                        <p>When commercials and speculators are on opposite extremes for both currencies in a pair, the setup is considered highest conviction. Commercials are hedging real business - they rarely get this wrong at extremes. When they are maximally long a currency that specs are maximally short, watch for a trend reversal. Green alignment means commercials support the spec direction. Red means commercials are fighting the spec trend - historically a warning sign.</p>
+                    </div>
+                </div>
+                <div id="cot-diff-chart" style="height:240px"></div>
+            </article>
+        </div>
+
+        <article class="cot-panel cot-panel--wide">
+            <header>
+                <span>Positioning vs Trend Scatter</span>
+                <em>Where specs are positioned vs price momentum</em>
+                <button class="cot-help-btn" data-help="scatter" aria-label="How to use this section" title="How to use this section">?</button>
+            </header>
+            <div class="cot-help-panel" data-help-panel="scatter" hidden>
+                <div class="cot-help-content">
+                    <button class="cot-help-close" aria-label="Close">x</button>
+                    <p>Each dot is a currency. The X axis shows COT Index percentile - how extreme speculative positioning is. The Y axis shows the weekly net change in positioning - momentum direction. Top right quadrant: specs increasingly long at extremes - trend exhaustion risk. Bottom left: specs increasingly short at extremes - potential reversal zone. Top left and bottom right: positioning and momentum aligned - trend continuation more likely. Use this to identify which currencies are at inflection points versus which are in a clean trend.</p>
+                </div>
+            </div>
+            <div id="cot-scatter-chart" style="height:320px"></div>
+            <p class="cot-insight" data-insight="scatter"></p>
         </article>
     </section>
 </main>

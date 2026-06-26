@@ -7,6 +7,18 @@
     const FX_SYMBOLS = ["EUR", "GBP", "JPY", "CHF", "CAD", "AUD", "NZD"];
     const MAP_SYMBOLS = [...FX_SYMBOLS, "USD"];
     const ALL_SYMBOLS = [...FX_SYMBOLS, "USD", "GOLD", "OIL"];
+    const DIFF_PAIRS = [
+        { pair: "EUR/USD", base: "EUR", quote: "USD" },
+        { pair: "GBP/USD", base: "GBP", quote: "USD" },
+        { pair: "AUD/USD", base: "AUD", quote: "USD" },
+        { pair: "NZD/USD", base: "NZD", quote: "USD" },
+        { pair: "USD/JPY", base: "USD", quote: "JPY" },
+        { pair: "USD/CAD", base: "USD", quote: "CAD" },
+        { pair: "USD/CHF", base: "USD", quote: "CHF" },
+        { pair: "EUR/GBP", base: "EUR", quote: "GBP" },
+        { pair: "EUR/JPY", base: "EUR", quote: "JPY" },
+        { pair: "AUD/JPY", base: "AUD", quote: "JPY" },
+    ];
     const PRICE_PAIR_BY_SYMBOL = {
         EUR: "EURUSD",
         GBP: "GBPUSD",
@@ -37,6 +49,7 @@
     const signed = (value) => `${Number(value || 0) >= 0 ? "+" : ""}${fmt(Math.round(Number(value || 0)))}`;
     const pct = (value) => `${Math.round(Number(value || 0))}`;
     const colorForIndex = (value) => value > 60 ? BULL : value < 40 ? BEAR : NEUTRAL;
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
     const escapeHtml = (value) => String(value || "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
@@ -433,6 +446,319 @@
         }
     };
 
+    const setDifferentialMode = (enabled) => {
+        const diffPanel = document.getElementById("cot-diff-panel");
+        const normalGrids = Array.from(root.children).filter((child) => child.classList.contains("cot-grid"));
+        normalGrids.forEach((section) => {
+            section.hidden = enabled;
+        });
+        const priceInput = $(".cot-price-input");
+        const mapPanel = document.getElementById("cot-positioning-map");
+        if (priceInput) priceInput.hidden = enabled;
+        if (mapPanel) mapPanel.hidden = enabled;
+        if (diffPanel) diffPanel.hidden = !enabled;
+    };
+
+    const percentileFromValues = (current, values) => {
+        if (!values.length) return 50;
+        const low = Math.min(...values);
+        const high = Math.max(...values);
+        if (high === low) return 50;
+        return clamp(((current - low) / (high - low)) * 100, 0, 100);
+    };
+
+    const smallSpecNet = (row) => {
+        if (!row) return 0;
+        return number(row.openInterest)
+            - number(row.specLong)
+            - number(row.specShort)
+            - number(row.commercialLong)
+            - number(row.commercialShort);
+    };
+
+    const buildCurrencyMetrics = () => {
+        const metrics = {};
+        MAP_SYMBOLS.forEach((symbol) => {
+            const rows = cotRows[symbol] || [];
+            const last = rows[rows.length - 1];
+            const previous = rows[rows.length - 2];
+            if (!last) return;
+            const windowRows = rows.slice(-52);
+            const specValues = windowRows.map((row) => number(row.specNet));
+            const smallValues = windowRows.map(smallSpecNet);
+            const currentSmallSpecNet = smallSpecNet(last);
+            metrics[symbol] = {
+                percentile: percentileFromValues(number(last.specNet), specValues),
+                smallPercentile: percentileFromValues(currentSmallSpecNet, smallValues),
+                specNet: number(last.specNet),
+                commercialNet: number(last.commercialNet),
+                specLong: number(last.specLong),
+                specShort: number(last.specShort),
+                commercialLong: number(last.commercialLong),
+                commercialShort: number(last.commercialShort),
+                smallSpecNet: currentSmallSpecNet,
+                weeklyChange: previous ? number(last.specNet) - number(previous.specNet) : 0,
+            };
+        });
+        return metrics;
+    };
+
+    const differentialSignal = (diff) => {
+        if (diff > 40) return "LONG BASE";
+        if (diff < -40) return "SHORT BASE";
+        if (diff > 20) return "MILD LONG";
+        if (diff < -20) return "MILD SHORT";
+        return "NEUTRAL";
+    };
+
+    const differentialConviction = (diff) => {
+        const absDiff = Math.abs(diff);
+        if (absDiff > 60) return "EXTREME";
+        if (absDiff > 40) return "HIGH";
+        if (absDiff > 20) return "MODERATE";
+        return "LOW";
+    };
+
+    const squeezeRisk = (basePercentile, quotePercentile) => {
+        const bothExtreme = (basePercentile > 80 && quotePercentile < 20)
+            || (basePercentile < 20 && quotePercentile > 80);
+        if (bothExtreme) return "HIGH";
+        if ([basePercentile, quotePercentile].some((value) => value > 75 || value < 25)) return "MEDIUM";
+        return "LOW";
+    };
+
+    const signalClass = (signal) => {
+        if (signal.includes("LONG")) return "cot-bull";
+        if (signal.includes("SHORT")) return "cot-bear";
+        return "cot-neutral";
+    };
+
+    const diffColorClass = (value) => {
+        if (value > 10) return "cot-bull";
+        if (value < -10) return "cot-bear";
+        return "cot-neutral";
+    };
+
+    const buildPairDifferentials = (metrics) => DIFF_PAIRS
+        .map((config) => {
+            const base = metrics[config.base];
+            const quote = metrics[config.quote];
+            if (!base || !quote) return null;
+            const specDiff = base.percentile - quote.percentile;
+            const commercialDiff = -specDiff;
+            const smallSpecDiff = base.smallPercentile - quote.smallPercentile;
+            const signal = differentialSignal(specDiff);
+            const conviction = differentialConviction(specDiff);
+            return {
+                ...config,
+                basePercentile: base.percentile,
+                quotePercentile: quote.percentile,
+                specDiff,
+                commercialDiff,
+                smallSpecDiff,
+                signal,
+                conviction,
+                squeezeRisk: squeezeRisk(base.percentile, quote.percentile),
+            };
+        })
+        .filter(Boolean);
+
+    const renderDifferentialTable = (pairs) => {
+        const tbody = document.getElementById("cot-diff-tbody");
+        if (!tbody) return;
+        tbody.innerHTML = pairs.map((item) => {
+            const convictionClass = item.conviction === "EXTREME" || item.conviction === "HIGH"
+                ? signalClass(item.signal)
+                : "cot-muted-badge";
+            return `
+                <tr>
+                    <td><strong>${escapeHtml(item.pair)}</strong></td>
+                    <td class="${diffColorClass(item.specDiff)}">${signed(item.specDiff)}</td>
+                    <td class="${diffColorClass(item.commercialDiff)}">${signed(item.commercialDiff)}</td>
+                    <td class="${diffColorClass(item.smallSpecDiff)}">${signed(item.smallSpecDiff)}</td>
+                    <td>${pct(item.basePercentile)}</td>
+                    <td>${pct(item.quotePercentile)}</td>
+                    <td><span class="cot-diff-badge ${signalClass(item.signal)}">${escapeHtml(item.signal)}</span></td>
+                    <td><span class="cot-diff-badge ${convictionClass}">${escapeHtml(item.conviction)}</span></td>
+                </tr>
+            `;
+        }).join("");
+    };
+
+    const renderSqueezeList = (pairs) => {
+        const list = document.getElementById("cot-squeeze-list");
+        if (!list) return;
+        const order = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+        list.innerHTML = [...pairs]
+            .sort((a, b) => order[a.squeezeRisk] - order[b.squeezeRisk] || Math.abs(b.specDiff) - Math.abs(a.specDiff))
+            .map((item) => `
+                <div class="cot-squeeze-item ${item.squeezeRisk.toLowerCase()}">
+                    <div>
+                        <strong>${escapeHtml(item.pair)}</strong>
+                        <p>Specs ${pct(item.basePercentile)}th pct on ${item.base}, ${pct(item.quotePercentile)}th pct on ${item.quote}</p>
+                    </div>
+                    <span>${escapeHtml(item.squeezeRisk)}</span>
+                </div>
+            `).join("");
+    };
+
+    const renderDifferentialChart = (pairs) => {
+        const el = document.getElementById("cot-diff-chart");
+        if (!el || !window.echarts) return;
+        const chart = window.echarts.getInstanceByDom(el) || window.echarts.init(el, null, { renderer: "canvas" });
+        chart.setOption({
+            backgroundColor: "transparent",
+            grid: { left: 44, right: 20, top: 24, bottom: 62, containLabel: true },
+            legend: { textStyle: { color: getMutedColor(), fontSize: 11 } },
+            tooltip: {
+                trigger: "axis",
+                axisPointer: { type: "shadow" },
+                backgroundColor: root.classList.contains("cot-light") ? "#ffffff" : "#101318",
+                borderColor: getGridColor(),
+                textStyle: { color: getTextColor(), fontSize: 11 },
+            },
+            xAxis: {
+                type: "category",
+                data: pairs.map((item) => item.pair),
+                axisLabel: { color: getMutedColor(), rotate: 35, fontSize: 10 },
+                axisLine: { lineStyle: { color: getGridColor() } },
+                axisTick: { show: false },
+            },
+            yAxis: {
+                type: "value",
+                axisLabel: { color: getMutedColor() },
+                axisLine: { lineStyle: { color: getGridColor() } },
+                splitLine: { lineStyle: { color: getGridColor() } },
+            },
+            series: [
+                {
+                    name: "Spec Differential",
+                    type: "bar",
+                    data: pairs.map((item) => ({
+                        value: Math.round(item.specDiff),
+                        itemStyle: { color: item.specDiff >= 0 ? "#22c55e" : "#ef4444" },
+                    })),
+                    barWidth: 10,
+                },
+                {
+                    name: "Commercial Differential",
+                    type: "bar",
+                    data: pairs.map((item) => ({
+                        value: Math.round(item.commercialDiff),
+                        itemStyle: { color: item.specDiff >= 0 ? "#ef4444" : "#22c55e" },
+                    })),
+                    barWidth: 10,
+                },
+            ],
+        });
+    };
+
+    const scatterColor = (metric) => {
+        if (metric.percentile > 60 && metric.weeklyChange > 0) return "#ef4444";
+        if (metric.percentile < 40 && metric.weeklyChange < 0) return "#ef4444";
+        if (metric.percentile > 60 && metric.weeklyChange < 0) return "#22c55e";
+        if (metric.percentile < 40 && metric.weeklyChange > 0) return "#22c55e";
+        return "#f59e0b";
+    };
+
+    const renderScatterChart = (metrics) => {
+        const el = document.getElementById("cot-scatter-chart");
+        if (!el || !window.echarts) return;
+        const rows = MAP_SYMBOLS
+            .filter((symbol) => metrics[symbol])
+            .map((symbol) => ({ symbol, ...metrics[symbol] }));
+        const chart = window.echarts.getInstanceByDom(el) || window.echarts.init(el, null, { renderer: "canvas" });
+        chart.setOption({
+            backgroundColor: "transparent",
+            grid: { left: 54, right: 30, top: 20, bottom: 44, containLabel: true },
+            tooltip: {
+                trigger: "item",
+                backgroundColor: root.classList.contains("cot-light") ? "#ffffff" : "#101318",
+                borderColor: getGridColor(),
+                textStyle: { color: getTextColor(), fontSize: 11 },
+                formatter: (item) => `${item.data[2]}<br/>COT Index: ${pct(item.data[0])}<br/>Weekly change: ${signed(item.data[1])}`,
+            },
+            xAxis: {
+                type: "value",
+                min: 0,
+                max: 100,
+                name: "COT Index",
+                nameTextStyle: { color: getMutedColor() },
+                axisLabel: { color: getMutedColor() },
+                axisLine: { lineStyle: { color: getGridColor() } },
+                splitLine: { lineStyle: { color: getGridColor() } },
+            },
+            yAxis: {
+                type: "value",
+                name: "Weekly change",
+                nameTextStyle: { color: getMutedColor() },
+                axisLabel: { color: getMutedColor() },
+                axisLine: { lineStyle: { color: getGridColor() } },
+                splitLine: { lineStyle: { color: getGridColor() } },
+            },
+            series: [{
+                type: "scatter",
+                symbolSize: 16,
+                data: rows.map((row) => [Math.round(row.percentile), Math.round(row.weeklyChange), row.symbol]),
+                itemStyle: {
+                    color: (item) => {
+                        const symbol = item.data[2];
+                        return scatterColor(metrics[symbol]);
+                    },
+                },
+                label: {
+                    show: true,
+                    formatter: (item) => item.data[2],
+                    position: "right",
+                    color: getTextColor(),
+                    fontWeight: 700,
+                },
+                markLine: {
+                    symbol: "none",
+                    silent: true,
+                    label: { color: getMutedColor(), fontSize: 10 },
+                    lineStyle: { color: getGridColor(), type: "dashed" },
+                    data: [{ xAxis: 20 }, { xAxis: 80 }, { yAxis: 0 }],
+                },
+            }],
+        });
+    };
+
+    const renderDifferentialInsights = (pairs, metrics) => {
+        if (!pairs.length) return;
+        const strongest = [...pairs].sort((a, b) => Math.abs(b.specDiff) - Math.abs(a.specDiff))[0];
+        const neutral = [...pairs].sort((a, b) => Math.abs(a.specDiff) - Math.abs(b.specDiff))[0];
+        const squeezePairs = pairs.filter((item) => item.squeezeRisk === "HIGH");
+        const inflection = MAP_SYMBOLS
+            .filter((symbol) => metrics[symbol] && scatterColor(metrics[symbol]) === "#22c55e")
+            .sort((a, b) => Math.abs(metrics[b].weeklyChange) - Math.abs(metrics[a].weeklyChange))[0] || MAP_SYMBOLS[0];
+        const continuation = MAP_SYMBOLS
+            .filter((symbol) => metrics[symbol] && scatterColor(metrics[symbol]) === "#f59e0b")
+            .sort((a, b) => Math.abs(metrics[b].weeklyChange) - Math.abs(metrics[a].weeklyChange))[0] || MAP_SYMBOLS[1];
+        $("[data-insight='diff-matrix']").textContent = `Strongest setup: ${strongest.pair}. Most neutral: ${neutral.pair}.`;
+        $("[data-insight='squeeze']").textContent = `High squeeze risk: ${squeezePairs.length} pairs. Most at risk: ${(squeezePairs[0] || strongest).pair}.`;
+        $("[data-insight='scatter']").textContent = `${inflection} at positioning inflection. ${continuation} in clean trend continuation.`;
+    };
+
+    const renderDifferentials = () => {
+        const metrics = buildCurrencyMetrics();
+        const pairs = buildPairDifferentials(metrics);
+        if (!pairs.length) {
+            showError("No COT rows are available for differential analysis yet.");
+            return;
+        }
+        clearError();
+        renderDifferentialTable(pairs);
+        renderSqueezeList(pairs);
+        renderDifferentialChart(pairs);
+        renderScatterChart(metrics);
+        renderDifferentialInsights(pairs, metrics);
+        window.requestAnimationFrame(() => {
+            window.echarts?.getInstanceByDom(document.getElementById("cot-diff-chart"))?.resize?.();
+            window.echarts?.getInstanceByDom(document.getElementById("cot-scatter-chart"))?.resize?.();
+        });
+    };
+
     const renderSpreadChart = (symbol) => {
         const labels = labelSeries(symbol);
         const spec = netSeries(symbol);
@@ -580,6 +906,12 @@
     };
 
     const renderSelected = () => {
+        if (active === "DIFF") {
+            setDifferentialMode(true);
+            renderDifferentials();
+            return;
+        }
+        setDifferentialMode(false);
         const rows = cotRows[active] || [];
         if (!rows.length) {
             showError(`No CFTC rows were returned for ${active}. Try refresh or choose another symbol.`);
@@ -646,6 +978,10 @@
         if (tab) {
             active = tab.dataset.cotSymbol || "EUR";
             $$("[data-cot-symbol]").forEach((button) => button.classList.toggle("is-active", button === tab));
+            if (active === "DIFF") {
+                renderSelected();
+                return;
+            }
             renderSelected();
             loadAutomaticPriceOverlay(active).then((loaded) => {
                 if (loaded) renderSelected();

@@ -62,7 +62,47 @@ async def build_currency_context() -> dict[str, Any]:
         surprises = await _fetch_recent_surprises(session)
         rate_probabilities = await _fetch_rate_probabilities(session)
 
-    retail_sentiment = _load_cached_retail_sentiment()
+    retail_sentiment = {}
+    retail_assets: list[dict[str, Any]] = []
+    try:
+        from app.services.retail_sentiment import get_retail_sentiment
+
+        retail_snapshot = await get_retail_sentiment()
+        retail_assets = [
+            asset
+            for asset in retail_snapshot.get("assets", [])
+            if isinstance(asset, dict)
+        ]
+    except Exception:
+        logger.exception("Failed to load retail sentiment for currency context.")
+
+    cot_payloads: dict[str, dict[str, Any]] = {}
+    cot_pairs = {
+        "AUD": "AUD",
+        "CAD": "CAD",
+        "CHF": "CHF",
+        "EUR": "EUR",
+        "GBP": "GBP",
+        "JPY": "JPY",
+        "NZD": "NZD",
+        "USD": None,
+    }
+    try:
+        from app.processing.cot import get_cot_payload
+
+        for currency, pair in cot_pairs.items():
+            if pair is None:
+                continue
+            try:
+                payload = await get_cot_payload(pair)
+            except Exception:
+                logger.exception("Failed to load COT payload for %s.", currency)
+                continue
+            if isinstance(payload, dict):
+                cot_payloads[currency] = payload
+    except ImportError:
+        logger.exception("Failed to import COT payload loader.")
+
     cb_rss = _load_cached_cb_rss_analysis()
 
     profiles = {
@@ -78,6 +118,120 @@ async def build_currency_context() -> dict[str, Any]:
         )
         for currency in TRACKED_CURRENCIES
     }
+
+    for currency, payload in cot_payloads.items():
+        chg_net = _to_float(payload.get("chg_net"))
+        net_values = [
+            _to_float(value)
+            for value in payload.get("net", [])[-3:]
+            if _to_float(value) is not None
+        ]
+        diffs = [
+            right - left
+            for left, right in zip(net_values, net_values[1:], strict=False)
+        ]
+        latest_direction = 0
+        if diffs:
+            latest_direction = 1 if diffs[-1] > 0 else -1 if diffs[-1] < 0 else 0
+        weeks_trend = 0
+        if latest_direction:
+            for diff in reversed(diffs):
+                direction = 1 if diff > 0 else -1 if diff < 0 else 0
+                if direction != latest_direction:
+                    break
+                weeks_trend += 1
+        signal = payload.get("signal") if isinstance(payload.get("signal"), dict) else {}
+        profiles[currency]["cot"] = {
+            "data_available": True,
+            "net_position": _to_float(payload.get("net_position")),
+            "direction": (
+                "increasing_long"
+                if chg_net and chg_net > 0
+                else "increasing_short"
+                if chg_net and chg_net < 0
+                else "unchanged"
+            ),
+            "weeks_trend": weeks_trend,
+            "signal_bias": signal.get("bias"),
+        }
+
+    retail_pairs = {
+        "EUR": ("EURUSD", False),
+        "GBP": ("GBPUSD", False),
+        "JPY": ("USDJPY", True),
+        "AUD": ("AUDUSD", False),
+        "NZD": ("NZDUSD", False),
+        "CAD": ("USDCAD", True),
+        "CHF": ("USDCHF", True),
+    }
+    retail_by_name = {
+        str(asset.get("name", "")).replace("/", "").upper(): asset
+        for asset in retail_assets
+    }
+    for currency, (symbol, invert) in retail_pairs.items():
+        asset = retail_by_name.get(symbol)
+        if not asset:
+            continue
+        raw_long = _to_float(asset.get("short" if invert else "long"))
+        raw_short = _to_float(asset.get("long" if invert else "short"))
+        if raw_long is None or raw_short is None:
+            continue
+        profiles[currency]["retail_sentiment"] = {
+            "data_available": True,
+            "pct_long": raw_long,
+            "pct_short": raw_short,
+            "signal": (
+                "CONTRARIAN_SHORT"
+                if raw_long > 65
+                else "CONTRARIAN_LONG"
+                if raw_long < 35
+                else "NEUTRAL"
+            ),
+        }
+
+    try:
+        from app.api.routes.public import _cb_feed_cache
+    except ImportError:
+        _cb_feed_cache = {}
+
+    hawkish_keywords = [
+        "rate hike", "tightening", "hawkish",
+        "inflation concern", "above target",
+        "restrictive", "further increases",
+    ]
+    dovish_keywords = [
+        "rate cut", "easing", "dovish", "pause",
+        "below target", "supportive", "accommodative",
+        "slower pace", "reduce rates",
+    ]
+    for currency in TRACKED_CURRENCIES:
+        cached_feed = _cb_feed_cache.get(currency) if isinstance(_cb_feed_cache, dict) else None
+        articles = (cached_feed or {}).get("articles", []) if isinstance(cached_feed, dict) else []
+        articles = [article for article in articles[:3] if isinstance(article, dict)]
+        if not articles:
+            continue
+        text_blob = " ".join(
+            f"{article.get('title', '')} {article.get('description', '')}".lower()
+            for article in articles
+        )
+        hawk_count = sum(text_blob.count(keyword) for keyword in hawkish_keywords)
+        dove_count = sum(text_blob.count(keyword) for keyword in dovish_keywords)
+        stance = (
+            "hawkish"
+            if hawk_count > dove_count
+            else "dovish"
+            if dove_count > hawk_count
+            else "neutral"
+        )
+        summary = str(articles[0].get("title") or "")[:100]
+        profiles[currency]["cb_rss_stance"] = stance
+        profiles[currency]["cb_rss_summary"] = summary
+        profiles[currency]["cb_rss"] = {
+            "data_available": True,
+            "stance": stance,
+            "summary": summary,
+        }
+
     ctx = {
         "generated_at": datetime.now(UTC).isoformat(),
         "currencies": profiles,

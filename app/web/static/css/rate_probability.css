@@ -2,11 +2,11 @@
 
 /* Colour tokens specific to this page */
 :root {
-  --rp-hike:  #1D9E75;
-  --rp-hold:  #BA7517;
-  --rp-cut:   #D85A30;
-  --rp-surface: #1a1c1e;
-  --rp-border: rgba(255, 255, 255, 0.10);
+  --rp-hike:  #22c55e;
+  --rp-hold:  #f59e0b;
+  --rp-cut:   #ef4444;
+  --rp-surface: rgba(22, 17, 12, 0.60);
+  --rp-border: rgba(255, 255, 255, 0.08);
 }
 
 /* ── Page wrapper ──────────────────────────────────────────────────── */

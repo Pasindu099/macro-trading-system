@@ -9,7 +9,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "0006_add_rp_scraped_tables"
-down_revision = "0005_add_intelligence_news_alerts"
+down_revision = "0005_news_alerts"
 branch_labels = None
 depends_on = None
 

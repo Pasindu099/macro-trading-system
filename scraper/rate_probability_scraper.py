@@ -22,8 +22,6 @@ import time
 from datetime import date, datetime
 from typing import Any
 
-import psycopg2
-import psycopg2.extras
 import requests
 from bs4 import BeautifulSoup
 
@@ -125,11 +123,6 @@ def _fetch_html(url: str) -> str:
 
 # ── Parsing helpers ─────────────────────────────────────────────────────────
 
-_DATE_PATTERNS = [
-    r"\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b",
-    r"\b(\w{3,9})\s+(\d{1,2}),?\s+(\d{4})\b",
-    r"\b(\d{4})-(\d{2})-(\d{2})\b",
-]
 _MONTH_MAP = {
     "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
     "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
@@ -141,14 +134,12 @@ _MONTH_MAP = {
 
 def _parse_date(text: str) -> date | None:
     text = text.strip()
-    # ISO format: 2026-07-29
     m = re.search(r"(\d{4})-(\d{2})-(\d{2})", text)
     if m:
         try:
             return date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
         except ValueError:
             pass
-    # Month name: Jul 29, 2026 or July 29 2026
     m = re.search(r"(\w{3,9})\s+(\d{1,2}),?\s+(\d{4})", text, re.IGNORECASE)
     if m:
         month = _MONTH_MAP.get(m.group(1).lower())
@@ -157,7 +148,6 @@ def _parse_date(text: str) -> date | None:
                 return date(int(m.group(3)), month, int(m.group(2)))
             except ValueError:
                 pass
-    # Numeric: 07/29/2026 or 29/07/2026
     m = re.search(r"(\d{1,2})[/-](\d{1,2})[/-](\d{4})", text)
     if m:
         a, b, yr = int(m.group(1)), int(m.group(2)), int(m.group(3))
@@ -185,7 +175,6 @@ def _parse_rate(text: str) -> float | None:
 
 
 def _parse_bps(text: str) -> float | None:
-    text = text.strip()
     m = re.search(r"([+-]?\d+(?:\.\d+)?)", text.replace(",", "."))
     if m:
         return float(m.group(1))
@@ -194,106 +183,84 @@ def _parse_bps(text: str) -> float | None:
 
 # ── Column identification ──────────────────────────────────────────────────
 
-_COL_DATE   = ("date", "meeting", "meeting date", "mtg", "decision")
-_COL_IMPL   = ("implied", "rate", "implied rate", "post-meeting rate", "post meeting")
-_COL_CUT    = ("cut", "cut prob", "cut probability", "cut %")
-_COL_HOLD   = ("hold", "hold prob", "hold probability", "hold %", "no change")
-_COL_HIKE   = ("hike", "hike prob", "hike probability", "hike %", "raise")
-_COL_DELTA  = ("delta", "bps", "delta bps", "change", "chg", "±bps", "+/-")
-_COL_CUMUL  = ("cumulative", "cum", "cum moves", "total moves", "total")
-_COL_MOVE   = ("move", "probability", "prob", "% change", "implied move")
-
-
 def _identify_column(header: str) -> str | None:
     h = header.lower().strip()
-    for kw in _COL_DATE:
-        if kw in h:
-            return "date"
-    for kw in _COL_CUT:
-        if kw in h:
-            return "cut"
-    for kw in _COL_HOLD:
-        if kw in h:
-            return "hold"
-    for kw in _COL_HIKE:
-        if kw in h:
-            return "hike"
-    for kw in _COL_DELTA:
-        if kw in h:
-            return "delta"
-    for kw in _COL_CUMUL:
-        if kw in h:
-            return "cumulative"
-    for kw in _COL_IMPL:
-        if kw in h:
-            return "implied"
-    for kw in _COL_MOVE:
-        if kw in h:
-            return "move"
+    if any(kw in h for kw in ("date", "meeting", "mtg", "decision")):
+        return "date"
+    if any(kw in h for kw in ("cut prob", "cut %", "cut_prob")):
+        return "cut"
+    if any(kw in h for kw in ("hold prob", "hold %", "hold_prob", "no change")):
+        return "hold"
+    if any(kw in h for kw in ("hike prob", "hike %", "hike_prob", "raise")):
+        return "hike"
+    if any(kw in h for kw in ("delta", "bps", "change", "chg", "±")):
+        return "delta"
+    if any(kw in h for kw in ("cumulative", "cum moves", "total")):
+        return "cumulative"
+    if any(kw in h for kw in ("implied", "post-meeting", "post meeting")):
+        return "implied"
+    if any(kw in h for kw in ("cut",)):
+        return "cut"
+    if any(kw in h for kw in ("hike", "raise")):
+        return "hike"
+    if any(kw in h for kw in ("hold",)):
+        return "hold"
+    if any(kw in h for kw in ("rate", "implied")):
+        return "implied"
+    if any(kw in h for kw in ("prob", "probability", "move")):
+        return "move"
     return None
 
 
 # ── Page parser ────────────────────────────────────────────────────────────
 
 def _parse_current_rate(soup: BeautifulSoup) -> float | None:
-    # Try common selectors for current rate display
     for selector in (
-        "[class*='current-rate']",
-        "[class*='current_rate']",
-        "[class*='policy-rate']",
-        "[class*='rate-value']",
-        "[class*='rate_value']",
-        "[data-rate]",
+        "[class*='current-rate']", "[class*='current_rate']",
+        "[class*='policy-rate']", "[class*='rate-value']",
+        "[class*='currentRate']", "[data-rate]",
     ):
         el = soup.select_one(selector)
         if el:
             val = _parse_rate(el.get_text())
-            if val is not None:
-                return val
-
-    # Look for text patterns like "Current Rate: 3.75%" near the top of the page
-    text_blocks = soup.find_all(["p", "span", "div", "h1", "h2", "h3", "h4"], limit=60)
-    for el in text_blocks:
-        raw = el.get_text()
-        if re.search(r"current.{1,20}rate", raw, re.IGNORECASE):
-            val = _parse_rate(raw)
             if val is not None and 0.0 <= val <= 25.0:
                 return val
 
+    for el in soup.find_all(["p", "span", "div", "h1", "h2", "h3", "h4"], limit=80):
+        raw = el.get_text()
+        if re.search(r"current.{1,20}rate|policy.{1,15}rate", raw, re.IGNORECASE):
+            val = _parse_rate(raw)
+            if val is not None and 0.0 <= val <= 25.0:
+                return val
     return None
 
 
 def _parse_table(soup: BeautifulSoup, bank: str) -> list[ScrapedMeeting]:
-    """Extract meeting rows from the page's probability table."""
     tables = soup.find_all("table")
     if not tables:
-        logger.warning("[%s] No <table> elements found on page", bank)
+        logger.warning("[%s] No <table> found — trying divs", bank)
         return []
 
     best_table = None
     best_score = -1
-
     for table in tables:
         headers = [th.get_text(strip=True) for th in table.find_all("th")]
         if not headers:
-            # Some tables use first row as headers
             first_row = table.find("tr")
             if first_row:
                 headers = [td.get_text(strip=True) for td in first_row.find_all("td")]
-
         score = sum(
             1 for h in headers
-            if any(kw in h.lower() for kw in ("date", "meeting", "implied", "prob", "cut", "hike", "hold", "bps"))
+            if any(kw in h.lower() for kw in ("date","meeting","implied","prob","cut","hike","hold","bps","rate"))
         )
         if score > best_score:
             best_score = score
             best_table = table
 
     if best_table is None or best_score < 2:
-        logger.warning("[%s] Could not identify a suitable table (best score=%d)", bank, best_score)
+        logger.warning("[%s] No suitable table found (best score=%d of %d tables)", bank, best_score, len(tables))
         return []
 
-    # Map column positions
     headers = [th.get_text(strip=True) for th in best_table.find_all("th")]
     if not headers:
         first_row = best_table.find("tr")
@@ -306,9 +273,8 @@ def _parse_table(soup: BeautifulSoup, bank: str) -> list[ScrapedMeeting]:
         if role and role not in col_map:
             col_map[role] = i
 
-    logger.debug("[%s] Column map: %s (headers=%s)", bank, col_map, headers)
+    logger.info("[%s] Table headers=%s col_map=%s", bank, headers, col_map)
 
-    # Determine which rows are data rows (skip header row)
     rows = best_table.find_all("tr")
     has_thead = bool(best_table.find("thead"))
     data_rows = rows[1:] if not has_thead else rows
@@ -320,11 +286,8 @@ def _parse_table(soup: BeautifulSoup, bank: str) -> list[ScrapedMeeting]:
         cells = [td.get_text(strip=True) for td in row.find_all(["td", "th"])]
         if not cells:
             continue
-
-        # Skip header-like rows
-        if any(re.search(r"[a-zA-Z]{4,}", c) for c in cells[:2]) and "date" not in (cells[0] or "").lower():
-            if not any(re.search(r"\d{4}", c) for c in cells):
-                continue
+        if len(cells) < 2:
+            continue
 
         def get(role: str) -> str:
             idx = col_map.get(role)
@@ -332,18 +295,18 @@ def _parse_table(soup: BeautifulSoup, bank: str) -> list[ScrapedMeeting]:
                 return cells[idx]
             return ""
 
-        meeting_date = _parse_date(get("date") or (cells[0] if cells else ""))
+        raw_date = get("date") or (cells[0] if cells else "")
+        meeting_date = _parse_date(raw_date)
         if meeting_date is None or meeting_date < today:
             continue
 
-        implied_rate = _parse_rate(get("implied")) if col_map.get("implied") is not None else None
-        cut_prob     = _parse_pct(get("cut"))   if col_map.get("cut") is not None else None
-        hold_prob    = _parse_pct(get("hold"))  if col_map.get("hold") is not None else None
-        hike_prob    = _parse_pct(get("hike"))  if col_map.get("hike") is not None else None
-        delta_bps    = _parse_bps(get("delta")) if col_map.get("delta") is not None else None
-        cumul        = _parse_pct(get("cumulative")) if col_map.get("cumulative") is not None else None
+        implied_rate     = _parse_rate(get("implied"))     if "implied" in col_map else None
+        cut_prob         = _parse_pct(get("cut"))          if "cut"     in col_map else None
+        hold_prob        = _parse_pct(get("hold"))         if "hold"    in col_map else None
+        hike_prob        = _parse_pct(get("hike"))         if "hike"    in col_map else None
+        delta_bps        = _parse_bps(get("delta"))        if "delta"   in col_map else None
+        cumulative_moves = _parse_pct(get("cumulative"))   if "cumulative" in col_map else None
 
-        # Fallback: single move/probability column — treat as dominant direction
         if cut_prob is None and hold_prob is None and hike_prob is None:
             move_text = get("move")
             if move_text:
@@ -363,7 +326,7 @@ def _parse_table(soup: BeautifulSoup, bank: str) -> list[ScrapedMeeting]:
             hold_prob=hold_prob,
             hike_prob=hike_prob,
             delta_bps=delta_bps,
-            cumulative_moves=cumul,
+            cumulative_moves=cumulative_moves,
         ))
 
     logger.info("[%s] Parsed %d upcoming meetings", bank, len(meetings))
@@ -371,7 +334,7 @@ def _parse_table(soup: BeautifulSoup, bank: str) -> list[ScrapedMeeting]:
 
 
 def scrape_bank(bank: str) -> ScrapedBankData | None:
-    """Scrape one bank's rate probability page. Returns None on failure."""
+    """Scrape one bank's page. Returns None on fetch failure."""
     url = BANK_URLS.get(bank)
     if not url:
         logger.error("Unknown bank: %s", bank)
@@ -387,7 +350,6 @@ def scrape_bank(bank: str) -> ScrapedBankData | None:
     current_rate = _parse_current_rate(soup)
     meetings = _parse_table(soup, bank)
 
-    # Infer bank name from title or h1
     bank_name = bank
     for el in soup.find_all(["title", "h1", "h2"], limit=5):
         t = el.get_text(strip=True)
@@ -403,31 +365,21 @@ def scrape_bank(bank: str) -> ScrapedBankData | None:
     )
 
 
-# ── Database ────────────────────────────────────────────────────────────────
+# ── Async DB write (uses app's existing SQLAlchemy session) ─────────────────
 
-def _sync_db_url() -> str:
-    raw = os.environ.get("DATABASE_URL", "")
-    if not raw:
-        raise RuntimeError("DATABASE_URL environment variable is not set")
-    return raw.replace("postgresql+asyncpg://", "postgresql://")
+async def _upsert_bank_async(session: Any, data: ScrapedBankData) -> None:
+    from sqlalchemy import text as sa_text
 
-
-def _get_conn() -> "psycopg2.extensions.connection":
-    return psycopg2.connect(_sync_db_url())
-
-
-def _upsert_bank(conn: "psycopg2.extensions.connection", data: ScrapedBankData) -> None:
     now = datetime.utcnow()
-    next_meeting: ScrapedMeeting | None = data.meetings[0] if data.meetings else None
+    next_meeting = data.meetings[0] if data.meetings else None
 
-    with conn.cursor() as cur:
-        # Upsert summary row
-        cur.execute(
-            """
+    await session.execute(
+        sa_text("""
             INSERT INTO rp_scraped_summary
                 (bank, current_rate, next_meeting_date,
                  next_cut_prob, next_hold_prob, next_hike_prob, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            VALUES (:bank, :current_rate, :next_meeting_date,
+                    :next_cut_prob, :next_hold_prob, :next_hike_prob, :updated_at)
             ON CONFLICT (bank) DO UPDATE SET
                 current_rate      = EXCLUDED.current_rate,
                 next_meeting_date = EXCLUDED.next_meeting_date,
@@ -435,34 +387,33 @@ def _upsert_bank(conn: "psycopg2.extensions.connection", data: ScrapedBankData) 
                 next_hold_prob    = EXCLUDED.next_hold_prob,
                 next_hike_prob    = EXCLUDED.next_hike_prob,
                 updated_at        = EXCLUDED.updated_at
-            """,
-            (
-                data.bank,
-                data.current_rate,
-                next_meeting.meeting_date if next_meeting else None,
-                next_meeting.cut_prob     if next_meeting else None,
-                next_meeting.hold_prob    if next_meeting else None,
-                next_meeting.hike_prob    if next_meeting else None,
-                now,
-            ),
-        )
+        """),
+        {
+            "bank":              data.bank,
+            "current_rate":      data.current_rate,
+            "next_meeting_date": next_meeting.meeting_date if next_meeting else None,
+            "next_cut_prob":     next_meeting.cut_prob     if next_meeting else None,
+            "next_hold_prob":    next_meeting.hold_prob    if next_meeting else None,
+            "next_hike_prob":    next_meeting.hike_prob    if next_meeting else None,
+            "updated_at":        now,
+        },
+    )
 
-        # Delete stale meeting rows for this bank so future meetings not on
-        # the page (past meetings) don't persist forever.
-        cur.execute(
-            "DELETE FROM rp_scraped_meetings WHERE bank = %s AND meeting_date >= %s",
-            (data.bank, date.today()),
-        )
+    await session.execute(
+        sa_text("DELETE FROM rp_scraped_meetings WHERE bank = :bank AND meeting_date >= :today"),
+        {"bank": data.bank, "today": date.today()},
+    )
 
-        # Insert fresh meeting rows
-        for m in data.meetings:
-            cur.execute(
-                """
+    for m in data.meetings:
+        await session.execute(
+            sa_text("""
                 INSERT INTO rp_scraped_meetings
                     (bank, meeting_date, implied_rate,
                      cut_prob, hold_prob, hike_prob,
                      delta_bps, cumulative_moves, scraped_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (:bank, :meeting_date, :implied_rate,
+                        :cut_prob, :hold_prob, :hike_prob,
+                        :delta_bps, :cumulative_moves, :scraped_at)
                 ON CONFLICT (bank, meeting_date) DO UPDATE SET
                     implied_rate     = EXCLUDED.implied_rate,
                     cut_prob         = EXCLUDED.cut_prob,
@@ -471,69 +422,52 @@ def _upsert_bank(conn: "psycopg2.extensions.connection", data: ScrapedBankData) 
                     delta_bps        = EXCLUDED.delta_bps,
                     cumulative_moves = EXCLUDED.cumulative_moves,
                     scraped_at       = EXCLUDED.scraped_at
-                """,
-                (
-                    data.bank,
-                    m.meeting_date,
-                    m.implied_rate,
-                    m.cut_prob,
-                    m.hold_prob,
-                    m.hike_prob,
-                    m.delta_bps,
-                    m.cumulative_moves,
-                    now,
-                ),
-            )
+            """),
+            {
+                "bank":             data.bank,
+                "meeting_date":     m.meeting_date,
+                "implied_rate":     m.implied_rate,
+                "cut_prob":         m.cut_prob,
+                "hold_prob":        m.hold_prob,
+                "hike_prob":        m.hike_prob,
+                "delta_bps":        m.delta_bps,
+                "cumulative_moves": m.cumulative_moves,
+                "scraped_at":       now,
+            },
+        )
 
-    conn.commit()
     logger.info("[%s] Saved %d meetings to DB", data.bank, len(data.meetings))
 
 
-# ── Main scrape loop ────────────────────────────────────────────────────────
+# ── Main entry points ───────────────────────────────────────────────────────
 
-def run_scraper(banks: list[str] | None = None) -> dict[str, str]:
-    """Scrape all (or selected) banks and write to DB. Returns {bank: status}."""
+async def run_scraper_async(banks: list[str] | None = None) -> dict[str, str]:
+    """Scrape all (or selected) banks and write to DB via async SQLAlchemy session."""
+    from app.db.session import session_scope
+
     target_banks = banks or list(BANK_URLS.keys())
     statuses: dict[str, str] = {}
 
-    try:
-        conn = _get_conn()
-    except Exception as exc:
-        logger.error("DB connection failed: %s", exc)
-        return {b: "db_error" for b in target_banks}
+    for i, bank in enumerate(target_banks):
+        if i > 0:
+            delay = random.uniform(*INTER_BANK_DELAY)
+            await asyncio.sleep(delay)
 
-    try:
-        for i, bank in enumerate(target_banks):
-            if i > 0:
-                delay = random.uniform(*INTER_BANK_DELAY)
-                logger.debug("Sleeping %.1fs before %s", delay, bank)
-                time.sleep(delay)
+        try:
+            data = await asyncio.to_thread(scrape_bank, bank)
+            if data is None:
+                statuses[bank] = "fetch_failed"
+                continue
 
-            try:
-                data = scrape_bank(bank)
-                if data is None:
-                    statuses[bank] = "fetch_failed"
-                    continue
+            async with session_scope() as session:
+                await _upsert_bank_async(session, data)
 
-                _upsert_bank(conn, data)
-                statuses[bank] = "ok"
-
-            except Exception as exc:
-                logger.error("[%s] Unexpected error: %s", bank, exc, exc_info=True)
-                try:
-                    conn.rollback()
-                except Exception:
-                    pass
-                statuses[bank] = "error"
-    finally:
-        conn.close()
+            statuses[bank] = "ok"
+        except Exception as exc:
+            logger.error("[%s] Unexpected error: %s", bank, exc, exc_info=True)
+            statuses[bank] = "error"
 
     return statuses
-
-
-async def run_scraper_async(banks: list[str] | None = None) -> dict[str, str]:
-    """Async wrapper for use from APScheduler / FastAPI background tasks."""
-    return await asyncio.to_thread(run_scraper, banks)
 
 
 # ── CLI entry point ─────────────────────────────────────────────────────────
@@ -548,11 +482,12 @@ def _setup_logging() -> None:
 
 if __name__ == "__main__":
     import argparse
+    import sys
     from pathlib import Path
 
     _setup_logging()
 
-    # Load .env if present (project root)
+    # Load .env from project root
     env_file = Path(__file__).parent.parent / ".env"
     if env_file.exists():
         for line in env_file.read_text().splitlines():
@@ -561,11 +496,14 @@ if __name__ == "__main__":
                 k, _, v = line.partition("=")
                 os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
+    # Ensure app package is importable when run from project root
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+
     parser = argparse.ArgumentParser(description="Scrape rateprobability.com for G8 banks")
     parser.add_argument("banks", nargs="*", help="Bank codes to scrape (default: all)")
     args = parser.parse_args()
 
-    statuses = run_scraper(args.banks or None)
+    statuses = asyncio.run(run_scraper_async(args.banks or None))
     for bank, status in statuses.items():
         symbol = "✓" if status == "ok" else "✗"
         print(f"  {symbol} {bank}: {status}")

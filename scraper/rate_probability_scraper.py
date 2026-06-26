@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""Scraper for rateprobability.com — rate probability tables for G8 central banks.
+"""Scraper for rateprobability.com — rate probability JSON API for G8 central banks.
+
+Strategy: fetch the HTML page first (sets Cloudflare session cookies), then hit
+the bank's JSON API endpoint with those cookies.
+
+Available banks (6 free + 2 Pro):
+  Free: FED, ECB, BOJ, BOE, BOC, RBA
+  Pro:  RBNZ, SNB (stored as no-data; dashboard shows them grayed out)
 
 Runnable standalone:
-    python scraper/rate_probability_scraper.py
+    python scraper/rate_probability_scraper.py [FED ECB ...]
 
-Or via APScheduler (called from app/ingestion/scheduler.py).
-
-Tables written:
-  rp_scraped_meetings  — per-meeting probabilities for each bank
-  rp_scraped_summary   — current rate + next-meeting summary per bank
+Or called from APScheduler via run_scraper_async().
 """
 
 from __future__ import annotations
@@ -17,19 +20,17 @@ import asyncio
 import logging
 import os
 import random
-import re
 import time
 from datetime import date, datetime
 from typing import Any
 
 import requests
-from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
 # ── Config ─────────────────────────────────────────────────────────────────
 
-BANK_URLS: dict[str, str] = {
+BANK_PAGE_URLS: dict[str, str] = {
     "FED":  "https://rateprobability.com/fed",
     "ECB":  "https://rateprobability.com/ecb",
     "BOJ":  "https://rateprobability.com/boj",
@@ -40,18 +41,42 @@ BANK_URLS: dict[str, str] = {
     "SNB":  "https://rateprobability.com/snb",
 }
 
+# FED uses the root /api/latest; other banks use /api/{slug}/latest
+BANK_API_URLS: dict[str, str] = {
+    "FED":  "https://rateprobability.com/api/latest",
+    "ECB":  "https://rateprobability.com/api/ecb/latest",
+    "BOJ":  "https://rateprobability.com/api/boj/latest",
+    "BOE":  "https://rateprobability.com/api/boe/latest",
+    "BOC":  "https://rateprobability.com/api/boc/latest",
+    "RBA":  "https://rateprobability.com/api/rba/latest",
+    "RBNZ": "https://rateprobability.com/api/rbnz/latest",  # Pro only
+    "SNB":  "https://rateprobability.com/api/snb/latest",   # Pro only
+}
+
+# Field name for the current policy rate in each bank's API response
+CURRENT_RATE_FIELD: dict[str, str] = {
+    "FED":  "midpoint",
+    "ECB":  "ecb_deposit_facility",
+    "BOJ":  "current_target",
+    "BOE":  "current_target",
+    "BOC":  "Overnight Rate Target",
+    "RBA":  "cash_rate_target",
+    "RBNZ": "current_target",
+    "SNB":  "current_target",
+}
+
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0",
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
 ]
 
 REQUEST_TIMEOUT = 30
 MAX_RETRIES = 3
 RETRY_DELAY = 5
-INTER_BANK_DELAY = (2.0, 4.0)  # seconds, random between these
+INTER_BANK_DELAY = (2.5, 4.5)
+
 
 # ── Data classes ────────────────────────────────────────────────────────────
 
@@ -81,243 +106,111 @@ class ScrapedMeeting:
 
 
 class ScrapedBankData:
-    __slots__ = ("bank", "current_rate", "bank_name", "meetings")
+    __slots__ = ("bank", "current_rate", "meetings")
 
-    def __init__(
-        self,
-        bank: str,
-        current_rate: float | None,
-        bank_name: str,
-        meetings: list[ScrapedMeeting],
-    ) -> None:
+    def __init__(self, bank: str, current_rate: float | None, meetings: list[ScrapedMeeting]) -> None:
         self.bank = bank
         self.current_rate = current_rate
-        self.bank_name = bank_name
         self.meetings = meetings
 
 
-# ── HTTP helpers ─────────────────────────────────────────────────────────────
+# ── HTTP fetch ──────────────────────────────────────────────────────────────
 
-def _fetch_html(url: str) -> str:
-    """Fetch a URL with retry logic and rotating user agents."""
+def _ua() -> str:
+    return random.choice(USER_AGENTS)
+
+
+def _fetch_bank(bank: str) -> ScrapedBankData | None:
+    """
+    Fetch one bank: load the HTML page first (sets CF cookies), then hit the API.
+    Returns None on unrecoverable failure; returns data with empty meetings on Pro-only.
+    """
+    page_url = BANK_PAGE_URLS[bank]
+    api_url  = BANK_API_URLS[bank]
+    ua = _ua()
+    session = requests.Session()
+
+    # Step 1: load the HTML page to get Cloudflare session cookies
     for attempt in range(1, MAX_RETRIES + 1):
-        headers = {
-            "User-Agent": random.choice(USER_AGENTS),
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Accept-Encoding": "gzip, deflate, br",
-            "DNT": "1",
-            "Connection": "keep-alive",
-            "Upgrade-Insecure-Requests": "1",
-        }
         try:
-            resp = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
-            resp.raise_for_status()
-            return resp.text
+            session.get(page_url, headers={"User-Agent": ua}, timeout=REQUEST_TIMEOUT)
+            break
         except requests.RequestException as exc:
-            logger.warning("Attempt %d/%d for %s failed: %s", attempt, MAX_RETRIES, url, exc)
+            logger.warning("[%s] HTML fetch attempt %d/%d failed: %s", bank, attempt, MAX_RETRIES, exc)
             if attempt < MAX_RETRIES:
                 time.sleep(RETRY_DELAY)
-    raise RuntimeError(f"All {MAX_RETRIES} attempts failed for {url}")
+    else:
+        logger.error("[%s] All HTML fetch attempts failed", bank)
+        return None
 
-
-# ── Parsing helpers ─────────────────────────────────────────────────────────
-
-_MONTH_MAP = {
-    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
-    "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
-    "january": 1, "february": 2, "march": 3, "april": 4,
-    "june": 6, "july": 7, "august": 8, "september": 9,
-    "october": 10, "november": 11, "december": 12,
-}
-
-
-def _parse_date(text: str) -> date | None:
-    text = text.strip()
-    m = re.search(r"(\d{4})-(\d{2})-(\d{2})", text)
-    if m:
+    # Step 2: hit the JSON API with the session
+    for attempt in range(1, MAX_RETRIES + 1):
         try:
-            return date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
-        except ValueError:
-            pass
-    m = re.search(r"(\w{3,9})\s+(\d{1,2}),?\s+(\d{4})", text, re.IGNORECASE)
-    if m:
-        month = _MONTH_MAP.get(m.group(1).lower())
-        if month:
-            try:
-                return date(int(m.group(3)), month, int(m.group(2)))
-            except ValueError:
-                pass
-    m = re.search(r"(\d{1,2})[/-](\d{1,2})[/-](\d{4})", text)
-    if m:
-        a, b, yr = int(m.group(1)), int(m.group(2)), int(m.group(3))
-        for mo, da in ((a, b), (b, a)):
-            if 1 <= mo <= 12 and 1 <= da <= 31:
-                try:
-                    return date(yr, mo, da)
-                except ValueError:
-                    pass
+            resp = session.get(
+                api_url,
+                headers={"User-Agent": ua, "Accept": "application/json"},
+                timeout=REQUEST_TIMEOUT,
+            )
+            if resp.status_code == 401:
+                logger.info("[%s] Pro subscription required — skipping", bank)
+                return ScrapedBankData(bank=bank, current_rate=None, meetings=[])
+            resp.raise_for_status()
+            data = resp.json()
+            return _parse_api_response(bank, data)
+        except requests.RequestException as exc:
+            logger.warning("[%s] API fetch attempt %d/%d failed: %s", bank, attempt, MAX_RETRIES, exc)
+            if attempt < MAX_RETRIES:
+                time.sleep(RETRY_DELAY)
+
+    logger.error("[%s] All API fetch attempts failed", bank)
     return None
 
 
-def _parse_pct(text: str) -> float | None:
-    m = re.search(r"(-?\d+(?:\.\d+)?)\s*%?", text.replace(",", "."))
-    if m:
-        return float(m.group(1))
-    return None
+# ── API response parser ─────────────────────────────────────────────────────
 
-
-def _parse_rate(text: str) -> float | None:
-    m = re.search(r"(-?\d+(?:\.\d+)?)\s*%?", text.replace(",", "."))
-    if m:
-        return float(m.group(1))
-    return None
-
-
-def _parse_bps(text: str) -> float | None:
-    m = re.search(r"([+-]?\d+(?:\.\d+)?)", text.replace(",", "."))
-    if m:
-        return float(m.group(1))
-    return None
-
-
-# ── Column identification ──────────────────────────────────────────────────
-
-def _identify_column(header: str) -> str | None:
-    h = header.lower().strip()
-    if any(kw in h for kw in ("date", "meeting", "mtg", "decision")):
-        return "date"
-    if any(kw in h for kw in ("cut prob", "cut %", "cut_prob")):
-        return "cut"
-    if any(kw in h for kw in ("hold prob", "hold %", "hold_prob", "no change")):
-        return "hold"
-    if any(kw in h for kw in ("hike prob", "hike %", "hike_prob", "raise")):
-        return "hike"
-    if any(kw in h for kw in ("delta", "bps", "change", "chg", "±")):
-        return "delta"
-    if any(kw in h for kw in ("cumulative", "cum moves", "total")):
-        return "cumulative"
-    if any(kw in h for kw in ("implied", "post-meeting", "post meeting")):
-        return "implied"
-    if any(kw in h for kw in ("cut",)):
-        return "cut"
-    if any(kw in h for kw in ("hike", "raise")):
-        return "hike"
-    if any(kw in h for kw in ("hold",)):
-        return "hold"
-    if any(kw in h for kw in ("rate", "implied")):
-        return "implied"
-    if any(kw in h for kw in ("prob", "probability", "move")):
-        return "move"
-    return None
-
-
-# ── Page parser ────────────────────────────────────────────────────────────
-
-def _parse_current_rate(soup: BeautifulSoup) -> float | None:
-    for selector in (
-        "[class*='current-rate']", "[class*='current_rate']",
-        "[class*='policy-rate']", "[class*='rate-value']",
-        "[class*='currentRate']", "[data-rate]",
-    ):
-        el = soup.select_one(selector)
-        if el:
-            val = _parse_rate(el.get_text())
-            if val is not None and 0.0 <= val <= 25.0:
-                return val
-
-    for el in soup.find_all(["p", "span", "div", "h1", "h2", "h3", "h4"], limit=80):
-        raw = el.get_text()
-        if re.search(r"current.{1,20}rate|policy.{1,15}rate", raw, re.IGNORECASE):
-            val = _parse_rate(raw)
-            if val is not None and 0.0 <= val <= 25.0:
-                return val
-    return None
-
-
-def _parse_table(soup: BeautifulSoup, bank: str) -> list[ScrapedMeeting]:
-    tables = soup.find_all("table")
-    if not tables:
-        logger.warning("[%s] No <table> found — trying divs", bank)
-        return []
-
-    best_table = None
-    best_score = -1
-    for table in tables:
-        headers = [th.get_text(strip=True) for th in table.find_all("th")]
-        if not headers:
-            first_row = table.find("tr")
-            if first_row:
-                headers = [td.get_text(strip=True) for td in first_row.find_all("td")]
-        score = sum(
-            1 for h in headers
-            if any(kw in h.lower() for kw in ("date","meeting","implied","prob","cut","hike","hold","bps","rate"))
-        )
-        if score > best_score:
-            best_score = score
-            best_table = table
-
-    if best_table is None or best_score < 2:
-        logger.warning("[%s] No suitable table found (best score=%d of %d tables)", bank, best_score, len(tables))
-        return []
-
-    headers = [th.get_text(strip=True) for th in best_table.find_all("th")]
-    if not headers:
-        first_row = best_table.find("tr")
-        if first_row:
-            headers = [td.get_text(strip=True) for td in first_row.find_all("td")]
-
-    col_map: dict[str, int] = {}
-    for i, h in enumerate(headers):
-        role = _identify_column(h)
-        if role and role not in col_map:
-            col_map[role] = i
-
-    logger.info("[%s] Table headers=%s col_map=%s", bank, headers, col_map)
-
-    rows = best_table.find_all("tr")
-    has_thead = bool(best_table.find("thead"))
-    data_rows = rows[1:] if not has_thead else rows
-
-    meetings: list[ScrapedMeeting] = []
+def _parse_api_response(bank: str, data: dict[str, Any]) -> ScrapedBankData:
+    today_block = data.get("today", data)  # some responses have "today" wrapper, some don't
     today = date.today()
 
-    for row in data_rows:
-        cells = [td.get_text(strip=True) for td in row.find_all(["td", "th"])]
-        if not cells:
+    # Current rate
+    rate_field = CURRENT_RATE_FIELD.get(bank, "current_target")
+    current_rate: float | None = None
+    raw_rate = today_block.get(rate_field)
+    if raw_rate is not None:
+        try:
+            current_rate = float(raw_rate)
+        except (TypeError, ValueError):
+            pass
+
+    # Meeting rows
+    rows = today_block.get("rows", [])
+    meetings: list[ScrapedMeeting] = []
+
+    for row in rows:
+        iso = row.get("meeting_iso") or row.get("meeting")
+        if not iso:
             continue
-        if len(cells) < 2:
+        try:
+            meeting_date = date.fromisoformat(str(iso)[:10])
+        except ValueError:
+            continue
+        if meeting_date < today:
             continue
 
-        def get(role: str) -> str:
-            idx = col_map.get(role)
-            if idx is not None and idx < len(cells):
-                return cells[idx]
-            return ""
+        implied_rate = _safe_float(row.get("implied_rate_post_meeting"))
+        prob_move    = _safe_float(row.get("prob_move_pct"))
+        prob_is_cut  = bool(row.get("prob_is_cut", False))
+        delta_bps    = _safe_float(row.get("change_bps"))
+        num_moves    = _safe_float(row.get("num_moves"))
 
-        raw_date = get("date") or (cells[0] if cells else "")
-        meeting_date = _parse_date(raw_date)
-        if meeting_date is None or meeting_date < today:
-            continue
-
-        implied_rate     = _parse_rate(get("implied"))     if "implied" in col_map else None
-        cut_prob         = _parse_pct(get("cut"))          if "cut"     in col_map else None
-        hold_prob        = _parse_pct(get("hold"))         if "hold"    in col_map else None
-        hike_prob        = _parse_pct(get("hike"))         if "hike"    in col_map else None
-        delta_bps        = _parse_bps(get("delta"))        if "delta"   in col_map else None
-        cumulative_moves = _parse_pct(get("cumulative"))   if "cumulative" in col_map else None
-
-        if cut_prob is None and hold_prob is None and hike_prob is None:
-            move_text = get("move")
-            if move_text:
-                val = _parse_pct(move_text)
-                if val is not None:
-                    if val < 0:
-                        cut_prob = abs(val)
-                    elif val > 0:
-                        hike_prob = val
-                    else:
-                        hold_prob = 100.0
+        # Derive cut/hold/hike probabilities from the single prob_move_pct + direction flag.
+        # rateprobability.com shows the dominant move probability; hold = remainder.
+        if prob_move is not None:
+            cut_prob  = prob_move if prob_is_cut  else 0.0
+            hike_prob = prob_move if not prob_is_cut else 0.0
+            hold_prob = max(0.0, 100.0 - prob_move)
+        else:
+            cut_prob = hold_prob = hike_prob = None
 
         meetings.append(ScrapedMeeting(
             meeting_date=meeting_date,
@@ -326,43 +219,20 @@ def _parse_table(soup: BeautifulSoup, bank: str) -> list[ScrapedMeeting]:
             hold_prob=hold_prob,
             hike_prob=hike_prob,
             delta_bps=delta_bps,
-            cumulative_moves=cumulative_moves,
+            cumulative_moves=num_moves,
         ))
 
-    logger.info("[%s] Parsed %d upcoming meetings", bank, len(meetings))
-    return meetings
+    logger.info("[%s] current_rate=%.3f meetings=%d", bank, current_rate or 0.0, len(meetings))
+    return ScrapedBankData(bank=bank, current_rate=current_rate, meetings=meetings)
 
 
-def scrape_bank(bank: str) -> ScrapedBankData | None:
-    """Scrape one bank's page. Returns None on fetch failure."""
-    url = BANK_URLS.get(bank)
-    if not url:
-        logger.error("Unknown bank: %s", bank)
+def _safe_float(value: Any) -> float | None:
+    if value is None:
         return None
-
     try:
-        html = _fetch_html(url)
-    except RuntimeError as exc:
-        logger.error("[%s] Fetch failed: %s", bank, exc)
+        return float(value)
+    except (TypeError, ValueError):
         return None
-
-    soup = BeautifulSoup(html, "html.parser")
-    current_rate = _parse_current_rate(soup)
-    meetings = _parse_table(soup, bank)
-
-    bank_name = bank
-    for el in soup.find_all(["title", "h1", "h2"], limit=5):
-        t = el.get_text(strip=True)
-        if len(t) > 3:
-            bank_name = t[:80]
-            break
-
-    return ScrapedBankData(
-        bank=bank,
-        current_rate=current_rate,
-        bank_name=bank_name,
-        meetings=meetings,
-    )
 
 
 # ── Async DB write (uses app's existing SQLAlchemy session) ─────────────────
@@ -436,25 +306,24 @@ async def _upsert_bank_async(session: Any, data: ScrapedBankData) -> None:
             },
         )
 
-    logger.info("[%s] Saved %d meetings to DB", data.bank, len(data.meetings))
+    logger.info("[%s] DB upsert complete (%d meetings)", data.bank, len(data.meetings))
 
 
 # ── Main entry points ───────────────────────────────────────────────────────
 
 async def run_scraper_async(banks: list[str] | None = None) -> dict[str, str]:
-    """Scrape all (or selected) banks and write to DB via async SQLAlchemy session."""
+    """Scrape all (or selected) banks and write to DB via async SQLAlchemy."""
     from app.db.session import session_scope
 
-    target_banks = banks or list(BANK_URLS.keys())
+    target_banks = banks or list(BANK_PAGE_URLS.keys())
     statuses: dict[str, str] = {}
 
     for i, bank in enumerate(target_banks):
         if i > 0:
-            delay = random.uniform(*INTER_BANK_DELAY)
-            await asyncio.sleep(delay)
+            await asyncio.sleep(random.uniform(*INTER_BANK_DELAY))
 
         try:
-            data = await asyncio.to_thread(scrape_bank, bank)
+            data = await asyncio.to_thread(_fetch_bank, bank)
             if data is None:
                 statuses[bank] = "fetch_failed"
                 continue
@@ -462,7 +331,7 @@ async def run_scraper_async(banks: list[str] | None = None) -> dict[str, str]:
             async with session_scope() as session:
                 await _upsert_bank_async(session, data)
 
-            statuses[bank] = "ok"
+            statuses[bank] = "ok" if data.meetings else "no_data"
         except Exception as exc:
             logger.error("[%s] Unexpected error: %s", bank, exc, exc_info=True)
             statuses[bank] = "error"
@@ -472,22 +341,16 @@ async def run_scraper_async(banks: list[str] | None = None) -> dict[str, str]:
 
 # ── CLI entry point ─────────────────────────────────────────────────────────
 
-def _setup_logging() -> None:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-
-
 if __name__ == "__main__":
     import argparse
     import sys
     from pathlib import Path
 
-    _setup_logging()
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
 
-    # Load .env from project root
     env_file = Path(__file__).parent.parent / ".env"
     if env_file.exists():
         for line in env_file.read_text().splitlines():
@@ -496,14 +359,13 @@ if __name__ == "__main__":
                 k, _, v = line.partition("=")
                 os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
-    # Ensure app package is importable when run from project root
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
     parser = argparse.ArgumentParser(description="Scrape rateprobability.com for G8 banks")
-    parser.add_argument("banks", nargs="*", help="Bank codes to scrape (default: all)")
+    parser.add_argument("banks", nargs="*", help="Bank codes (default: all)")
     args = parser.parse_args()
 
     statuses = asyncio.run(run_scraper_async(args.banks or None))
     for bank, status in statuses.items():
-        symbol = "✓" if status == "ok" else "✗"
+        symbol = "✓" if status in ("ok", "no_data") else "✗"
         print(f"  {symbol} {bank}: {status}")

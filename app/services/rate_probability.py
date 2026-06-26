@@ -105,11 +105,6 @@ async def compute_meeting_probabilities(
             )
 
     config = _bank_config(bank)
-    if curve_date is None:
-        override_probabilities = _load_probability_overrides(bank, config, n_meetings)
-        if override_probabilities:
-            return override_probabilities
-
     meetings = await get_upcoming_meetings(bank, n_meetings, db_session)
     if not meetings:
         return [
@@ -127,6 +122,11 @@ async def compute_meeting_probabilities(
     step = int(step_bps or config.get("step_bps") or 25)
     loaded = await _load_curve(db_session, bank, curve_date)
     if loaded is None:
+        # No live OIS data in DB — fall back to override file if available.
+        if curve_date is None:
+            override_probabilities = _load_probability_overrides(bank, config, n_meetings)
+            if override_probabilities:
+                return override_probabilities
         return [
             _unavailable_probability(
                 bank=bank,
@@ -557,7 +557,9 @@ def _load_probability_overrides(
     baseline_rate = float(config["current_rate"]) + float(config.get("rate_basis_adj") or 0.0)
     probabilities: list[MeetingProbability] = []
     prior_implied = baseline_rate
-    for row in rows[:n_meetings]:
+    now = datetime.now(UTC)
+    future_rows = [r for r in rows if _parse_dt(r["meeting_dt"]).astimezone(UTC) >= now]
+    for row in future_rows[:n_meetings]:
         meeting_dt = _parse_dt(row["meeting_dt"])
         cumulative_delta_bps = float(row["cumulative_delta_bps"])
         delta_bps = float(row.get("delta_bps", cumulative_delta_bps - ((prior_implied - baseline_rate) * 100.0)))

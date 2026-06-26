@@ -132,6 +132,10 @@
       </div>
       <div class="sb-group">
         <div class="sb-group-label">Research</div>
+        <a href="/macro-monitor" class="sb-item {% if request.url.path == '/macro-monitor' %}active{% endif %}">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-4 4"/></svg>
+          <span class="label">Macro Monitor</span>
+        </a>
         <a href="/countries" class="sb-item {% if request.url.path.startswith('/countries') or request.url.path.startswith('/country/') %}active{% endif %}">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z"/></svg>
           <span class="label">Countries</span>

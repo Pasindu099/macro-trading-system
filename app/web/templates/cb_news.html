@@ -1,103 +1,292 @@
 {% extends "base.html" %}
 
 {% block body %}
-<main class="shell dashboard-tool-shell">
-    <header class="tool-hero">
-        <div>
-            <a href="/">Dashboard</a>
-            <span>/</span>
-            <strong>CB News</strong>
+<div id="content" class="cbn-page" data-cbn-section>
+
+  {# ── Hero + bank tabs ─────────────────────────────────────────────── #}
+  <div class="cbn-hero">
+    <div class="cbn-hero__left">
+      <div class="cbn-hero__eyebrow">
+        <span class="intel-dot"></span>
+        <span>Live · Official CB RSS + Speech feeds · G8 banks</span>
+      </div>
+      <h1 class="cbn-hero__title">CB Terminal</h1>
+      <p class="cbn-hero__sub">Hawk/dove scoring, live RSS feeds with member speech tagging, and AI stance analysis.</p>
+    </div>
+    <div class="cbn-hero__right">
+      <div class="cbn-tabs-wrap" data-cbn-tabs></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+        <button class="btn btn-sm" type="button" data-cbn-refresh>↻ Refresh feeds</button>
+        <span class="cbn-ts" data-cbn-ts></span>
+      </div>
+    </div>
+  </div>
+
+  {# ── Main split: left scores | right news ─────────────────────────── #}
+  <div class="cbn-split">
+
+    {# Left column #}
+    <div class="cbn-left">
+
+      <div class="panel cbn-spec-panel">
+        <div class="panel-header"><span class="title">Hawk / Dove Spectrum</span></div>
+        <div class="cbn-spec-lbl-row">
+          <span>Dovish</span><span>Neutral</span><span>Hawkish</span>
         </div>
-        <section>
-            <div>
-                <h1>Central Bank Terminal</h1>
-                <p>Live RSS feeds, hawk/dove scoring, yield differentials and GPT-4o stance analysis for G8 central banks.</p>
-            </div>
-            <a href="/news-feed">General News</a>
-        </section>
-    </header>
-
-    <section class="cbn-terminal" data-cbn-section>
-
-        <!-- top bar: tabs + refresh -->
-        <div class="cbn-topbar">
-            <span class="cbn-topbar-title">CB Sentiment</span>
-            <div class="cbn-tabs" data-cbn-tabs></div>
-            <button class="cbn-refresh-btn" type="button" data-cbn-refresh>&#8635; Refresh feeds</button>
-            <span class="cbn-ts" data-cbn-ts>&mdash;</span>
+        <div class="cbn-spec-track">
+          <div class="cbn-spec-mid"></div>
+          <div class="cbn-spec-dots" data-cbn-dots></div>
         </div>
+        <div style="height:20px;"></div>
+      </div>
 
-        <!-- hawk/dove spectrum bar -->
-        <div class="cbn-spectrum-bar">
-            <div class="cbn-spec-labels">
-                <span>Dovish</span><span>Neutral</span><span>Hawkish</span>
-            </div>
-            <div class="cbn-spec-track">
-                <div class="cbn-spec-mid"></div>
-                <div class="cbn-spec-dots" data-cbn-dots></div>
-            </div>
-            <div style="height:20px"></div>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="title">Bank Scores</span>
+          <span class="meta" data-cbn-bank-label>All banks</span>
         </div>
+        <div data-cbn-sentiment></div>
+      </div>
 
-        <!-- 2 × 2 panel grid -->
-        <div class="cbn-main-grid">
-
-            <div class="cbn-panel">
-                <div class="cbn-panel-hdr">
-                    <span>Hawk / Dove Sentiment</span>
-                    <em data-cbn-bank-label>All banks</em>
-                </div>
-                <div data-cbn-sentiment></div>
-            </div>
-
-            <div class="cbn-panel">
-                <div class="cbn-panel-hdr">
-                    <span>Latest CB News</span>
-                    <em data-cbn-news-status>live feeds</em>
-                </div>
-                <input class="cbn-search" type="search" placeholder="Search articles…" data-cbn-search>
-                <div class="cbn-news-scroll" data-cbn-news>
-                    <div class="cbn-empty">Loading feeds…</div>
-                </div>
-            </div>
-
-            <div class="cbn-panel">
-                <div class="cbn-panel-hdr">
-                    <span>Recent Policy Signals</span>
-                    <em>macro prints</em>
-                </div>
-                <div data-cbn-signals></div>
-            </div>
-
-            <div class="cbn-panel">
-                <div class="cbn-panel-hdr">
-                    <span>FX Impact Matrix</span>
-                    <em data-cbn-fx-label>yield spreads</em>
-                </div>
-                <div data-cbn-fx></div>
-            </div>
-
-        </div><!-- /cbn-main-grid -->
-
-        <!-- historical trend + AI -->
-        <div class="cbn-panel cbn-panel--wide">
-            <div class="cbn-panel-hdr">
-                <span>Historical Sentiment Trend</span>
-                <div class="cbn-legend" data-cbn-legend></div>
-            </div>
-            <div class="cbn-chart-wrap">
-                <canvas data-cbn-chart></canvas>
-            </div>
-            <div class="cbn-ai-row">
-                <button class="cbn-ai-btn" type="button" data-cbn-analyze>AI Stance Analysis &rarr;</button>
-                <div class="cbn-ai-out" data-cbn-ai-out></div>
-            </div>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="title">FX Impact</span>
+          <span class="meta" data-cbn-fx-label>yield spreads</span>
         </div>
+        <div data-cbn-fx></div>
+      </div>
 
-    </section>
-</main>
+    </div>
 
-<!-- inject server-side data so JS can use real scores without an extra round trip -->
+    {# Right column: news + AI #}
+    <div class="panel cbn-right">
+      <div class="panel-header">
+        <span class="title">Live CB News</span>
+        <span class="meta" data-cbn-news-status>loading…</span>
+        <input class="cbn-search" type="search" placeholder="Search articles…" data-cbn-search>
+      </div>
+      <div class="cbn-news-scroll" data-cbn-news>
+        <div class="cbn-empty">Connecting to central bank feeds…</div>
+      </div>
+      <div class="cbn-ai-row">
+        <button class="btn primary" type="button" data-cbn-analyze>AI Stance Analysis →</button>
+        <div data-cbn-ai-out></div>
+      </div>
+    </div>
+
+  </div>
+
+  {# ── Bottom row: policy signals + historical chart ────────────────── #}
+  <div class="grid grid-2" style="margin-top:4px;">
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="title">Recent Policy Signals</span>
+        <span class="meta">macro prints</span>
+      </div>
+      <div data-cbn-signals></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="title">Historical Sentiment Trend</span>
+        <div class="cbn-legend" data-cbn-legend></div>
+      </div>
+      <div style="height:180px;position:relative;">
+        <canvas data-cbn-chart></canvas>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<style>
+/* ── CB Terminal page ──────────────────────────────────────────────── */
+.cbn-page { display:flex; flex-direction:column; gap:16px; padding-bottom:40px; }
+
+/* Hero */
+.cbn-hero {
+  display:flex; align-items:flex-start; justify-content:space-between;
+  gap:24px; padding:20px 0 16px; border-bottom:1px solid var(--border);
+}
+.cbn-hero__eyebrow {
+  display:flex; align-items:center; gap:8px; margin-bottom:8px;
+  font-family:var(--mono); font-size:11px; color:var(--text-muted);
+  letter-spacing:0.08em; text-transform:uppercase;
+}
+.cbn-hero__title { margin:0 0 6px; font-size:1.9rem; font-weight:800; color:var(--text-heading); letter-spacing:-0.02em; }
+.cbn-hero__sub   { margin:0; font-size:0.84rem; color:var(--text-muted); }
+.cbn-hero__right { flex-shrink:0; }
+
+/* Bank tabs */
+.cbn-tabs-wrap { display:flex; flex-wrap:wrap; gap:5px; justify-content:flex-end; }
+.cbn-tab {
+  padding:5px 13px; border-radius:999px;
+  border:1px solid var(--border); background:var(--panel);
+  color:var(--text-muted); font-size:11px; font-weight:600;
+  cursor:pointer; white-space:nowrap;
+  transition:border-color 0.15s, color 0.15s, background 0.15s;
+}
+.cbn-tab:hover  { border-color:var(--accent); color:var(--accent); }
+.cbn-tab.is-active { background:var(--accent); border-color:var(--accent); color:#fff; }
+.cbn-ts { font-family:var(--mono); font-size:10px; color:var(--text-muted); }
+
+/* Split layout */
+.cbn-split {
+  display:grid; grid-template-columns:310px 1fr;
+  gap:14px; align-items:start;
+}
+@media (max-width:1100px) { .cbn-split { grid-template-columns:1fr; } }
+
+/* Left column */
+.cbn-left { display:flex; flex-direction:column; gap:12px; position:sticky; top:12px; }
+
+/* Spectrum */
+.cbn-spec-lbl-row {
+  display:flex; justify-content:space-between;
+  font-size:10px; color:var(--text-muted); font-family:var(--mono);
+  letter-spacing:0.05em; text-transform:uppercase; margin-bottom:8px;
+}
+.cbn-spec-track {
+  position:relative; height:5px; border-radius:999px;
+  background:linear-gradient(90deg, var(--bull) 0%, rgba(255,255,255,0.10) 50%, var(--accent) 100%);
+}
+.cbn-spec-mid {
+  position:absolute; left:50%; top:-5px; transform:translateX(-50%);
+  width:1px; height:15px; background:var(--border-strong);
+}
+.cbn-spec-dots { position:relative; width:100%; }
+.cbn-dot {
+  position:absolute; top:-13px;
+  width:9px; height:9px; border-radius:50%;
+  transform:translateX(-50%); cursor:pointer;
+  box-shadow:0 0 6px currentColor;
+  transition:transform 0.2s;
+}
+.cbn-dot:hover { transform:translateX(-50%) scale(1.5); }
+.cbn-dot-label {
+  position:absolute; top:-20px; left:50%; transform:translateX(-50%);
+  font-size:13px; pointer-events:none;
+}
+
+/* Sentiment rows */
+.cbn-sent-row {
+  display:grid; grid-template-columns:18px 34px 58px 1fr 32px;
+  align-items:center; gap:6px;
+  padding:7px 0; border-bottom:1px solid var(--border); font-size:11px;
+}
+.cbn-sent-row:last-child { border-bottom:0; }
+.cbn-sent-flag  { font-size:14px; line-height:1; }
+.cbn-sent-name  { font-family:var(--mono); font-weight:700; font-size:11px; color:var(--text-heading); }
+.cbn-sent-badge {
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:2px 5px; border-radius:4px; border:1px solid;
+  font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;
+}
+.cbn-badge--hawk    { border-color:rgba(249,115,22,0.4); color:var(--accent); background:rgba(249,115,22,0.10); }
+.cbn-badge--dove    { border-color:rgba(34,197,94,0.4);  color:var(--bull);   background:rgba(34,197,94,0.10);  }
+.cbn-badge--neutral { border-color:rgba(251,191,36,0.35); color:#fbbf24;      background:rgba(251,191,36,0.08); }
+.cbn-sent-meter { height:4px; background:var(--border); border-radius:999px; overflow:hidden; }
+.cbn-sent-fill  { height:100%; border-radius:999px; transition:width 0.4s; }
+.cbn-sent-score { font-family:var(--mono); font-size:11px; font-weight:700; text-align:right; }
+.cbn-sent-sub   { display:none; }
+
+/* FX rows */
+.cbn-fx-row {
+  display:grid; grid-template-columns:68px 14px 54px 1fr;
+  align-items:center; gap:6px;
+  padding:6px 0; border-bottom:1px solid var(--border); font-size:11px;
+}
+.cbn-fx-row:last-child { border-bottom:0; }
+.cbn-fx-pair   { font-family:var(--mono); font-weight:700; color:var(--text-heading); }
+.cbn-fx-arr    { font-size:13px; text-align:center; }
+.cbn-fx-spread { font-family:var(--mono); font-weight:700; }
+.cbn-fx-note   { font-size:10px; color:var(--text-muted); }
+.cbn-up { color:var(--bull); }
+.cbn-dn { color:var(--bear); }
+
+/* Right: news */
+.cbn-right { display:flex; flex-direction:column; min-height:400px; }
+.cbn-search {
+  padding:5px 10px; border-radius:6px;
+  background:var(--panel-2); border:1px solid var(--border);
+  color:var(--text-heading); font-size:12px; outline:none;
+  min-width:0; width:160px;
+}
+.cbn-search:focus { border-color:var(--accent); }
+.cbn-news-scroll {
+  flex:1; overflow-y:auto; max-height:520px;
+  margin:8px -16px 0; padding:0;
+}
+.cbn-news-item {
+  display:flex; flex-direction:column; gap:5px;
+  width:100%; padding:11px 16px;
+  border:0; border-bottom:1px solid var(--border);
+  border-left:2px solid transparent;
+  background:transparent; color:var(--text-heading);
+  text-align:left; cursor:pointer;
+  transition:background 0.15s, border-left-color 0.15s;
+}
+.cbn-news-item:hover    { background:rgba(249,115,22,0.05); }
+.cbn-news-item.is-selected { background:rgba(249,115,22,0.09); border-left-color:var(--accent); }
+.cbn-news-meta { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.cbn-news-bank {
+  display:inline-flex; padding:2px 7px; border-radius:4px;
+  background:rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.25);
+  font-size:9.5px; font-weight:700; color:var(--accent); letter-spacing:0.05em;
+}
+.cbn-news-speaker {
+  display:inline-flex; align-items:center; gap:3px;
+  padding:2px 7px; border-radius:4px;
+  background:rgba(139,92,246,0.10); border:1px solid rgba(139,92,246,0.25);
+  font-size:9.5px; font-weight:700; color:#a78bfa; letter-spacing:0.04em;
+}
+.cbn-news-item em { font-size:10px; color:var(--text-muted); font-style:normal; font-family:var(--mono); margin-left:auto; }
+.cbn-news-item strong { font-size:13px; font-weight:500; line-height:1.4; color:var(--text-heading); }
+.cbn-news-item small   { font-size:11px; color:var(--text-muted); line-height:1.45; }
+.cbn-link { font-size:10px; color:var(--accent); text-decoration:none; align-self:flex-start; }
+.cbn-link:hover { text-decoration:underline; }
+
+/* AI */
+.cbn-ai-row { padding-top:14px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:10px; }
+.cbn-ai-load  { font-size:12px; color:var(--text-muted); font-family:var(--mono); }
+.cbn-ai-box   { display:flex; flex-direction:column; gap:8px; }
+.cbn-ai-source { font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-muted); font-family:var(--mono); }
+.cbn-ai-stance { display:inline-flex; align-items:center; padding:4px 14px; border-radius:999px; border:1px solid; font-size:11px; font-weight:700; letter-spacing:0.05em; width:fit-content; }
+.cbn-ai-summary { margin:0; font-size:12.5px; line-height:1.65; color:var(--text-body); }
+.cbn-ai-fx      { font-size:11px; color:var(--text-muted); font-family:var(--mono); padding:6px 8px; background:var(--panel-2); border-radius:4px; border:1px solid var(--border); }
+.cbn-ai-tags    { display:flex; flex-wrap:wrap; gap:5px; }
+.cbn-ai-tag     { padding:2px 8px; border-radius:4px; border:1px solid var(--border); font-size:10px; color:var(--text-muted); font-family:var(--mono); }
+.cbn-ai-ts      { font-size:10px; color:var(--text-muted); font-family:var(--mono); }
+.cbn-ai-risks   { font-size:11px; color:var(--bear); font-family:var(--mono); }
+.cbn-asset      { display:flex; align-items:center; gap:8px; font-size:11px; font-family:var(--mono); }
+.cbn-asset strong { color:var(--text-heading); }
+
+/* Policy signals */
+.cbn-tl-row {
+  display:grid; grid-template-columns:48px 34px 52px 1fr;
+  align-items:center; gap:8px;
+  padding:7px 0; border-bottom:1px solid var(--border); font-size:11px;
+}
+.cbn-tl-row:last-child { border-bottom:0; }
+.cbn-tl-date  { font-family:var(--mono); color:var(--text-muted); }
+.cbn-tl-bank  { font-family:var(--mono); font-weight:700; color:var(--text-heading); }
+.cbn-tl-dec   { font-family:var(--mono); font-weight:700; }
+.cbn-dec--hawk    { color:var(--accent); }
+.cbn-dec--dove    { color:var(--bull); }
+.cbn-dec--neutral { color:var(--text-muted); }
+.cbn-tl-name  { color:var(--text-body); }
+
+/* Chart legend */
+.cbn-legend { display:flex; flex-wrap:wrap; gap:10px; }
+.cbn-legend-item { display:inline-flex; align-items:center; gap:5px; font-size:10px; color:var(--text-muted); font-family:var(--mono); }
+.cbn-legend-item i { display:block; width:14px; height:3px; border-radius:2px; flex-shrink:0; }
+
+/* Empty */
+.cbn-empty { padding:24px 16px; text-align:center; font-size:12px; color:var(--text-muted); font-family:var(--mono); }
+</style>
+
 <script>
 window.__cbData = {
     currencyMeter: [
@@ -173,5 +362,5 @@ window.__cbData = {
     }
 };
 </script>
-<script src="{{ url_for('static', path='js/cb_news.js') }}?v=20260506b" defer></script>
+<script src="{{ url_for('static', path='js/cb_news.js') }}?v=20260626b" defer></script>
 {% endblock %}

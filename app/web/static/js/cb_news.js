@@ -175,17 +175,21 @@
             return;
         }
 
-        el.innerHTML = items.slice(0, 14).map((a) => {
+        el.innerHTML = items.slice(0, 20).map((a) => {
             const rt  = relTime(a.pubDate);
             const sel = selectedLink === a.link;
+            const speakerTag = a.speaker
+                ? `<span class="cbn-news-speaker">🎙 ${esc(a.speaker)}</span>`
+                : (a.is_speech ? `<span class="cbn-news-speaker">🎙 Speech</span>` : "");
             return `<button class="cbn-news-item${sel ? " is-selected" : ""}" type="button" data-article-link="${esc(a.link)}">
                 <div class="cbn-news-meta">
                     <span class="cbn-news-bank">${esc(a.bankName)}</span>
+                    ${speakerTag}
                     ${rt ? `<em>${esc(rt)}</em>` : ""}
                 </div>
                 <strong>${esc(a.title)}</strong>
-                ${a.description ? `<small>${esc(a.description.slice(0, 110))}…</small>` : ""}
-                ${a.link ? `<a class="cbn-link" href="${esc(a.link)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Open&nbsp;↗</a>` : ""}
+                ${a.description ? `<small>${esc(a.description.slice(0, 120))}…</small>` : ""}
+                ${a.link ? `<a class="cbn-link" href="${esc(a.link)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Open ↗</a>` : ""}
             </button>`;
         }).join("");
     };
@@ -431,5 +435,5 @@
     // ── boot ──────────────────────────────────────────────────────────────────
     render();
     fetchFeeds();
-    setInterval(fetchFeeds, 15 * 60 * 1000);
+    setInterval(fetchFeeds, 10 * 60 * 1000);
 })();

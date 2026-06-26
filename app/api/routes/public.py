@@ -85,6 +85,8 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
         "urls": [
             "https://www.federalreserve.gov/feeds/press_all.xml",
             "https://www.federalreserve.gov/feeds/speeches.xml",
+            # FOMC statements, minutes, Monetary Policy Report (semi-annual)
+            "https://www.federalreserve.gov/feeds/press_monetary.xml",
         ],
         "members": ["Powell", "Jefferson", "Waller", "Cook", "Kugler", "Barr",
                     "Williams", "Daly", "Kashkari", "Bostic", "Barkin", "Goolsbee",
@@ -95,6 +97,8 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
         "urls": [
             "https://www.ecb.europa.eu/rss/press.html",
             "https://www.ecb.europa.eu/rss/speech.html",
+            # ECB Economic Bulletin (published every 6 weeks)
+            "https://www.ecb.europa.eu/rss/publications.html",
         ],
         "members": ["Lagarde", "de Guindos", "Lane", "Schnabel", "Cipollone",
                     "Nagel", "Villeroy", "Wunsch", "Knot", "Centeno",
@@ -106,6 +110,7 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
         "urls": [
             "https://www.bankofengland.co.uk/rss/news",
             "https://www.bankofengland.co.uk/rss/speeches",
+            # Monetary Policy Report, MPC minutes, Financial Stability Report
             "https://www.bankofengland.co.uk/rss/publications",
         ],
         "members": ["Bailey", "Broadbent", "Ramsden", "Mann", "Haskel",
@@ -116,6 +121,8 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
         "urls": [
             "https://www.boj.or.jp/rss/whatsnew.xml",
             "https://www.boj.or.jp/rss/speech.xml",
+            # Outlook for Economic Activity and Prices (quarterly)
+            "https://www.boj.or.jp/rss/release.xml",
         ],
         "listing_url": "https://www.boj.or.jp/en/whatsnew/",
         "members": ["Ueda", "Himino", "Uchida", "Tamura", "Nakamura",
@@ -126,6 +133,8 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
         "urls": [
             "https://www.rba.gov.au/rss/rss-cb-media-releases.xml",
             "https://www.rba.gov.au/rss/rss-cb-speeches.xml",
+            # Statement on Monetary Policy (quarterly)
+            "https://www.rba.gov.au/rss/rss-cb-publications.xml",
         ],
         "listing_url": "https://www.rba.gov.au/media-releases/",
         "members": ["Bullock", "Hauser", "Hunter", "Kohler", "Jones",
@@ -136,6 +145,8 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
         "urls": [
             "https://www.bankofcanada.ca/feed/",
             "https://www.bankofcanada.ca/publications/speeches/feed/",
+            # Monetary Policy Report (quarterly) + Summary of Deliberations
+            "https://www.bankofcanada.ca/publications/mpr/feed/",
         ],
         "members": ["Macklem", "Rogers", "Gravelle", "Kozicki", "Mendes", "Selody"],
     },
@@ -154,11 +165,27 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
         "urls": [
             "https://www.rbnz.govt.nz/hub/news/rss",
             "https://www.rbnz.govt.nz/hub/speeches/rss",
+            # Monetary Policy Statement (quarterly)
+            "https://www.rbnz.govt.nz/hub/publications/monetary-policy-statement/rss",
         ],
         "listing_url": "https://www.rbnz.govt.nz/news-and-events/news",
         "members": ["Orr", "Hawkesby", "Silk", "Conway", "Ranchhod"],
     },
 }
+
+# Keywords that identify a monetary policy report / decision document
+# (vs a regular press release or speech)
+_POLICY_REPORT_KEYWORDS: frozenset[str] = frozenset([
+    "monetary policy report", "monetary policy statement", "mpr",
+    "fomc minutes", "fomc statement", "mpc minutes", "mpc statement",
+    "summary of deliberations", "summary of economic projections",
+    "economic bulletin", "economic outlook", "outlook for economic activity",
+    "statement on monetary policy", "inflation report",
+    "rate decision", "interest rate decision", "policy rate",
+    "policy assessment", "monetary policy decision",
+    "beige book", "financial stability report",
+    "minutes of the", "record of the monetary policy",
+])
 _cb_feed_cache: dict[str, dict[str, Any]] = {}
 
 
@@ -1379,6 +1406,10 @@ def _parse_cb_feed(xml_body: str, currency: str, bank_name: str, *, limit: int =
                 return member
         return None
 
+    def tag_policy_report(title: str, description: str) -> bool:
+        text_blob = f"{title} {description}".lower()
+        return any(kw in text_blob for kw in _POLICY_REPORT_KEYWORDS)
+
     if is_atom:
         for entry in root.findall(".//{*}entry"):
             title = child_text(entry, ("title",)) or "Untitled"
@@ -1393,6 +1424,7 @@ def _parse_cb_feed(xml_body: str, currency: str, bank_name: str, *, limit: int =
                 "description": description[:500], "currency": currency,
                 "bank": bank_name, "speaker": speaker,
                 "is_speech": speaker is not None or "speech" in title.lower(),
+                "is_policy_report": tag_policy_report(title, description),
             })
             if len(articles) >= limit:
                 break
@@ -1410,6 +1442,7 @@ def _parse_cb_feed(xml_body: str, currency: str, bank_name: str, *, limit: int =
                 "description": description[:500], "currency": currency,
                 "bank": bank_name, "speaker": speaker,
                 "is_speech": speaker is not None or "speech" in title.lower(),
+                "is_policy_report": tag_policy_report(title, description),
             })
             if len(articles) >= limit:
                 break

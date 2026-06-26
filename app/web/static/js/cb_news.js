@@ -178,9 +178,11 @@
         el.innerHTML = items.slice(0, 20).map((a) => {
             const rt  = relTime(a.pubDate);
             const sel = selectedLink === a.link;
-            const speakerTag = a.speaker
-                ? `<span class="cbn-news-speaker">🎙 ${esc(a.speaker)}</span>`
-                : (a.is_speech ? `<span class="cbn-news-speaker">🎙 Speech</span>` : "");
+            const speakerTag = a.is_policy_report
+                ? `<span class="cbn-news-report">📋 Report</span>`
+                : a.speaker
+                    ? `<span class="cbn-news-speaker">🎙 ${esc(a.speaker)}</span>`
+                    : (a.is_speech ? `<span class="cbn-news-speaker">🎙 Speech</span>` : "");
             return `<button class="cbn-news-item${sel ? " is-selected" : ""}" type="button" data-article-link="${esc(a.link)}">
                 <div class="cbn-news-meta">
                     <span class="cbn-news-bank">${esc(a.bankName)}</span>

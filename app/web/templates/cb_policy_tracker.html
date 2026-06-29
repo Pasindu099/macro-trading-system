@@ -114,11 +114,16 @@
 
       <div class="cpt-card-footer">
         <span class="cpt-date-label">Latest: {{ bank.latest_date }}</span>
-        <button
-          class="cpt-expand-btn"
-          onclick="cptToggleDetail('{{ bank.code }}')"
-          id="expand-btn-{{ bank.code }}"
-        >History ▼</button>
+        <div class="cpt-footer-actions">
+          {% if bank.latest_pdf_url %}
+          <a href="{{ bank.latest_pdf_url }}" target="_blank" rel="noopener" class="cpt-pdf-btn" title="View PDF report">PDF ↗</a>
+          {% endif %}
+          <button
+            class="cpt-expand-btn"
+            onclick="cptToggleDetail('{{ bank.code }}')"
+            id="expand-btn-{{ bank.code }}"
+          >History ▼</button>
+        </div>
       </div>
 
       <!-- Expanded detail panel -->
@@ -177,9 +182,14 @@
               <span class="cpt-tl-date">{{ report.date_display }}</span>
               <span class="cpt-tl-score {{ report.tone_class }}">{{ report.tone_score_display }}</span>
               <span class="cpt-tl-label {{ report.tone_class }}">{{ report.tone_label }}</span>
-              {% if report.source_url %}
-              <a href="{{ report.source_url }}" target="_blank" rel="noopener" class="cpt-tl-src" title="View official statement">↗</a>
-              {% endif %}
+              <span class="cpt-tl-links">
+                {% if report.pdf_url %}
+                <a href="{{ report.pdf_url }}" target="_blank" rel="noopener" class="cpt-tl-pdf" title="Download PDF">PDF</a>
+                {% endif %}
+                {% if report.source_url %}
+                <a href="{{ report.source_url }}" target="_blank" rel="noopener" class="cpt-tl-src" title="View official statement">↗</a>
+                {% endif %}
+              </span>
             </div>
             {% if not loop.first and report.tone_change %}
             <div class="cpt-tl-change">{{ report.tone_change }}</div>
@@ -201,9 +211,14 @@
             <div class="cpt-tl-meta">
               <span class="cpt-tl-date">{{ bank.reports[0].date_display }}</span>
               <span class="cpt-tl-score {{ bank.reports[0].tone_class }}">{{ bank.reports[0].tone_score_display }}</span>
-              {% if bank.reports[0].source_url %}
-              <a href="{{ bank.reports[0].source_url }}" target="_blank" rel="noopener" class="cpt-tl-src">↗</a>
-              {% endif %}
+              <span class="cpt-tl-links">
+                {% if bank.reports[0].pdf_url %}
+                <a href="{{ bank.reports[0].pdf_url }}" target="_blank" rel="noopener" class="cpt-tl-pdf" title="Download PDF">PDF</a>
+                {% endif %}
+                {% if bank.reports[0].source_url %}
+                <a href="{{ bank.reports[0].source_url }}" target="_blank" rel="noopener" class="cpt-tl-src">↗</a>
+                {% endif %}
+              </span>
             </div>
           </div>
         </div>

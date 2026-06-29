@@ -2946,6 +2946,7 @@ async def _build_cb_policy_context(session: AsyncSession) -> dict[str, Any]:
                 "labor_outlook": _format_outlook_label(r.labor_outlook),
                 "labor_summary": r.labor_summary or "",
                 "source_url": r.source_url or "",
+                "pdf_url": f"/api/cb/policy-reports/{r.bank}/{r.meeting_date.isoformat()}/pdf",
             }
             for r in reversed(reports)  # newest first for the detail view
         ]
@@ -2988,6 +2989,10 @@ async def _build_cb_policy_context(session: AsyncSession) -> dict[str, Any]:
                 ),
                 "latest_change": (latest.tone_change_vs_prior or "") if latest else "",
                 "latest_bullets": list(latest.retail_bullets or []) if latest else [],
+                "latest_pdf_url": (
+                    f"/api/cb/policy-reports/{bank_code}/{latest.meeting_date.isoformat()}/pdf"
+                    if latest else ""
+                ),
                 "recent_key_phrases": recent_phrases,
                 "chart_data": chart_series,
                 "reports": report_items,

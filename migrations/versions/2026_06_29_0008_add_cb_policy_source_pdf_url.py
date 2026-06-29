@@ -10,7 +10,7 @@ from __future__ import annotations
 from alembic import op
 import sqlalchemy as sa
 
-revision = "0008_add_cb_policy_source_pdf_url"
+revision = "0008_cb_pdf_url"
 down_revision = "0007_add_cb_policy_reports"
 branch_labels = None
 depends_on = None

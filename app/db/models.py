@@ -418,6 +418,107 @@ class CbPolicyReport(Base):
         )
 
 
+class CbPolicyDocument(Base):
+    """A manually downloaded or uploaded CB policy PDF with AI analysis.
+
+    One row per (bank, doc_date, doc_type). Stores the full text and all
+    AI-derived fields extracted by cb_document_ingester.py.
+    """
+
+    __tablename__ = "cb_policy_documents"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    bank: Mapped[str] = mapped_column(String(10), nullable=False)
+    doc_type: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default=text("'statement'")
+    )
+    doc_date: Mapped[date] = mapped_column(Date, nullable=False)
+    filename: Mapped[str] = mapped_column(Text, nullable=False)
+    file_path: Mapped[str] = mapped_column(Text, nullable=False)
+    raw_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    tone_score: Mapped[Decimal | None] = mapped_column(Numeric(4, 2), nullable=True)
+    tone_label: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    inflation_outlook: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    inflation_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    growth_outlook: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    growth_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    labor_outlook: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    labor_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    key_phrases: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    tone_change_vs_prior: Mapped[str | None] = mapped_column(Text, nullable=True)
+    retail_bullets: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    full_analysis: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+
+    analyzed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+
+    __table_args__ = (
+        UniqueConstraint("bank", "doc_date", "doc_type", name="uq_cb_policy_docs"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<CbPolicyDocument bank={self.bank!r} doc_date={self.doc_date.isoformat()} "
+            f"doc_type={self.doc_type!r} tone={self.tone_score}>"
+        )
+
+
+class CbEconomicProjection(Base):
+    """CB economic forecasts extracted from projection documents.
+
+    One row per (bank, projection_date, horizon_label). Populated by
+    cb_document_ingester when analyzing projection/MPR documents.
+    """
+
+    __tablename__ = "cb_economic_projections"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    bank: Mapped[str] = mapped_column(String(10), nullable=False)
+    projection_date: Mapped[date] = mapped_column(Date, nullable=False)
+    horizon_label: Mapped[str] = mapped_column(String(30), nullable=False)
+    horizon_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    inflation_forecast: Mapped[Decimal | None] = mapped_column(
+        Numeric(6, 3), nullable=True
+    )
+    gdp_forecast: Mapped[Decimal | None] = mapped_column(Numeric(6, 3), nullable=True)
+    unemployment_forecast: Mapped[Decimal | None] = mapped_column(
+        Numeric(6, 3), nullable=True
+    )
+    source_doc_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("cb_policy_documents.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "bank", "projection_date", "horizon_label", name="uq_cb_econ_proj"
+        ),
+    )
+
+    # Relationships
+    source_doc: Mapped[CbPolicyDocument | None] = relationship("CbPolicyDocument")
+
+    def __repr__(self) -> str:
+        return (
+            f"<CbEconomicProjection bank={self.bank!r} "
+            f"proj_date={self.projection_date.isoformat()} "
+            f"horizon={self.horizon_label!r}>"
+        )
+
+
 class OISCache(Base):
     """Cached OIS curve point."""
 

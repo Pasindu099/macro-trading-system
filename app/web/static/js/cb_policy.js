@@ -1,9 +1,10 @@
-/* CB Policy Tracker — tone timeline chart + refresh + expand/collapse */
+/* CB Policy Tracker — tone timeline chart, tab switching, upload, ingest,
+   projection charts */
 
 (function () {
   "use strict";
 
-  // ── Tone timeline chart ───────────────────────────────────────────────────
+  // ── Bank colours & labels ─────────────────────────────────────────────────
 
   const BANK_COLORS = {
     FED:  "#ff8c42",
@@ -26,6 +27,37 @@
     SNB:  "SNB (CHF)",
     RBNZ: "RBNZ (NZD)",
   };
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+
+  window.cptSwitchTab = function (tabName) {
+    const tabs = document.querySelectorAll(".cpt-tab-content");
+    const btns = document.querySelectorAll(".cpt-tab-btn");
+    tabs.forEach((t) => (t.style.display = "none"));
+    btns.forEach((b) => b.classList.remove("active"));
+
+    const target = document.getElementById("tab-" + tabName);
+    if (target) target.style.display = "block";
+
+    const btn = document.getElementById("tab-btn-" + tabName);
+    if (btn) btn.classList.add("active");
+
+    // Lazy-init projection charts when switching to that tab
+    if (tabName === "projections" && !window._cptProjChartsInit) {
+      window._cptProjChartsInit = true;
+      const rawEl = document.getElementById("cpt-proj-data");
+      if (rawEl && typeof Chart !== "undefined") {
+        try {
+          const data = JSON.parse(rawEl.textContent || "{}");
+          initProjectionCharts(data);
+        } catch (e) {
+          console.warn("cpt: could not parse projection data", e);
+        }
+      }
+    }
+  };
+
+  // ── Tone timeline chart ───────────────────────────────────────────────────
 
   function initChart() {
     const el = document.getElementById("cpt-tone-chart");
@@ -61,7 +93,7 @@
 
     if (datasets.length === 0) return;
 
-    const chart = new Chart(el, {
+    new Chart(el, {
       type: "line",
       data: { datasets },
       options: {
@@ -117,7 +149,6 @@
       },
     });
 
-    // Build legend
     const legendEl = document.getElementById("cpt-chart-legend");
     if (legendEl) {
       legendEl.innerHTML = datasets
@@ -132,6 +163,127 @@
     }
   }
 
+  // ── Projection charts ─────────────────────────────────────────────────────
+
+  window.initProjectionCharts = function (data) {
+    for (const [bank, projList] of Object.entries(data)) {
+      if (!projList || projList.length === 0) continue;
+      const el = document.getElementById("cpt-proj-" + bank + "-chart");
+      if (!el) continue;
+
+      const color = BANK_COLORS[bank] || "#888";
+
+      // Group unique projection dates (x axis)
+      const allDates = [...new Set(projList.map((p) => p.projection_date))].sort();
+
+      // Build per-metric datasets
+      const inflData = allDates.map((d) => {
+        const rows = projList.filter((p) => p.projection_date === d && p.inflation_forecast != null);
+        // Take the first non-null value for this date
+        return rows.length ? { x: d, y: rows[0].inflation_forecast } : null;
+      }).filter(Boolean);
+
+      const gdpData = allDates.map((d) => {
+        const rows = projList.filter((p) => p.projection_date === d && p.gdp_forecast != null);
+        return rows.length ? { x: d, y: rows[0].gdp_forecast } : null;
+      }).filter(Boolean);
+
+      const unempData = allDates.map((d) => {
+        const rows = projList.filter((p) => p.projection_date === d && p.unemployment_forecast != null);
+        return rows.length ? { x: d, y: rows[0].unemployment_forecast } : null;
+      }).filter(Boolean);
+
+      const datasets = [];
+      if (inflData.length) {
+        datasets.push({
+          label: "Inflation",
+          data: inflData,
+          borderColor: "#ff8c42",
+          backgroundColor: "#ff8c4222",
+          pointRadius: 4,
+          borderWidth: 2,
+          tension: 0.3,
+          fill: false,
+        });
+      }
+      if (gdpData.length) {
+        datasets.push({
+          label: "GDP",
+          data: gdpData,
+          borderColor: "#23c483",
+          backgroundColor: "#23c48322",
+          pointRadius: 4,
+          borderWidth: 2,
+          tension: 0.3,
+          fill: false,
+        });
+      }
+      if (unempData.length) {
+        datasets.push({
+          label: "Unemployment",
+          data: unempData,
+          borderColor: "#50b5ff",
+          backgroundColor: "#50b5ff22",
+          pointRadius: 4,
+          borderWidth: 2,
+          tension: 0.3,
+          fill: false,
+        });
+      }
+
+      if (!datasets.length) continue;
+
+      new Chart(el, {
+        type: "line",
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          scales: {
+            x: {
+              type: "category",
+              ticks: {
+                color: "#8fa5b5",
+                font: { size: 9 },
+                maxTicksLimit: 8,
+              },
+              grid: { color: "rgba(255,255,255,0.04)" },
+            },
+            y: {
+              ticks: {
+                color: "#8fa5b5",
+                font: { size: 9 },
+                callback: (v) => v + "%",
+              },
+              grid: { color: "rgba(255,255,255,0.06)" },
+            },
+          },
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                color: "#8fa5b5",
+                font: { size: 10 },
+                boxWidth: 10,
+              },
+            },
+            tooltip: {
+              backgroundColor: "rgba(18,32,43,0.95)",
+              borderColor: "#355063",
+              borderWidth: 1,
+              titleColor: "#dce8f2",
+              bodyColor: "#8fa5b5",
+              callbacks: {
+                label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`,
+              },
+            },
+          },
+        },
+      });
+    }
+  };
+
   // ── Expand / collapse bank detail ─────────────────────────────────────────
 
   window.cptToggleDetail = function (bankCode) {
@@ -143,7 +295,7 @@
     btn.textContent = isOpen ? "History ▼" : "History ▲";
   };
 
-  // ── Refresh analysis ──────────────────────────────────────────────────────
+  // ── Refresh analysis (web scraper) ────────────────────────────────────────
 
   let _refreshPoll = null;
 
@@ -167,14 +319,93 @@
         const analyzed = data.analyzed || 0;
         const scraped = data.scraped || 0;
         if (msg) {
-          msg.textContent =
-            `Done — scraped ${scraped} statements, analyzed ${analyzed}. Reloading…`;
+          msg.textContent = `Done — scraped ${scraped} statements, analyzed ${analyzed}. Reloading…`;
         }
         setTimeout(() => window.location.reload(), 1800);
       })
       .catch((err) => {
         if (msg) msg.textContent = "Error: " + err.message;
         if (btn) btn.disabled = false;
+      });
+  };
+
+  // ── Upload document ───────────────────────────────────────────────────────
+
+  window.cptUpload = function (event) {
+    event.preventDefault();
+    const form = document.getElementById("cpt-upload-form");
+    const btn = document.getElementById("cpt-upload-btn");
+    const result = document.getElementById("cpt-upload-result");
+    if (!form || !btn || !result) return;
+
+    btn.disabled = true;
+    btn.textContent = "Uploading…";
+    result.style.display = "none";
+    result.className = "cpt-upload-result";
+
+    const formData = new FormData(form);
+
+    fetch("/api/cb/documents/upload", { method: "POST", body: formData })
+      .then((r) => r.json().then((d) => ({ ok: r.ok, data: d })))
+      .then(({ ok, data }) => {
+        if (!ok) {
+          throw new Error(data.detail || "Upload failed");
+        }
+        result.className = "cpt-upload-result cpt-result-ok";
+        const score = data.tone_score != null ? data.tone_score.toFixed(2) : "N/A";
+        result.innerHTML = `
+          <strong>Analyzed successfully.</strong><br>
+          Bank: ${data.bank} &nbsp;|&nbsp; Date: ${data.doc_date} &nbsp;|&nbsp; Type: ${data.doc_type}<br>
+          Tone score: <strong>${score}</strong> &nbsp;|&nbsp; Label: <strong>${data.tone_label || "—"}</strong><br>
+          <a href="#" onclick="window.location.reload(); return false;" style="color:#ff8c42">Reload page to see updated charts</a>
+        `;
+        result.style.display = "block";
+        btn.textContent = "Upload & Analyze";
+        btn.disabled = false;
+      })
+      .catch((err) => {
+        result.className = "cpt-upload-result cpt-result-err";
+        result.textContent = "Error: " + err.message;
+        result.style.display = "block";
+        btn.textContent = "Upload & Analyze";
+        btn.disabled = false;
+      });
+  };
+
+  // ── Ingest from disk ──────────────────────────────────────────────────────
+
+  window.cptIngest = function () {
+    const result = document.getElementById("cpt-ingest-result");
+    const reanalyzeEl = document.getElementById("ingest-reanalyze");
+    if (!result) return;
+
+    const reanalyze = reanalyzeEl ? reanalyzeEl.checked : false;
+    const url = "/api/cb/documents/ingest" + (reanalyze ? "?reanalyze=true" : "");
+
+    result.style.display = "block";
+    result.className = "cpt-ingest-result cpt-ingest-running";
+    result.textContent = "Scanning data/policy/ and ingesting PDFs… this may take several minutes.";
+
+    fetch(url, { method: "POST" })
+      .then((r) => r.json().then((d) => ({ ok: r.ok, data: d })))
+      .then(({ ok, data }) => {
+        if (!ok) {
+          throw new Error(data.detail || "Ingest failed");
+        }
+        result.className = "cpt-ingest-result cpt-ingest-ok";
+        result.innerHTML = `
+          Ingest complete.<br>
+          Scanned: <strong>${data.scanned}</strong> &nbsp;|&nbsp;
+          New/updated: <strong>${data.new}</strong> &nbsp;|&nbsp;
+          Analyzed: <strong>${data.analyzed}</strong> &nbsp;|&nbsp;
+          Projections: <strong>${data.projections}</strong> &nbsp;|&nbsp;
+          Errors: <strong>${data.errors}</strong>
+          <br><a href="#" onclick="window.location.reload(); return false;" style="color:#ff8c42">Reload page</a>
+        `;
+      })
+      .catch((err) => {
+        result.className = "cpt-ingest-result cpt-ingest-err";
+        result.textContent = "Error: " + err.message;
       });
   };
 
@@ -189,7 +420,6 @@
       scripts.forEach((s) =>
         s.addEventListener("load", initChart, { once: true })
       );
-      // Fallback
       setTimeout(initChart, 800);
     }
   });

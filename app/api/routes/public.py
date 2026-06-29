@@ -12,8 +12,8 @@ from urllib.parse import urljoin
 from xml.etree import ElementTree
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, asc, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -35,7 +35,10 @@ from app.api.schemas import (
     IndicatorSnapshot,
     ResponseMeta,
 )
-from app.db.models import Country, CbPolicyReport, Indicator, IndicatorRelease, IngestionRun
+from app.db.models import (
+    Country, CbPolicyReport, CbEconomicProjection,
+    Indicator, IndicatorRelease, IngestionRun,
+)
 from app.db.session import get_session
 from app.processing.cot import COT_PAIRS, get_all_cot_rows, get_cot_payload, normalize_cot_pair
 from app.services.retail_sentiment import (
@@ -1915,3 +1918,281 @@ async def get_cb_policy_report_pdf(
         raise HTTPException(status_code=404, detail="No PDF or source URL available for this report")
 
     return RedirectResponse(url=redirect_url, status_code=302)
+
+
+# ── CB Document ingestion endpoints ───────────────────────────────────────────
+
+@router.post("/cb/documents/ingest")
+async def ingest_cb_documents(
+    bank: str | None = Query(default=None),
+    reanalyze: bool = Query(default=False),
+    session: AsyncSession = DB_SESSION,
+) -> dict[str, Any]:
+    """Scan data/policy/ and process PDFs from manually downloaded files."""
+    from app.processing.cb_document_ingester import ingest_documents
+
+    settings = get_settings()
+    if not settings.openai_api_key:
+        raise HTTPException(status_code=503, detail="OPENAI_API_KEY is not configured.")
+
+    counts = await ingest_documents(
+        session,
+        bank=bank.upper() if bank else None,
+        reanalyze=reanalyze,
+    )
+    return {"status": "ok", **counts}
+
+
+@router.post("/cb/documents/upload")
+async def upload_cb_document(
+    bank: str = Form(...),
+    doc_date: str = Form(...),  # YYYY-MM-DD
+    doc_type: str = Form(default="upload"),
+    file: UploadFile = File(...),
+    session: AsyncSession = DB_SESSION,
+) -> dict[str, Any]:
+    """Upload a PDF and run AI analysis on it."""
+    from datetime import date as _date
+    from app.processing.cb_document_ingester import ingest_uploaded_file
+
+    settings = get_settings()
+    if not settings.openai_api_key:
+        raise HTTPException(status_code=503, detail="OPENAI_API_KEY is not configured.")
+
+    try:
+        parsed_date = _date.fromisoformat(doc_date)
+    except ValueError:
+        raise HTTPException(400, "Invalid date — use YYYY-MM-DD")
+
+    if not (file.filename or "").lower().endswith(".pdf"):
+        raise HTTPException(400, "Only PDF files are accepted")
+
+    file_bytes = await file.read()
+    doc = await ingest_uploaded_file(
+        session,
+        bank=bank.upper(),
+        doc_date=parsed_date,
+        doc_type=doc_type,
+        filename=file.filename or f"{bank.upper()}_{doc_date}.pdf",
+        file_bytes=file_bytes,
+    )
+    return {
+        "status": "ok",
+        "bank": doc.bank,
+        "doc_date": doc.doc_date.isoformat(),
+        "doc_type": doc.doc_type,
+        "tone_score": float(doc.tone_score) if doc.tone_score else None,
+        "tone_label": doc.tone_label,
+        "analyzed": doc.analyzed_at is not None,
+    }
+
+
+@router.get("/cb/projections")
+async def get_cb_projections(
+    bank: str | None = Query(default=None),
+    session: AsyncSession = DB_SESSION,
+) -> dict[str, Any]:
+    """Return all economic projections, optionally filtered by bank."""
+    q = select(CbEconomicProjection).order_by(
+        CbEconomicProjection.bank.asc(),
+        CbEconomicProjection.projection_date.asc(),
+        CbEconomicProjection.horizon_year.asc(),
+    )
+    if bank:
+        q = q.where(CbEconomicProjection.bank == bank.upper())
+
+    rows = (await session.execute(q)).scalars().all()
+    return {
+        "projections": [
+            {
+                "bank": r.bank,
+                "projection_date": r.projection_date.isoformat(),
+                "horizon_label": r.horizon_label,
+                "horizon_year": r.horizon_year,
+                "inflation_forecast": float(r.inflation_forecast) if r.inflation_forecast else None,
+                "gdp_forecast": float(r.gdp_forecast) if r.gdp_forecast else None,
+                "unemployment_forecast": float(r.unemployment_forecast) if r.unemployment_forecast else None,
+            }
+            for r in rows
+        ],
+        "count": len(rows),
+    }
+
+
+@router.get("/cb/projections/comparison")
+async def get_cb_projection_comparison(
+    session: AsyncSession = DB_SESSION,
+) -> dict[str, Any]:
+    """Return latest CB projections for current/next year vs actual indicator values."""
+    from datetime import date as _date
+
+    # Bank → indicator canonical_name + country_code mappings
+    BANK_INDICATOR_MAP: dict[str, dict[str, tuple[str, str] | None]] = {
+        "FED":  {
+            "inflation": ("cpi_headline_yoy", "US"),
+            "gdp": ("gdp_qoq", "US"),
+            "unemployment": ("unemployment_rate", "US"),
+        },
+        "ECB":  {
+            "inflation": ("cpi_headline_yoy", "EU"),
+            "gdp": ("gdp_qoq", "EU"),
+            "unemployment": ("unemployment_rate", "EU"),
+        },
+        "BOE":  {
+            "inflation": ("cpi_headline_yoy", "UK"),
+            "gdp": ("gdp_qoq", "UK"),
+            "unemployment": ("unemployment_rate", "UK"),
+        },
+        "BOJ":  {
+            "inflation": ("cpi_headline_yoy", "JP"),
+            "gdp": ("gdp_qoq", "JP"),
+            "unemployment": ("unemployment_rate", "JP"),
+        },
+        "RBA":  {
+            "inflation": ("cpi_headline_yoy", "AU"),
+            "gdp": None,
+            "unemployment": ("unemployment_rate", "AU"),
+        },
+        "BOC":  {
+            "inflation": ("cpi_headline_yoy", "CA"),
+            "gdp": ("gdp_mom", "CA"),
+            "unemployment": ("unemployment_rate", "CA"),
+        },
+        "SNB":  {
+            "inflation": ("cpi_headline_yoy", "CH"),
+            "gdp": ("gdp_qoq", "CH"),
+            "unemployment": ("unemployment_rate", "CH"),
+        },
+        "RBNZ": {
+            "inflation": ("cpi_headline_qoq", "NZ"),
+            "gdp": None,
+            "unemployment": ("unemployment_rate", "NZ"),
+        },
+    }
+
+    current_year = _date.today().year
+    next_year = current_year + 1
+
+    # Get the latest projection per bank for current/next year
+    # We do this by loading all projections and filtering in Python
+    proj_rows = (await session.execute(
+        select(CbEconomicProjection)
+        .where(CbEconomicProjection.horizon_year.in_([current_year, next_year]))
+        .order_by(
+            CbEconomicProjection.bank.asc(),
+            CbEconomicProjection.projection_date.desc(),
+        )
+    )).scalars().all()
+
+    # Group by (bank, horizon_year) — take the most recent projection_date
+    latest_by_bank_year: dict[tuple[str, int], CbEconomicProjection] = {}
+    for row in proj_rows:
+        if row.horizon_year is None:
+            continue
+        key = (row.bank, row.horizon_year)
+        if key not in latest_by_bank_year:
+            latest_by_bank_year[key] = row
+
+    # Cache indicator actuals
+    indicator_cache: dict[tuple[str, str], float | None] = {}
+
+    async def _get_actual(canonical_name: str, country_code: str) -> float | None:
+        key = (canonical_name, country_code)
+        if key in indicator_cache:
+            return indicator_cache[key]
+
+        ind_q = await session.execute(
+            select(Indicator).where(
+                Indicator.canonical_name == canonical_name,
+                Indicator.country_code == country_code,
+            )
+        )
+        ind = ind_q.scalar_one_or_none()
+        if ind is None:
+            indicator_cache[key] = None
+            return None
+
+        rel_q = await session.execute(
+            select(IndicatorRelease)
+            .where(
+                IndicatorRelease.indicator_id == ind.id,
+                IndicatorRelease.actual.is_not(None),
+            )
+            .order_by(
+                IndicatorRelease.period_start_date.desc().nullslast(),
+                IndicatorRelease.released_at.desc(),
+            )
+            .limit(1)
+        )
+        rel = rel_q.scalar_one_or_none()
+        value = float(rel.actual) if rel and rel.actual is not None else None
+        indicator_cache[key] = value
+        return value
+
+    comparison_rows: list[dict[str, Any]] = []
+
+    for (bank_code, horizon_year), proj in sorted(latest_by_bank_year.items()):
+        bank_map = BANK_INDICATOR_MAP.get(bank_code, {})
+
+        # Inflation
+        if proj.inflation_forecast is not None and bank_map.get("inflation"):
+            canon, country = bank_map["inflation"]  # type: ignore[misc]
+            actual = await _get_actual(canon, country)
+            if actual is not None:
+                projected = float(proj.inflation_forecast)
+                deviation = actual - projected
+                deviation_pct = (deviation / projected * 100) if projected else None
+                comparison_rows.append({
+                    "bank": bank_code,
+                    "metric": "Inflation",
+                    "projection_date": proj.projection_date.isoformat(),
+                    "horizon": str(horizon_year),
+                    "projected_value": projected,
+                    "actual_value": actual,
+                    "deviation": round(deviation, 3),
+                    "deviation_pct": round(deviation_pct, 1) if deviation_pct is not None else None,
+                })
+
+        # GDP
+        if proj.gdp_forecast is not None and bank_map.get("gdp"):
+            canon, country = bank_map["gdp"]  # type: ignore[misc]
+            actual = await _get_actual(canon, country)
+            if actual is not None:
+                projected = float(proj.gdp_forecast)
+                deviation = actual - projected
+                deviation_pct = (deviation / projected * 100) if projected else None
+                comparison_rows.append({
+                    "bank": bank_code,
+                    "metric": "GDP",
+                    "projection_date": proj.projection_date.isoformat(),
+                    "horizon": str(horizon_year),
+                    "projected_value": projected,
+                    "actual_value": actual,
+                    "deviation": round(deviation, 3),
+                    "deviation_pct": round(deviation_pct, 1) if deviation_pct is not None else None,
+                })
+
+        # Unemployment
+        if proj.unemployment_forecast is not None and bank_map.get("unemployment"):
+            canon, country = bank_map["unemployment"]  # type: ignore[misc]
+            actual = await _get_actual(canon, country)
+            if actual is not None:
+                projected = float(proj.unemployment_forecast)
+                deviation = actual - projected
+                deviation_pct = (deviation / projected * 100) if projected else None
+                comparison_rows.append({
+                    "bank": bank_code,
+                    "metric": "Unemployment",
+                    "projection_date": proj.projection_date.isoformat(),
+                    "horizon": str(horizon_year),
+                    "projected_value": projected,
+                    "actual_value": actual,
+                    "deviation": round(deviation, 3),
+                    "deviation_pct": round(deviation_pct, 1) if deviation_pct is not None else None,
+                })
+
+    return {
+        "comparison": comparison_rows,
+        "count": len(comparison_rows),
+        "generated_at": _now().isoformat(),
+    }

@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/cb_policy.css') }}?v=20260629">
-<script src="{{ url_for('static', path='js/cb_policy.js') }}?v=20260629" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', path='css/cb_policy.css') }}?v=20260629b">
+<script src="{{ url_for('static', path='js/cb_policy.js') }}?v=20260629b" defer></script>
 {% endblock %}
 {% block body %}
 
 <div class="page-header cpt-header">
   <div class="cpt-header-left">
     <h1 class="page-title">CB Policy Tracker</h1>
-    <p class="page-subtitle">12-month AI analysis of central bank monetary policy statements — tone shifts, inflation &amp; growth expectations</p>
+    <p class="page-subtitle">AI analysis of central bank policy statements — tone shifts, projections &amp; economic comparisons</p>
   </div>
   <div class="cpt-header-right">
     <span class="cpt-last-updated">
@@ -24,26 +24,43 @@
   </div>
 </div>
 
+<!-- Tab bar -->
+<div class="cpt-tab-bar">
+  <button class="cpt-tab-btn active" id="tab-btn-tone" onclick="cptSwitchTab('tone')">Tone Analysis</button>
+  <button class="cpt-tab-btn" id="tab-btn-projections" onclick="cptSwitchTab('projections')">Economic Projections</button>
+  <button class="cpt-tab-btn" id="tab-btn-upload" onclick="cptSwitchTab('upload')">Upload Document</button>
+</div>
+
 <div id="cpt-refresh-banner" class="cpt-banner" style="display:none">
   <span class="cpt-banner-dot"></span>
   <span id="cpt-refresh-msg">Fetching statements from central bank websites and running AI analysis — this may take a few minutes…</span>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════ TAB 1: Tone Analysis -->
+<div class="cpt-tab-content" id="tab-tone">
+
 {% if is_empty %}
-<!-- Empty state ─────────────────────────────────────────────────────────── -->
 <div class="panel cpt-empty">
   <div class="cpt-empty-icon">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="48" height="48"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-4 4"/></svg>
   </div>
   <h2>No policy reports yet</h2>
-  <p>Click <strong>Refresh Analysis</strong> to fetch the last 12 months of monetary policy statements from all 8 central banks and run AI analysis.</p>
+  <p>Click <strong>Refresh Analysis</strong> to fetch the last 12 months of monetary policy statements from all 8 central banks and run AI analysis. You can also upload PDFs manually using the <strong>Upload Document</strong> tab.</p>
   <p class="cpt-empty-note">First run: ~5–10 minutes (8 banks × 6–8 statements × AI analysis). Results are cached — subsequent loads are instant.</p>
   <button class="btn" onclick="cptRefresh()">&#8635; Start First Fetch</button>
 </div>
 
 {% else %}
 
-<!-- Tone Timeline Chart ──────────────────────────────────────────────────── -->
+{% if local_docs_analyzed > 0 %}
+<div class="cpt-source-badge">
+  <span class="cpt-source-pill cpt-source-local">Local PDFs</span>
+  <span class="cpt-source-pill cpt-source-scraper">Web Scraper</span>
+  <span class="cpt-source-note">Showing combined analysis from {{ local_docs_analyzed }} local document(s) + web-scraped statements</span>
+</div>
+{% endif %}
+
+<!-- Tone Timeline Chart -->
 <div class="panel cpt-chart-panel">
   <div class="panel-header">
     <h2 class="panel-title">Policy Tone Timeline — 12 Months</h2>
@@ -55,7 +72,7 @@
   <div class="cpt-chart-legend" id="cpt-chart-legend"></div>
 </div>
 
-<!-- Bank Cards Grid ─────────────────────────────────────────────────────── -->
+<!-- Bank Cards Grid -->
 <div class="panel">
   <div class="panel-header">
     <h2 class="panel-title">Central Bank Snapshots</h2>
@@ -65,7 +82,6 @@
     {% for bank in banks %}
     <div class="cpt-bank-card {% if bank.has_data %}{{ bank.tone_class }}{% else %}tone-neutral{% endif %}" id="card-{{ bank.code }}">
 
-      <!-- Card header -->
       <div class="cpt-card-header">
         <div class="cpt-card-identity">
           <span class="cpt-flag">{{ bank.flag }}</span>
@@ -81,13 +97,11 @@
       </div>
 
       {% if bank.has_data %}
-      <!-- Tone meter bar -->
       <div class="cpt-meter-track" title="Tone score: {{ bank.latest_tone_score_display }}">
         <div class="cpt-meter-fill" style="width: {{ bank.tone_percent }}%"></div>
         <div class="cpt-meter-center"></div>
       </div>
 
-      <!-- Outlook grid -->
       <div class="cpt-outlook-grid">
         <div class="cpt-outlook-cell {{ bank.inflation_class }}" title="{{ bank.inflation_summary }}">
           <span class="cpt-outlook-label">Inflation</span>
@@ -103,7 +117,6 @@
         </div>
       </div>
 
-      <!-- Key phrases -->
       {% if bank.recent_key_phrases %}
       <div class="cpt-phrases">
         {% for phrase in bank.recent_key_phrases[:4] %}
@@ -126,9 +139,7 @@
         </div>
       </div>
 
-      <!-- Expanded detail panel -->
       <div class="cpt-detail" id="detail-{{ bank.code }}" style="display:none">
-        <!-- What changed callout -->
         {% if bank.latest_change %}
         <div class="cpt-change-callout">
           <span class="cpt-change-label">What changed</span>
@@ -136,7 +147,6 @@
         </div>
         {% endif %}
 
-        <!-- Retail bullets -->
         {% if bank.latest_bullets %}
         <div class="cpt-bullets-section">
           <div class="cpt-section-label">Retail trader takeaways</div>
@@ -149,7 +159,6 @@
         </div>
         {% endif %}
 
-        <!-- Outlook summaries -->
         <div class="cpt-outlook-summaries">
           <div class="cpt-section-label">Detailed outlook</div>
           {% if bank.inflation_summary %}
@@ -172,7 +181,6 @@
           {% endif %}
         </div>
 
-        <!-- Historical timeline -->
         {% if bank.reports|length > 1 %}
         <div class="cpt-section-label" style="margin-top: 16px">Statement history</div>
         <div class="cpt-timeline">
@@ -226,7 +234,6 @@
       </div>
 
       {% else %}
-      <!-- No data yet -->
       <div class="cpt-no-data">No data — click Refresh to fetch.</div>
       {% endif %}
 
@@ -236,8 +243,180 @@
 </div>
 
 {% endif %}
+</div><!-- /tab-tone -->
 
-<!-- hidden data for JS chart -->
+
+<!-- ═══════════════════════════════════════════════ TAB 2: Economic Projections -->
+<div class="cpt-tab-content" id="tab-projections" style="display:none">
+
+{% if not has_projections %}
+<div class="panel cpt-empty">
+  <div class="cpt-empty-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="48" height="48"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-4 4"/></svg>
+  </div>
+  <h2>No projections data yet</h2>
+  <p>Upload projection documents (SEP, MPR) using the <strong>Upload Document</strong> tab, or use <strong>Scan &amp; Ingest</strong> if you have PDFs in <code>data/policy/</code>.</p>
+</div>
+{% else %}
+
+<div class="cpt-proj-section">
+
+  <!-- Projection charts per bank -->
+  {% if projections_by_bank %}
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">Projection Timelines</h2>
+      <p class="panel-subtitle">Inflation, GDP &amp; unemployment forecasts by projection date</p>
+    </div>
+    <div class="cpt-proj-charts-grid">
+      {% for bank_code, proj_list in projections_by_bank.items() %}
+      {% if proj_list %}
+      <div class="cpt-proj-chart-wrap panel-inner">
+        <div class="cpt-proj-chart-title">{{ bank_code }}</div>
+        <canvas id="cpt-proj-{{ bank_code }}-chart" height="160"></canvas>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Comparison table -->
+  {% if projection_comparison %}
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">Projections vs Actuals</h2>
+      <p class="panel-subtitle">Latest CB forecasts for current/next year compared to actual released data</p>
+    </div>
+    <div class="cpt-table-wrap">
+      <table class="cpt-comparison-table">
+        <thead>
+          <tr>
+            <th>Bank</th>
+            <th>Metric</th>
+            <th>Horizon</th>
+            <th>Proj. Date</th>
+            <th>Projected</th>
+            <th>Actual</th>
+            <th>Deviation</th>
+            <th>Dev %</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in projection_comparison %}
+          <tr class="{{ row.deviation_class }}">
+            <td class="cpt-bank-cell">{{ row.bank }}</td>
+            <td>{{ row.metric }}</td>
+            <td>{{ row.horizon }}</td>
+            <td class="cpt-date-cell">{{ row.projection_date }}</td>
+            <td class="cpt-num-cell">{{ "%.2f"|format(row.projected_value) }}</td>
+            <td class="cpt-num-cell">{{ "%.2f"|format(row.actual_value) }}</td>
+            <td class="cpt-num-cell {% if row.deviation > 0 %}cpt-dev-pos{% elif row.deviation < 0 %}cpt-dev-neg{% endif %}">
+              {% if row.deviation > 0 %}+{% endif %}{{ "%.2f"|format(row.deviation) }}
+            </td>
+            <td class="cpt-num-cell {{ row.deviation_class }}">
+              {% if row.deviation_pct is not none %}
+                {% if row.deviation_pct > 0 %}+{% endif %}{{ "%.1f"|format(row.deviation_pct) }}%
+              {% else %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="cpt-table-legend">
+      <span class="cpt-legend-chip deviation-low">Within 10%</span>
+      <span class="cpt-legend-chip deviation-medium">10–25% off</span>
+      <span class="cpt-legend-chip deviation-high">Over 25% off</span>
+    </div>
+  </div>
+  {% else %}
+  <div class="panel">
+    <p class="cpt-no-data" style="padding:24px">No comparison data — projections exist but no matching actual indicator releases found in database.</p>
+  </div>
+  {% endif %}
+
+</div>
+
+{% endif %}
+</div><!-- /tab-projections -->
+
+
+<!-- ════════════════════════════════════════════════ TAB 3: Upload Document -->
+<div class="cpt-tab-content" id="tab-upload" style="display:none">
+
+<div class="cpt-upload-section panel">
+  <div class="panel-header">
+    <h2 class="panel-title">Upload Policy Document</h2>
+    <p class="panel-subtitle">Upload any central bank PDF — the system will extract text and run AI analysis to score tone and extract projections.</p>
+  </div>
+
+  <form id="cpt-upload-form" class="cpt-upload-form" onsubmit="cptUpload(event)">
+    <div class="cpt-form-row">
+      <label class="cpt-form-label" for="upload-bank">Central Bank</label>
+      <select name="bank" id="upload-bank" class="cpt-form-control" required>
+        <option value="FED">Federal Reserve (FED)</option>
+        <option value="ECB">European Central Bank (ECB)</option>
+        <option value="BOE">Bank of England (BOE)</option>
+        <option value="BOJ">Bank of Japan (BOJ)</option>
+        <option value="RBA">Reserve Bank of Australia (RBA)</option>
+        <option value="BOC">Bank of Canada (BOC)</option>
+        <option value="SNB">Swiss National Bank (SNB)</option>
+        <option value="RBNZ">Reserve Bank of New Zealand (RBNZ)</option>
+      </select>
+    </div>
+    <div class="cpt-form-row">
+      <label class="cpt-form-label" for="upload-date">Document Date</label>
+      <input type="date" name="doc_date" id="upload-date" class="cpt-form-control" required>
+    </div>
+    <div class="cpt-form-row">
+      <label class="cpt-form-label" for="upload-type">Document Type</label>
+      <select name="doc_type" id="upload-type" class="cpt-form-control">
+        <option value="statement">Rate Decision Statement</option>
+        <option value="projection">Economic Projections / SEP</option>
+        <option value="report">Full Monetary Policy Report</option>
+        <option value="upload">Other</option>
+      </select>
+    </div>
+    <div class="cpt-form-row">
+      <label class="cpt-form-label" for="upload-file">PDF File</label>
+      <input type="file" name="file" id="upload-file" class="cpt-form-control" accept=".pdf" required>
+    </div>
+    <div class="cpt-form-actions">
+      <button type="submit" class="btn" id="cpt-upload-btn">Upload &amp; Analyze</button>
+    </div>
+  </form>
+
+  <div id="cpt-upload-result" style="display:none" class="cpt-upload-result"></div>
+</div>
+
+<!-- Ingest from disk -->
+<div class="panel cpt-ingest-section">
+  <div class="panel-header">
+    <h2 class="panel-title">Ingest from Disk</h2>
+    <p class="panel-subtitle">
+      Scan <code>data/policy/</code> and process any newly added PDFs.
+      {% if local_doc_count > 0 %}
+        <strong>{{ local_doc_count }}</strong> PDF(s) found on disk.
+      {% else %}
+        No PDFs found in <code>data/policy/</code> yet.
+      {% endif %}
+    </p>
+  </div>
+  <div class="cpt-ingest-controls">
+    <button class="btn" onclick="cptIngest()">&#8635; Scan &amp; Ingest</button>
+    <label class="cpt-ingest-opt">
+      <input type="checkbox" id="ingest-reanalyze"> Re-analyze already-processed files
+    </label>
+  </div>
+  <div id="cpt-ingest-result" class="cpt-ingest-result" style="display:none"></div>
+</div>
+
+</div><!-- /tab-upload -->
+
+
+<!-- Hidden data for JS charts -->
 <script id="cpt-data" type="application/json">{{ all_chart_data | tojson }}</script>
+<script id="cpt-proj-data" type="application/json">{{ projections_by_bank | tojson }}</script>
 
 {% endblock body %}

@@ -49,3 +49,6 @@ data/linkedin/drafts/
 
 # Alembic
 # (keep migrations/versions/, ignore nothing here)
+
+# CB policy PDFs (manually downloaded, kept on VPS only)
+data/policy/

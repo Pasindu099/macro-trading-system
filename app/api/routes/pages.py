@@ -28,7 +28,10 @@ from app.api.routes.public import (
     list_biggest_surprises,
     list_country_summaries,
 )
-from app.db.models import Country, CbPolicyReport, Indicator, IndicatorRelease, IngestionRun
+from app.db.models import (
+    Country, CbPolicyDocument, CbEconomicProjection, CbPolicyReport,
+    Indicator, IndicatorRelease, IngestionRun,
+)
 from app.services.meeting_calendar import SUPPORTED_BANKS, normalize_bank, get_upcoming_meetings
 from app.services.rate_probability import (
     DATA_STATE_LIVE,
@@ -3019,6 +3022,179 @@ async def _build_cb_policy_context(session: AsyncSession) -> dict[str, Any]:
     }
 
 
+BANK_INDICATOR_MAP: dict[str, dict[str, tuple[str, str] | None]] = {
+    "FED":  {
+        "inflation": ("cpi_headline_yoy", "US"),
+        "gdp": ("gdp_qoq", "US"),
+        "unemployment": ("unemployment_rate", "US"),
+    },
+    "ECB":  {
+        "inflation": ("cpi_headline_yoy", "EU"),
+        "gdp": ("gdp_qoq", "EU"),
+        "unemployment": ("unemployment_rate", "EU"),
+    },
+    "BOE":  {
+        "inflation": ("cpi_headline_yoy", "UK"),
+        "gdp": ("gdp_qoq", "UK"),
+        "unemployment": ("unemployment_rate", "UK"),
+    },
+    "BOJ":  {
+        "inflation": ("cpi_headline_yoy", "JP"),
+        "gdp": ("gdp_qoq", "JP"),
+        "unemployment": ("unemployment_rate", "JP"),
+    },
+    "RBA":  {
+        "inflation": ("cpi_headline_yoy", "AU"),
+        "gdp": None,
+        "unemployment": ("unemployment_rate", "AU"),
+    },
+    "BOC":  {
+        "inflation": ("cpi_headline_yoy", "CA"),
+        "gdp": ("gdp_mom", "CA"),
+        "unemployment": ("unemployment_rate", "CA"),
+    },
+    "SNB":  {
+        "inflation": ("cpi_headline_yoy", "CH"),
+        "gdp": ("gdp_qoq", "CH"),
+        "unemployment": ("unemployment_rate", "CH"),
+    },
+    "RBNZ": {
+        "inflation": ("cpi_headline_qoq", "NZ"),
+        "gdp": None,
+        "unemployment": ("unemployment_rate", "NZ"),
+    },
+}
+
+
+async def _build_projections_context(session: AsyncSession) -> dict[str, Any]:
+    """Build template context for the Economic Projections tab."""
+    from datetime import date as _date
+
+    current_year = _date.today().year
+    next_year = current_year + 1
+
+    # All projections for current/next year
+    proj_rows_q = await session.execute(
+        select(CbEconomicProjection)
+        .where(CbEconomicProjection.horizon_year.in_([current_year, next_year]))
+        .order_by(
+            CbEconomicProjection.bank.asc(),
+            CbEconomicProjection.projection_date.asc(),
+            CbEconomicProjection.horizon_year.asc(),
+        )
+    )
+    proj_rows = list(proj_rows_q.scalars().all())
+
+    # Group by bank for chart data
+    projections_by_bank: dict[str, list[dict[str, Any]]] = {}
+    for row in proj_rows:
+        projections_by_bank.setdefault(row.bank, []).append({
+            "projection_date": row.projection_date.isoformat(),
+            "horizon_label": row.horizon_label,
+            "horizon_year": row.horizon_year,
+            "inflation_forecast": float(row.inflation_forecast) if row.inflation_forecast else None,
+            "gdp_forecast": float(row.gdp_forecast) if row.gdp_forecast else None,
+            "unemployment_forecast": float(row.unemployment_forecast) if row.unemployment_forecast else None,
+        })
+
+    # Build comparison rows: projection vs actual
+    # Cache indicator lookups
+    indicator_cache: dict[tuple[str, str], float | None] = {}
+
+    async def _get_actual(canonical_name: str, country_code: str) -> float | None:
+        key = (canonical_name, country_code)
+        if key in indicator_cache:
+            return indicator_cache[key]
+        ind_q = await session.execute(
+            select(Indicator).where(
+                Indicator.canonical_name == canonical_name,
+                Indicator.country_code == country_code,
+            )
+        )
+        ind = ind_q.scalar_one_or_none()
+        if ind is None:
+            indicator_cache[key] = None
+            return None
+        rel_q = await session.execute(
+            select(IndicatorRelease)
+            .where(
+                IndicatorRelease.indicator_id == ind.id,
+                IndicatorRelease.actual.is_not(None),
+            )
+            .order_by(
+                IndicatorRelease.period_start_date.desc().nullslast(),
+                desc(IndicatorRelease.released_at),
+            )
+            .limit(1)
+        )
+        rel = rel_q.scalar_one_or_none()
+        value = float(rel.actual) if rel and rel.actual is not None else None
+        indicator_cache[key] = value
+        return value
+
+    # Latest projection per (bank, horizon_year)
+    latest_proj: dict[tuple[str, int], CbEconomicProjection] = {}
+    for row in proj_rows:
+        if row.horizon_year is None:
+            continue
+        key = (row.bank, row.horizon_year)
+        if key not in latest_proj:
+            latest_proj[key] = row
+
+    projection_comparison: list[dict[str, Any]] = []
+    for (bank_code, horizon_year), proj in sorted(latest_proj.items()):
+        bank_map = BANK_INDICATOR_MAP.get(bank_code, {})
+
+        for metric_key, label in [("inflation", "Inflation"), ("gdp", "GDP"), ("unemployment", "Unemployment")]:
+            forecast_val: float | None = None
+            if metric_key == "inflation" and proj.inflation_forecast is not None:
+                forecast_val = float(proj.inflation_forecast)
+            elif metric_key == "gdp" and proj.gdp_forecast is not None:
+                forecast_val = float(proj.gdp_forecast)
+            elif metric_key == "unemployment" and proj.unemployment_forecast is not None:
+                forecast_val = float(proj.unemployment_forecast)
+
+            if forecast_val is None:
+                continue
+
+            indicator_mapping = bank_map.get(metric_key)
+            if not indicator_mapping:
+                continue
+            canon, country = indicator_mapping
+            actual = await _get_actual(canon, country)
+            if actual is None:
+                continue
+
+            deviation = actual - forecast_val
+            deviation_pct = (deviation / forecast_val * 100) if forecast_val else None
+            abs_pct = abs(deviation_pct) if deviation_pct is not None else 0
+
+            if abs_pct > 25:
+                deviation_class = "deviation-high"
+            elif abs_pct > 10:
+                deviation_class = "deviation-medium"
+            else:
+                deviation_class = "deviation-low"
+
+            projection_comparison.append({
+                "bank": bank_code,
+                "metric": label,
+                "projection_date": proj.projection_date.isoformat(),
+                "horizon": str(horizon_year),
+                "projected_value": round(forecast_val, 2),
+                "actual_value": round(actual, 2),
+                "deviation": round(deviation, 2),
+                "deviation_pct": round(deviation_pct, 1) if deviation_pct is not None else None,
+                "deviation_class": deviation_class,
+            })
+
+    return {
+        "projections_by_bank": projections_by_bank,
+        "projection_comparison": projection_comparison,
+        "has_projections": len(proj_rows) > 0,
+    }
+
+
 async def _run_cb_policy_refresh() -> None:
     """Background task: scrape + analyze all banks. Creates its own DB session."""
     from app.db.session import session_scope
@@ -3038,10 +3214,23 @@ async def cb_policy_tracker_page(
     background_tasks: BackgroundTasks = BackgroundTasks(),  # FastAPI injects this
 ) -> HTMLResponse:
     """Render the CB Policy Tracker page."""
-    context = await _build_cb_policy_context(session)
+    from app.processing.cb_document_ingester import POLICY_DIR, count_local_pdfs
 
-    # Auto-trigger first-run scrape if no data exists
-    if context["is_empty"]:
+    context = await _build_cb_policy_context(session)
+    proj_context = await _build_projections_context(session)
+
+    # Count local PDFs for the upload tab
+    has_local_docs = POLICY_DIR.exists() and POLICY_DIR.is_dir()
+    local_doc_count = count_local_pdfs() if has_local_docs else 0
+
+    # Check if any local documents have been analyzed
+    local_docs_q = await session.execute(
+        select(func.count(CbPolicyDocument.id))
+    )
+    local_docs_total = local_docs_q.scalar_one() or 0
+
+    # Auto-trigger first-run scrape if no data at all (neither scraped nor local)
+    if context["is_empty"] and local_docs_total == 0:
         background_tasks.add_task(_run_cb_policy_refresh)
 
     return templates.TemplateResponse(
@@ -3051,5 +3240,9 @@ async def cb_policy_tracker_page(
             "request": request,
             "page_title": "CB Policy Tracker | Macro Dashboard",
             **context,
+            **proj_context,
+            "has_local_docs": has_local_docs,
+            "local_doc_count": local_doc_count,
+            "local_docs_analyzed": local_docs_total,
         },
     )

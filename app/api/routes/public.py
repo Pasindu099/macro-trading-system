@@ -1873,14 +1873,16 @@ async def get_cb_policy_report_pdf(
     meeting_date: str,
     session: AsyncSession = DB_SESSION,
 ) -> Response:
-    """Return a formatted PDF for one CB policy report.
+    """Serve the actual CB-published PDF for a policy report.
 
-    PDF is generated on first request and cached to disk. Subsequent requests
-    serve the cached file without hitting the DB.
+    PDFs are downloaded from the central bank website during the analysis
+    pipeline and cached to disk. Only the last 2 PDFs per bank are kept.
+    If the PDF is not cached, redirects to the source_pdf_url when available,
+    or falls back to the HTML source page.
     """
     from datetime import date as _date
-    from fastapi.responses import Response as _Response
-    from app.processing.cb_policy_analyzer import pdf_path, generate_report_pdf
+    from fastapi.responses import Response as _Response, RedirectResponse
+    from app.processing.cb_policy_analyzer import pdf_path
 
     try:
         mtg_date = _date.fromisoformat(meeting_date)
@@ -1888,8 +1890,9 @@ async def get_cb_policy_report_pdf(
         raise HTTPException(status_code=400, detail="Invalid date format — use YYYY-MM-DD")
 
     bank = bank.upper()
-    cached = pdf_path(bank, mtg_date)
 
+    # Serve cached file if available
+    cached = pdf_path(bank, mtg_date)
     if cached.exists():
         return _Response(
             content=cached.read_bytes(),
@@ -1897,31 +1900,18 @@ async def get_cb_policy_report_pdf(
             headers={"Content-Disposition": f'inline; filename="{bank}_{meeting_date}.pdf"'},
         )
 
-    # Not cached yet — generate from DB record
+    # Not cached — redirect to the CB's own PDF URL or HTML page
     report = await session.scalar(
         select(CbPolicyReport).where(
             CbPolicyReport.bank == bank,
             CbPolicyReport.meeting_date == mtg_date,
-            CbPolicyReport.analyzed_at.is_not(None),
         )
     )
     if report is None:
-        raise HTTPException(status_code=404, detail="No analyzed report found for this bank and date")
+        raise HTTPException(status_code=404, detail="No report found for this bank and date")
 
-    try:
-        pdf_bytes = generate_report_pdf(report)
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"PDF generation failed: {exc}")
+    redirect_url = report.source_pdf_url or report.source_url
+    if not redirect_url:
+        raise HTTPException(status_code=404, detail="No PDF or source URL available for this report")
 
-    # Cache to disk for next time
-    try:
-        cached.parent.mkdir(parents=True, exist_ok=True)
-        cached.write_bytes(pdf_bytes)
-    except OSError:
-        pass
-
-    return _Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'inline; filename="{bank}_{meeting_date}.pdf"'},
-    )
+    return RedirectResponse(url=redirect_url, status_code=302)

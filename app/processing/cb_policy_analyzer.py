@@ -6,7 +6,9 @@ phrases, tone shift vs prior meeting, and retail-trader bullets.
 
 Results are persisted to cb_policy_reports (analyze once, cache forever).
 Each bank is capped at 12 reports — oldest are purged automatically.
-PDFs are generated on-demand and cached to data/cb_policy_pdfs/.
+
+Actual PDF documents from CB websites are downloaded and stored locally.
+We keep only the last 2 PDFs per bank (oldest is deleted when a 3rd arrives).
 """
 
 from __future__ import annotations
@@ -16,7 +18,6 @@ import logging
 import re
 from datetime import date, datetime, timezone
 from decimal import Decimal
-from io import BytesIO
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions"
 MAX_REPORTS_PER_BANK = 12
+MAX_PDFS_PER_BANK = 2
 
 CB_POLICY_PDF_DIR = Path("data/cb_policy_pdfs")
 
@@ -147,17 +149,17 @@ def _validated(raw: dict[str, Any]) -> dict[str, Any]:
     labor      = str(raw.get("labor_outlook","balanced")).lower()
     if labor not in _VALID_LABOR:       labor      = "balanced"
     return {
-        "tone_score":         _safe_float(raw.get("tone_score")),
-        "tone_label":         tone_label,
-        "inflation_outlook":  inflation,
-        "inflation_summary":  _safe_str(raw.get("inflation_summary")),
-        "growth_outlook":     growth,
-        "growth_summary":     _safe_str(raw.get("growth_summary")),
-        "labor_outlook":      labor,
-        "labor_summary":      _safe_str(raw.get("labor_summary")),
-        "key_phrases":        _safe_list(raw.get("key_phrases"),  max_items=5),
+        "tone_score":           _safe_float(raw.get("tone_score")),
+        "tone_label":           tone_label,
+        "inflation_outlook":    inflation,
+        "inflation_summary":    _safe_str(raw.get("inflation_summary")),
+        "growth_outlook":       growth,
+        "growth_summary":       _safe_str(raw.get("growth_summary")),
+        "labor_outlook":        labor,
+        "labor_summary":        _safe_str(raw.get("labor_summary")),
+        "key_phrases":          _safe_list(raw.get("key_phrases"),  max_items=5),
         "tone_change_vs_prior": _safe_str(raw.get("tone_change_vs_prior"), 400),
-        "retail_bullets":     _safe_list(raw.get("retail_bullets"), max_items=3, max_len=250),
+        "retail_bullets":       _safe_list(raw.get("retail_bullets"), max_items=3, max_len=250),
     }
 
 
@@ -200,197 +202,71 @@ async def _call_openai(prompt: str) -> dict[str, Any] | None:
     return _extract_json(raw_text)
 
 
-# ── PDF generation ───────────────────────────────────────────────────────────
+# ── PDF download & storage ────────────────────────────────────────────────────
 
 def pdf_path(bank: str, meeting_date: date) -> Path:
     return CB_POLICY_PDF_DIR / bank / f"{meeting_date.isoformat()}.pdf"
 
 
-def generate_report_pdf(report: CbPolicyReport) -> bytes:
-    """Build a formatted PDF for one policy report using reportlab."""
-    from reportlab.lib import colors
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.units import cm
-    from reportlab.pdfgen import canvas as rl_canvas
-    from reportlab.lib.utils import simpleSplit
+async def download_and_store_pdf(bank: str, meeting_date: date, pdf_url: str) -> bool:
+    """Download the actual PDF from the CB website and cache to disk.
 
-    W, H = A4
-    buf = BytesIO()
-    c = rl_canvas.Canvas(buf, pagesize=A4)
+    Returns True if saved successfully (or already cached).
+    """
+    if not pdf_url:
+        return False
 
-    # Colours
-    bg       = colors.HexColor("#071018")
-    panel    = colors.HexColor("#12202b")
-    border   = colors.HexColor("#355063")
-    text_c   = colors.HexColor("#dce8f2")
-    muted    = colors.HexColor("#8fa5b5")
-    accent   = colors.HexColor("#ff8c42")
-    hawk_c   = colors.HexColor("#ff7a4a")
-    dove_c   = colors.HexColor("#50b5ff")
-    pos_c    = colors.HexColor("#23c483")
-    neg_c    = colors.HexColor("#ff5a7e")
+    dest = pdf_path(bank, meeting_date)
+    if dest.exists():
+        return True
 
-    score = float(report.tone_score or 0)
-    tone_color = hawk_c if score > 1 else (dove_c if score < -1 else muted)
-    bank_name = _BANK_NAMES.get(report.bank, report.bank)
+    try:
+        async with httpx.AsyncClient(
+            timeout=30.0,
+            follow_redirects=True,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/125.0.0.0 Safari/537.36"
+                ),
+                "Accept": "application/pdf,*/*",
+            },
+        ) as client:
+            resp = await client.get(pdf_url)
+            resp.raise_for_status()
+            content_type = resp.headers.get("content-type", "")
+            if "html" in content_type and len(resp.content) < 50_000:
+                logger.warning("PDF URL %s returned HTML (likely a 404 page), skipping", pdf_url)
+                return False
+            if len(resp.content) < 1_000:
+                logger.warning("PDF %s too small (%d bytes), skipping", pdf_url, len(resp.content))
+                return False
+    except httpx.HTTPError as exc:
+        logger.warning("Failed to download PDF for %s %s: %s", bank, meeting_date, exc)
+        return False
 
-    def page_bg() -> None:
-        c.setFillColor(bg)
-        c.rect(0, 0, W, H, stroke=0, fill=1)
-
-    def wrap_text(txt: str, x: float, y: float, max_w: float, size: int = 9,
-                  col: Any = None, bold: bool = False) -> float:
-        c.setFillColor(col or muted)
-        font = "Helvetica-Bold" if bold else "Helvetica"
-        c.setFont(font, size)
-        for line in simpleSplit(txt, font, size, max_w):
-            if y < 60:
-                c.showPage(); page_bg(); y = H - 60
-            c.drawString(x, y, line)
-            y -= size + 3
-        return y
-
-    def section_bar(y: float, label: str) -> float:
-        c.setFillColor(accent)
-        c.rect(40, y - 2, W - 80, 1, stroke=0, fill=1)
-        c.setFillColor(accent)
-        c.setFont("Helvetica-Bold", 7)
-        c.drawString(40, y + 4, label.upper())
-        return y - 18
-
-    # ── Page 1 ──
-    page_bg()
-
-    # Header strip
-    c.setFillColor(panel)
-    c.rect(0, H - 90, W, 90, stroke=0, fill=1)
-    c.setStrokeColor(accent)
-    c.setLineWidth(3)
-    c.line(0, H - 90, W, H - 90)
-
-    # Bank name + date
-    c.setFillColor(accent)
-    c.setFont("Helvetica-Bold", 9)
-    c.drawString(40, H - 26, "MACRO DASHBOARD · CB POLICY TRACKER")
-    c.setFillColor(text_c)
-    c.setFont("Helvetica-Bold", 20)
-    c.drawString(40, H - 52, bank_name)
-    c.setFillColor(muted)
-    c.setFont("Helvetica", 10)
-    c.drawString(40, H - 68, report.meeting_date.strftime("%B %d, %Y") + f"  ·  {report.report_type.title()}")
-
-    # Tone score badge
-    c.setFillColor(tone_color)
-    c.roundRect(W - 140, H - 76, 100, 46, 6, stroke=0, fill=1)
-    c.setFillColor(colors.white)
-    c.setFont("Helvetica-Bold", 24)
-    score_str = f"{score:+.1f}"
-    c.drawCentredString(W - 90, H - 52, score_str)
-    c.setFont("Helvetica-Bold", 8)
-    label_str = (report.tone_label or "neutral").replace("_", " ").upper()
-    c.drawCentredString(W - 90, H - 66, label_str)
-
-    y = H - 110
-
-    # Outlook grid
-    outlook_data = [
-        ("Inflation", report.inflation_outlook, report.inflation_summary),
-        ("Growth",    report.growth_outlook,    report.growth_summary),
-        ("Labor",     report.labor_outlook,      report.labor_summary),
-    ]
-    cell_w = (W - 80 - 20) / 3
-    for idx, (topic, outlook, summary) in enumerate(outlook_data):
-        ox = 40 + idx * (cell_w + 10)
-        c.setFillColor(panel)
-        c.setStrokeColor(border)
-        c.roundRect(ox, y - 54, cell_w, 58, 4, stroke=1, fill=1)
-        c.setFillColor(accent)
-        c.setFont("Helvetica-Bold", 7)
-        c.drawString(ox + 8, y - 12, topic.upper())
-        ov = (outlook or "—").replace("_", " ").title()
-        c.setFillColor(text_c)
-        c.setFont("Helvetica-Bold", 11)
-        c.drawString(ox + 8, y - 28, ov)
-        if summary:
-            c.setFillColor(muted)
-            c.setFont("Helvetica", 7)
-            for line in simpleSplit(summary, "Helvetica", 7, cell_w - 16)[:3]:
-                c.drawString(ox + 8, y - 40, line)
-                y_offset = -10
-                break
-
-    y -= 72
-
-    # Key phrases
-    if report.key_phrases:
-        y = section_bar(y, "Key Policy Language")
-        phrases = report.key_phrases or []
-        px = 40
-        for phrase in phrases[:6]:
-            pw = len(phrase) * 5.5 + 16
-            if px + pw > W - 40:
-                px = 40; y -= 18
-            c.setFillColor(panel)
-            c.setStrokeColor(border)
-            c.roundRect(px, y - 12, pw, 14, 4, stroke=1, fill=1)
-            c.setFillColor(muted)
-            c.setFont("Helvetica", 8)
-            c.drawString(px + 8, y - 4, phrase)
-            px += pw + 8
-        y -= 28
-
-    # What changed
-    if report.tone_change_vs_prior:
-        y = section_bar(y, "Tone Shift vs Prior Meeting")
-        c.setFillColor(colors.HexColor("#f3ba6315"))
-        c.setStrokeColor(colors.HexColor("#f3ba6340"))
-        c.roundRect(40, y - 28, W - 80, 32, 4, stroke=1, fill=1)
-        c.setFillColor(colors.HexColor("#f3ba63"))
-        c.rect(40, y - 28, 3, 32, stroke=0, fill=1)
-        y = wrap_text(report.tone_change_vs_prior, 52, y + 2, W - 100, size=9, col=text_c)
-        y -= 10
-
-    # Retail bullets
-    if report.retail_bullets:
-        y = section_bar(y, "Retail FX Trader Takeaways")
-        for bullet in report.retail_bullets:
-            c.setFillColor(accent)
-            c.circle(48, y + 2, 3, stroke=0, fill=1)
-            y = wrap_text(bullet, 58, y, W - 100, size=10, col=text_c)
-            y -= 4
-
-    # Full statement text
-    if report.raw_text:
-        y = section_bar(y - 4, "Full Statement Text")
-        y = wrap_text(report.raw_text[:6000], 40, y, W - 80, size=8, col=muted)
-
-    # Footer
-    c.setFillColor(panel)
-    c.rect(0, 0, W, 30, stroke=0, fill=1)
-    c.setFillColor(muted)
-    c.setFont("Helvetica", 7)
-    c.drawString(40, 10, f"Generated by Macro Dashboard  ·  {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
-    if report.source_url:
-        c.drawRightString(W - 40, 10, f"Source: {report.source_url[:80]}")
-
-    c.save()
-    return buf.getvalue()
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(resp.content)
+    logger.info("Saved PDF %s/%s (%d KB)", bank, meeting_date, len(resp.content) // 1024)
+    return True
 
 
-def save_report_pdf(report: CbPolicyReport) -> Path:
-    """Generate and save PDF to disk. Returns the file path."""
-    path = pdf_path(report.bank, report.meeting_date)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(generate_report_pdf(report))
-    logger.info("Saved PDF: %s", path)
-    return path
+def _enforce_pdf_limit(bank: str) -> int:
+    """Delete PDF files beyond MAX_PDFS_PER_BANK for a bank, keeping the newest.
 
-
-def delete_report_pdf(bank: str, meeting_date: date) -> None:
-    """Remove cached PDF file if it exists."""
-    p = pdf_path(bank, meeting_date)
-    if p.exists():
-        p.unlink()
+    Files are named YYYY-MM-DD.pdf so lexicographic sort = chronological sort.
+    Returns number of files deleted.
+    """
+    bank_dir = CB_POLICY_PDF_DIR / bank
+    if not bank_dir.exists():
+        return 0
+    pdfs = sorted(bank_dir.glob("*.pdf"), key=lambda p: p.stem, reverse=True)
+    to_delete = pdfs[MAX_PDFS_PER_BANK:]
+    for p in to_delete:
+        p.unlink(missing_ok=True)
+        logger.info("Deleted old PDF: %s", p)
+    return len(to_delete)
 
 
 # ── DB helpers ────────────────────────────────────────────────────────────────
@@ -407,13 +283,15 @@ async def upsert_statement(
             meeting_date=record["meeting_date"],
             report_type=record.get("report_type", "statement"),
             source_url=record.get("source_url"),
+            source_pdf_url=record.get("source_pdf_url") or None,
             raw_text=record.get("raw_text"),
         )
         .on_conflict_do_update(
             constraint="uq_cb_policy_reports_bank_date",
             set_={
-                "source_url": pg_insert(CbPolicyReport).excluded.source_url,
-                "raw_text":   pg_insert(CbPolicyReport).excluded.raw_text,
+                "source_url":     pg_insert(CbPolicyReport).excluded.source_url,
+                "source_pdf_url": pg_insert(CbPolicyReport).excluded.source_pdf_url,
+                "raw_text":       pg_insert(CbPolicyReport).excluded.raw_text,
             },
         )
         .returning(CbPolicyReport.id)
@@ -427,11 +305,7 @@ async def upsert_statement(
 
 
 async def _enforce_limit(session: AsyncSession, bank: str) -> int:
-    """Delete the oldest reports for a bank beyond MAX_REPORTS_PER_BANK.
-
-    Also removes their cached PDF files. Returns number of rows deleted.
-    """
-    # IDs of reports to keep (newest MAX_REPORTS_PER_BANK)
+    """Delete the oldest reports for a bank beyond MAX_REPORTS_PER_BANK."""
     keep_ids_q = await session.execute(
         select(CbPolicyReport.id, CbPolicyReport.meeting_date)
         .where(CbPolicyReport.bank == bank)
@@ -440,27 +314,17 @@ async def _enforce_limit(session: AsyncSession, bank: str) -> int:
     )
     keep_rows = keep_ids_q.all()
     if len(keep_rows) < MAX_REPORTS_PER_BANK:
-        return 0  # Under the limit, nothing to prune
+        return 0
 
     keep_ids = {row.id for row in keep_rows}
-
-    # Find the ones to delete
     to_delete_q = await session.execute(
         select(CbPolicyReport.id, CbPolicyReport.meeting_date)
-        .where(
-            CbPolicyReport.bank == bank,
-            CbPolicyReport.id.not_in(keep_ids),
-        )
+        .where(CbPolicyReport.bank == bank, CbPolicyReport.id.not_in(keep_ids))
     )
     to_delete = to_delete_q.all()
     if not to_delete:
         return 0
 
-    # Delete PDF files for pruned reports
-    for row in to_delete:
-        delete_report_pdf(bank, row.meeting_date)
-
-    # Delete DB rows
     result = await session.execute(
         delete(CbPolicyReport).where(
             CbPolicyReport.bank == bank,
@@ -468,15 +332,12 @@ async def _enforce_limit(session: AsyncSession, bank: str) -> int:
         )
     )
     deleted = result.rowcount
-    logger.info("Pruned %d old report(s) for %s (limit=%d)", deleted, bank, MAX_REPORTS_PER_BANK)
+    logger.info("Pruned %d old report(s) for %s", deleted, bank)
     return deleted
 
 
-async def analyze_report(
-    session: AsyncSession,
-    report: CbPolicyReport,
-) -> bool:
-    """Run OpenAI analysis on one report and persist results + PDF."""
+async def analyze_report(session: AsyncSession, report: CbPolicyReport) -> bool:
+    """Run OpenAI analysis on one report and persist results."""
     if not report.raw_text:
         logger.warning("Skipping %s %s — no raw text", report.bank, report.meeting_date)
         return False
@@ -504,28 +365,21 @@ async def analyze_report(
         return False
 
     v = _validated(raw)
-    report.tone_score         = v["tone_score"]
-    report.tone_label         = v["tone_label"]
-    report.inflation_outlook  = v["inflation_outlook"]
-    report.inflation_summary  = v["inflation_summary"]
-    report.growth_outlook     = v["growth_outlook"]
-    report.growth_summary     = v["growth_summary"]
-    report.labor_outlook      = v["labor_outlook"]
-    report.labor_summary      = v["labor_summary"]
-    report.key_phrases        = v["key_phrases"]
+    report.tone_score           = v["tone_score"]
+    report.tone_label           = v["tone_label"]
+    report.inflation_outlook    = v["inflation_outlook"]
+    report.inflation_summary    = v["inflation_summary"]
+    report.growth_outlook       = v["growth_outlook"]
+    report.growth_summary       = v["growth_summary"]
+    report.labor_outlook        = v["labor_outlook"]
+    report.labor_summary        = v["labor_summary"]
+    report.key_phrases          = v["key_phrases"]
     report.tone_change_vs_prior = v["tone_change_vs_prior"]
-    report.retail_bullets     = v["retail_bullets"]
-    report.full_analysis      = raw
-    report.analyzed_at        = datetime.now(timezone.utc)
+    report.retail_bullets       = v["retail_bullets"]
+    report.full_analysis        = raw
+    report.analyzed_at          = datetime.now(timezone.utc)
 
     await session.flush()
-
-    # Generate and cache PDF
-    try:
-        save_report_pdf(report)
-    except Exception as exc:
-        logger.warning("PDF generation failed for %s %s: %s", report.bank, report.meeting_date, exc)
-
     logger.info(
         "Analyzed %s %s — tone=%.1f (%s)",
         report.bank, report.meeting_date,
@@ -539,7 +393,7 @@ async def run_full_pipeline(
     records: list[StatementRecord],
     reanalyze: bool = False,
 ) -> dict[str, int]:
-    """Upsert scraped records, analyze new ones, then enforce per-bank limit."""
+    """Upsert scraped records, analyze new ones, enforce per-bank limits, download PDFs."""
     counts = {"upserted": 0, "analyzed": 0, "skipped": 0, "pruned": 0}
 
     for record in records:
@@ -559,4 +413,16 @@ async def run_full_pipeline(
         counts["pruned"] += await _enforce_limit(session, bank)
 
     await session.commit()
+
+    # Download the last 2 actual PDFs per bank (after commit so DB failures don't block this)
+    for bank in banks_seen:
+        bank_records = sorted(
+            [r for r in records if r["bank"] == bank and r.get("source_pdf_url")],
+            key=lambda r: r["meeting_date"],
+            reverse=True,
+        )
+        for rec in bank_records[:MAX_PDFS_PER_BANK]:
+            await download_and_store_pdf(bank, rec["meeting_date"], rec.get("source_pdf_url", ""))
+        _enforce_pdf_limit(bank)
+
     return counts

@@ -37,12 +37,13 @@ _FETCH_TIMEOUT = 20.0  # seconds
 _MAX_TEXT_CHARS = 8000  # truncate raw statement text before storage
 
 
-class StatementRecord(TypedDict):
-    bank: str
-    meeting_date: date
-    source_url: str
-    raw_text: str
-    report_type: str
+class StatementRecord(TypedDict, total=False):
+    bank: str            # required
+    meeting_date: date   # required
+    source_url: str      # required
+    raw_text: str        # required
+    report_type: str     # required
+    source_pdf_url: str  # optional — direct PDF download link from CB website
 
 
 # ── HTML text extraction ─────────────────────────────────────────────────────
@@ -128,6 +129,45 @@ def _clean_text(text: str) -> str:
     return "\n".join(cleaned)
 
 
+# ── PDF link discovery ───────────────────────────────────────────────────────
+
+# Terms that indicate a link is the main policy document PDF (not an appendix)
+_PDF_PREFERRED_TERMS = (
+    "statement", "decision", "assessment", "monetary", "mps", "minutes",
+    "press", "policy", "rate", "mpmpro", "annex", "implementation",
+)
+_PDF_SKIP_TERMS = ("publication", "annual", "report", "speech", "wp", "working", "research")
+
+
+def _find_pdf_link(html: str, base_url: str) -> str | None:
+    """Return the best-guess PDF link from a CB page's HTML.
+
+    Looks for <a href="...pdf"> elements, prefers links that mention monetary
+    policy terms. Falls back to the first .pdf link if nothing preferred found.
+    """
+    # Parse base to build absolute URLs
+    from urllib.parse import urljoin, urlparse
+    hrefs = re.findall(r'href=["\']([^"\']+\.pdf[^"\']*)["\']', html, re.IGNORECASE)
+    if not hrefs:
+        return None
+
+    preferred: list[str] = []
+    fallback: list[str] = []
+
+    for href in hrefs:
+        # Resolve relative URLs
+        abs_url = urljoin(base_url, href.split("?")[0])
+        lower = href.lower()
+        if any(t in lower for t in _PDF_SKIP_TERMS):
+            continue
+        if any(t in lower for t in _PDF_PREFERRED_TERMS):
+            preferred.append(abs_url)
+        else:
+            fallback.append(abs_url)
+
+    return (preferred or fallback or [None])[0]
+
+
 # ── HTTP helpers ─────────────────────────────────────────────────────────────
 
 def _make_client() -> httpx.AsyncClient:
@@ -191,11 +231,14 @@ async def _scrape_fed(client: httpx.AsyncClient, since: date) -> list[StatementR
         if len(text) < 150:
             continue
 
+        # FED publishes its statement as both .htm and .pdf at the same path
+        pdf_url = url.replace(".htm", ".pdf")
         records.append(
             StatementRecord(
                 bank="FED",
                 meeting_date=meeting_date,
                 source_url=url,
+                source_pdf_url=pdf_url,
                 raw_text=text[:_MAX_TEXT_CHARS],
                 report_type="statement",
             )
@@ -258,6 +301,7 @@ async def _scrape_ecb(client: httpx.AsyncClient, since: date) -> list[StatementR
                     bank="ECB",
                     meeting_date=meeting_date,
                     source_url=url,
+                    source_pdf_url=_find_pdf_link(html, url) or "",
                     raw_text=text[:_MAX_TEXT_CHARS],
                     report_type="statement",
                 )
@@ -327,6 +371,7 @@ async def _scrape_boe(client: httpx.AsyncClient, since: date) -> list[StatementR
                 bank="BOE",
                 meeting_date=meeting_date,
                 source_url=url,
+                source_pdf_url=_find_pdf_link(html, url) or "",
                 raw_text=text[:_MAX_TEXT_CHARS],
                 report_type="statement",
             )
@@ -380,6 +425,7 @@ async def _scrape_boj(client: httpx.AsyncClient, since: date) -> list[StatementR
                 bank="BOJ",
                 meeting_date=meeting_date,
                 source_url=url,
+                source_pdf_url=_find_pdf_link(html, url) or "",
                 raw_text=text[:_MAX_TEXT_CHARS],
                 report_type="statement",
             )
@@ -431,6 +477,7 @@ async def _scrape_rba(client: httpx.AsyncClient, since: date) -> list[StatementR
                 bank="RBA",
                 meeting_date=meeting_date,
                 source_url=url,
+                source_pdf_url=_find_pdf_link(html, url) or "",
                 raw_text=text[:_MAX_TEXT_CHARS],
                 report_type="statement",
             )
@@ -504,6 +551,7 @@ async def _scrape_boc(client: httpx.AsyncClient, since: date) -> list[StatementR
                 bank="BOC",
                 meeting_date=meeting_date,
                 source_url=url,
+                source_pdf_url=_find_pdf_link(html, url) or "",
                 raw_text=text[:_MAX_TEXT_CHARS],
                 report_type="statement",
             )
@@ -559,6 +607,7 @@ async def _scrape_snb(client: httpx.AsyncClient, since: date) -> list[StatementR
                 bank="SNB",
                 meeting_date=meeting_date,
                 source_url=url,
+                source_pdf_url=_find_pdf_link(html, url) or "",
                 raw_text=text[:_MAX_TEXT_CHARS],
                 report_type="statement",
             )
@@ -622,6 +671,7 @@ async def _scrape_rbnz(client: httpx.AsyncClient, since: date) -> list[Statement
                 bank="RBNZ",
                 meeting_date=meeting_date,
                 source_url=url,
+                source_pdf_url=_find_pdf_link(html, url) or "",
                 raw_text=text[:_MAX_TEXT_CHARS],
                 report_type="statement",
             )

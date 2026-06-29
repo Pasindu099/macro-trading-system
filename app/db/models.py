@@ -381,6 +381,7 @@ class CbPolicyReport(Base):
         String(30), nullable=False, server_default=text("'statement'")
     )
     source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_pdf_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     raw_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # AI-derived fields (NULL until analyzed)

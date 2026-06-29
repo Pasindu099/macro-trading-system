@@ -6,6 +6,7 @@ import asyncio
 import csv
 import calendar
 import json
+import logging
 from datetime import date, datetime, timedelta, timezone
 from io import BytesIO
 from io import StringIO
@@ -52,6 +53,7 @@ from app.settings import get_settings
 
 router = APIRouter(tags=["pages"])
 templates = Jinja2Templates(directory=str(Path("app/web/templates")))
+logger = logging.getLogger(__name__)
 
 ALL_CATEGORY_TABS = (
     "Inflation",

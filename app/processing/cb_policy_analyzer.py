@@ -23,6 +23,7 @@ from typing import Any
 
 import httpx
 from sqlalchemy import select, asc
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import CbPolicyReport
@@ -226,30 +227,35 @@ async def upsert_statement(
     session: AsyncSession,
     record: StatementRecord,
 ) -> CbPolicyReport:
-    """Insert or update a scraped statement (without analysis)."""
-    existing = await session.scalar(
-        select(CbPolicyReport).where(
-            CbPolicyReport.bank == record["bank"],
-            CbPolicyReport.meeting_date == record["meeting_date"],
-        )
-    )
-    if existing is None:
-        existing = CbPolicyReport(
+    """Insert or update a scraped statement using PostgreSQL native UPSERT.
+
+    Uses INSERT ... ON CONFLICT DO UPDATE so concurrent refresh calls don't
+    race and cause UniqueViolationError.
+    """
+    stmt = (
+        pg_insert(CbPolicyReport)
+        .values(
             bank=record["bank"],
             meeting_date=record["meeting_date"],
             report_type=record.get("report_type", "statement"),
             source_url=record.get("source_url"),
             raw_text=record.get("raw_text"),
         )
-        session.add(existing)
-    else:
-        # Update text in case scrape yielded more content
-        if record.get("raw_text") and len(record["raw_text"]) > len(existing.raw_text or ""):
-            existing.raw_text = record["raw_text"]
-        if record.get("source_url"):
-            existing.source_url = record["source_url"]
-
+        .on_conflict_do_update(
+            constraint="uq_cb_policy_reports_bank_date",
+            set_={
+                "source_url": pg_insert(CbPolicyReport).excluded.source_url,
+                "raw_text": pg_insert(CbPolicyReport).excluded.raw_text,
+            },
+        )
+        .returning(CbPolicyReport.id)
+    )
+    result = await session.execute(stmt)
+    report_id = result.scalar_one()
     await session.flush()
+
+    existing = await session.get(CbPolicyReport, report_id)
+    assert existing is not None
     return existing
 
 

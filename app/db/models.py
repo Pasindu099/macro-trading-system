@@ -364,6 +364,59 @@ class RateSnapshot(Base):
         )
 
 
+class CbPolicyReport(Base):
+    """AI-analyzed central bank monetary policy statement.
+
+    One row per (bank, meeting_date). Scraped from official CB websites and
+    analyzed by OpenAI to extract tone score, outlook directions, and
+    retail-trader-friendly summaries.
+    """
+
+    __tablename__ = "cb_policy_reports"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    bank: Mapped[str] = mapped_column(String(10), nullable=False)
+    meeting_date: Mapped[date] = mapped_column(Date, nullable=False)
+    report_type: Mapped[str] = mapped_column(
+        String(30), nullable=False, server_default=text("'statement'")
+    )
+    source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    raw_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # AI-derived fields (NULL until analyzed)
+    tone_score: Mapped[Decimal | None] = mapped_column(Numeric(4, 2), nullable=True)
+    tone_label: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    inflation_outlook: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    inflation_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    growth_outlook: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    growth_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    labor_outlook: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    labor_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    key_phrases: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    tone_change_vs_prior: Mapped[str | None] = mapped_column(Text, nullable=True)
+    retail_bullets: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    full_analysis: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+
+    analyzed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    scraped_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+
+    __table_args__ = (
+        UniqueConstraint("bank", "meeting_date", name="uq_cb_policy_reports_bank_date"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<CbPolicyReport bank={self.bank!r} "
+            f"meeting_date={self.meeting_date.isoformat()} tone={self.tone_score}>"
+        )
+
+
 class OISCache(Base):
     """Cached OIS curve point."""
 

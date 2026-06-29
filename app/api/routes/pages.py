@@ -27,7 +27,7 @@ from app.api.routes.public import (
     list_biggest_surprises,
     list_country_summaries,
 )
-from app.db.models import Country, Indicator, IndicatorRelease, IngestionRun
+from app.db.models import Country, CbPolicyReport, Indicator, IndicatorRelease, IngestionRun
 from app.services.meeting_calendar import SUPPORTED_BANKS, normalize_bank, get_upcoming_meetings
 from app.services.rate_probability import (
     DATA_STATE_LIVE,
@@ -46,6 +46,8 @@ from app.processing.bank_research import (
     load_bank_research_index,
     parse_drive_folder_id,
 )
+from app.processing.cb_policy_scraper import scrape_all_banks
+from app.processing.cb_policy_analyzer import run_full_pipeline
 from app.settings import get_settings
 
 router = APIRouter(tags=["pages"])
@@ -2812,5 +2814,235 @@ async def calendar_page(
             "countries": countries,
             "category_tabs": ALL_CATEGORY_TABS,
             "calendar_windows": CALENDAR_WINDOWS,
+        },
+    )
+
+
+# ── CB Policy Tracker ────────────────────────────────────────────────────────
+
+_CB_POLICY_BANK_META: dict[str, dict[str, str]] = {
+    "FED":  {"name": "Federal Reserve", "currency": "USD", "flag": "\U0001f1fa\U0001f1f8"},
+    "ECB":  {"name": "European Central Bank", "currency": "EUR", "flag": "\U0001f1ea\U0001f1fa"},
+    "BOE":  {"name": "Bank of England", "currency": "GBP", "flag": "\U0001f1ec\U0001f1e7"},
+    "BOJ":  {"name": "Bank of Japan", "currency": "JPY", "flag": "\U0001f1ef\U0001f1f5"},
+    "RBA":  {"name": "Reserve Bank of Australia", "currency": "AUD", "flag": "\U0001f1e6\U0001f1fa"},
+    "BOC":  {"name": "Bank of Canada", "currency": "CAD", "flag": "\U0001f1e8\U0001f1e6"},
+    "SNB":  {"name": "Swiss National Bank", "currency": "CHF", "flag": "\U0001f1e8\U0001f1ed"},
+    "RBNZ": {"name": "Reserve Bank of NZ", "currency": "NZD", "flag": "\U0001f1f3\U0001f1ff"},
+}
+
+
+def _tone_class(score: float | None) -> str:
+    if score is None:
+        return "tone-neutral"
+    if score >= 1.5:
+        return "tone-hawkish"
+    if score <= -1.5:
+        return "tone-dovish"
+    return "tone-neutral"
+
+
+def _tone_percent(score: float | None) -> int:
+    """Map -5…+5 score to 0…100 for the progress bar."""
+    if score is None:
+        return 50
+    clamped = max(-5.0, min(5.0, float(score)))
+    return int(round(((clamped + 5.0) / 10.0) * 100))
+
+
+def _outlook_arrow(outlook: str | None) -> str:
+    mapping = {
+        "falling": "↓↓", "below_target": "↓", "stable": "→",
+        "rising": "↑", "well_above_target": "↑↑",
+        "weak": "↓↓", "slowing": "↓", "moderate": "→", "strong": "↑",
+        "loose": "↓↓", "easing": "↓", "balanced": "→", "tight": "↑",
+    }
+    return mapping.get(str(outlook or "").lower(), "→")
+
+
+def _outlook_class(outlook: str | None, kind: str = "inflation") -> str:
+    positive = {
+        "inflation": {"rising", "well_above_target"},
+        "growth":    {"strong", "moderate"},
+        "labor":     {"tight"},
+    }
+    negative = {
+        "inflation": {"falling", "below_target"},
+        "growth":    {"weak", "slowing"},
+        "labor":     {"loose", "easing"},
+    }
+    val = str(outlook or "").lower()
+    if val in positive.get(kind, set()):
+        return "outlook-positive"
+    if val in negative.get(kind, set()):
+        return "outlook-negative"
+    return "outlook-neutral"
+
+
+def _format_tone_label(label: str | None) -> str:
+    if not label:
+        return "Neutral"
+    return label.replace("_", " ").title()
+
+
+def _format_outlook_label(label: str | None) -> str:
+    if not label:
+        return "—"
+    return label.replace("_", " ").title()
+
+
+async def _build_cb_policy_context(session: AsyncSession) -> dict[str, Any]:
+    """Query all CB policy reports and build the template context."""
+    from datetime import date as _date, timedelta
+    cutoff = _date.today() - timedelta(days=13 * 31)
+
+    rows_q = await session.execute(
+        select(CbPolicyReport)
+        .where(
+            CbPolicyReport.meeting_date >= cutoff,
+            CbPolicyReport.analyzed_at.is_not(None),
+        )
+        .order_by(CbPolicyReport.bank.asc(), CbPolicyReport.meeting_date.asc())
+    )
+    all_reports = list(rows_q.scalars().all())
+
+    # Group by bank
+    by_bank: dict[str, list[CbPolicyReport]] = {}
+    for r in all_reports:
+        by_bank.setdefault(r.bank, []).append(r)
+
+    bank_cards: list[dict[str, Any]] = []
+    all_chart_data: dict[str, list[list[Any]]] = {}
+
+    for bank_code, meta in _CB_POLICY_BANK_META.items():
+        reports = by_bank.get(bank_code, [])
+        latest = reports[-1] if reports else None
+
+        tone_score_f = float(latest.tone_score) if latest and latest.tone_score else None
+        chart_series = [
+            [r.meeting_date.isoformat(), float(r.tone_score)]
+            for r in reports if r.tone_score is not None
+        ]
+        all_chart_data[bank_code] = chart_series
+
+        report_items = [
+            {
+                "date": r.meeting_date.isoformat(),
+                "date_display": r.meeting_date.strftime("%b %d, %Y"),
+                "tone_score": float(r.tone_score) if r.tone_score else None,
+                "tone_score_display": f"{float(r.tone_score):+.1f}" if r.tone_score else "—",
+                "tone_label": _format_tone_label(r.tone_label),
+                "tone_class": _tone_class(float(r.tone_score) if r.tone_score else None),
+                "tone_percent": _tone_percent(float(r.tone_score) if r.tone_score else None),
+                "tone_change": r.tone_change_vs_prior or "—",
+                "retail_bullets": list(r.retail_bullets or []),
+                "key_phrases": list(r.key_phrases or []),
+                "inflation_outlook": _format_outlook_label(r.inflation_outlook),
+                "inflation_summary": r.inflation_summary or "",
+                "growth_outlook": _format_outlook_label(r.growth_outlook),
+                "growth_summary": r.growth_summary or "",
+                "labor_outlook": _format_outlook_label(r.labor_outlook),
+                "labor_summary": r.labor_summary or "",
+                "source_url": r.source_url or "",
+            }
+            for r in reversed(reports)  # newest first for the detail view
+        ]
+
+        # Key phrases from the two most recent reports
+        recent_phrases: list[str] = []
+        for r in reversed(reports[:2]):
+            for phrase in (r.key_phrases or []):
+                if phrase not in recent_phrases:
+                    recent_phrases.append(phrase)
+        recent_phrases = recent_phrases[:8]
+
+        bank_cards.append(
+            {
+                "code": bank_code,
+                "name": meta["name"],
+                "currency": meta["currency"],
+                "flag": meta["flag"],
+                "latest_tone_score": tone_score_f,
+                "latest_tone_score_display": (
+                    f"{tone_score_f:+.1f}" if tone_score_f is not None else "—"
+                ),
+                "latest_tone_label": _format_tone_label(latest.tone_label if latest else None),
+                "tone_class": _tone_class(tone_score_f),
+                "tone_percent": _tone_percent(tone_score_f),
+                "inflation_outlook": _format_outlook_label(latest.inflation_outlook if latest else None),
+                "inflation_arrow": _outlook_arrow(latest.inflation_outlook if latest else None),
+                "inflation_class": _outlook_class(latest.inflation_outlook if latest else None, "inflation"),
+                "inflation_summary": (latest.inflation_summary or "") if latest else "",
+                "growth_outlook": _format_outlook_label(latest.growth_outlook if latest else None),
+                "growth_arrow": _outlook_arrow(latest.growth_outlook if latest else None),
+                "growth_class": _outlook_class(latest.growth_outlook if latest else None, "growth"),
+                "growth_summary": (latest.growth_summary or "") if latest else "",
+                "labor_outlook": _format_outlook_label(latest.labor_outlook if latest else None),
+                "labor_arrow": _outlook_arrow(latest.labor_outlook if latest else None),
+                "labor_class": _outlook_class(latest.labor_outlook if latest else None, "labor"),
+                "labor_summary": (latest.labor_summary or "") if latest else "",
+                "latest_date": (
+                    latest.meeting_date.strftime("%b %d, %Y") if latest else "No data"
+                ),
+                "latest_change": (latest.tone_change_vs_prior or "") if latest else "",
+                "latest_bullets": list(latest.retail_bullets or []) if latest else [],
+                "recent_key_phrases": recent_phrases,
+                "chart_data": chart_series,
+                "reports": report_items,
+                "report_count": len(reports),
+                "has_data": latest is not None,
+            }
+        )
+
+    # Overall last-updated timestamp
+    latest_analyzed = max(
+        (r.analyzed_at for r in all_reports if r.analyzed_at),
+        default=None,
+    )
+    last_updated_str = (
+        latest_analyzed.strftime("%b %d, %Y %H:%M UTC") if latest_analyzed else "Never"
+    )
+
+    return {
+        "banks": bank_cards,
+        "all_chart_data": all_chart_data,
+        "total_reports": len(all_reports),
+        "last_updated": last_updated_str,
+        "is_empty": len(all_reports) == 0,
+    }
+
+
+async def _run_cb_policy_refresh() -> None:
+    """Background task: scrape + analyze all banks. Creates its own DB session."""
+    from app.db.session import session_scope
+    try:
+        records = await scrape_all_banks(lookback_months=12)
+        async with session_scope() as bg_session:
+            counts = await run_full_pipeline(bg_session, records)
+        logger.info("CB policy refresh complete: %s", counts)
+    except Exception as exc:
+        logger.error("CB policy refresh failed: %s", exc, exc_info=True)
+
+
+@router.get("/cb-policy-tracker", response_class=HTMLResponse)
+async def cb_policy_tracker_page(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    background_tasks: BackgroundTasks = BackgroundTasks(),  # FastAPI injects this
+) -> HTMLResponse:
+    """Render the CB Policy Tracker page."""
+    context = await _build_cb_policy_context(session)
+
+    # Auto-trigger first-run scrape if no data exists
+    if context["is_empty"]:
+        background_tasks.add_task(_run_cb_policy_refresh)
+
+    return templates.TemplateResponse(
+        request,
+        "cb_policy_tracker.html",
+        {
+            "request": request,
+            "page_title": "CB Policy Tracker | Macro Dashboard",
+            **context,
         },
     )

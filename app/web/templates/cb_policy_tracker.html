@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/cb_policy.css') }}?v=20260629">
+<script src="{{ url_for('static', path='js/cb_policy.js') }}?v=20260629" defer></script>
+{% endblock %}
+{% block body %}
+
+<div class="page-header cpt-header">
+  <div class="cpt-header-left">
+    <h1 class="page-title">CB Policy Tracker</h1>
+    <p class="page-subtitle">12-month AI analysis of central bank monetary policy statements — tone shifts, inflation &amp; growth expectations</p>
+  </div>
+  <div class="cpt-header-right">
+    <span class="cpt-last-updated">
+      <span class="dot {% if is_empty %}dot-warn{% else %}dot-ok{% endif %}"></span>
+      {% if is_empty %}Awaiting first fetch{% else %}Updated {{ last_updated }}{% endif %}
+    </span>
+    <button
+      id="cpt-refresh-btn"
+      class="btn btn-sm"
+      onclick="cptRefresh()"
+      title="Re-scrape statements and re-run AI analysis"
+    >&#8635; Refresh Analysis</button>
+  </div>
+</div>
+
+<div id="cpt-refresh-banner" class="cpt-banner" style="display:none">
+  <span class="cpt-banner-dot"></span>
+  <span id="cpt-refresh-msg">Fetching statements from central bank websites and running AI analysis — this may take a few minutes…</span>
+</div>
+
+{% if is_empty %}
+<!-- Empty state ─────────────────────────────────────────────────────────── -->
+<div class="panel cpt-empty">
+  <div class="cpt-empty-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="48" height="48"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-4 4"/></svg>
+  </div>
+  <h2>No policy reports yet</h2>
+  <p>Click <strong>Refresh Analysis</strong> to fetch the last 12 months of monetary policy statements from all 8 central banks and run AI analysis.</p>
+  <p class="cpt-empty-note">First run: ~5–10 minutes (8 banks × 6–8 statements × AI analysis). Results are cached — subsequent loads are instant.</p>
+  <button class="btn" onclick="cptRefresh()">&#8635; Start First Fetch</button>
+</div>
+
+{% else %}
+
+<!-- Tone Timeline Chart ──────────────────────────────────────────────────── -->
+<div class="panel cpt-chart-panel">
+  <div class="panel-header">
+    <h2 class="panel-title">Policy Tone Timeline — 12 Months</h2>
+    <p class="panel-subtitle">Hawkish = positive &nbsp;|&nbsp; Dovish = negative &nbsp;|&nbsp; Range: &minus;5 to +5</p>
+  </div>
+  <div class="cpt-chart-wrap">
+    <canvas id="cpt-tone-chart" height="220"></canvas>
+  </div>
+  <div class="cpt-chart-legend" id="cpt-chart-legend"></div>
+</div>
+
+<!-- Bank Cards Grid ─────────────────────────────────────────────────────── -->
+<div class="panel">
+  <div class="panel-header">
+    <h2 class="panel-title">Central Bank Snapshots</h2>
+    <p class="panel-subtitle">Latest statement analysis per bank</p>
+  </div>
+  <div class="cpt-bank-grid">
+    {% for bank in banks %}
+    <div class="cpt-bank-card {% if bank.has_data %}{{ bank.tone_class }}{% else %}tone-neutral{% endif %}" id="card-{{ bank.code }}">
+
+      <!-- Card header -->
+      <div class="cpt-card-header">
+        <div class="cpt-card-identity">
+          <span class="cpt-flag">{{ bank.flag }}</span>
+          <div>
+            <div class="cpt-currency">{{ bank.currency }}</div>
+            <div class="cpt-bank-name">{{ bank.name }}</div>
+          </div>
+        </div>
+        <div class="cpt-tone-score-wrap">
+          <div class="cpt-tone-score">{{ bank.latest_tone_score_display }}</div>
+          <div class="cpt-tone-label">{{ bank.latest_tone_label }}</div>
+        </div>
+      </div>
+
+      {% if bank.has_data %}
+      <!-- Tone meter bar -->
+      <div class="cpt-meter-track" title="Tone score: {{ bank.latest_tone_score_display }}">
+        <div class="cpt-meter-fill" style="width: {{ bank.tone_percent }}%"></div>
+        <div class="cpt-meter-center"></div>
+      </div>
+
+      <!-- Outlook grid -->
+      <div class="cpt-outlook-grid">
+        <div class="cpt-outlook-cell {{ bank.inflation_class }}" title="{{ bank.inflation_summary }}">
+          <span class="cpt-outlook-label">Inflation</span>
+          <span class="cpt-outlook-val">{{ bank.inflation_arrow }} {{ bank.inflation_outlook }}</span>
+        </div>
+        <div class="cpt-outlook-cell {{ bank.growth_class }}" title="{{ bank.growth_summary }}">
+          <span class="cpt-outlook-label">Growth</span>
+          <span class="cpt-outlook-val">{{ bank.growth_arrow }} {{ bank.growth_outlook }}</span>
+        </div>
+        <div class="cpt-outlook-cell {{ bank.labor_class }}" title="{{ bank.labor_summary }}">
+          <span class="cpt-outlook-label">Labor</span>
+          <span class="cpt-outlook-val">{{ bank.labor_arrow }} {{ bank.labor_outlook }}</span>
+        </div>
+      </div>
+
+      <!-- Key phrases -->
+      {% if bank.recent_key_phrases %}
+      <div class="cpt-phrases">
+        {% for phrase in bank.recent_key_phrases[:4] %}
+        <span class="cpt-phrase-tag">{{ phrase }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="cpt-card-footer">
+        <span class="cpt-date-label">Latest: {{ bank.latest_date }}</span>
+        <button
+          class="cpt-expand-btn"
+          onclick="cptToggleDetail('{{ bank.code }}')"
+          id="expand-btn-{{ bank.code }}"
+        >History ▼</button>
+      </div>
+
+      <!-- Expanded detail panel -->
+      <div class="cpt-detail" id="detail-{{ bank.code }}" style="display:none">
+        <!-- What changed callout -->
+        {% if bank.latest_change %}
+        <div class="cpt-change-callout">
+          <span class="cpt-change-label">What changed</span>
+          <span class="cpt-change-text">{{ bank.latest_change }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Retail bullets -->
+        {% if bank.latest_bullets %}
+        <div class="cpt-bullets-section">
+          <div class="cpt-section-label">Retail trader takeaways</div>
+          {% for bullet in bank.latest_bullets %}
+          <div class="cpt-bullet">
+            <span class="cpt-bullet-dot"></span>
+            <span>{{ bullet }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Outlook summaries -->
+        <div class="cpt-outlook-summaries">
+          <div class="cpt-section-label">Detailed outlook</div>
+          {% if bank.inflation_summary %}
+          <div class="cpt-summary-row {{ bank.inflation_class }}">
+            <span class="cpt-summary-topic">Inflation</span>
+            <span class="cpt-summary-text">{{ bank.inflation_summary }}</span>
+          </div>
+          {% endif %}
+          {% if bank.growth_summary %}
+          <div class="cpt-summary-row {{ bank.growth_class }}">
+            <span class="cpt-summary-topic">Growth</span>
+            <span class="cpt-summary-text">{{ bank.growth_summary }}</span>
+          </div>
+          {% endif %}
+          {% if bank.labor_summary %}
+          <div class="cpt-summary-row {{ bank.labor_class }}">
+            <span class="cpt-summary-topic">Labor</span>
+            <span class="cpt-summary-text">{{ bank.labor_summary }}</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Historical timeline -->
+        {% if bank.reports|length > 1 %}
+        <div class="cpt-section-label" style="margin-top: 16px">Statement history</div>
+        <div class="cpt-timeline">
+          {% for report in bank.reports %}
+          <div class="cpt-timeline-item {% if loop.first %}is-latest{% endif %}">
+            <div class="cpt-tl-meta">
+              <span class="cpt-tl-date">{{ report.date_display }}</span>
+              <span class="cpt-tl-score {{ report.tone_class }}">{{ report.tone_score_display }}</span>
+              <span class="cpt-tl-label {{ report.tone_class }}">{{ report.tone_label }}</span>
+              {% if report.source_url %}
+              <a href="{{ report.source_url }}" target="_blank" rel="noopener" class="cpt-tl-src" title="View official statement">↗</a>
+              {% endif %}
+            </div>
+            {% if not loop.first and report.tone_change %}
+            <div class="cpt-tl-change">{{ report.tone_change }}</div>
+            {% endif %}
+            {% if report.retail_bullets %}
+            <div class="cpt-tl-bullets">
+              {% for b in report.retail_bullets %}
+              <div class="cpt-tl-bullet">• {{ b }}</div>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% elif bank.reports|length == 1 %}
+        <div class="cpt-section-label" style="margin-top:16px">Statement</div>
+        <div class="cpt-timeline">
+          <div class="cpt-timeline-item is-latest">
+            <div class="cpt-tl-meta">
+              <span class="cpt-tl-date">{{ bank.reports[0].date_display }}</span>
+              <span class="cpt-tl-score {{ bank.reports[0].tone_class }}">{{ bank.reports[0].tone_score_display }}</span>
+              {% if bank.reports[0].source_url %}
+              <a href="{{ bank.reports[0].source_url }}" target="_blank" rel="noopener" class="cpt-tl-src">↗</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      {% else %}
+      <!-- No data yet -->
+      <div class="cpt-no-data">No data — click Refresh to fetch.</div>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endif %}
+
+<!-- hidden data for JS chart -->
+<script id="cpt-data" type="application/json">{{ all_chart_data | tojson }}</script>
+
+{% endblock body %}

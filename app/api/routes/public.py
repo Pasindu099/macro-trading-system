@@ -35,7 +35,7 @@ from app.api.schemas import (
     IndicatorSnapshot,
     ResponseMeta,
 )
-from app.db.models import Country, Indicator, IndicatorRelease, IngestionRun
+from app.db.models import Country, CbPolicyReport, Indicator, IndicatorRelease, IngestionRun
 from app.db.session import get_session
 from app.processing.cot import COT_PAIRS, get_all_cot_rows, get_cot_payload, normalize_cot_pair
 from app.services.retail_sentiment import (
@@ -1779,3 +1779,88 @@ async def get_indicator_explorer(
     if payload is None:
         raise HTTPException(status_code=404, detail="Indicator not found")
     return Envelope(data=payload, meta=await _meta(session))
+
+
+# ── CB Policy Tracker endpoints ───────────────────────────────────────────────
+
+@router.post("/cb/policy-reports/refresh")
+async def refresh_cb_policy_reports(
+    bank: str | None = Query(default=None, description="Specific bank code or omit for all"),
+    reanalyze: bool = Query(default=False, description="Re-run AI on already-analyzed rows"),
+    session: AsyncSession = DB_SESSION,
+) -> dict[str, Any]:
+    """Scrape and AI-analyze CB policy statements, storing results in cb_policy_reports.
+
+    This endpoint can take several minutes on first run (8 banks × ~7 statements each).
+    Call it from a background task or a manual refresh button.
+    """
+    from app.processing.cb_policy_scraper import scrape_all_banks, scrape_bank
+    from app.processing.cb_policy_analyzer import run_full_pipeline
+
+    settings = get_settings()
+    if not settings.openai_api_key:
+        raise HTTPException(status_code=503, detail="OPENAI_API_KEY is not configured.")
+
+    try:
+        if bank:
+            records = await scrape_bank(bank.upper())
+        else:
+            records = await scrape_all_banks(lookback_months=12)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Scraping failed: {exc}") from exc
+
+    counts = await run_full_pipeline(session, records, reanalyze=reanalyze)
+    return {
+        "bank": bank or "all",
+        "scraped": len(records),
+        **counts,
+        "generated_at": _now().isoformat(),
+    }
+
+
+@router.get("/cb/policy-reports")
+async def get_cb_policy_reports(
+    bank: str | None = Query(default=None),
+    session: AsyncSession = DB_SESSION,
+) -> dict[str, Any]:
+    """Return analyzed CB policy reports for all (or one) bank(s)."""
+    from datetime import date as _date, timedelta
+    cutoff = _date.today() - timedelta(days=13 * 31)
+
+    q = select(CbPolicyReport).where(
+        CbPolicyReport.meeting_date >= cutoff,
+        CbPolicyReport.analyzed_at.is_not(None),
+    ).order_by(CbPolicyReport.bank.asc(), CbPolicyReport.meeting_date.desc())
+
+    if bank:
+        q = q.where(CbPolicyReport.bank == bank.upper())
+
+    rows = (await session.execute(q)).scalars().all()
+
+    return {
+        "reports": [
+            {
+                "bank": r.bank,
+                "meeting_date": r.meeting_date.isoformat(),
+                "report_type": r.report_type,
+                "source_url": r.source_url,
+                "tone_score": float(r.tone_score) if r.tone_score is not None else None,
+                "tone_label": r.tone_label,
+                "inflation_outlook": r.inflation_outlook,
+                "inflation_summary": r.inflation_summary,
+                "growth_outlook": r.growth_outlook,
+                "growth_summary": r.growth_summary,
+                "labor_outlook": r.labor_outlook,
+                "labor_summary": r.labor_summary,
+                "key_phrases": r.key_phrases or [],
+                "tone_change_vs_prior": r.tone_change_vs_prior,
+                "retail_bullets": r.retail_bullets or [],
+                "analyzed_at": r.analyzed_at.isoformat() if r.analyzed_at else None,
+            }
+            for r in rows
+        ],
+        "count": len(rows),
+        "generated_at": _now().isoformat(),
+    }

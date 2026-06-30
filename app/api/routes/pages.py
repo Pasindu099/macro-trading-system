@@ -2303,12 +2303,197 @@ async def bank_research_page(request: Request) -> HTMLResponse:
     )
 
 
+_MM_WATCHLIST = [
+    {
+        "id": "us", "bank": "FED", "name": "Federal Reserve",
+        "country": "United States", "country_code": "US", "flag": "🇺🇸", "currency": "USD",
+        "rate_indicator": "fed_interest_rate_decision", "inflation_target": 2.0,
+        "metrics": [
+            {"key": "core_pce", "canonical": "core_pce_price_index_yoy", "label": "Core PCE YoY", "unit": "%", "primary": True, "target": 2.0},
+            {"key": "cpi",      "canonical": "cpi_headline_yoy",          "label": "Headline CPI YoY", "unit": "%", "target": 2.0},
+            {"key": "core_cpi", "canonical": "core_cpi_yoy",              "label": "Core CPI YoY",     "unit": "%", "target": 2.0},
+            {"key": "unemp",    "canonical": "unemployment_rate",          "label": "Unemployment",     "unit": "%", "target": 4.0, "lower_better": True},
+            {"key": "nfp",      "canonical": "private_nonfarm_payrolls",  "label": "Private NFP",      "unit": "K"},
+            {"key": "pmi",      "canonical": "ism_manufacturing_pmi",     "label": "ISM Mfg PMI",      "unit": "idx", "target": 50},
+        ],
+    },
+    {
+        "id": "eu", "bank": "ECB", "name": "European Central Bank",
+        "country": "Eurozone", "country_code": "EU", "flag": "🇪🇺", "currency": "EUR",
+        "rate_indicator": "ecb_deposit_rate", "inflation_target": 2.0,
+        "metrics": [
+            {"key": "cpi",      "canonical": "cpi_headline_yoy",  "label": "Headline CPI YoY", "unit": "%", "primary": True, "target": 2.0},
+            {"key": "core_cpi", "canonical": "core_cpi_yoy",      "label": "Core CPI YoY",     "unit": "%", "target": 2.0},
+            {"key": "gdp",      "canonical": "gdp_qoq",           "label": "GDP QoQ",          "unit": "%"},
+            {"key": "unemp",    "canonical": "unemployment_rate", "label": "Unemployment",     "unit": "%", "lower_better": True},
+            {"key": "mfg_pmi",  "canonical": "manufacturing_pmi", "label": "Mfg PMI",          "unit": "idx", "target": 50},
+            {"key": "svc_pmi",  "canonical": "services_pmi",      "label": "Services PMI",     "unit": "idx", "target": 50},
+        ],
+    },
+    {
+        "id": "uk", "bank": "BOE", "name": "Bank of England",
+        "country": "United Kingdom", "country_code": "UK", "flag": "🇬🇧", "currency": "GBP",
+        "rate_indicator": "bank_rate", "inflation_target": 2.0,
+        "metrics": [
+            {"key": "cpi",      "canonical": "cpi_headline_yoy",  "label": "Headline CPI YoY", "unit": "%", "primary": True, "target": 2.0},
+            {"key": "core_cpi", "canonical": "core_cpi_yoy",      "label": "Core CPI YoY",     "unit": "%", "target": 2.0},
+            {"key": "svc_pmi",  "canonical": "services_pmi",      "label": "Services PMI",     "unit": "idx", "target": 50},
+            {"key": "gdp",      "canonical": "gdp_qoq",           "label": "GDP QoQ",          "unit": "%"},
+            {"key": "unemp",    "canonical": "unemployment_rate", "label": "Unemployment",     "unit": "%", "lower_better": True},
+            {"key": "emp",      "canonical": "employment_change", "label": "Employment Chg",  "unit": "K"},
+        ],
+    },
+    {
+        "id": "jp", "bank": "BOJ", "name": "Bank of Japan",
+        "country": "Japan", "country_code": "JP", "flag": "🇯🇵", "currency": "JPY",
+        "rate_indicator": "boj_interest_rate_decision", "inflation_target": 2.0,
+        "metrics": [
+            {"key": "core_ex", "canonical": "cpi_ex_food_energy_yoy", "label": "CPI ex Food & Energy", "unit": "%", "primary": True, "target": 2.0},
+            {"key": "core_cpi","canonical": "core_cpi_yoy",           "label": "Core CPI YoY",        "unit": "%", "target": 2.0},
+            {"key": "cpi",     "canonical": "cpi_headline_yoy",       "label": "Headline CPI YoY",    "unit": "%"},
+            {"key": "tokyo",   "canonical": "tokyo_core_cpi_yoy",     "label": "Tokyo Core CPI",      "unit": "%"},
+            {"key": "gdp",     "canonical": "gdp_qoq",                "label": "GDP QoQ",             "unit": "%"},
+            {"key": "unemp",   "canonical": "unemployment_rate",      "label": "Unemployment",        "unit": "%", "lower_better": True},
+        ],
+    },
+    {
+        "id": "au", "bank": "RBA", "name": "Reserve Bank of Australia",
+        "country": "Australia", "country_code": "AU", "flag": "🇦🇺", "currency": "AUD",
+        "rate_indicator": "cash_rate", "inflation_target": 2.5,
+        "metrics": [
+            {"key": "trimmed", "canonical": "rba_trimmed_mean_cpi_yoy", "label": "Trimmed Mean CPI", "unit": "%", "primary": True, "target": 2.5},
+            {"key": "cpi",     "canonical": "cpi_headline_yoy",         "label": "Headline CPI YoY",  "unit": "%", "target": 2.5},
+            {"key": "unemp",   "canonical": "unemployment_rate",        "label": "Unemployment",      "unit": "%", "lower_better": True},
+            {"key": "emp",     "canonical": "employment_change",        "label": "Employment Chg",    "unit": "K"},
+            {"key": "mfg_pmi", "canonical": "manufacturing_pmi",        "label": "Mfg PMI",           "unit": "idx", "target": 50},
+            {"key": "svc_pmi", "canonical": "services_pmi",             "label": "Services PMI",      "unit": "idx", "target": 50},
+        ],
+    },
+    {
+        "id": "ca", "bank": "BOC", "name": "Bank of Canada",
+        "country": "Canada", "country_code": "CA", "flag": "🇨🇦", "currency": "CAD",
+        "rate_indicator": "overnight_rate", "inflation_target": 2.0,
+        "metrics": [
+            {"key": "trimmed", "canonical": "cpi_trimmed_mean_yoy", "label": "CPI Trimmed Mean", "unit": "%", "primary": True, "target": 2.0},
+            {"key": "median",  "canonical": "cpi_median_yoy",       "label": "CPI Median",       "unit": "%", "target": 2.0},
+            {"key": "cpi",     "canonical": "cpi_headline_yoy",     "label": "Headline CPI YoY", "unit": "%", "target": 2.0},
+            {"key": "gdp",     "canonical": "gdp_mom",              "label": "GDP MoM",          "unit": "%"},
+            {"key": "unemp",   "canonical": "unemployment_rate",    "label": "Unemployment",     "unit": "%", "lower_better": True},
+            {"key": "emp",     "canonical": "employment_change",    "label": "Employment Chg",   "unit": "K"},
+        ],
+    },
+    {
+        "id": "ch", "bank": "SNB", "name": "Swiss National Bank",
+        "country": "Switzerland", "country_code": "CH", "flag": "🇨🇭", "currency": "CHF",
+        "rate_indicator": "policy_rate", "inflation_target": 1.0,
+        "metrics": [
+            {"key": "cpi",   "canonical": "cpi_headline_yoy",  "label": "Headline CPI YoY", "unit": "%", "primary": True, "target": 1.0},
+            {"key": "gdp",   "canonical": "gdp_qoq",           "label": "GDP QoQ",          "unit": "%"},
+            {"key": "unemp", "canonical": "unemployment_rate", "label": "Unemployment",     "unit": "%", "lower_better": True},
+        ],
+    },
+    {
+        "id": "nz", "bank": "RBNZ", "name": "Reserve Bank of New Zealand",
+        "country": "New Zealand", "country_code": "NZ", "flag": "🇳🇿", "currency": "NZD",
+        "rate_indicator": "official_cash_rate", "inflation_target": 2.0,
+        "metrics": [
+            {"key": "cpi_qoq", "canonical": "cpi_headline_qoq",     "label": "CPI QoQ",         "unit": "%", "primary": True, "target": 0.5},
+            {"key": "cpi",     "canonical": "cpi_headline_yoy",     "label": "Headline CPI YoY","unit": "%", "target": 2.0},
+            {"key": "unemp",   "canonical": "unemployment_rate",    "label": "Unemployment",    "unit": "%", "lower_better": True},
+            {"key": "emp",     "canonical": "employment_change_qoq","label": "Employment Chg QoQ","unit": "%"},
+        ],
+    },
+]
+
+
+async def _build_macro_monitor_data(session: AsyncSession) -> list[dict[str, Any]]:
+    """Query live indicator data for each CB's key metrics."""
+    from datetime import date as _date, timedelta as _td
+    cutoff = _date.today() - _td(days=548)  # ~18 months
+
+    result = []
+    for cb in _MM_WATCHLIST:
+        cc = cb["country_code"]
+        canonical_names = [m["canonical"] for m in cb["metrics"]] + [cb["rate_indicator"]]
+
+        # Fetch indicator IDs for this country
+        id_rows = (await session.execute(
+            select(Indicator.id, Indicator.canonical_name)
+            .where(Indicator.country_code == cc, Indicator.canonical_name.in_(canonical_names))
+        )).all()
+        id_map = {row.canonical_name: row.id for row in id_rows}
+
+        # Fetch last 18 months of releases for all relevant indicators
+        if not id_map:
+            result.append({**cb, "rate": None, "metrics_data": {}})
+            continue
+
+        releases = (await session.execute(
+            select(
+                IndicatorRelease.indicator_id,
+                IndicatorRelease.actual,
+                IndicatorRelease.released_at,
+            )
+            .where(
+                IndicatorRelease.indicator_id.in_(list(id_map.values())),
+                IndicatorRelease.actual.is_not(None),
+                IndicatorRelease.released_at >= datetime.combine(cutoff, datetime.min.time()),
+            )
+            .order_by(IndicatorRelease.indicator_id, IndicatorRelease.released_at.asc())
+        )).all()
+
+        # Group by indicator_id → dedupe by date (keep latest actual per calendar date)
+        from collections import defaultdict
+        by_indicator: dict[int, dict[str, float]] = defaultdict(dict)
+        for r in releases:
+            date_key = r.released_at.date().isoformat()
+            by_indicator[r.indicator_id][date_key] = float(r.actual)
+
+        # Reverse id_map
+        name_map = {v: k for k, v in id_map.items()}
+
+        # Build per-metric data
+        metrics_data: dict[str, Any] = {}
+        for m in cb["metrics"]:
+            canonical = m["canonical"]
+            ind_id = id_map.get(canonical)
+            if ind_id is None or ind_id not in by_indicator:
+                metrics_data[m["key"]] = {"current": None, "previous": None, "history": []}
+                continue
+            dated = sorted(by_indicator[ind_id].items())  # [(date_str, value), ...]
+            history = [[d, v] for d, v in dated]
+            current = dated[-1][1] if dated else None
+            previous = dated[-2][1] if len(dated) >= 2 else None
+            metrics_data[m["key"]] = {"current": current, "previous": previous, "history": history}
+
+        # Rate
+        rate_id = id_map.get(cb["rate_indicator"])
+        rate_val = None
+        if rate_id and rate_id in by_indicator:
+            rate_val = sorted(by_indicator[rate_id].items())[-1][1]
+
+        result.append({
+            "id": cb["id"], "bank": cb["bank"], "name": cb["name"],
+            "country": cb["country"], "flag": cb["flag"], "currency": cb["currency"],
+            "inflation_target": cb["inflation_target"],
+            "rate": rate_val,
+            "metrics": cb["metrics"],
+            "metrics_data": metrics_data,
+        })
+
+    return result
+
+
 @router.get("/macro-monitor", response_class=HTMLResponse)
-async def macro_monitor_page(request: Request) -> HTMLResponse:
+async def macro_monitor_page(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+) -> HTMLResponse:
+    mm_data = await _build_macro_monitor_data(session)
     return templates.TemplateResponse(
         request,
         "macro_monitor.html",
-        {"page_title": "Macro Monitor | Macro Dashboard"},
+        {"page_title": "Macro Monitor | Macro Dashboard", "mm_data": mm_data},
     )
 
 

@@ -2,900 +2,434 @@
 
 {% block extra_head %}
 <style>
-/* ── Page shell ─────────────────────────────────────────────── */
-.mm-shell {
-  padding: 0 !important;
-  background: #1a0e05;
-  min-height: 100vh;
-  color: #e8d5b0;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 13px;
+/* ── Page shell ──────────────────────────────────────────────────────────── */
+.mm-shell { padding: 0 !important; }
+.mm-page-header {
+  padding: 20px 28px 0;
+  border-bottom: 1px solid #1e3244;
+  background: #071018;
 }
+.mm-page-title { font-size: 20px; font-weight: 700; color: #dce8f2; margin: 0 0 2px; }
+.mm-page-sub   { font-size: 12px; color: #637a8a; margin: 0 0 16px; }
 
-/* ── Country tab bar ─────────────────────────────────────────── */
+/* ── Country tab bar ─────────────────────────────────────────────────────── */
 .mm-tabs {
-  display: flex;
-  gap: 0;
-  background: #1e1208;
-  border-bottom: 1px solid #2e1e0a;
-  overflow-x: auto;
-  scrollbar-width: none;
+  display: flex; gap: 0; overflow-x: auto; scrollbar-width: none;
 }
 .mm-tabs::-webkit-scrollbar { display: none; }
 .mm-tab {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 11px 18px;
-  cursor: pointer;
-  border: none;
-  background: none;
-  color: #6a5535;
-  font-size: 12.5px;
-  font-weight: 500;
-  white-space: nowrap;
-  border-bottom: 2px solid transparent;
-  transition: color .15s, border-color .15s;
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 20px; cursor: pointer; border: none; background: none;
+  color: #637a8a; font-size: 12px; font-weight: 500; white-space: nowrap;
+  border-bottom: 2px solid transparent; transition: color .15s, border-color .15s;
   font-family: inherit;
 }
-.mm-tab:hover { color: #a87844; }
-.mm-tab.active {
-  color: #e8843a;
-  border-bottom-color: #e8843a;
-}
-.mm-tab-flag { font-size: 16px; line-height: 1; }
+.mm-tab:hover { color: #b8ccd9; }
+.mm-tab.active { color: #ff8c42; border-bottom-color: #ff8c42; }
+.mm-tab-flag { font-size: 15px; }
 
-/* ── Content wrapper ─────────────────────────────────────────── */
-.mm-content {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 16px 20px 32px;
-}
+/* ── Content ─────────────────────────────────────────────────────────────── */
+.mm-content { padding: 20px 28px 40px; }
+.mm-section { display: none; }
+.mm-section.active { display: block; }
 
-/* ── CB Banner ───────────────────────────────────────────────── */
+/* ── CB banner ───────────────────────────────────────────────────────────── */
 .mm-banner {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  background: #1e1208;
-  border: 1px solid #2e1e0a;
-  border-radius: 8px;
-  padding: 14px 20px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
+  display: flex; align-items: center; gap: 0;
+  background: rgba(255,255,255,0.025); border: 1px solid #1e3244;
+  border-radius: 8px; margin-bottom: 20px; overflow: hidden;
 }
 .mm-banner-cb {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 160px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px; flex: 1; min-width: 0;
+  border-right: 1px solid #1e3244;
 }
-.mm-banner-icon { font-size: 20px; }
-.mm-banner-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #e8d5b0;
+.mm-banner-flag { font-size: 22px; flex-shrink: 0; }
+.mm-banner-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.mm-banner-bank { font-size: 15px; font-weight: 700; color: #dce8f2; }
+.mm-banner-full { font-size: 11px; color: #637a8a; }
+.mm-banner-stat {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 10px 20px; border-right: 1px solid #1e3244; flex-shrink: 0;
 }
-.mm-banner-divider {
-  width: 1px;
-  height: 28px;
-  background: #2e1e0a;
-  flex-shrink: 0;
-}
-.mm-banner-item { text-align: center; }
-.mm-banner-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  color: #6a5535;
-  margin-bottom: 3px;
-}
-.mm-banner-val {
-  font-size: 16px;
-  font-weight: 700;
-  color: #e8d5b0;
-}
-.mm-score-bar {
-  width: 80px;
-  height: 4px;
-  background: #2e1e0a;
-  border-radius: 2px;
-  margin-top: 5px;
-  overflow: hidden;
-}
-.mm-score-fill { height: 100%; border-radius: 2px; background: #e8843a; }
-.mm-stance {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-}
-.mm-stance-hawkish { background: rgba(232,132,58,.2); color: #e8843a; border: 1px solid rgba(232,132,58,.35); }
-.mm-stance-neutral  { background: rgba(210,180,80,.15); color: #d4b24a; border: 1px solid rgba(210,180,80,.3); }
-.mm-stance-dovish   { background: rgba(80,130,210,.15); color: #6aaddc; border: 1px solid rgba(80,130,210,.3); }
-.mm-banner-meeting { font-size: 12px; color: #6a5535; }
-.mm-banner-meeting strong { color: #a87844; }
+.mm-banner-stat:last-child { border-right: none; }
+.mm-banner-slabel { font-size: 10px; color: #637a8a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+.mm-banner-sval { font-size: 16px; font-weight: 700; color: #dce8f2; }
+.mm-banner-sval.rate-val { color: #ff8c42; }
 
-/* ── Stat cards ──────────────────────────────────────────────── */
-.mm-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 16px;
+/* ── Metrics grid ────────────────────────────────────────────────────────── */
+.mm-metrics-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px; margin-bottom: 20px;
 }
-@media (max-width: 900px) { .mm-stats { grid-template-columns: repeat(2,1fr); } }
-.mm-stat {
-  background: #1e1208;
-  border: 1px solid #2e1e0a;
-  border-radius: 8px;
-  padding: 14px 16px;
-  border-top: 2px solid;
+.mm-metric-card {
+  background: rgba(255,255,255,0.025); border: 1px solid #1e3244;
+  border-radius: 8px; padding: 14px 16px; position: relative;
+  transition: border-color .15s;
 }
-.mm-stat-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: .07em;
-  color: #6a5535;
-  margin-bottom: 8px;
+.mm-metric-card.primary { border-color: rgba(255,140,66,0.35); background: rgba(255,140,66,0.04); }
+.mm-metric-card:hover { border-color: #2a4a62; }
+.mm-metric-label {
+  font-size: 10px; color: #637a8a; text-transform: uppercase;
+  letter-spacing: 0.05em; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 5px;
 }
-.mm-stat-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 4px;
+.mm-primary-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #ff8c42; flex-shrink: 0;
 }
-.mm-stat-val {
-  font-size: 26px;
-  font-weight: 700;
-  color: #e8d5b0;
-  line-height: 1;
+.mm-metric-val-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.mm-metric-val { font-size: 22px; font-weight: 700; color: #dce8f2; }
+.mm-metric-unit { font-size: 11px; color: #637a8a; }
+.mm-metric-delta {
+  font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 3px;
 }
-.mm-stat-unit { font-size: 13px; color: #6a5535; }
-.mm-delta {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 5px;
-  border-radius: 3px;
+.delta-up   { background: rgba(255,90,126,0.15); color: #ff8aa8; }
+.delta-down { background: rgba(35,196,131,0.12); color: #23c483; }
+.delta-up.lower-better   { background: rgba(35,196,131,0.12); color: #23c483; }
+.delta-down.lower-better { background: rgba(255,90,126,0.15); color: #ff8aa8; }
+.delta-flat { background: rgba(255,255,255,0.06); color: #637a8a; }
+.mm-target-row {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; color: #637a8a; margin-bottom: 6px;
 }
-.mm-delta-bad  { color: #e85050; background: rgba(232,80,80,.1); }
-.mm-delta-good { color: #4a9e5c; background: rgba(74,158,92,.1); }
-.mm-stat-sub { font-size: 11px; color: #6a5535; }
+.mm-target-badge {
+  font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 3px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.tbadge-hot    { background: rgba(255,90,126,0.15); color: #ff8aa8; border: 1px solid rgba(255,90,126,0.25); }
+.tbadge-above  { background: rgba(255,140,66,0.15); color: #ff8c42; border: 1px solid rgba(255,140,66,0.25); }
+.tbadge-on     { background: rgba(35,196,131,0.12); color: #23c483; border: 1px solid rgba(35,196,131,0.2); }
+.tbadge-below  { background: rgba(80,181,255,0.12); color: #50b5ff; border: 1px solid rgba(80,181,255,0.2); }
+.mm-sparkline-wrap { position: relative; height: 36px; margin-top: 4px; }
+.mm-no-data { font-size: 11px; color: #355063; font-style: italic; margin-top: 4px; }
 
-/* ── Three-panel row ─────────────────────────────────────────── */
-.mm-panels {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 16px;
+/* ── Chart section ───────────────────────────────────────────────────────── */
+.mm-charts-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
 }
-@media (max-width: 860px) { .mm-panels { grid-template-columns: 1fr; } }
-.mm-panel {
-  background: #1e1208;
-  border: 1px solid #2e1e0a;
-  border-radius: 8px;
-  overflow: hidden;
-}
-.mm-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  border-bottom: 1px solid #2e1e0a;
-  background: #211408;
-}
-.mm-panel-title {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .07em;
-  font-weight: 600;
-  color: #a87844;
-}
-.mm-status-badge {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 3px;
-}
-.mm-status-hot     { background: rgba(232,80,80,.15);  color: #e85050; border: 1px solid rgba(232,80,80,.3); }
-.mm-status-above   { background: rgba(232,132,58,.15); color: #e8843a; border: 1px solid rgba(232,132,58,.3); }
-.mm-status-target  { background: rgba(74,158,92,.15);  color: #4a9e5c; border: 1px solid rgba(74,158,92,.3); }
-.mm-status-tight   { background: rgba(232,132,58,.15); color: #e8843a; border: 1px solid rgba(232,132,58,.3); }
-.mm-status-balanced{ background: rgba(210,180,80,.12); color: #d4b24a; border: 1px solid rgba(210,180,80,.25); }
-.mm-status-soft    { background: rgba(80,130,210,.12); color: #6aaddc; border: 1px solid rgba(80,130,210,.25); }
-.mm-status-expand  { background: rgba(74,158,92,.15);  color: #4a9e5c; border: 1px solid rgba(74,158,92,.3); }
-.mm-status-slow    { background: rgba(210,180,80,.12); color: #d4b24a; border: 1px solid rgba(210,180,80,.25); }
-.mm-status-contract{ background: rgba(232,80,80,.15);  color: #e85050; border: 1px solid rgba(232,80,80,.3); }
-.mm-panel-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
-.mm-metric { display: flex; flex-direction: column; gap: 4px; }
-.mm-metric-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-.mm-metric-name { font-size: 11px; color: #6a5535; flex: 1; }
-.mm-metric-val  { font-size: 13px; font-weight: 600; color: #e8d5b0; }
-.mm-metric-delta { font-size: 10px; font-weight: 600; padding: 1px 4px; border-radius: 2px; }
-.mm-bar-track {
-  height: 3px;
-  background: #2e1e0a;
-  border-radius: 1px;
-  overflow: hidden;
-}
-.mm-bar-fill { height: 100%; border-radius: 1px; }
-.mm-bar-red    { background: #e85050; }
-.mm-bar-orange { background: #e8843a; }
-.mm-bar-green  { background: #4a9e5c; }
-.mm-bar-gray   { background: #3a2810; }
-.mm-metric-target {
-  font-size: 10px;
-  color: #4a5568;
-  display: flex;
-  justify-content: flex-end;
-}
-.mm-pmi-val { font-weight: 700; }
-.mm-pmi-hot { color: #4a9e5c; }
-.mm-pmi-cold { color: #e85050; }
-
-/* ── Bottom row ──────────────────────────────────────────────── */
-.mm-bottom {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-@media (max-width: 780px) { .mm-bottom { grid-template-columns: 1fr; } }
 .mm-chart-card {
-  background: #1e1208;
-  border: 1px solid #2e1e0a;
-  border-radius: 8px;
-  overflow: hidden;
+  background: rgba(255,255,255,0.02); border: 1px solid #1e3244; border-radius: 8px; overflow: hidden;
 }
 .mm-chart-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  border-bottom: 1px solid #2e1e0a;
-  background: #211408;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-bottom: 1px solid #1e3244;
 }
-.mm-chart-title {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .07em;
-  font-weight: 600;
-  color: #a87844;
-}
-.mm-chart-tabs { display: flex; gap: 4px; }
-.mm-chart-tab {
-  padding: 3px 9px;
-  font-size: 11px;
-  font-weight: 500;
-  border-radius: 4px;
-  cursor: pointer;
-  border: 1px solid #2e1e0a;
-  background: none;
-  color: #6a5535;
-  font-family: inherit;
-  transition: color .15s, border-color .15s;
-}
-.mm-chart-tab.active { border-color: #e8843a; color: #e8843a; }
-.mm-chart-body { padding: 14px; }
-.mm-chart-wrap { position: relative; height: 180px; }
-#mm-chart { position: absolute; inset: 0; }
-
-/* ── FX signals ──────────────────────────────────────────────── */
-.mm-fx-card {
-  background: #1e1208;
-  border: 1px solid #2e1e0a;
-  border-radius: 8px;
-  overflow: hidden;
-}
-.mm-fx-head {
-  padding: 10px 14px;
-  border-bottom: 1px solid #2e1e0a;
-  background: #211408;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .07em;
-  font-weight: 600;
-  color: #a87844;
-}
-.mm-fx-body { padding: 4px 0; }
-.mm-fx-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(46,30,10,.5);
-}
-.mm-fx-row:last-child { border-bottom: none; }
-.mm-fx-pair {
-  font-size: 13px;
-  font-weight: 700;
-  color: #e8d5b0;
-  min-width: 68px;
-  font-variant-numeric: tabular-nums;
-}
-.mm-fx-dir {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 3px;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-.mm-fx-bull { background: rgba(30,80,40,.7); color: #4a9e5c; border: 1px solid rgba(74,158,92,.4); }
-.mm-fx-bear { background: rgba(80,20,20,.7); color: #e85050; border: 1px solid rgba(232,80,80,.4); }
-.mm-fx-neut { background: rgba(100,80,20,.5); color: #d4b24a; border: 1px solid rgba(210,180,80,.3); }
-.mm-fx-reason { font-size: 11.5px; color: #6a5535; line-height: 1.5; flex: 1; }
+.mm-chart-title { font-size: 11px; font-weight: 700; color: #8fa5b5; text-transform: uppercase; letter-spacing: 0.05em; }
+.mm-chart-period { font-size: 10px; color: #355063; }
+.mm-chart-wrap { position: relative; height: 160px; padding: 12px 12px 8px; }
 </style>
 {% endblock %}
 
 {% block body %}
-<main class="shell mm-shell">
+<div class="mm-shell">
+<div class="mm-page-header">
+  <h1 class="mm-page-title">Macro Monitor</h1>
+  <p class="mm-page-sub">Central bank preferred indicators — live data from economic releases</p>
   <div class="mm-tabs" id="mm-tabs"></div>
-  <div class="mm-content">
-    <div id="mm-main"></div>
-  </div>
-</main>
+</div>
+<div class="mm-content" id="mm-content"></div>
+</div>
+
+<script id="mm-raw-data" type="application/json">{{ mm_data | tojson }}</script>
 
 <script>
 (function () {
+"use strict";
 
-/* ═══════════════════════════════════════════════════════════
-   DATA
-═══════════════════════════════════════════════════════════ */
-const C = [
-  {
-    id:'us', flag:'🇺🇸', name:'United States',
-    cb:'Federal Reserve', cbIcon:'🏛️',
-    stance:'neutral', rate:4.375, score:52,
-    nextMeeting:'Jul 30, 2026',
-    cpi:2.4,  cpiPrev:2.6,
-    core:2.8, corePrev:2.9,
-    pce:2.3,  pcePrev:2.4,
-    unemp:4.2, unempPrev:4.1,
-    nfp:139,   nfpPrev:177,
-    gdp:2.1,  gdpPrev:2.4,
-    pmi:51.3, pmiPrev:50.8,
-    retail:0.4, retailPrev:0.2,
-    chartData:[2.9,2.8,2.7,2.6,2.5,2.6,2.4],
-    unempChart:[4.0,4.0,4.1,4.1,4.2,4.1,4.2],
-    signals:[
-      {pair:'EUR/USD', dir:'BEAR', reason:'EUR growth slowing; ECB cutting faster than Fed'},
-      {pair:'USD/JPY', dir:'BULL', reason:'BOJ cautious on hikes; rate differential remains wide'},
-      {pair:'GBP/USD', dir:'NEUTRAL', reason:'Divergence narrowing; BOE/Fed trajectories aligning'},
-    ],
-  },
-  {
-    id:'eu', flag:'🇪🇺', name:'Eurozone',
-    cb:'European Central Bank', cbIcon:'🏦',
-    stance:'dovish', rate:2.25, score:38,
-    nextMeeting:'Jul 23, 2026',
-    cpi:2.2,  cpiPrev:2.4,
-    core:2.4, corePrev:2.7,
-    pce:null, pcePrev:null,
-    unemp:6.2, unempPrev:6.3,
-    nfp:null,  nfpPrev:null,
-    gdp:1.1,  gdpPrev:0.8,
-    pmi:49.4, pmiPrev:48.7,
-    retail:0.3, retailPrev:-0.2,
-    chartData:[2.8,2.7,2.6,2.5,2.4,2.4,2.2],
-    unempChart:[6.5,6.4,6.4,6.3,6.3,6.3,6.2],
-    signals:[
-      {pair:'EUR/USD', dir:'BEAR', reason:'ECB in easing cycle; growth fragile; rate gap widens'},
-      {pair:'EUR/GBP', dir:'BEAR', reason:'UK inflation stickier; BOE slower to cut than ECB'},
-      {pair:'EUR/JPY', dir:'NEUTRAL', reason:'BOJ hikes offset ECB cuts; cross range-bound'},
-    ],
-  },
-  {
-    id:'uk', flag:'🇬🇧', name:'United Kingdom',
-    cb:'Bank of England', cbIcon:'🏰',
-    stance:'dovish', rate:3.75, score:47,
-    nextMeeting:'Aug 7, 2026',
-    cpi:3.4,  cpiPrev:3.5,
-    core:3.5, corePrev:3.6,
-    pce:null, pcePrev:null,
-    unemp:4.5, unempPrev:4.4,
-    nfp:null,  nfpPrev:null,
-    gdp:0.6,  gdpPrev:0.4,
-    pmi:50.6, pmiPrev:49.8,
-    retail:0.2, retailPrev:-0.1,
-    chartData:[3.9,3.8,3.7,3.6,3.5,3.5,3.4],
-    unempChart:[4.2,4.3,4.3,4.4,4.4,4.4,4.5],
-    signals:[
-      {pair:'GBP/USD', dir:'NEUTRAL', reason:'Sticky inflation limits cuts; growth modest; balanced'},
-      {pair:'GBP/JPY', dir:'BULL', reason:'BOJ gradual; BOE rate still elevated vs JPY'},
-      {pair:'EUR/GBP', dir:'BULL', reason:'UK inflation above ECB territory; BOE slower to ease'},
-    ],
-  },
-  {
-    id:'jp', flag:'🇯🇵', name:'Japan',
-    cb:'Bank of Japan', cbIcon:'🗼',
-    stance:'hawkish', rate:1.00, score:65,
-    nextMeeting:'Jul 31, 2026',
-    cpi:2.8,  cpiPrev:2.6,
-    core:1.9, corePrev:1.7,
-    pce:null, pcePrev:null,
-    unemp:2.5, unempPrev:2.4,
-    nfp:null,  nfpPrev:null,
-    gdp:0.8,  gdpPrev:0.5,
-    pmi:52.1, pmiPrev:51.4,
-    retail:0.5, retailPrev:0.3,
-    chartData:[2.2,2.4,2.5,2.6,2.6,2.7,2.8],
-    unempChart:[2.5,2.5,2.4,2.4,2.5,2.4,2.5],
-    signals:[
-      {pair:'USD/JPY', dir:'BEAR', reason:'BOJ hiking; rate gap narrowing; JPY structurally bid'},
-      {pair:'EUR/JPY', dir:'BEAR', reason:'ECB cutting while BOJ tightens; cross pressured lower'},
-      {pair:'GBP/JPY', dir:'BEAR', reason:'BOJ hawkish pivot dominant; JPY strength broadening'},
-    ],
-  },
-  {
-    id:'au', flag:'🇦🇺', name:'Australia',
-    cb:'Reserve Bank of Australia', cbIcon:'🦘',
-    stance:'neutral', rate:4.10, score:55,
-    nextMeeting:'Aug 11, 2026',
-    cpi:3.8,  cpiPrev:4.1,
-    core:3.2, corePrev:3.5,
-    pce:null, pcePrev:null,
-    unemp:3.9, unempPrev:3.8,
-    nfp:null,  nfpPrev:null,
-    gdp:1.4,  gdpPrev:1.1,
-    pmi:50.2, pmiPrev:49.5,
-    retail:0.3, retailPrev:0.4,
-    chartData:[4.5,4.3,4.2,4.2,4.1,4.0,3.8],
-    unempChart:[3.7,3.8,3.8,3.8,3.9,3.8,3.9],
-    signals:[
-      {pair:'AUD/USD', dir:'NEUTRAL', reason:'RBA paused; China demand mixed; AUD directionless'},
-      {pair:'AUD/JPY', dir:'BEAR', reason:'BOJ hawkish; Australia neutral; cross structurally lower'},
-      {pair:'AUD/NZD', dir:'BULL', reason:'RBNZ deeper in easing cycle than RBA; NZD weaker'},
-    ],
-  },
-  {
-    id:'ca', flag:'🇨🇦', name:'Canada',
-    cb:'Bank of Canada', cbIcon:'🍁',
-    stance:'dovish', rate:2.25, score:36,
-    nextMeeting:'Sep 2, 2026',
-    cpi:2.0,  cpiPrev:2.1,
-    core:2.1, corePrev:2.3,
-    pce:null, pcePrev:null,
-    unemp:6.8, unempPrev:6.7,
-    nfp:null,  nfpPrev:null,
-    gdp:1.5,  gdpPrev:1.3,
-    pmi:48.8, pmiPrev:48.2,
-    retail:-0.1, retailPrev:0.2,
-    chartData:[3.1,2.8,2.5,2.3,2.2,2.1,2.0],
-    unempChart:[6.4,6.5,6.6,6.6,6.7,6.7,6.8],
-    signals:[
-      {pair:'USD/CAD', dir:'BULL', reason:'BOC aggressively cutting; trade headwinds; CAD weak'},
-      {pair:'CAD/JPY', dir:'BEAR', reason:'BOC dovish vs BOJ hawkish; cross under pressure'},
-      {pair:'AUD/CAD', dir:'BEAR', reason:'RBA less dovish; AUD fundamentally stronger here'},
-    ],
-  },
-  {
-    id:'nz', flag:'🇳🇿', name:'New Zealand',
-    cb:'Reserve Bank of NZ', cbIcon:'🥝',
-    stance:'dovish', rate:3.25, score:33,
-    nextMeeting:'Aug 27, 2026',
-    cpi:2.5,  cpiPrev:2.8,
-    core:2.4, corePrev:2.6,
-    pce:null, pcePrev:null,
-    unemp:5.1, unempPrev:5.0,
-    nfp:null,  nfpPrev:null,
-    gdp:0.8,  gdpPrev:0.6,
-    pmi:48.3, pmiPrev:47.9,
-    retail:0.1, retailPrev:-0.3,
-    chartData:[3.5,3.2,3.0,2.9,2.8,2.8,2.5],
-    unempChart:[4.7,4.8,4.9,5.0,5.0,5.0,5.1],
-    signals:[
-      {pair:'NZD/USD', dir:'BEAR', reason:'RBNZ deep easing cycle; weak domestic demand'},
-      {pair:'AUD/NZD', dir:'BULL', reason:'RBA ahead of RBNZ in normalisation; spread widens'},
-      {pair:'NZD/JPY', dir:'BEAR', reason:'Both legs reinforcing NZD weakness; JPY bid on hikes'},
-    ],
-  },
-  {
-    id:'ch', flag:'🇨🇭', name:'Switzerland',
-    cb:'Swiss National Bank', cbIcon:'🏔️',
-    stance:'dovish', rate:0.25, score:26,
-    nextMeeting:'Sep 18, 2026',
-    cpi:0.3,  cpiPrev:0.4,
-    core:0.8, corePrev:0.9,
-    pce:null, pcePrev:null,
-    unemp:2.3, unempPrev:2.3,
-    nfp:null,  nfpPrev:null,
-    gdp:1.2,  gdpPrev:1.0,
-    pmi:51.8, pmiPrev:51.2,
-    retail:0.2, retailPrev:0.1,
-    chartData:[0.7,0.6,0.5,0.5,0.4,0.4,0.3],
-    unempChart:[2.3,2.3,2.3,2.3,2.3,2.3,2.3],
-    signals:[
-      {pair:'USD/CHF', dir:'BULL', reason:'SNB near-zero; FX cap concerns; CHF likely capped'},
-      {pair:'EUR/CHF', dir:'NEUTRAL', reason:'Both CBs easing; inflation close; range play'},
-      {pair:'CHF/JPY', dir:'BEAR', reason:'BOJ hiking; SNB cutting; JPY structurally stronger'},
-    ],
-  },
-];
+const RAW = JSON.parse(document.getElementById("mm-raw-data").textContent || "[]");
 
-const MONTHS = ['Dec','Jan','Feb','Mar','Apr','May','Jun'];
+/* ── helpers ──────────────────────────────────────────────────────────────── */
+function fmt(v, unit) {
+  if (v == null) return "—";
+  if (unit === "K") return (v >= 0 ? "+" : "") + v.toFixed(0) + "K";
+  if (unit === "idx") return v.toFixed(1);
+  return v.toFixed(1);
+}
 
-/* ═══════════════════════════════════════════════════════════
-   CHART
-═══════════════════════════════════════════════════════════ */
-let chart = null;
-let chartMode = 'cpi'; // 'cpi' | 'unemp'
-let currentCountry = C[0];
+function deltaClass(cur, prev, lowerBetter) {
+  if (cur == null || prev == null) return "delta-flat";
+  const up = cur > prev;
+  const cls = up ? "delta-up" : cur < prev ? "delta-down" : "delta-flat";
+  return lowerBetter ? cls + " lower-better" : cls;
+}
 
-function buildChart(country) {
-  const canvas = document.getElementById('mm-chart');
-  if (!canvas) return;
-  if (chart) { chart.destroy(); chart = null; }
+function deltaText(cur, prev, unit) {
+  if (cur == null || prev == null) return "";
+  const d = cur - prev;
+  const sign = d >= 0 ? "+" : "";
+  if (unit === "K") return sign + d.toFixed(0) + "K";
+  return sign + d.toFixed(1);
+}
 
-  const isCpi = chartMode === 'cpi';
-  const data  = isCpi ? country.chartData : country.unempChart;
-  const color = isCpi ? '#e85050' : '#e8843a';
-  const label = isCpi ? 'CPI %' : 'Unemployment %';
+function targetBadge(cur, target, lowerBetter, unit) {
+  if (cur == null || target == null) return "";
+  const diff = cur - target;
+  let cls, label;
+  if (unit === "idx") {
+    cls = cur >= 52 ? "tbadge-hot" : cur >= 50 ? "tbadge-above" : "tbadge-below";
+    label = cur >= 52 ? "Expanding" : cur >= 50 ? "Growing" : "Contracting";
+  } else if (lowerBetter) {
+    cls = diff > 0.5 ? "tbadge-hot" : diff > 0 ? "tbadge-above" : "tbadge-on";
+    label = diff > 0.5 ? "High" : diff > 0 ? "Above" : "On Target";
+  } else {
+    const absDiff = Math.abs(diff);
+    if (diff > 1.0)  { cls = "tbadge-hot";   label = "Well Above"; }
+    else if (diff > 0.3) { cls = "tbadge-above"; label = "Above"; }
+    else if (absDiff <= 0.3) { cls = "tbadge-on"; label = "On Target"; }
+    else { cls = "tbadge-below"; label = "Below"; }
+  }
+  return `<span class="mm-target-badge ${cls}">${label}</span>`;
+}
 
-  chart = new Chart(canvas.getContext('2d'), {
-    type: 'line',
+/* ── sparkline (Chart.js tiny line) ──────────────────────────────────────── */
+const CHART_REGISTRY = {};
+
+function drawSparkline(canvasId, history, color) {
+  const el = document.getElementById(canvasId);
+  if (!el || !history || history.length < 2) return;
+  if (CHART_REGISTRY[canvasId]) { CHART_REGISTRY[canvasId].destroy(); }
+  CHART_REGISTRY[canvasId] = new Chart(el, {
+    type: "line",
     data: {
-      labels: MONTHS,
+      labels: history.map(p => p[0]),
       datasets: [{
-        label,
-        data,
-        borderColor: color,
-        backgroundColor: 'transparent',
+        data: history.map(p => p[1]),
+        borderColor: color || "#ff8c42",
         borderWidth: 1.5,
-        pointRadius: 3,
-        pointBackgroundColor: color,
+        pointRadius: 0,
+        fill: false,
         tension: 0.3,
+        spanGaps: true,
       }],
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       animation: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: { x: { display: false }, y: { display: false } },
+    },
+  });
+}
+
+/* ── full history Chart.js chart ─────────────────────────────────────────── */
+function drawHistoryChart(canvasId, history, label, color, unit) {
+  const el = document.getElementById(canvasId);
+  if (!el || !history || history.length < 2) return;
+  if (CHART_REGISTRY[canvasId]) { CHART_REGISTRY[canvasId].destroy(); }
+  CHART_REGISTRY[canvasId] = new Chart(el, {
+    type: "line",
+    data: {
+      labels: history.map(p => p[0]),
+      datasets: [{
+        label,
+        data: history.map(p => p[1]),
+        borderColor: color,
+        backgroundColor: color + "18",
+        borderWidth: 2,
+        pointRadius: 2,
+        pointHoverRadius: 5,
+        fill: true,
+        tension: 0.3,
+        spanGaps: true,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#211408',
-          borderColor: '#2e1e0a',
-          borderWidth: 1,
-          titleColor: '#e8d5b0',
-          bodyColor: '#a87844',
-          callbacks: { label: ctx => ' ' + ctx.parsed.y.toFixed(1) + '%' },
+          backgroundColor: "rgba(7,16,24,0.95)", borderColor: "#1e3244", borderWidth: 1,
+          titleColor: "#dce8f2", bodyColor: "#8fa5b5",
+          callbacks: {
+            label: ctx => ` ${label}: ${ctx.parsed.y != null ? ctx.parsed.y.toFixed(2) + (unit === "%" ? "%" : unit === "idx" ? "" : "") : "—"}`,
+          },
         },
       },
       scales: {
-        x: {
-          ticks: { color: '#4a3520', font: { size: 10 } },
-          grid:  { color: '#1a0e04' },
-        },
+        x: { ticks: { color: "#637a8a", font: { size: 9 }, maxTicksLimit: 8 }, grid: { color: "rgba(255,255,255,0.03)" } },
         y: {
-          ticks: { color: '#4a3520', font: { size: 10 }, callback: v => v.toFixed(1) + '%' },
-          grid:  { color: '#1a0e04' },
+          ticks: { color: "#637a8a", font: { size: 9 }, callback: v => v.toFixed(1) + (unit === "%" ? "%" : "") },
+          grid: { color: "rgba(255,255,255,0.05)" },
         },
       },
     },
   });
 }
 
-/* ═══════════════════════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════════════════════ */
-function fmt(v, dec=1) {
-  if (v == null) return '—';
-  return v.toFixed(dec);
+/* ── metric card HTML ─────────────────────────────────────────────────────── */
+const METRIC_COLORS = [
+  "#ff8c42","#23c483","#50b5ff","#f3ba63","#e05aff","#ff5a7e","#56cfad","#a78bfa"
+];
+
+function metricCard(cb, m, idx) {
+  const md = (cb.metrics_data || {})[m.key] || {};
+  const cur = md.current, prev = md.previous, hist = md.history || [];
+  const lb = !!m.lower_better;
+  const sparkId = `spark-${cb.id}-${m.key}`;
+  const color = METRIC_COLORS[idx % METRIC_COLORS.length];
+
+  const targetRow = m.target != null ? `
+    <div class="mm-target-row">
+      <span>Target: ${m.target}${m.unit === "%" ? "%" : ""}</span>
+      ${targetBadge(cur, m.target, lb, m.unit)}
+    </div>` : "";
+
+  const body = cur != null ? `
+    <div class="mm-metric-val-row">
+      <span class="mm-metric-val">${fmt(cur, m.unit)}</span>
+      <span class="mm-metric-unit">${m.unit}</span>
+      ${prev != null ? `<span class="mm-metric-delta ${deltaClass(cur, prev, lb)}">${deltaText(cur, prev, m.unit)}</span>` : ""}
+    </div>
+    ${targetRow}
+    <div class="mm-sparkline-wrap"><canvas id="${sparkId}"></canvas></div>
+  ` : `<div class="mm-no-data">No data</div>`;
+
+  return {
+    html: `
+      <div class="mm-metric-card${m.primary ? " primary" : ""}">
+        <div class="mm-metric-label">
+          ${m.primary ? '<span class="mm-primary-dot"></span>' : ""}
+          ${m.label}
+        </div>
+        ${body}
+      </div>`,
+    sparkId, hist, color,
+  };
 }
 
-function delta(curr, prev, invertLogic) {
-  // invertLogic=true → up is BAD (CPI, unemployment)
-  // invertLogic=false → up is GOOD (GDP, NFP, PMI)
-  if (prev == null || curr == null) return '';
-  const diff = curr - prev;
-  if (Math.abs(diff) < 0.001) return '';
-  const up    = diff > 0;
-  const arrow = up ? '▲' : '▼';
-  const bad   = invertLogic ? up : !up;
-  const cls   = bad ? 'mm-delta-bad' : 'mm-delta-good';
-  return `<span class="mm-delta ${cls}">${arrow} ${Math.abs(diff).toFixed(1)}</span>`;
-}
+/* ── section HTML ─────────────────────────────────────────────────────────── */
+function buildSection(cb) {
+  const rateStr = cb.rate != null ? cb.rate.toFixed(2) + "%" : "—";
 
-function metricDelta(curr, prev, invertLogic) {
-  if (prev == null || curr == null) return '';
-  const diff = curr - prev;
-  if (Math.abs(diff) < 0.001) return '';
-  const up    = diff > 0;
-  const arrow = up ? '▲' : '▼';
-  const bad   = invertLogic ? up : !up;
-  const col   = bad ? '#e85050' : '#4a9e5c';
-  return `<span class="mm-metric-delta" style="color:${col}">${arrow}${Math.abs(diff).toFixed(1)}</span>`;
-}
-
-function bar(pct, cls) {
-  const w = Math.min(100, Math.max(0, pct));
-  return `<div class="mm-bar-track"><div class="mm-bar-fill ${cls}" style="width:${w}%"></div></div>`;
-}
-
-function inflationStatus(cpi) {
-  if (cpi > 3) return ['HOT', 'mm-status-hot'];
-  if (cpi > 2.2) return ['ABOVE TARGET', 'mm-status-above'];
-  return ['ON TARGET', 'mm-status-target'];
-}
-function laborStatus(unemp) {
-  if (unemp < 4.0) return ['TIGHT', 'mm-status-tight'];
-  if (unemp < 5.0) return ['BALANCED', 'mm-status-balanced'];
-  return ['SOFTENING', 'mm-status-soft'];
-}
-function growthStatus(gdp) {
-  if (gdp > 1.0) return ['EXPANDING', 'mm-status-expand'];
-  if (gdp >= 0)  return ['SLOW', 'mm-status-slow'];
-  return ['CONTRACTING', 'mm-status-contract'];
-}
-function wagePressure(unemp) {
-  if (unemp < 4.0) return 'High';
-  if (unemp < 5.0) return 'Moderate';
-  return 'Low';
-}
-function stanceCls(stance) {
-  if (stance === 'hawkish') return 'mm-stance-hawkish';
-  if (stance === 'dovish')  return 'mm-stance-dovish';
-  return 'mm-stance-neutral';
-}
-function fxDirCls(dir) {
-  if (dir === 'BULL') return 'mm-fx-bull';
-  if (dir === 'BEAR') return 'mm-fx-bear';
-  return 'mm-fx-neut';
-}
-
-/* ═══════════════════════════════════════════════════════════
-   RENDER
-═══════════════════════════════════════════════════════════ */
-function render(country) {
-  currentCountry = country;
-
-  /* ── CB Banner ─── */
+  // Banner
   const banner = `
-<div class="mm-banner">
-  <div class="mm-banner-cb">
-    <span class="mm-banner-icon">${country.cbIcon}</span>
-    <span class="mm-banner-name">${country.cb}</span>
-  </div>
-  <div class="mm-banner-divider"></div>
-  <div class="mm-banner-item">
-    <div class="mm-banner-label">Policy Rate</div>
-    <div class="mm-banner-val">${fmt(country.rate, 2)}%</div>
-  </div>
-  <div class="mm-banner-divider"></div>
-  <div class="mm-banner-item">
-    <div class="mm-banner-label">Macro Score</div>
-    <div class="mm-banner-val">${country.score}</div>
-    <div class="mm-score-bar"><div class="mm-score-fill" style="width:${country.score}%"></div></div>
-  </div>
-  <div class="mm-banner-divider"></div>
-  <div class="mm-banner-item">
-    <div class="mm-banner-label">Stance</div>
-    <span class="mm-stance ${stanceCls(country.stance)}">${country.stance}</span>
-  </div>
-  <div class="mm-banner-divider"></div>
-  <div class="mm-banner-item">
-    <div class="mm-banner-label">Next Meeting</div>
-    <div class="mm-banner-meeting"><strong>${country.nextMeeting}</strong></div>
-  </div>
-</div>`;
-
-  /* ── Stat cards ─── */
-  const statCards = [
-    {
-      label: 'Headline CPI', top: '#e85050',
-      val: fmt(country.cpi) + '%',
-      delta: delta(country.cpi, country.cpiPrev, true),
-      sub: `Core ${fmt(country.core)}% · Target 2.0%`,
-    },
-    {
-      label: 'Unemployment', top: '#e8843a',
-      val: fmt(country.unemp) + '%',
-      delta: delta(country.unemp, country.unempPrev, true),
-      sub: country.nfp != null ? `NFP ${country.nfp > 0 ? '+' : ''}${country.nfp}K` : `Wage: ${wagePressure(country.unemp)}`,
-    },
-    {
-      label: 'GDP Growth', top: '#4a9e5c',
-      val: fmt(country.gdp) + '%',
-      delta: delta(country.gdp, country.gdpPrev, false),
-      sub: `PMI ${fmt(country.pmi)} · Retail ${country.retail > 0 ? '+' : ''}${fmt(country.retail)}%`,
-    },
-    {
-      label: 'Policy Rate', top: '#6aaddc',
-      val: fmt(country.rate, 2) + '%',
-      delta: '',
-      sub: `Score ${country.score}/100 · ${country.stance}`,
-    },
-  ];
-
-  const stats = `<div class="mm-stats">${statCards.map(s => `
-<div class="mm-stat" style="border-top-color:${s.top}">
-  <div class="mm-stat-label">${s.label}</div>
-  <div class="mm-stat-row">
-    <div class="mm-stat-val">${s.val}</div>
-    ${s.delta}
-  </div>
-  <div class="mm-stat-sub">${s.sub}</div>
-</div>`).join('')}</div>`;
-
-  /* ── Inflation panel ─── */
-  const [infStatus, infStatusCls] = inflationStatus(country.cpi);
-  const maxCpi = 8;
-  const inflationRows = [
-    { name: 'Headline CPI', val: country.cpi,  prev: country.cpiPrev,  unit: '%', max: maxCpi, inv: true },
-    { name: 'Core CPI',     val: country.core, prev: country.corePrev, unit: '%', max: maxCpi, inv: true },
-    ...(country.pce != null ? [{ name: 'PCE',   val: country.pce,  prev: country.pcePrev,  unit: '%', max: maxCpi, inv: true }] : []),
-    { name: 'CB Target', val: 2.0, prev: null, unit: '%', max: maxCpi, inv: false, isTarget: true },
-  ];
-  const inflationPanel = `
-<div class="mm-panel">
-  <div class="mm-panel-head">
-    <span class="mm-panel-title">Inflation</span>
-    <span class="mm-status-badge ${infStatusCls}">${infStatus}</span>
-  </div>
-  <div class="mm-panel-body">
-    ${inflationRows.map(r => `
-<div class="mm-metric">
-  <div class="mm-metric-top">
-    <span class="mm-metric-name">${r.name}</span>
-    <span class="mm-metric-val">${fmt(r.val)}${r.unit}</span>
-    ${r.isTarget ? '' : metricDelta(r.val, r.prev, r.inv)}
-  </div>
-  ${bar((r.val / r.max) * 100, r.isTarget ? 'mm-bar-gray' : 'mm-bar-red')}
-</div>`).join('')}
-  </div>
-</div>`;
-
-  /* ── Labor panel ─── */
-  const [labStatus, labStatusCls] = laborStatus(country.unemp);
-  const maxUnemp = 12;
-  const laborRows = [
-    { name: 'Unemployment', val: country.unemp, prev: country.unempPrev, unit: '%', max: maxUnemp, inv: true },
-    ...(country.nfp != null ? [{ name: 'Jobs Added',  val: country.nfp,   prev: country.nfpPrev,  unit: 'K',  max: 500,   inv: false }] : []),
-    { name: 'Wage Pressure', val: null, prev: null, unit: '', label: wagePressure(country.unemp) },
-  ];
-  const laborPanel = `
-<div class="mm-panel">
-  <div class="mm-panel-head">
-    <span class="mm-panel-title">Labor Market</span>
-    <span class="mm-status-badge ${labStatusCls}">${labStatus}</span>
-  </div>
-  <div class="mm-panel-body">
-    ${laborRows.map(r => r.label !== undefined ? `
-<div class="mm-metric">
-  <div class="mm-metric-top">
-    <span class="mm-metric-name">Wage Pressure</span>
-    <span class="mm-metric-val">${r.label}</span>
-  </div>
-  ${bar(r.label === 'High' ? 85 : r.label === 'Moderate' ? 50 : 20, 'mm-bar-orange')}
-</div>` : `
-<div class="mm-metric">
-  <div class="mm-metric-top">
-    <span class="mm-metric-name">${r.name}</span>
-    <span class="mm-metric-val">${r.val != null ? fmt(Math.abs(r.val)) + r.unit : '—'}</span>
-    ${r.val != null ? metricDelta(r.val, r.prev, r.inv) : ''}
-  </div>
-  ${r.val != null ? bar((Math.abs(r.val) / r.max) * 100, 'mm-bar-orange') : ''}
-</div>`).join('')}
-  </div>
-</div>`;
-
-  /* ── Growth panel ─── */
-  const [grwStatus, grwStatusCls] = growthStatus(country.gdp);
-  const pmiCls = country.pmi >= 50 ? 'mm-pmi-hot' : 'mm-pmi-cold';
-  const growthPanel = `
-<div class="mm-panel">
-  <div class="mm-panel-head">
-    <span class="mm-panel-title">Growth</span>
-    <span class="mm-status-badge ${grwStatusCls}">${grwStatus}</span>
-  </div>
-  <div class="mm-panel-body">
-    <div class="mm-metric">
-      <div class="mm-metric-top">
-        <span class="mm-metric-name">GDP QoQ</span>
-        <span class="mm-metric-val">${fmt(country.gdp)}%</span>
-        ${metricDelta(country.gdp, country.gdpPrev, false)}
+    <div class="mm-banner">
+      <div class="mm-banner-cb">
+        <span class="mm-banner-flag">${cb.flag}</span>
+        <div class="mm-banner-info">
+          <span class="mm-banner-bank">${cb.bank} — ${cb.country}</span>
+          <span class="mm-banner-full">${cb.name}</span>
+        </div>
       </div>
-      ${bar(Math.max(0, (country.gdp / 4) * 100), 'mm-bar-green')}
-    </div>
-    <div class="mm-metric">
-      <div class="mm-metric-top">
-        <span class="mm-metric-name">Manufacturing PMI</span>
-        <span class="mm-metric-val mm-pmi-val ${pmiCls}">${fmt(country.pmi)}</span>
-        ${metricDelta(country.pmi, country.pmiPrev, false)}
+      <div class="mm-banner-stat">
+        <span class="mm-banner-slabel">Policy Rate</span>
+        <span class="mm-banner-sval rate-val">${rateStr}</span>
       </div>
-      ${bar(((country.pmi - 40) / 20) * 100, country.pmi >= 50 ? 'mm-bar-green' : 'mm-bar-red')}
-    </div>
-    <div class="mm-metric">
-      <div class="mm-metric-top">
-        <span class="mm-metric-name">Retail Sales MoM</span>
-        <span class="mm-metric-val">${country.retail >= 0 ? '+' : ''}${fmt(country.retail)}%</span>
-        ${metricDelta(country.retail, country.retailPrev, false)}
+      <div class="mm-banner-stat">
+        <span class="mm-banner-slabel">Infl. Target</span>
+        <span class="mm-banner-sval">${cb.inflation_target}%</span>
       </div>
-      ${bar(Math.max(0, ((country.retail + 2) / 4) * 100), country.retail >= 0 ? 'mm-bar-green' : 'mm-bar-red')}
-    </div>
-  </div>
-</div>`;
-
-  /* ── Bottom row ─── */
-  const bottom = `
-<div class="mm-bottom">
-  <div class="mm-chart-card">
-    <div class="mm-chart-head">
-      <span class="mm-chart-title">7-Month Trend</span>
-      <div class="mm-chart-tabs">
-        <button class="mm-chart-tab ${chartMode==='cpi'?'active':''}" onclick="setChartMode('cpi')">CPI</button>
-        <button class="mm-chart-tab ${chartMode==='unemp'?'active':''}" onclick="setChartMode('unemp')">Unemployment</button>
+      <div class="mm-banner-stat">
+        <span class="mm-banner-slabel">Currency</span>
+        <span class="mm-banner-sval">${cb.currency}</span>
       </div>
-    </div>
-    <div class="mm-chart-body">
-      <div class="mm-chart-wrap"><canvas id="mm-chart"></canvas></div>
-    </div>
-  </div>
+    </div>`;
 
-  <div class="mm-fx-card">
-    <div class="mm-fx-head">FX Signals</div>
-    <div class="mm-fx-body">
-      ${country.signals.map(s => `
-<div class="mm-fx-row">
-  <span class="mm-fx-pair">${s.pair}</span>
-  <span class="mm-fx-dir ${fxDirCls(s.dir)}">${s.dir}</span>
-  <span class="mm-fx-reason">${s.reason}</span>
-</div>`).join('')}
-    </div>
-  </div>
-</div>`;
+  // Metric cards
+  const cards = cb.metrics.map((m, i) => metricCard(cb, m, i));
+  const metricsGrid = `<div class="mm-metrics-grid">${cards.map(c => c.html).join("")}</div>`;
 
-  /* ── Inject ─── */
-  document.getElementById('mm-main').innerHTML = banner + stats +
-    `<div class="mm-panels">${inflationPanel}${laborPanel}${growthPanel}</div>` + bottom;
+  // History charts (primary + inflation metrics only)
+  const chartItems = cb.metrics.filter(m => m.primary || ["cpi","core_cpi","unemp","gdp","trimmed","core_ex","median"].includes(m.key));
+  const chartHtml = chartItems.map((m, i) => {
+    const md = (cb.metrics_data || {})[m.key] || {};
+    const hist = md.history || [];
+    const cid = `hchart-${cb.id}-${m.key}`;
+    const color = METRIC_COLORS[i % METRIC_COLORS.length];
+    if (hist.length < 2) return "";
+    return `
+      <div class="mm-chart-card">
+        <div class="mm-chart-head">
+          <span class="mm-chart-title">${m.label}</span>
+          <span class="mm-chart-period">18 months</span>
+        </div>
+        <div class="mm-chart-wrap"><canvas id="${cid}"></canvas></div>
+      </div>`;
+  }).filter(Boolean).join("");
 
-  buildChart(country);
+  const chartsSection = chartHtml ? `<div class="mm-charts-grid">${chartHtml}</div>` : "";
+
+  return { banner, metricsGrid, chartsSection, cards, chartItems };
 }
 
-function setChartMode(mode) {
-  chartMode = mode;
-  render(currentCountry);
-}
-window.setChartMode = setChartMode;
+/* ── render ───────────────────────────────────────────────────────────────── */
+function render() {
+  if (!RAW || RAW.length === 0) {
+    document.getElementById("mm-content").innerHTML = '<p style="color:#637a8a;padding:40px 0">No data available.</p>';
+    return;
+  }
 
-/* ═══════════════════════════════════════════════════════════
-   TABS
-═══════════════════════════════════════════════════════════ */
-function buildTabs() {
-  const container = document.getElementById('mm-tabs');
-  container.innerHTML = C.map((c, i) => `
-<button class="mm-tab${i===0?' active':''}" data-id="${c.id}" onclick="selectTab(this,'${c.id}')">
-  <span class="mm-tab-flag">${c.flag}</span>
-  <span>${c.name}</span>
-</button>`).join('');
+  const tabsEl = document.getElementById("mm-tabs");
+  const contentEl = document.getElementById("mm-content");
+
+  const tabs = [], sections = [];
+  const sparks = [], hcharts = [];
+
+  RAW.forEach((cb, idx) => {
+    const active = idx === 0 ? " active" : "";
+    tabs.push(`<button class="mm-tab${active}" onclick="mmSwitch('${cb.id}')" id="mmtab-${cb.id}">
+      <span class="mm-tab-flag">${cb.flag}</span>${cb.bank}
+    </button>`);
+
+    const s = buildSection(cb);
+    sections.push(`<div class="mm-section${active}" id="mmsec-${cb.id}">
+      ${s.banner}${s.metricsGrid}${s.chartsSection}
+    </div>`);
+
+    // Collect sparklines and history charts to draw after DOM insert
+    s.cards.forEach(c => { if (c.sparkId && c.hist.length >= 2) sparks.push({id: c.sparkId, hist: c.hist, color: c.color}); });
+    s.chartItems.forEach((m, i) => {
+      const md = (cb.metrics_data || {})[m.key] || {};
+      const hist = md.history || [];
+      if (hist.length < 2) return;
+      sparks.push({id: `hchart-${cb.id}-${m.key}`, hist, color: METRIC_COLORS[i % METRIC_COLORS.length], full: true, label: m.label, unit: m.unit});
+    });
+  });
+
+  tabsEl.innerHTML = tabs.join("");
+  contentEl.innerHTML = sections.join("");
+
+  // Draw charts after DOM is ready
+  requestAnimationFrame(() => {
+    sparks.forEach(s => {
+      if (s.full) drawHistoryChart(s.id, s.hist, s.label, s.color, s.unit);
+      else drawSparkline(s.id, s.hist, s.color);
+    });
+  });
 }
 
-function selectTab(el, id) {
-  document.querySelectorAll('.mm-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  const country = C.find(c => c.id === id);
-  if (country) render(country);
-}
-window.selectTab = selectTab;
+window.mmSwitch = function (id) {
+  document.querySelectorAll(".mm-section").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(".mm-tab").forEach(el => el.classList.remove("active"));
+  const sec = document.getElementById("mmsec-" + id);
+  const tab = document.getElementById("mmtab-" + id);
+  if (sec) sec.classList.add("active");
+  if (tab) tab.classList.add("active");
 
-/* ═══════════════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════════════ */
-window.addEventListener('load', function () {
-  buildTabs();
-  render(C[0]);
-});
+  // Draw charts for this section if not yet drawn
+  requestAnimationFrame(() => {
+    const cb = RAW.find(c => c.id === id);
+    if (!cb) return;
+    cb.metrics.forEach((m, i) => {
+      const md = (cb.metrics_data || {})[m.key] || {};
+      drawSparkline(`spark-${id}-${m.key}`, md.history, METRIC_COLORS[i % METRIC_COLORS.length]);
+      if (m.primary || ["cpi","core_cpi","unemp","gdp","trimmed","core_ex","median"].includes(m.key)) {
+        drawHistoryChart(`hchart-${id}-${m.key}`, md.history, m.label, METRIC_COLORS[i % METRIC_COLORS.length], m.unit);
+      }
+    });
+  });
+};
+
+if (typeof Chart !== "undefined") render();
+else {
+  const s = document.querySelector("script[src*='chart']");
+  if (s) s.addEventListener("load", render, {once: true});
+  else setTimeout(render, 600);
+}
 
 })();
 </script>
-{% endblock %}
+{% endblock body %}

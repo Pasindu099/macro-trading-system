@@ -2306,8 +2306,9 @@ async def bank_research_page(request: Request) -> HTMLResponse:
 @router.get("/macro-monitor", response_class=HTMLResponse)
 async def macro_monitor_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
+        request,
         "macro_monitor.html",
-        {"request": request, "page_title": "Macro Monitor | Macro Dashboard"},
+        {"page_title": "Macro Monitor | Macro Dashboard"},
     )
 
 

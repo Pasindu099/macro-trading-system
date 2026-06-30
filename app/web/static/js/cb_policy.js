@@ -339,7 +339,7 @@
     const badge = DIV_BADGE[an.overall_divergence] || DIV_BADGE.mild;
 
     const divergenceRows = (an.key_divergences || []).map((d) => {
-      const dot = `<span class="cpt-div-dot" style="background:${SIG_DOT[d.significance] || "#8fa5b5'}"></span>`;
+      const dot = `<span class="cpt-div-dot" style="background:${SIG_DOT[d.significance] || '#8fa5b5'}"></span>`;
       return `
         <tr>
           <td class="cpt-div-topic">${dot}${d.topic}</td>

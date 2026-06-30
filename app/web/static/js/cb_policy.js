@@ -286,6 +286,144 @@
     }
   };
 
+  // ── Policy Divergence Comparison ─────────────────────────────────────────
+
+  const TONE_COLORS = {
+    hawkish: "#ff8c42", "very hawkish": "#ff5a1f",
+    dovish: "#50b5ff", "very dovish": "#2196f3",
+    neutral: "#8fa5b5",
+  };
+
+  const DIV_BADGE = {
+    significant: { cls: "cpt-div-significant", label: "Significant" },
+    moderate:    { cls: "cpt-div-moderate",    label: "Moderate"    },
+    mild:        { cls: "cpt-div-mild",        label: "Mild"        },
+  };
+
+  const SIG_DOT = { high: "#ff8c42", medium: "#f3ba63", low: "#50b5ff" };
+
+  function outlookIcon(o) {
+    if (!o) return "";
+    const l = o.toLowerCase();
+    if (l.includes("hawk")) return '<span class="cpt-outlook hawk">↑</span>';
+    if (l.includes("dov"))  return '<span class="cpt-outlook dove">↓</span>';
+    return '<span class="cpt-outlook neutral">→</span>';
+  }
+
+  function bankCard(doc) {
+    const tc = TONE_COLORS[doc.tone_label] || "#8fa5b5";
+    return `
+      <div class="cpt-cmp-card">
+        <div class="cpt-cmp-card-header">
+          <span class="cpt-cmp-bank">${doc.bank}</span>
+          <span class="cpt-cmp-ccy">${doc.currency}</span>
+          <span class="cpt-cmp-date">${doc.doc_date}</span>
+        </div>
+        <div class="cpt-cmp-tone" style="color:${tc}">
+          ${doc.tone_label.toUpperCase()}
+          <span class="cpt-cmp-score">${doc.tone_score >= 0 ? "+" : ""}${doc.tone_score.toFixed(1)}</span>
+        </div>
+        <div class="cpt-cmp-outlooks">
+          <div class="cpt-cmp-outlook-row">${outlookIcon(doc.inflation_outlook)}<span>Inflation: ${doc.inflation_outlook}</span></div>
+          <div class="cpt-cmp-outlook-row">${outlookIcon(doc.growth_outlook)}<span>Growth: ${doc.growth_outlook}</span></div>
+          <div class="cpt-cmp-outlook-row">${outlookIcon(doc.labor_outlook)}<span>Labor: ${doc.labor_outlook}</span></div>
+        </div>
+        ${doc.tone_change_vs_prior ? `<div class="cpt-cmp-shift">Shift: ${doc.tone_change_vs_prior}</div>` : ""}
+      </div>`;
+  }
+
+  function renderComparison(data) {
+    const a = data.bank_a;
+    const b = data.bank_b;
+    const an = data.analysis;
+    const badge = DIV_BADGE[an.overall_divergence] || DIV_BADGE.mild;
+
+    const divergenceRows = (an.key_divergences || []).map((d) => {
+      const dot = `<span class="cpt-div-dot" style="background:${SIG_DOT[d.significance] || "#8fa5b5'}"></span>`;
+      return `
+        <tr>
+          <td class="cpt-div-topic">${dot}${d.topic}</td>
+          <td>${d.bank_a}</td>
+          <td>${d.bank_b}</td>
+        </tr>`;
+    }).join("");
+
+    const implications = (an.trading_implications || [])
+      .map((t) => `<li>${t}</li>`).join("");
+
+    const risks = (an.risk_factors || [])
+      .map((r) => `<li>${r}</li>`).join("");
+
+    return `
+      <div class="cpt-cmp-result">
+        <div class="cpt-cmp-header-row">
+          <span class="cpt-div-badge ${badge.cls}">${badge.label} Divergence</span>
+          <span class="cpt-cmp-direction">${an.divergence_direction || ""}</span>
+          <span class="cpt-cmp-pair">${an.fx_pair || ""}</span>
+        </div>
+
+        <div class="cpt-cmp-cards-row">
+          ${bankCard(a)}
+          <div class="cpt-cmp-arrow">⇄</div>
+          ${bankCard(b)}
+        </div>
+
+        <div class="cpt-cmp-summary">${an.summary || ""}</div>
+
+        <div class="cpt-cmp-section-title">Key Divergences</div>
+        <div class="cpt-table-wrap">
+          <table class="cpt-div-table">
+            <thead><tr><th>Topic</th><th>${a.bank} (${a.currency})</th><th>${b.bank} (${b.currency})</th></tr></thead>
+            <tbody>${divergenceRows}</tbody>
+          </table>
+        </div>
+
+        <div class="cpt-cmp-two-col">
+          <div>
+            <div class="cpt-cmp-section-title">FX Bias — ${an.fx_pair || ""}</div>
+            <div class="cpt-cmp-fx-bias">${an.fx_bias || "—"}</div>
+            <ul class="cpt-cmp-bullets">${implications}</ul>
+          </div>
+          <div>
+            <div class="cpt-cmp-section-title">Risk Factors</div>
+            <ul class="cpt-cmp-bullets cpt-cmp-risks">${risks}</ul>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  window.cptRunComparison = function () {
+    const bankA = document.getElementById("cpt-compare-bank-a").value;
+    const bankB = document.getElementById("cpt-compare-bank-b").value;
+    const btn = document.getElementById("cpt-compare-btn");
+    const result = document.getElementById("cpt-compare-result");
+
+    if (bankA === bankB) {
+      result.style.display = "block";
+      result.innerHTML = '<div class="cpt-cmp-error">Select two different banks.</div>';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Analyzing…";
+    result.style.display = "block";
+    result.innerHTML = '<div class="cpt-cmp-loading"><span class="cpt-spinner"></span> Running AI analysis — this takes ~10 seconds…</div>';
+
+    fetch(`/api/cb/compare?bank_a=${bankA}&bank_b=${bankB}`, { method: "POST" })
+      .then((r) => r.json().then((d) => ({ ok: r.ok, data: d })))
+      .then(({ ok, data }) => {
+        if (!ok) throw new Error(data.detail || "Comparison failed");
+        result.innerHTML = renderComparison(data);
+      })
+      .catch((err) => {
+        result.innerHTML = `<div class="cpt-cmp-error">Error: ${err.message}</div>`;
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.textContent = "Analyze Divergence";
+      });
+  };
+
   // ── Expand / collapse bank detail ─────────────────────────────────────────
 
   window.cptToggleDetail = function (bankCode) {

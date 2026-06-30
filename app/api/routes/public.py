@@ -36,7 +36,7 @@ from app.api.schemas import (
     ResponseMeta,
 )
 from app.db.models import (
-    Country, CbPolicyReport, CbEconomicProjection,
+    Country, CbPolicyReport, CbEconomicProjection, CbPolicyDocument,
     Indicator, IndicatorRelease, IngestionRun,
 )
 from app.db.session import get_session
@@ -2194,5 +2194,149 @@ async def get_cb_projection_comparison(
     return {
         "comparison": comparison_rows,
         "count": len(comparison_rows),
+        "generated_at": _now().isoformat(),
+    }
+
+
+# ── CB Policy Divergence Comparison ───────────────────────────────────────────
+
+_BANK_CURRENCY = {
+    "FED": "USD", "ECB": "EUR", "BOE": "GBP", "BOJ": "JPY",
+    "RBA": "AUD", "BOC": "CAD", "SNB": "CHF", "RBNZ": "NZD",
+}
+
+_OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions"
+
+
+async def _compare_openai(doc_a: dict[str, Any], doc_b: dict[str, Any], settings: Any) -> dict[str, Any]:
+    """Call OpenAI to compare two CB policy documents and identify divergences."""
+    prompt = f"""You are a senior FX macro analyst. Compare these two central bank policy analyses and identify monetary policy divergences that matter for FX trading.
+
+BANK A — {doc_a['bank']} ({doc_a['currency']}) | Latest document: {doc_a['doc_date']} | Type: {doc_a['doc_type']}
+Tone: {doc_a['tone_label']} (score: {doc_a['tone_score']})
+Inflation outlook: {doc_a['inflation_outlook']}
+Inflation summary: {doc_a['inflation_summary']}
+Growth outlook: {doc_a['growth_outlook']}
+Growth summary: {doc_a['growth_summary']}
+Labor outlook: {doc_a['labor_outlook']}
+Labor summary: {doc_a['labor_summary']}
+Key phrases: {', '.join(doc_a['key_phrases'] or [])}
+Tone vs prior: {doc_a['tone_change_vs_prior']}
+
+BANK B — {doc_b['bank']} ({doc_b['currency']}) | Latest document: {doc_b['doc_date']} | Type: {doc_b['doc_type']}
+Tone: {doc_b['tone_label']} (score: {doc_b['tone_score']})
+Inflation outlook: {doc_b['inflation_outlook']}
+Inflation summary: {doc_b['inflation_summary']}
+Growth outlook: {doc_b['growth_outlook']}
+Growth summary: {doc_b['growth_summary']}
+Labor outlook: {doc_b['labor_outlook']}
+Labor summary: {doc_b['labor_summary']}
+Key phrases: {', '.join(doc_b['key_phrases'] or [])}
+Tone vs prior: {doc_b['tone_change_vs_prior']}
+
+Return a JSON object with exactly this structure:
+{{
+  "overall_divergence": "mild" | "moderate" | "significant",
+  "divergence_direction": "{doc_a['bank']} more hawkish" | "{doc_b['bank']} more hawkish" | "broadly aligned",
+  "summary": "<2-3 sentence macro summary of the policy gap>",
+  "key_divergences": [
+    {{
+      "topic": "<e.g. Rate trajectory / Inflation stance / Growth concern / Labor market>",
+      "bank_a": "<brief stance for {doc_a['bank']}>",
+      "bank_b": "<brief stance for {doc_b['bank']}>",
+      "significance": "low" | "medium" | "high"
+    }}
+  ],
+  "fx_pair": "{doc_a['currency']}/{doc_b['currency']}",
+  "fx_bias": "<e.g. Bullish {doc_a['currency']}/{doc_b['currency']}>",
+  "trading_implications": ["<bullet 1>", "<bullet 2>", "<bullet 3>"],
+  "risk_factors": ["<key risk to the divergence thesis>"]
+}}
+
+Focus on rate path expectations, inflation tolerance, and growth concerns. Be concise and actionable."""
+
+    async with httpx.AsyncClient(timeout=45.0) as client:
+        resp = await client.post(
+            _OPENAI_CHAT_URL,
+            headers={"Authorization": f"Bearer {settings.openai_api_key}", "Content-Type": "application/json"},
+            json={
+                "model": settings.openai_model,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.3,
+                "response_format": {"type": "json_object"},
+            },
+        )
+        resp.raise_for_status()
+        raw = resp.json()["choices"][0]["message"]["content"]
+        return json.loads(raw)
+
+
+@router.post("/cb/compare")
+async def compare_cb_policies(
+    bank_a: str = Query(..., description="First bank code e.g. FED"),
+    bank_b: str = Query(..., description="Second bank code e.g. ECB"),
+    session: AsyncSession = DB_SESSION,
+) -> dict[str, Any]:
+    """Compare the latest monetary policy documents from two central banks using AI."""
+    settings = get_settings()
+    if not settings.openai_api_key:
+        raise HTTPException(status_code=503, detail="OPENAI_API_KEY is not configured.")
+
+    bank_a = bank_a.upper().strip()
+    bank_b = bank_b.upper().strip()
+
+    if bank_a == bank_b:
+        raise HTTPException(status_code=400, detail="Select two different banks.")
+    if bank_a not in _BANK_CURRENCY or bank_b not in _BANK_CURRENCY:
+        raise HTTPException(status_code=400, detail=f"Unknown bank code. Valid: {list(_BANK_CURRENCY)}")
+
+    # Fetch the most-recent analyzed statement/report for each bank
+    async def _fetch_latest(bank: str) -> CbPolicyDocument | None:
+        row = (await session.execute(
+            select(CbPolicyDocument)
+            .where(
+                CbPolicyDocument.bank == bank,
+                CbPolicyDocument.analyzed_at.is_not(None),
+                CbPolicyDocument.doc_type.in_(["statement", "report", "upload"]),
+            )
+            .order_by(CbPolicyDocument.doc_date.desc())
+            .limit(1)
+        )).scalar_one_or_none()
+        return row
+
+    doc_a_row, doc_b_row = await asyncio.gather(_fetch_latest(bank_a), _fetch_latest(bank_b))
+
+    if doc_a_row is None:
+        raise HTTPException(status_code=404, detail=f"No analyzed documents found for {bank_a}. Upload and ingest first.")
+    if doc_b_row is None:
+        raise HTTPException(status_code=404, detail=f"No analyzed documents found for {bank_b}. Upload and ingest first.")
+
+    def _doc_dict(row: CbPolicyDocument, bank: str) -> dict[str, Any]:
+        return {
+            "bank": bank,
+            "currency": _BANK_CURRENCY[bank],
+            "doc_date": row.doc_date.isoformat(),
+            "doc_type": row.doc_type,
+            "tone_score": float(row.tone_score) if row.tone_score is not None else 0.0,
+            "tone_label": row.tone_label or "neutral",
+            "inflation_outlook": row.inflation_outlook or "unknown",
+            "inflation_summary": row.inflation_summary or "",
+            "growth_outlook": row.growth_outlook or "unknown",
+            "growth_summary": row.growth_summary or "",
+            "labor_outlook": row.labor_outlook or "unknown",
+            "labor_summary": row.labor_summary or "",
+            "key_phrases": row.key_phrases or [],
+            "tone_change_vs_prior": row.tone_change_vs_prior or "no change",
+        }
+
+    doc_a = _doc_dict(doc_a_row, bank_a)
+    doc_b = _doc_dict(doc_b_row, bank_b)
+
+    analysis = await _compare_openai(doc_a, doc_b, settings)
+
+    return {
+        "bank_a": doc_a,
+        "bank_b": doc_b,
+        "analysis": analysis,
         "generated_at": _now().isoformat(),
     }

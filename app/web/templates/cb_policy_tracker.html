@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/cb_policy.css') }}?v=20260630a">
-<script src="{{ url_for('static', path='js/cb_policy.js') }}?v=20260630a" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', path='css/cb_policy.css') }}?v=20260630b">
+<script src="{{ url_for('static', path='js/cb_policy.js') }}?v=20260630b" defer></script>
 {% endblock %}
 {% block body %}
 
@@ -22,6 +22,7 @@
 <div class="cpt-tab-bar">
   <button class="cpt-tab-btn active" id="tab-btn-tone" onclick="cptSwitchTab('tone')">Tone Analysis</button>
   <button class="cpt-tab-btn" id="tab-btn-projections" onclick="cptSwitchTab('projections')">Economic Projections</button>
+  <button class="cpt-tab-btn" id="tab-btn-compare" onclick="cptSwitchTab('compare')">Policy Divergence</button>
   <button class="cpt-tab-btn" id="tab-btn-upload" onclick="cptSwitchTab('upload')">Upload Document</button>
 </div>
 
@@ -379,6 +380,54 @@
 </div>
 
 </div><!-- /tab-upload -->
+
+
+<!-- ═══════════════════════════════════════════════ TAB 4: Policy Divergence -->
+<div class="cpt-tab-content" id="tab-compare" style="display:none">
+
+<div class="panel cpt-compare-panel">
+  <div class="panel-header">
+    <h2 class="panel-title">Policy Divergence Analyzer</h2>
+    <p class="panel-subtitle">Compare the latest monetary policy stance of two central banks using AI</p>
+  </div>
+
+  <div class="cpt-compare-selectors">
+    <div class="cpt-compare-bank-select">
+      <label class="cpt-compare-label">Bank A</label>
+      <select id="cpt-compare-bank-a" class="cpt-compare-select">
+        <option value="FED">FED — Federal Reserve (USD)</option>
+        <option value="ECB">ECB — European Central Bank (EUR)</option>
+        <option value="BOE">BOE — Bank of England (GBP)</option>
+        <option value="BOJ">BOJ — Bank of Japan (JPY)</option>
+        <option value="RBA">RBA — Reserve Bank of Australia (AUD)</option>
+        <option value="BOC">BOC — Bank of Canada (CAD)</option>
+        <option value="SNB">SNB — Swiss National Bank (CHF)</option>
+        <option value="RBNZ">RBNZ — Reserve Bank of New Zealand (NZD)</option>
+      </select>
+    </div>
+    <div class="cpt-compare-vs">vs</div>
+    <div class="cpt-compare-bank-select">
+      <label class="cpt-compare-label">Bank B</label>
+      <select id="cpt-compare-bank-b" class="cpt-compare-select">
+        <option value="ECB">ECB — European Central Bank (EUR)</option>
+        <option value="FED">FED — Federal Reserve (USD)</option>
+        <option value="BOE">BOE — Bank of England (GBP)</option>
+        <option value="BOJ">BOJ — Bank of Japan (JPY)</option>
+        <option value="RBA">RBA — Reserve Bank of Australia (AUD)</option>
+        <option value="BOC">BOC — Bank of Canada (CAD)</option>
+        <option value="SNB">SNB — Swiss National Bank (CHF)</option>
+        <option value="RBNZ">RBNZ — Reserve Bank of New Zealand (NZD)</option>
+      </select>
+    </div>
+    <button class="btn cpt-compare-btn" id="cpt-compare-btn" onclick="cptRunComparison()">
+      Analyze Divergence
+    </button>
+  </div>
+
+  <div id="cpt-compare-result" style="display:none"></div>
+</div>
+
+</div><!-- /tab-compare -->
 
 
 <!-- Hidden data for JS charts -->

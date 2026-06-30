@@ -29,6 +29,7 @@ dependencies = [
     "feedparser>=6.0.11",
     "openai>=1.0.0",
     "python-multipart>=0.0.9",
+    "cryptography>=42.0.0",
 ]
 
 [project.optional-dependencies]

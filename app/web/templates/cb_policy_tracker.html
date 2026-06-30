@@ -1,26 +1,20 @@
 {% extends "base.html" %}
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/cb_policy.css') }}?v=20260629b">
-<script src="{{ url_for('static', path='js/cb_policy.js') }}?v=20260629b" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', path='css/cb_policy.css') }}?v=20260630a">
+<script src="{{ url_for('static', path='js/cb_policy.js') }}?v=20260630a" defer></script>
 {% endblock %}
 {% block body %}
 
 <div class="page-header cpt-header">
   <div class="cpt-header-left">
     <h1 class="page-title">CB Policy Tracker</h1>
-    <p class="page-subtitle">AI analysis of central bank policy statements — tone shifts, projections &amp; economic comparisons</p>
+    <p class="page-subtitle">AI analysis of uploaded central bank documents — tone shifts, projections &amp; economic comparisons</p>
   </div>
   <div class="cpt-header-right">
     <span class="cpt-last-updated">
       <span class="dot {% if is_empty %}dot-warn{% else %}dot-ok{% endif %}"></span>
-      {% if is_empty %}Awaiting first fetch{% else %}Updated {{ last_updated }}{% endif %}
+      {% if is_empty %}No documents yet{% else %}Updated {{ last_updated }}{% endif %}
     </span>
-    <button
-      id="cpt-refresh-btn"
-      class="btn btn-sm"
-      onclick="cptRefresh()"
-      title="Re-scrape statements and re-run AI analysis"
-    >&#8635; Refresh Analysis</button>
   </div>
 </div>
 
@@ -31,11 +25,6 @@
   <button class="cpt-tab-btn" id="tab-btn-upload" onclick="cptSwitchTab('upload')">Upload Document</button>
 </div>
 
-<div id="cpt-refresh-banner" class="cpt-banner" style="display:none">
-  <span class="cpt-banner-dot"></span>
-  <span id="cpt-refresh-msg">Fetching statements from central bank websites and running AI analysis — this may take a few minutes…</span>
-</div>
-
 <!-- ═══════════════════════════════════════════════════════ TAB 1: Tone Analysis -->
 <div class="cpt-tab-content" id="tab-tone">
 
@@ -44,27 +33,17 @@
   <div class="cpt-empty-icon">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="48" height="48"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-4 4"/></svg>
   </div>
-  <h2>No policy reports yet</h2>
-  <p>Click <strong>Refresh Analysis</strong> to fetch the last 12 months of monetary policy statements from all 8 central banks and run AI analysis. You can also upload PDFs manually using the <strong>Upload Document</strong> tab.</p>
-  <p class="cpt-empty-note">First run: ~5–10 minutes (8 banks × 6–8 statements × AI analysis). Results are cached — subsequent loads are instant.</p>
-  <button class="btn" onclick="cptRefresh()">&#8635; Start First Fetch</button>
+  <h2>No documents analyzed yet</h2>
+  <p>Use the <strong>Upload Document</strong> tab to add a PDF, or click <strong>Scan &amp; Ingest</strong> if you have PDFs in <code>data/policy/</code>.</p>
 </div>
 
 {% else %}
 
-{% if local_docs_analyzed > 0 %}
-<div class="cpt-source-badge">
-  <span class="cpt-source-pill cpt-source-local">Local PDFs</span>
-  <span class="cpt-source-pill cpt-source-scraper">Web Scraper</span>
-  <span class="cpt-source-note">Showing combined analysis from {{ local_docs_analyzed }} local document(s) + web-scraped statements</span>
-</div>
-{% endif %}
-
 <!-- Tone Timeline Chart -->
 <div class="panel cpt-chart-panel">
   <div class="panel-header">
-    <h2 class="panel-title">Policy Tone Timeline — 12 Months</h2>
-    <p class="panel-subtitle">Hawkish = positive &nbsp;|&nbsp; Dovish = negative &nbsp;|&nbsp; Range: &minus;5 to +5</p>
+    <h2 class="panel-title">Policy Tone Timeline — Last 12 Months</h2>
+    <p class="panel-subtitle">Hawkish = positive &nbsp;|&nbsp; Dovish = negative &nbsp;|&nbsp; Range: &minus;5 to +5 &nbsp;|&nbsp; {{ total_reports }} document(s) analyzed</p>
   </div>
   <div class="cpt-chart-wrap">
     <canvas id="cpt-tone-chart" height="220"></canvas>
@@ -76,7 +55,7 @@
 <div class="panel">
   <div class="panel-header">
     <h2 class="panel-title">Central Bank Snapshots</h2>
-    <p class="panel-subtitle">Latest statement analysis per bank</p>
+    <p class="panel-subtitle">Latest document analysis per bank</p>
   </div>
   <div class="cpt-bank-grid">
     {% for bank in banks %}
@@ -128,9 +107,6 @@
       <div class="cpt-card-footer">
         <span class="cpt-date-label">Latest: {{ bank.latest_date }}</span>
         <div class="cpt-footer-actions">
-          {% if bank.latest_pdf_url %}
-          <a href="{{ bank.latest_pdf_url }}" target="_blank" rel="noopener" class="cpt-pdf-btn" title="View PDF report">PDF ↗</a>
-          {% endif %}
           <button
             class="cpt-expand-btn"
             onclick="cptToggleDetail('{{ bank.code }}')"
@@ -149,7 +125,7 @@
 
         {% if bank.latest_bullets %}
         <div class="cpt-bullets-section">
-          <div class="cpt-section-label">Retail trader takeaways</div>
+          <div class="cpt-section-label">Trader takeaways</div>
           {% for bullet in bank.latest_bullets %}
           <div class="cpt-bullet">
             <span class="cpt-bullet-dot"></span>
@@ -182,7 +158,7 @@
         </div>
 
         {% if bank.reports|length > 1 %}
-        <div class="cpt-section-label" style="margin-top: 16px">Statement history</div>
+        <div class="cpt-section-label" style="margin-top: 16px">Document history</div>
         <div class="cpt-timeline">
           {% for report in bank.reports %}
           <div class="cpt-timeline-item {% if loop.first %}is-latest{% endif %}">
@@ -190,16 +166,11 @@
               <span class="cpt-tl-date">{{ report.date_display }}</span>
               <span class="cpt-tl-score {{ report.tone_class }}">{{ report.tone_score_display }}</span>
               <span class="cpt-tl-label {{ report.tone_class }}">{{ report.tone_label }}</span>
-              <span class="cpt-tl-links">
-                {% if report.pdf_url %}
-                <a href="{{ report.pdf_url }}" target="_blank" rel="noopener" class="cpt-tl-pdf" title="Download PDF">PDF</a>
-                {% endif %}
-                {% if report.source_url %}
-                <a href="{{ report.source_url }}" target="_blank" rel="noopener" class="cpt-tl-src" title="View official statement">↗</a>
-                {% endif %}
-              </span>
+              {% if report.doc_type %}
+              <span class="cpt-tl-type">{{ report.doc_type }}</span>
+              {% endif %}
             </div>
-            {% if not loop.first and report.tone_change %}
+            {% if not loop.first and report.tone_change and report.tone_change != '—' %}
             <div class="cpt-tl-change">{{ report.tone_change }}</div>
             {% endif %}
             {% if report.retail_bullets %}
@@ -213,20 +184,12 @@
           {% endfor %}
         </div>
         {% elif bank.reports|length == 1 %}
-        <div class="cpt-section-label" style="margin-top:16px">Statement</div>
+        <div class="cpt-section-label" style="margin-top:16px">Document</div>
         <div class="cpt-timeline">
           <div class="cpt-timeline-item is-latest">
             <div class="cpt-tl-meta">
               <span class="cpt-tl-date">{{ bank.reports[0].date_display }}</span>
               <span class="cpt-tl-score {{ bank.reports[0].tone_class }}">{{ bank.reports[0].tone_score_display }}</span>
-              <span class="cpt-tl-links">
-                {% if bank.reports[0].pdf_url %}
-                <a href="{{ bank.reports[0].pdf_url }}" target="_blank" rel="noopener" class="cpt-tl-pdf" title="Download PDF">PDF</a>
-                {% endif %}
-                {% if bank.reports[0].source_url %}
-                <a href="{{ bank.reports[0].source_url }}" target="_blank" rel="noopener" class="cpt-tl-src">↗</a>
-                {% endif %}
-              </span>
             </div>
           </div>
         </div>
@@ -234,7 +197,7 @@
       </div>
 
       {% else %}
-      <div class="cpt-no-data">No data — click Refresh to fetch.</div>
+      <div class="cpt-no-data">No documents — upload via the Upload tab.</div>
       {% endif %}
 
     </div>
@@ -261,7 +224,6 @@
 
 <div class="cpt-proj-section">
 
-  <!-- Projection charts per bank -->
   {% if projections_by_bank %}
   <div class="panel">
     <div class="panel-header">
@@ -273,7 +235,9 @@
       {% if proj_list %}
       <div class="cpt-proj-chart-wrap panel-inner">
         <div class="cpt-proj-chart-title">{{ bank_code }}</div>
-        <canvas id="cpt-proj-{{ bank_code }}-chart" height="160"></canvas>
+        <div class="cpt-proj-canvas-wrap">
+          <canvas id="cpt-proj-{{ bank_code }}-chart"></canvas>
+        </div>
       </div>
       {% endif %}
       {% endfor %}
@@ -281,7 +245,6 @@
   </div>
   {% endif %}
 
-  <!-- Comparison table -->
   {% if projection_comparison %}
   <div class="panel">
     <div class="panel-header">

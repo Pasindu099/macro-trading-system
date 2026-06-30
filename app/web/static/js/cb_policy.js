@@ -164,6 +164,8 @@
   }
 
   // ── Projection charts ─────────────────────────────────────────────────────
+  // Each canvas lives inside .cpt-proj-canvas-wrap which has a fixed CSS height.
+  // We use maintainAspectRatio:false so the chart fills that container exactly.
 
   window.initProjectionCharts = function (data) {
     for (const [bank, projList] of Object.entries(data)) {
@@ -171,15 +173,11 @@
       const el = document.getElementById("cpt-proj-" + bank + "-chart");
       if (!el) continue;
 
-      const color = BANK_COLORS[bank] || "#888";
-
       // Group unique projection dates (x axis)
       const allDates = [...new Set(projList.map((p) => p.projection_date))].sort();
 
-      // Build per-metric datasets
       const inflData = allDates.map((d) => {
         const rows = projList.filter((p) => p.projection_date === d && p.inflation_forecast != null);
-        // Take the first non-null value for this date
         return rows.length ? { x: d, y: rows[0].inflation_forecast } : null;
       }).filter(Boolean);
 
@@ -200,7 +198,7 @@
           data: inflData,
           borderColor: "#ff8c42",
           backgroundColor: "#ff8c4222",
-          pointRadius: 4,
+          pointRadius: 3,
           borderWidth: 2,
           tension: 0.3,
           fill: false,
@@ -212,7 +210,7 @@
           data: gdpData,
           borderColor: "#23c483",
           backgroundColor: "#23c48322",
-          pointRadius: 4,
+          pointRadius: 3,
           borderWidth: 2,
           tension: 0.3,
           fill: false,
@@ -224,7 +222,7 @@
           data: unempData,
           borderColor: "#50b5ff",
           backgroundColor: "#50b5ff22",
-          pointRadius: 4,
+          pointRadius: 3,
           borderWidth: 2,
           tension: 0.3,
           fill: false,
@@ -246,7 +244,7 @@
               ticks: {
                 color: "#8fa5b5",
                 font: { size: 9 },
-                maxTicksLimit: 8,
+                maxTicksLimit: 6,
               },
               grid: { color: "rgba(255,255,255,0.04)" },
             },
@@ -264,8 +262,9 @@
               display: true,
               labels: {
                 color: "#8fa5b5",
-                font: { size: 10 },
-                boxWidth: 10,
+                font: { size: 9 },
+                boxWidth: 8,
+                padding: 8,
               },
             },
             tooltip: {
@@ -293,40 +292,6 @@
     const isOpen = detail.style.display !== "none";
     detail.style.display = isOpen ? "none" : "block";
     btn.textContent = isOpen ? "History ▼" : "History ▲";
-  };
-
-  // ── Refresh analysis (web scraper) ────────────────────────────────────────
-
-  let _refreshPoll = null;
-
-  window.cptRefresh = function () {
-    const btn = document.getElementById("cpt-refresh-btn");
-    const banner = document.getElementById("cpt-refresh-banner");
-    const msg = document.getElementById("cpt-refresh-msg");
-    if (btn) btn.disabled = true;
-    if (banner) banner.style.display = "flex";
-
-    fetch("/api/cb/policy-reports/refresh", { method: "POST" })
-      .then((r) => {
-        if (!r.ok) {
-          return r.json().then((d) => {
-            throw new Error(d.detail || "Refresh failed");
-          });
-        }
-        return r.json();
-      })
-      .then((data) => {
-        const analyzed = data.analyzed || 0;
-        const scraped = data.scraped || 0;
-        if (msg) {
-          msg.textContent = `Done — scraped ${scraped} statements, analyzed ${analyzed}. Reloading…`;
-        }
-        setTimeout(() => window.location.reload(), 1800);
-      })
-      .catch((err) => {
-        if (msg) msg.textContent = "Error: " + err.message;
-        if (btn) btn.disabled = false;
-      });
   };
 
   // ── Upload document ───────────────────────────────────────────────────────
@@ -412,7 +377,6 @@
   // ── Init ──────────────────────────────────────────────────────────────────
 
   document.addEventListener("DOMContentLoaded", function () {
-    // Chart.js may load after DOMContentLoaded if deferred — wait a tick
     if (typeof Chart !== "undefined") {
       initChart();
     } else {

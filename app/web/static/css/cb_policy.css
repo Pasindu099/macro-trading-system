@@ -566,6 +566,12 @@
   padding: 12px 14px 14px;
 }
 
+/* Fixed-height container prevents Chart.js responsive resize loop */
+.cpt-proj-canvas-wrap {
+  position: relative;
+  height: 160px;
+}
+
 .panel-inner {
   /* used for inner panels within a parent panel */
 }

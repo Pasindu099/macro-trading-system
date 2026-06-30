@@ -73,13 +73,20 @@
       return;
     }
 
+    // Collect all unique dates across all banks and sort chronologically
+    const allDates = [...new Set(
+      Object.values(allData).flat().map(([d]) => d)
+    )].sort();
+
     const datasets = [];
     for (const [bank, series] of Object.entries(allData)) {
       if (!series || series.length === 0) continue;
+      const byDate = Object.fromEntries(series.map(([d, v]) => [d, v]));
       const color = BANK_COLORS[bank] || "#888";
       datasets.push({
         label: BANK_LABELS[bank] || bank,
-        data: series.map(([d, v]) => ({ x: d, y: v })),
+        data: allDates.map((d) => (d in byDate ? byDate[d] : null)),
+        spanGaps: true,
         borderColor: color,
         backgroundColor: color + "22",
         pointBackgroundColor: color,
@@ -95,7 +102,7 @@
 
     new Chart(el, {
       type: "line",
-      data: { datasets },
+      data: { labels: allDates, datasets },
       options: {
         responsive: true,
         maintainAspectRatio: false,

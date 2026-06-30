@@ -576,6 +576,18 @@
   /* used for inner panels within a parent panel */
 }
 
+.cpt-proj-chart-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cpt-proj-chart-asof {
+  font-size: 10px;
+  color: #637a8a;
+}
+
 .cpt-proj-chart-title {
   font-size: 11px;
   font-weight: 700;

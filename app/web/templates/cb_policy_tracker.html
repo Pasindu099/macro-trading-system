@@ -227,14 +227,17 @@
   {% if projections_by_bank %}
   <div class="panel">
     <div class="panel-header">
-      <h2 class="panel-title">Projection Timelines</h2>
-      <p class="panel-subtitle">Inflation, GDP &amp; unemployment forecasts by projection date</p>
+      <h2 class="panel-title">Latest Forecast Path</h2>
+      <p class="panel-subtitle">Most-recent projection: expected inflation, GDP &amp; unemployment by horizon year</p>
     </div>
     <div class="cpt-proj-charts-grid">
-      {% for bank_code, proj_list in projections_by_bank.items() %}
-      {% if proj_list %}
+      {% for bank_code, payload in latest_path_by_bank.items() %}
+      {% if payload.path %}
       <div class="cpt-proj-chart-wrap panel-inner">
-        <div class="cpt-proj-chart-title">{{ bank_code }}</div>
+        <div class="cpt-proj-chart-header">
+          <span class="cpt-proj-chart-title">{{ bank_code }}</span>
+          <span class="cpt-proj-chart-asof">as of {{ payload.as_of }}</span>
+        </div>
         <div class="cpt-proj-canvas-wrap">
           <canvas id="cpt-proj-{{ bank_code }}-chart"></canvas>
         </div>
@@ -380,6 +383,6 @@
 
 <!-- Hidden data for JS charts -->
 <script id="cpt-data" type="application/json">{{ all_chart_data | tojson }}</script>
-<script id="cpt-proj-data" type="application/json">{{ projections_by_bank | tojson }}</script>
+<script id="cpt-proj-data" type="application/json">{{ latest_path_by_bank | tojson }}</script>
 
 {% endblock body %}

@@ -3058,34 +3058,64 @@ async def _build_projections_context(session: AsyncSession) -> dict[str, Any]:
     from datetime import date as _date
 
     current_year = _date.today().year
-    next_year = current_year + 1
 
-    # All projections for current/next year
-    proj_rows_q = await session.execute(
+    # Fetch all projections (all years) so we can build full paths
+    all_proj_q = await session.execute(
         select(CbEconomicProjection)
-        .where(CbEconomicProjection.horizon_year.in_([current_year, next_year]))
         .order_by(
             CbEconomicProjection.bank.asc(),
-            CbEconomicProjection.projection_date.asc(),
+            CbEconomicProjection.projection_date.desc(),  # newest first
             CbEconomicProjection.horizon_year.asc(),
         )
     )
-    proj_rows = list(proj_rows_q.scalars().all())
+    all_proj_rows = list(all_proj_q.scalars().all())
 
-    # Group by bank for chart data
-    projections_by_bank: dict[str, list[dict[str, Any]]] = {}
-    for row in proj_rows:
-        projections_by_bank.setdefault(row.bank, []).append({
-            "projection_date": row.projection_date.isoformat(),
-            "horizon_label": row.horizon_label,
-            "horizon_year": row.horizon_year,
-            "inflation_forecast": float(row.inflation_forecast) if row.inflation_forecast else None,
-            "gdp_forecast": float(row.gdp_forecast) if row.gdp_forecast else None,
-            "unemployment_forecast": float(row.unemployment_forecast) if row.unemployment_forecast else None,
+    def _is_annual_label(label: str | None) -> bool:
+        """True only for plain 4-digit year labels like '2025', '2026'."""
+        return bool(label and len(label) == 4 and label.isdigit())
+
+    # ── Latest forecast path per bank ────────────────────────────────────────
+    # For each bank: take the most-recent projection date, merge annual-horizon
+    # rows into one "path" object keyed by horizon_year.
+    latest_path_by_bank: dict[str, Any] = {}
+    seen_latest_date: dict[str, str] = {}
+
+    for row in all_proj_rows:
+        bank = row.bank
+        date_str = row.projection_date.isoformat()
+
+        # Determine the most-recent projection date for this bank
+        if bank not in seen_latest_date:
+            seen_latest_date[bank] = date_str
+        latest_date = seen_latest_date[bank]
+        if date_str != latest_date:
+            continue  # only process rows for the most-recent date
+
+        if not _is_annual_label(row.horizon_label):
+            continue  # skip quarterly / longer_run rows
+
+        yr = row.horizon_year
+        if yr is None:
+            continue
+
+        if bank not in latest_path_by_bank:
+            latest_path_by_bank[bank] = {"as_of": date_str, "path": {}}
+
+        entry = latest_path_by_bank[bank]["path"].setdefault(yr, {
+            "year": yr, "inflation": None, "gdp": None, "unemployment": None,
         })
+        if entry["inflation"] is None and row.inflation_forecast is not None:
+            entry["inflation"] = float(row.inflation_forecast)
+        if entry["gdp"] is None and row.gdp_forecast is not None:
+            entry["gdp"] = float(row.gdp_forecast)
+        if entry["unemployment"] is None and row.unemployment_forecast is not None:
+            entry["unemployment"] = float(row.unemployment_forecast)
 
-    # Build comparison rows: projection vs actual
-    # Cache indicator lookups
+    # Serialise path dict → sorted list
+    for bank, payload in latest_path_by_bank.items():
+        payload["path"] = sorted(payload["path"].values(), key=lambda x: x["year"])
+
+    # ── Comparison table: latest annual projection vs actual ─────────────────
     indicator_cache: dict[tuple[str, str], float | None] = {}
 
     async def _get_actual(canonical_name: str, country_code: str) -> float | None:
@@ -3119,19 +3149,20 @@ async def _build_projections_context(session: AsyncSession) -> dict[str, Any]:
         indicator_cache[key] = value
         return value
 
-    # Latest projection per (bank, horizon_year)
-    latest_proj: dict[tuple[str, int], CbEconomicProjection] = {}
-    for row in proj_rows:
-        if row.horizon_year is None:
+    # Most-recent annual projection per (bank, horizon_year) for current & next year
+    best_proj: dict[tuple[str, int], CbEconomicProjection] = {}
+    for row in all_proj_rows:
+        if not _is_annual_label(row.horizon_label):
+            continue
+        if row.horizon_year is None or row.horizon_year < current_year:
             continue
         key = (row.bank, row.horizon_year)
-        if key not in latest_proj:
-            latest_proj[key] = row
+        if key not in best_proj:  # rows are newest-first, so first = most recent
+            best_proj[key] = row
 
     projection_comparison: list[dict[str, Any]] = []
-    for (bank_code, horizon_year), proj in sorted(latest_proj.items()):
+    for (bank_code, horizon_year), proj in sorted(best_proj.items()):
         bank_map = BANK_INDICATOR_MAP.get(bank_code, {})
-
         for metric_key, label in [("inflation", "Inflation"), ("gdp", "GDP"), ("unemployment", "Unemployment")]:
             forecast_val: float | None = None
             if metric_key == "inflation" and proj.inflation_forecast is not None:
@@ -3140,10 +3171,8 @@ async def _build_projections_context(session: AsyncSession) -> dict[str, Any]:
                 forecast_val = float(proj.gdp_forecast)
             elif metric_key == "unemployment" and proj.unemployment_forecast is not None:
                 forecast_val = float(proj.unemployment_forecast)
-
             if forecast_val is None:
                 continue
-
             indicator_mapping = bank_map.get(metric_key)
             if not indicator_mapping:
                 continue
@@ -3151,18 +3180,14 @@ async def _build_projections_context(session: AsyncSession) -> dict[str, Any]:
             actual = await _get_actual(canon, country)
             if actual is None:
                 continue
-
             deviation = actual - forecast_val
             deviation_pct = (deviation / forecast_val * 100) if forecast_val else None
             abs_pct = abs(deviation_pct) if deviation_pct is not None else 0
-
-            if abs_pct > 25:
-                deviation_class = "deviation-high"
-            elif abs_pct > 10:
-                deviation_class = "deviation-medium"
-            else:
-                deviation_class = "deviation-low"
-
+            deviation_class = (
+                "deviation-high" if abs_pct > 25
+                else "deviation-medium" if abs_pct > 10
+                else "deviation-low"
+            )
             projection_comparison.append({
                 "bank": bank_code,
                 "metric": label,
@@ -3176,9 +3201,9 @@ async def _build_projections_context(session: AsyncSession) -> dict[str, Any]:
             })
 
     return {
-        "projections_by_bank": projections_by_bank,
+        "latest_path_by_bank": latest_path_by_bank,
         "projection_comparison": projection_comparison,
-        "has_projections": len(proj_rows) > 0,
+        "has_projections": len(all_proj_rows) > 0,
     }
 
 

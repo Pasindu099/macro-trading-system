@@ -164,68 +164,68 @@
   }
 
   // ── Projection charts ─────────────────────────────────────────────────────
-  // Each canvas lives inside .cpt-proj-canvas-wrap which has a fixed CSS height.
-  // We use maintainAspectRatio:false so the chart fills that container exactly.
+  // data = { FED: { as_of: "2026-06-17", path: [{year,inflation,gdp,unemployment},...] }, ... }
+  // x-axis = horizon year, y-axis = forecast %, 3 lines per bank.
 
   window.initProjectionCharts = function (data) {
-    for (const [bank, projList] of Object.entries(data)) {
-      if (!projList || projList.length === 0) continue;
+    for (const [bank, payload] of Object.entries(data)) {
+      const path = payload && payload.path;
+      if (!path || path.length === 0) continue;
       const el = document.getElementById("cpt-proj-" + bank + "-chart");
       if (!el) continue;
 
-      // Group unique projection dates (x axis)
-      const allDates = [...new Set(projList.map((p) => p.projection_date))].sort();
-
-      const inflData = allDates.map((d) => {
-        const rows = projList.filter((p) => p.projection_date === d && p.inflation_forecast != null);
-        return rows.length ? { x: d, y: rows[0].inflation_forecast } : null;
-      }).filter(Boolean);
-
-      const gdpData = allDates.map((d) => {
-        const rows = projList.filter((p) => p.projection_date === d && p.gdp_forecast != null);
-        return rows.length ? { x: d, y: rows[0].gdp_forecast } : null;
-      }).filter(Boolean);
-
-      const unempData = allDates.map((d) => {
-        const rows = projList.filter((p) => p.projection_date === d && p.unemployment_forecast != null);
-        return rows.length ? { x: d, y: rows[0].unemployment_forecast } : null;
-      }).filter(Boolean);
+      const labels = path.map((p) => String(p.year));
 
       const datasets = [];
-      if (inflData.length) {
+
+      const inflPts = path.map((p) => p.inflation);
+      if (inflPts.some((v) => v != null)) {
         datasets.push({
           label: "Inflation",
-          data: inflData,
+          data: inflPts,
           borderColor: "#ff8c42",
-          backgroundColor: "#ff8c4222",
-          pointRadius: 3,
+          backgroundColor: "#ff8c4244",
+          pointBackgroundColor: "#ff8c42",
+          pointRadius: 4,
+          pointHoverRadius: 6,
           borderWidth: 2,
-          tension: 0.3,
+          tension: 0.2,
           fill: false,
+          spanGaps: true,
         });
       }
-      if (gdpData.length) {
+
+      const gdpPts = path.map((p) => p.gdp);
+      if (gdpPts.some((v) => v != null)) {
         datasets.push({
           label: "GDP",
-          data: gdpData,
+          data: gdpPts,
           borderColor: "#23c483",
-          backgroundColor: "#23c48322",
-          pointRadius: 3,
+          backgroundColor: "#23c48344",
+          pointBackgroundColor: "#23c483",
+          pointRadius: 4,
+          pointHoverRadius: 6,
           borderWidth: 2,
-          tension: 0.3,
+          tension: 0.2,
           fill: false,
+          spanGaps: true,
         });
       }
-      if (unempData.length) {
+
+      const unempPts = path.map((p) => p.unemployment);
+      if (unempPts.some((v) => v != null)) {
         datasets.push({
           label: "Unemployment",
-          data: unempData,
+          data: unempPts,
           borderColor: "#50b5ff",
-          backgroundColor: "#50b5ff22",
-          pointRadius: 3,
+          backgroundColor: "#50b5ff44",
+          pointBackgroundColor: "#50b5ff",
+          pointRadius: 4,
+          pointHoverRadius: 6,
           borderWidth: 2,
-          tension: 0.3,
+          tension: 0.2,
           fill: false,
+          spanGaps: true,
         });
       }
 
@@ -233,7 +233,7 @@
 
       new Chart(el, {
         type: "line",
-        data: { datasets },
+        data: { labels, datasets },
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -243,8 +243,7 @@
               type: "category",
               ticks: {
                 color: "#8fa5b5",
-                font: { size: 9 },
-                maxTicksLimit: 6,
+                font: { size: 10 },
               },
               grid: { color: "rgba(255,255,255,0.04)" },
             },
@@ -252,7 +251,7 @@
               ticks: {
                 color: "#8fa5b5",
                 font: { size: 9 },
-                callback: (v) => v + "%",
+                callback: (v) => v.toFixed(1) + "%",
               },
               grid: { color: "rgba(255,255,255,0.06)" },
             },
@@ -274,7 +273,11 @@
               titleColor: "#dce8f2",
               bodyColor: "#8fa5b5",
               callbacks: {
-                label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`,
+                title: (items) => "Horizon: " + (items[0] && items[0].label),
+                label: (ctx) => {
+                  const v = ctx.parsed.y;
+                  return v != null ? ` ${ctx.dataset.label}: ${v.toFixed(1)}%` : "";
+                },
               },
             },
           },

@@ -98,7 +98,7 @@ class Settings(BaseSettings):
         description="OpenAI API key for bank research summarization",
     )
     openai_model: str = Field(
-        default="gpt-4o-mini",
+        default="gpt-4o",
         alias="OPENAI_MODEL",
         description="Model used for bank research report analysis",
     )

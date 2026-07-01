@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import email.utils
 import html
 import json
 import re
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta, timezone
 from typing import Any
 from urllib.parse import urljoin
 from xml.etree import ElementTree
@@ -1371,7 +1372,33 @@ def _news_alert_category(implied_tier: Any, source: Any) -> str:
     return "Macro"
 
 
-def _parse_cb_feed(xml_body: str, currency: str, bank_name: str, *, limit: int = 12) -> list[dict[str, Any]]:
+def _parse_pub_date(raw: str) -> str:
+    """Normalise any RSS/Atom date string to a sortable ISO-8601 string (UTC).
+    Falls back to the raw string so the article is still included."""
+    if not raw:
+        return ""
+    s = raw.strip()
+    # RFC 2822 (standard RSS format: "Tue, 01 Jul 2026 10:00:00 +0000" or "GMT")
+    try:
+        tup = email.utils.parsedate_tz(s)
+        if tup:
+            ts = email.utils.mktime_tz(tup)
+            return datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+    except Exception:
+        pass
+    # ISO-8601 / Atom
+    for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%d"):
+        try:
+            dt = datetime.strptime(s, fmt)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(timezone.utc).isoformat()
+        except ValueError:
+            continue
+    return s
+
+
+def _parse_cb_feed(xml_body: str, currency: str, bank_name: str, *, limit: int = 30) -> list[dict[str, Any]]:
     """Parse RSS/RDF/Atom feeds into normalized article rows."""
     try:
         root = ElementTree.fromstring(xml_body)
@@ -1418,7 +1445,7 @@ def _parse_cb_feed(xml_body: str, currency: str, bank_name: str, *, limit: int =
             if not link:
                 continue
             description = _strip_html(child_text(entry, ("summary", "content", "description")))
-            pub_date = child_text(entry, ("published", "updated", "date"))
+            pub_date = _parse_pub_date(child_text(entry, ("published", "updated", "date")))
             speaker = tag_speaker(title, description)
             articles.append({
                 "title": title, "link": link, "pubDate": pub_date,
@@ -1436,7 +1463,7 @@ def _parse_cb_feed(xml_body: str, currency: str, bank_name: str, *, limit: int =
             if not link:
                 continue
             description = _strip_html(child_text(item, ("description", "summary", "content")))
-            pub_date = child_text(item, ("pubDate", "date", "dc:date"))
+            pub_date = _parse_pub_date(child_text(item, ("pubDate", "date", "dc:date")))
             speaker = tag_speaker(title, description)
             articles.append({
                 "title": title, "link": link, "pubDate": pub_date,
@@ -1513,10 +1540,9 @@ async def _fetch_one_cb_feed(currency: str, now: datetime) -> dict[str, Any]:
             except Exception as exc:
                 errors.append(f"{config['listing_url']}: {type(exc).__name__}")
 
-    # Sort: speeches and policy reports first, then by date descending
-    articles.sort(key=lambda a: (
-        0 if a.get("is_speech") else (1 if a.get("is_policy_report") else 2),
-    ))
+    # Two-pass stable sort: newest first, then speeches/reports bubble to top (preserving date order within group)
+    articles.sort(key=lambda a: a.get("pubDate") or "", reverse=True)
+    articles.sort(key=lambda a: 0 if a.get("is_speech") else (1 if a.get("is_policy_report") else 2))
 
     result: dict[str, Any] = {
         "currency": currency,

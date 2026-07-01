@@ -2208,52 +2208,85 @@ _BANK_CURRENCY = {
 _OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions"
 
 
+def _truncate_text(text: str | None, max_chars: int = 4000) -> str:
+    """Return first max_chars of raw document text, trimmed cleanly at a word boundary."""
+    if not text:
+        return ""
+    text = text.strip()
+    if len(text) <= max_chars:
+        return text
+    truncated = text[:max_chars]
+    last_space = truncated.rfind(" ")
+    return (truncated[:last_space] if last_space > max_chars - 200 else truncated) + "\n[...truncated]"
+
+
 async def _compare_openai(doc_a: dict[str, Any], doc_b: dict[str, Any], settings: Any) -> dict[str, Any]:
-    """Call OpenAI to compare two CB policy documents and identify divergences."""
-    prompt = f"""You are a senior FX macro analyst. Compare these two central bank policy analyses and identify monetary policy divergences that matter for FX trading.
+    """Call OpenAI to compare two CB policy documents using their actual raw text."""
 
-BANK A — {doc_a['bank']} ({doc_a['currency']}) | Latest document: {doc_a['doc_date']} | Type: {doc_a['doc_type']}
-Tone: {doc_a['tone_label']} (score: {doc_a['tone_score']})
-Inflation outlook: {doc_a['inflation_outlook']}
-Inflation summary: {doc_a['inflation_summary']}
-Growth outlook: {doc_a['growth_outlook']}
-Growth summary: {doc_a['growth_summary']}
-Labor outlook: {doc_a['labor_outlook']}
-Labor summary: {doc_a['labor_summary']}
-Key phrases: {', '.join(doc_a['key_phrases'] or [])}
-Tone vs prior: {doc_a['tone_change_vs_prior']}
+    def _doc_block(doc: dict[str, Any]) -> str:
+        lines = [
+            f"=== {doc['bank']} ({doc['currency']}) — {doc['doc_date']} ({doc['doc_type']}) ===",
+            f"Pre-extracted tone: {doc['tone_label']} (score {doc['tone_score']})",
+            f"Key phrases from ingestion: {', '.join(doc['key_phrases'] or [])}",
+            f"Tone shift vs prior: {doc['tone_change_vs_prior']}",
+        ]
+        if doc.get("raw_text"):
+            lines += ["", "--- FULL DOCUMENT TEXT (first 4000 chars) ---", doc["raw_text"]]
+        else:
+            # Fall back to structured summaries if raw text unavailable
+            lines += [
+                f"Inflation ({doc['inflation_outlook']}): {doc['inflation_summary']}",
+                f"Growth ({doc['growth_outlook']}): {doc['growth_summary']}",
+                f"Labor ({doc['labor_outlook']}): {doc['labor_summary']}",
+            ]
+        return "\n".join(lines)
 
-BANK B — {doc_b['bank']} ({doc_b['currency']}) | Latest document: {doc_b['doc_date']} | Type: {doc_b['doc_type']}
-Tone: {doc_b['tone_label']} (score: {doc_b['tone_score']})
-Inflation outlook: {doc_b['inflation_outlook']}
-Inflation summary: {doc_b['inflation_summary']}
-Growth outlook: {doc_b['growth_outlook']}
-Growth summary: {doc_b['growth_summary']}
-Labor outlook: {doc_b['labor_outlook']}
-Labor summary: {doc_b['labor_summary']}
-Key phrases: {', '.join(doc_b['key_phrases'] or [])}
-Tone vs prior: {doc_b['tone_change_vs_prior']}
+    prompt = f"""You are a senior FX macro analyst. Read these two central bank policy documents and identify the true monetary policy divergence for FX trading purposes.
+
+IMPORTANT: Base your analysis on specific numbers, voting records, language about future rate paths, and explicit inflation/growth forecasts in the document text — not just the pre-extracted labels, which can miss nuance.
+
+{_doc_block(doc_a)}
+
+{_doc_block(doc_b)}
+
+Identify:
+1. Which bank is genuinely more hawkish/dovish and WHY (cite specific data: CPI figures, vote splits, rate path language, output gap mentions)
+2. The significance of the divergence
+3. The FX implication for {doc_a['currency']}/{doc_b['currency']}
 
 Return a JSON object with exactly this structure:
 {{
   "overall_divergence": "mild" | "moderate" | "significant",
   "divergence_direction": "{doc_a['bank']} more hawkish" | "{doc_b['bank']} more hawkish" | "broadly aligned",
-  "summary": "<2-3 sentence macro summary of the policy gap>",
+  "summary": "<2-3 sentences citing specific evidence from the documents — include numbers/vote splits/exact language>",
   "key_divergences": [
     {{
-      "topic": "<e.g. Rate trajectory / Inflation stance / Growth concern / Labor market>",
-      "bank_a": "<brief stance for {doc_a['bank']}>",
-      "bank_b": "<brief stance for {doc_b['bank']}>",
+      "topic": "<Rate trajectory / Inflation level / Growth outlook / Labor market / Vote split / Forward guidance>",
+      "bank_a": "<{doc_a['bank']} specific stance with data>",
+      "bank_b": "<{doc_b['bank']} specific stance with data>",
       "significance": "low" | "medium" | "high"
     }}
   ],
   "fx_pair": "{doc_a['currency']}/{doc_b['currency']}",
-  "fx_bias": "<e.g. Bullish {doc_a['currency']}/{doc_b['currency']}>",
-  "trading_implications": ["<bullet 1>", "<bullet 2>", "<bullet 3>"],
-  "risk_factors": ["<key risk to the divergence thesis>"]
-}}
+  "fx_bias": "<e.g. Bullish {doc_a['currency']}/{doc_b['currency']} — one line>",
+  "trading_implications": ["<specific bullet citing document evidence>", "<bullet 2>", "<bullet 3>"],
+  "risk_factors": ["<concrete risk that could invalidate the thesis>"]
+}}"""
 
-Focus on rate path expectations, inflation tolerance, and growth concerns. Be concise and actionable."""
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.post(
+            _OPENAI_CHAT_URL,
+            headers={"Authorization": f"Bearer {settings.openai_api_key}", "Content-Type": "application/json"},
+            json={
+                "model": settings.openai_model,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.2,
+                "response_format": {"type": "json_object"},
+            },
+        )
+        resp.raise_for_status()
+        raw = resp.json()["choices"][0]["message"]["content"]
+        return json.loads(raw)
 
     async with httpx.AsyncClient(timeout=45.0) as client:
         resp = await client.post(
@@ -2327,6 +2360,8 @@ async def compare_cb_policies(
             "labor_summary": row.labor_summary or "",
             "key_phrases": row.key_phrases or [],
             "tone_change_vs_prior": row.tone_change_vs_prior or "no change",
+            # Raw text (first 4000 chars) so the AI reads the actual document
+            "raw_text": _truncate_text(row.raw_text, 4000),
         }
 
     doc_a = _doc_dict(doc_a_row, bank_a)
@@ -2334,9 +2369,13 @@ async def compare_cb_policies(
 
     analysis = await _compare_openai(doc_a, doc_b, settings)
 
+    # Strip raw_text before returning to browser (large, not needed by UI)
+    doc_a_out = {k: v for k, v in doc_a.items() if k != "raw_text"}
+    doc_b_out = {k: v for k, v in doc_b.items() if k != "raw_text"}
+
     return {
-        "bank_a": doc_a,
-        "bank_b": doc_b,
+        "bank_a": doc_a_out,
+        "bank_b": doc_b_out,
         "analysis": analysis,
         "generated_at": _now().isoformat(),
     }

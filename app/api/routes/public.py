@@ -98,10 +98,8 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
     "EUR": {
         "name": "ECB",
         "urls": [
-            "https://www.ecb.europa.eu/rss/press.html",
-            "https://www.ecb.europa.eu/rss/speech.html",
-            # ECB Economic Bulletin (published every 6 weeks)
-            "https://www.ecb.europa.eu/rss/publications.html",
+            "https://www.ecb.europa.eu/rss/press.html",       # speeches + press releases (working)
+            "https://www.ecb.europa.eu/rss/other/speeches.rss",  # speech-only feed (try)
         ],
         "members": ["Lagarde", "de Guindos", "Lane", "Schnabel", "Cipollone",
                     "Nagel", "Villeroy", "Wunsch", "Knot", "Centeno",
@@ -147,7 +145,7 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
         "name": "BoC",
         "urls": [
             "https://www.bankofcanada.ca/feed/",
-            "https://www.bankofcanada.ca/publications/speeches/feed/",
+            "https://www.bankofcanada.ca/press/speeches/feed/",
             # Monetary Policy Report (quarterly) + Summary of Deliberations
             "https://www.bankofcanada.ca/publications/mpr/feed/",
         ],

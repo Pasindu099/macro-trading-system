@@ -81,7 +81,7 @@ class MyfxbookConfigRequest(BaseModel):
     username: str = Field(min_length=1)
     password: str = Field(min_length=1)
 
-CB_FEED_CACHE_TTL = 600  # 10 minutes
+CB_FEED_CACHE_TTL = 300  # 5 minutes — lower so fresh speeches appear quickly
 CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
     "USD": {
         "name": "Fed",
@@ -91,9 +91,9 @@ CB_RSS_FEEDS: dict[str, dict[str, Any]] = {
             # FOMC statements, minutes, Monetary Policy Report (semi-annual)
             "https://www.federalreserve.gov/feeds/press_monetary.xml",
         ],
-        "members": ["Powell", "Jefferson", "Waller", "Cook", "Kugler", "Barr",
+        "members": ["Warsh", "Powell", "Jefferson", "Waller", "Cook", "Kugler", "Barr",
                     "Williams", "Daly", "Kashkari", "Bostic", "Barkin", "Goolsbee",
-                    "Musalem", "Schmid", "Collins", "Logan"],
+                    "Musalem", "Schmid", "Collins", "Logan", "Bowman"],
     },
     "EUR": {
         "name": "ECB",
@@ -1483,8 +1483,10 @@ async def _fetch_one_cb_feed(currency: str, now: datetime) -> dict[str, Any]:
         return cached
 
     articles: list[dict[str, Any]] = []
+    seen_links: set[str] = set()
     errors: list[str] = []
-    async with httpx.AsyncClient(timeout=8.0, follow_redirects=True) as client:
+    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+        # Always fetch ALL URLs (including speech-specific feeds) — don't break early
         for url in config.get("urls", [config.get("url")]):
             if not url:
                 continue
@@ -1494,11 +1496,12 @@ async def _fetch_one_cb_feed(currency: str, now: datetime) -> dict[str, Any]:
                     headers={"User-Agent": "MacroDashboard/1.0 (macro research dashboard)"},
                 )
                 response.raise_for_status()
-                articles.extend(_parse_cb_feed(response.text, currency, config["name"]))
+                for art in _parse_cb_feed(response.text, currency, config["name"]):
+                    if art["link"] not in seen_links:
+                        seen_links.add(art["link"])
+                        articles.append(art)
             except Exception as exc:
                 errors.append(f"{url}: {type(exc).__name__}")
-            if len(articles) >= 12:
-                break
 
         if not articles and config.get("listing_url"):
             try:
@@ -1512,10 +1515,15 @@ async def _fetch_one_cb_feed(currency: str, now: datetime) -> dict[str, Any]:
             except Exception as exc:
                 errors.append(f"{config['listing_url']}: {type(exc).__name__}")
 
+    # Sort: speeches and policy reports first, then by date descending
+    articles.sort(key=lambda a: (
+        0 if a.get("is_speech") else (1 if a.get("is_policy_report") else 2),
+    ))
+
     result: dict[str, Any] = {
         "currency": currency,
         "name": config["name"],
-        "articles": articles[:12],
+        "articles": articles[:20],
         "fetched_at": now,
         "status": "ok" if articles else "empty",
         "error": "; ".join(errors[-2:]) if errors and not articles else "",

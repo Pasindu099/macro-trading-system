@@ -7,8 +7,6 @@ services:
       POSTGRES_DB: macro_dashboard_dev
       POSTGRES_USER: macro_user
       POSTGRES_PASSWORD: MyMacro2026Pass
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

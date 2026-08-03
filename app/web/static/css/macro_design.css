@@ -418,38 +418,37 @@ body.is-terminal {
 
 /* Nav popover — the sidebar is gone on this page, so this is the only route to
    the rest of the app. <details> keeps it dependency-free. */
+.term-menubar { display: flex; align-items: center; gap: 4px; }
 .term-nav { position: relative; }
 .term-nav > summary {
   cursor: pointer;
   padding: 4px 10px;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  background: var(--panel-2);
   color: var(--text-body);
   list-style: none;
 }
+.term-nav > summary::after { content: " \25be"; color: var(--text-faint); }
+.term-nav > summary:hover { background: var(--panel-2); color: var(--text-heading); }
 .term-nav > summary::-webkit-details-marker { display: none; }
-.term-nav[open] > summary { border-color: var(--accent); color: var(--text-heading); }
+.term-nav[open] > summary {
+  border-color: var(--accent);
+  background: var(--panel-2);
+  color: var(--text-heading);
+}
 .term-nav__panel {
   position: absolute;
   z-index: 60;
   top: calc(100% + 6px);
   left: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(130px, 1fr));
-  gap: 14px;
-  padding: 14px;
+  gap: 1px;
+  min-width: 165px;
+  padding: 8px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: rgba(16, 13, 10, 0.98);
   box-shadow: var(--glass-shadow);
-}
-.term-nav__group { display: grid; gap: 2px; align-content: start; }
-.term-nav__label {
-  margin-bottom: 4px;
-  color: var(--text-faint);
-  font-size: 9px;
-  letter-spacing: 0.14em;
 }
 .term-nav__panel a {
   padding: 4px 6px;
@@ -503,10 +502,14 @@ body.is-terminal {
 .tpanel {
   display: flex;
   flex-direction: column;
+  /* flex: none — as flex children these would otherwise shrink below their
+     content and bleed into the next panel's header. The column scrolls instead. */
+  flex: 0 0 auto;
   min-height: 0;
+  overflow: hidden;
   background: rgba(16, 13, 10, 0.96);
 }
-.tpanel--grow { flex: 1 1 auto; }
+.tpanel--grow { flex: 1 1 auto; min-height: 120px; }
 .tpanel__hd {
   display: flex;
   align-items: center;
@@ -534,6 +537,9 @@ a.tpanel__meta:hover { color: var(--accent); }
   font-size: 10px;
 }
 .tpanel__bd--scroll { overflow-y: auto; flex: 1 1 auto; }
+/* Long feeds (calendar, CB news) scroll inside a capped box rather than growing
+   tall enough to push their sibling panels out of the column. */
+.tpanel__bd--cap { max-height: 240px; overflow-y: auto; }
 
 .tbadge {
   padding: 1px 5px;
@@ -769,15 +775,35 @@ a.tpanel__meta:hover { color: var(--accent); }
 .map-tip small { margin-top: 5px; color: var(--text-faint); font-size: 9px; }
 .map-tip--empty em { color: var(--text-muted); font-style: normal; }
 
-/* Below this width the terminal grid cannot hold four columns legibly, so it
-   releases the viewport lock and becomes an ordinary scrolling page. */
-@media (max-width: 1100px) {
+/* Between roughly 900 and 1400px a side-by-side map plus three columns leaves
+   the map too narrow to read (~500px). Stack it instead — map full width but
+   short on top, columns beneath — which keeps the viewport lock and the
+   terminal character rather than degrading to a long scrolling page. */
+@media (max-width: 1400px) {
+  .term-body {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: minmax(240px, 40vh) minmax(0, 1fr);
+  }
+  .term-map { grid-column: 1 / -1; }
+  /* The layers panel would otherwise sit on top of the scale bar in the
+     shorter map box. */
+  .map-ov--layers { bottom: 34px; }
+  .map-ov--layers label { margin-top: 4px; }
+}
+
+/* Only below ~900px does the grid genuinely stop working. Here it releases the
+   viewport lock and becomes an ordinary scrolling page. */
+@media (max-width: 900px) {
   body.is-terminal { height: auto; overflow: auto; }
   .term-shell { height: auto; grid-template-rows: auto auto auto; }
-  .term-body { grid-template-columns: 1fr; overflow: visible; }
+  .term-body {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-rows: none;
+    overflow: visible;
+  }
   .term-col { overflow: visible; }
-  .term-map { height: 60vh; min-height: 340px; }
-  .tpanel__bd--scroll { max-height: 320px; }
+  .term-map { height: 46vh; min-height: 300px; }
+  .tpanel__bd--scroll { max-height: 300px; }
 }
 
 .section-title {

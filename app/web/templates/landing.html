@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-  <script defer src="/static/js/landing_terminal.js?v=20260803term4"></script>
+  <script defer src="/static/js/landing_terminal.js?v=20260803term7"></script>
 {% endblock %}
 
 {% block body %}
@@ -21,7 +21,7 @@
       {% if badge %}<span class="tbadge">{{ badge }}</span>{% endif %}
       <span class="tpanel__meta">{{ meta }}</span>
     </header>
-    <div class="tpanel__bd" data-panel-body>
+    <div class="tpanel__bd tpanel__bd--cap" data-panel-body>
       <div class="tskeleton"><i></i><i></i><i></i><i></i></div>
     </div>
   </section>

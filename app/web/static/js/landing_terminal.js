@@ -280,7 +280,9 @@
         bottom: 54,
         left: 14,
         right: 14,
-        aspectScale: 0.9,
+        // True proportions. Anything below 1 visibly stretches countries
+        // east-west, which is what "the map looks stretched" was.
+        aspectScale: 1,
         selectedMode: false,
         itemStyle: {
           areaColor: C.empty,

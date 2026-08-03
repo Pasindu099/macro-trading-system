@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}?v=20260626sb">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/macro_design.css') }}?v=20260803term4">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/macro_design.css') }}?v=20260803term7">
     <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
     <script src="{{ url_for('static', path='js/chart.umd.min.js') }}" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js" defer></script>
@@ -109,21 +109,25 @@
     <a class="term-logo" href="/"><span class="mark">M</span><span>MACRO</span></a>
     <span class="term-ver">v1.4.2</span>
     <span class="term-live"><i></i>LIVE</span>
-    <details class="term-nav">
-      <summary>Menu</summary>
-      <div class="term-nav__panel">
-        {% for group_name, items in nav_groups %}
-          <div class="term-nav__group">
-            <div class="term-nav__label">{{ group_name }}</div>
+    {#
+      One group per dropdown rather than a single "Menu" button: with the
+      sidebar gone this is the only route to the other 20 pages, and a lone
+      unlabelled button hid them.
+    #}
+    <nav class="term-menubar">
+      {% for group_name, items in nav_groups %}
+        <details class="term-nav">
+          <summary>{{ group_name }}</summary>
+          <div class="term-nav__panel">
             {% for href, label, admin_only in items %}
               {% if not admin_only or is_admin %}
                 <a href="{{ href }}" {% if request.url.path == href %}class="active"{% endif %}>{{ label }}</a>
               {% endif %}
             {% endfor %}
           </div>
-        {% endfor %}
-      </div>
-    </details>
+        </details>
+      {% endfor %}
+    </nav>
     <div class="spacer"></div>
     <div class="clock"><span class="dot"></span><span id="utcclock">--:--:-- UTC</span></div>
     {% if request.state.current_user %}
@@ -306,6 +310,29 @@
   </main>
 </div>
 {% endif %}
+<script>
+/* Terminal menubar: only one dropdown open at a time, and clicking away or
+   pressing Escape closes it. <details name=""> would do the first natively but
+   is too new to rely on for the only navigation on the page. */
+(function(){
+  var bar = document.querySelector(".term-menubar");
+  if (!bar) return;
+  var items = Array.prototype.slice.call(bar.querySelectorAll("details"));
+  items.forEach(function (d) {
+    d.addEventListener("toggle", function () {
+      if (!d.open) return;
+      items.forEach(function (o) { if (o !== d) o.open = false; });
+    });
+  });
+  document.addEventListener("click", function (e) {
+    if (bar.contains(e.target)) return;
+    items.forEach(function (d) { d.open = false; });
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") items.forEach(function (d) { d.open = false; });
+  });
+})();
+</script>
 <script>
 (function(){
   var el = document.getElementById("utcclock");

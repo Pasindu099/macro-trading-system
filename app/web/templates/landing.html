@@ -115,48 +115,6 @@
       </article>
     </div>
   </div>
-  <div class="section-title" style="margin-top:0;">
-    <h2>World Macro Map</h2>
-    <span class="meta">hover for key country data · click for full profile</span>
-  </div>
-
-  {# ── 1. News Feed + Calendar (65/35) ─────────────────────────────── #}
-  <div class="panel world-map-panel">
-    <div class="world-map-stage world-map-stage--static" aria-label="Static world macro map">
-      <img
-        class="world-map-image"
-        src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Blank_world_map_Robinson_projection.svg"
-        alt=""
-        loading="eager"
-      >
-      {% for country in world_map_countries %}
-        <a class="world-map-country world-map-country--static"
-           href="{{ country.href }}"
-           style="left:{{ country.x }}%;top:{{ country.y }}%;"
-           aria-label="{{ country.name }} macro profile">
-          <span class="world-map-pulse"></span>
-          <span class="world-map-dot">{{ country.code }}</span>
-          <span class="world-map-card">
-            <strong>{{ country.name }} · {{ country.currency_code }}</strong>
-            {% for metric in country.metrics %}
-              <span><em>{{ metric.label }}</em><b>{{ metric.value }}</b></span>
-            {% endfor %}
-            <small>Updated {{ country.latest_release_at }}</small>
-          </span>
-        </a>
-      {% endfor %}
-    </div>
-    <div class="world-map-strip">
-      {% for country in world_map_countries[:6] %}
-        <a class="world-map-mini" href="{{ country.href }}">
-          <span>{{ country.flag }}</span>
-          <strong>{{ country.currency_code }}</strong>
-          <em>{{ country.metrics[1].value }} CPI</em>
-        </a>
-      {% endfor %}
-    </div>
-  </div>
-
   <div class="grid grid-65-35">
 
     {# News Feed #}

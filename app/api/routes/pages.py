@@ -137,6 +137,31 @@ COUNTRY_FLAGS = {
     "CA": "\U0001F1E8\U0001F1E6",
     "CH": "\U0001F1E8\U0001F1ED",
 }
+WORLD_MAP_POSITIONS = {
+    "US": {"x": 19, "y": 43},
+    "CA": {"x": 18, "y": 30},
+    "EU": {"x": 50, "y": 38},
+    "DE": {"x": 51, "y": 37},
+    "FR": {"x": 49, "y": 40},
+    "UK": {"x": 46, "y": 36},
+    "CH": {"x": 50, "y": 41},
+    "JP": {"x": 82, "y": 43},
+    "AU": {"x": 79, "y": 72},
+    "NZ": {"x": 88, "y": 80},
+}
+MAP_METRIC_PREFERENCES = {
+    "rate": (
+        "policy_rate",
+        "fed_interest_rate_decision",
+        "cash_rate",
+        "official_cash_rate",
+        "overnight_rate",
+        "boj_interest_rate_decision",
+    ),
+    "inflation": ("cpi_headline_yoy", "cpi_headline_qoq", "cpi_headline_mom"),
+    "labour": ("unemployment_rate", "u6_unemployment_rate"),
+    "gdp": ("gdp_qoq", "gdp_yoy", "gdp_mom", "niesr_monthly_gdp_tracker"),
+}
 
 
 def _flag_for_country(country_code: str) -> str:
@@ -212,6 +237,15 @@ def _format_yield(value: float | None) -> str:
     if value is None:
         return "N/A"
     return f"{value:.2f}%"
+
+
+def _format_map_metric(value: float | None, unit: str | None) -> str:
+    if value is None:
+        return "N/A"
+    formatted = f"{value:,.2f}".rstrip("0").rstrip(".")
+    if unit and unit.strip() == "%":
+        return f"{formatted}%"
+    return f"{formatted} {unit}".strip() if unit else formatted
 
 
 def _subtract_months(value: date, months: int) -> date:
@@ -1146,6 +1180,74 @@ async def _build_fundamental_currency_meter(
         })
 
     return meter_rows
+
+
+async def _build_world_map_snapshots(
+    session: AsyncSession,
+    countries: list[Any],
+) -> list[dict[str, Any]]:
+    """Build latest macro snapshots for the landing-page world map."""
+    snapshots: list[dict[str, Any]] = []
+    for country in countries:
+        position = WORLD_MAP_POSITIONS.get(country.code)
+        if position is None:
+            continue
+
+        detail = await get_country_detail_payload(session, country.code)
+        indicators = detail.indicators if detail else []
+        by_name = {indicator.canonical_name: indicator for indicator in indicators}
+
+        metric_rows: list[dict[str, str]] = []
+        for key, label in (
+            ("rate", "Interest rate"),
+            ("inflation", "Inflation"),
+            ("labour", "Labour"),
+            ("gdp", "GDP"),
+        ):
+            indicator = next(
+                (
+                    by_name[canonical_name]
+                    for canonical_name in MAP_METRIC_PREFERENCES[key]
+                    if canonical_name in by_name
+                ),
+                None,
+            )
+            release = indicator.latest_release if indicator else None
+            metric_rows.append({
+                "key": key,
+                "label": label,
+                "value": _format_map_metric(
+                    release.actual if release else None,
+                    indicator.unit if indicator else None,
+                ),
+                "detail": (
+                    indicator.display_name
+                    if indicator and release else "No latest print"
+                ),
+            })
+
+        latest_release_at = (
+            country.latest_release_at.strftime("%b %d, %Y")
+            if country.latest_release_at else "pending"
+        )
+        tooltip_lines = [
+            f"{country.name} ({country.currency_code})",
+            *[f"{row['label']}: {row['value']}" for row in metric_rows],
+            f"Updated: {latest_release_at}",
+        ]
+        snapshots.append({
+            "code": country.code,
+            "name": country.name,
+            "currency_code": country.currency_code,
+            "flag": _flag_for_country(country.code),
+            "href": f"/country/{country.code.lower()}",
+            "x": position["x"],
+            "y": position["y"],
+            "latest_release_at": latest_release_at,
+            "metrics": metric_rows,
+            "tooltip": "\n".join(tooltip_lines),
+        })
+    return snapshots
 
 
 def _yield_history_point(
@@ -2085,6 +2187,7 @@ async def landing_page(
     surprises = await list_biggest_surprises(session, days=7, limit=5)
     currency_stance = await _build_currency_stance_dashboard(session)
     currency_meter = await _build_fundamental_currency_meter(session)
+    world_map_countries = await _build_world_map_snapshots(session, countries)
     yield_differentials = await _build_yield_differentials()
     news_items: list[dict[str, Any]] = []
 
@@ -2120,6 +2223,7 @@ async def landing_page(
             "news_items": news_items,
             "currency_stance": currency_stance,
             "currency_meter": currency_meter,
+            "world_map_countries": world_map_countries,
             "yield_differentials": yield_differentials,
         },
     )

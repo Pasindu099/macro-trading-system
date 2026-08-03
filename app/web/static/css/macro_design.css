@@ -346,6 +346,127 @@ h3 { font-size: 13px; font-family: var(--mono); text-transform: uppercase; lette
 .panel-header .title { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-heading); font-weight: 600; }
 .panel-header .meta { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
 
+.world-map-panel {
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.world-map-stage {
+  position: relative;
+  min-height: 360px;
+  aspect-ratio: 2.35 / 1;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+    radial-gradient(circle at 50% 42%, rgba(59,130,246,0.11), transparent 58%),
+    rgba(7, 12, 18, 0.58);
+  background-size: 40px 40px, 40px 40px, auto, auto;
+  border: 1px solid var(--border);
+}
+.world-map-base {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.world-map-base path {
+  fill: rgba(201, 191, 179, 0.08);
+  stroke: rgba(201, 191, 179, 0.30);
+  stroke-width: 3;
+}
+.world-map-country {
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  z-index: 2;
+}
+.world-map-dot {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(249,115,22,0.62);
+  background: rgba(13, 11, 9, 0.92);
+  color: var(--text-heading);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  box-shadow: 0 0 18px rgba(249,115,22,0.25);
+}
+.world-map-pulse {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(249,115,22,0.16);
+  animation: mapPulse 2.8s ease-out infinite;
+}
+.world-map-country:hover .world-map-dot,
+.world-map-country:focus-visible .world-map-dot {
+  background: var(--accent);
+  color: #fff;
+  outline: none;
+}
+.world-map-tooltip {
+  position: absolute;
+  z-index: 5;
+  width: 250px;
+  pointer-events: none;
+  white-space: pre-line;
+  padding: 12px 14px;
+  border: 1px solid rgba(249,115,22,0.28);
+  border-radius: var(--radius-sm);
+  background: rgba(10, 8, 6, 0.96);
+  color: var(--text-body);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.65;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+}
+.world-map-tooltip[aria-hidden="true"] {
+  display: none;
+}
+.world-map-strip {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.world-map-mini {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  font-family: var(--mono);
+}
+.world-map-mini strong {
+  color: var(--text-heading);
+  font-size: 11px;
+}
+.world-map-mini em {
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-style: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@keyframes mapPulse {
+  from { transform: scale(0.65); opacity: 0.75; }
+  to { transform: scale(1.45); opacity: 0; }
+}
+
 .section-title {
   display: flex; align-items: center; gap: 12px;
   margin: 24px 0 12px;
@@ -934,9 +1055,36 @@ table.tbl td.num, table.tbl th.num { text-align: right; font-variant-numeric: ta
   .metric-grid-6 {
     grid-template-columns: 1fr 1fr;
   }
+  .world-map-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 760px) {
+  .world-map-stage {
+    min-height: 260px;
+    aspect-ratio: 1.45 / 1;
+  }
+  .world-map-country {
+    width: 40px;
+    height: 40px;
+  }
+  .world-map-dot {
+    width: 30px;
+    height: 30px;
+    font-size: 9px;
+  }
+  .world-map-pulse {
+    width: 38px;
+    height: 38px;
+  }
+  .world-map-strip {
+    grid-template-columns: 1fr 1fr;
+  }
+  .world-map-tooltip {
+    width: 220px;
+    font-size: 10px;
+  }
   .app {
     grid-template-columns: 1fr;
   }

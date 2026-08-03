@@ -11,8 +11,43 @@
 {%- endmacro %}
 
 <div id="content">
+  <div class="section-title" style="margin-top:0;">
+    <h2>World Macro Map</h2>
+    <span class="meta">hover for key country data · click for full profile</span>
+  </div>
 
   {# ── 1. News Feed + Calendar (65/35) ─────────────────────────────── #}
+  <div class="panel world-map-panel" data-world-map>
+    <div class="world-map-stage" aria-label="Interactive world macro map">
+      <svg class="world-map-base" viewBox="0 0 1000 520" role="img" aria-label="World map outline">
+        <path d="M58 157 C92 98 181 72 252 103 C321 133 363 177 352 230 C342 279 287 296 238 274 C194 255 174 279 139 261 C94 238 45 221 58 157Z" />
+        <path d="M245 284 C303 290 361 320 370 375 C380 434 333 477 279 493 C251 432 224 392 205 351 C190 319 202 291 245 284Z" />
+        <path d="M438 122 C485 92 545 107 568 151 C589 191 551 230 507 220 C461 210 422 159 438 122Z" />
+        <path d="M462 239 C531 212 613 226 650 291 C687 357 638 428 568 441 C505 406 461 335 462 239Z" />
+        <path d="M568 139 C632 78 779 80 895 127 C949 150 952 201 894 218 C817 240 746 216 684 245 C620 275 562 229 568 139Z" />
+        <path d="M718 266 C790 264 831 305 824 361 C817 417 758 430 710 399 C669 372 672 287 718 266Z" />
+        <path d="M756 371 C817 383 856 421 847 461 C804 475 742 467 719 425 C707 402 725 379 756 371Z" />
+        <path d="M868 437 C900 443 922 462 913 483 C881 489 855 475 851 453 C851 444 858 438 868 437Z" />
+      </svg>
+      {% for country in world_map_countries %}
+        <a class="world-map-country" href="{{ country.href }}" style="left:{{ country.x }}%;top:{{ country.y }}%;" data-map-tooltip="{{ country.tooltip }}" aria-label="{{ country.name }} macro profile" title="{{ country.tooltip }}">
+          <span class="world-map-pulse"></span>
+          <span class="world-map-dot">{{ country.code }}</span>
+        </a>
+      {% endfor %}
+      <div class="world-map-tooltip" data-map-tooltip-box aria-hidden="true"></div>
+    </div>
+    <div class="world-map-strip">
+      {% for country in world_map_countries[:6] %}
+        <a class="world-map-mini" href="{{ country.href }}">
+          <span>{{ country.flag }}</span>
+          <strong>{{ country.currency_code }}</strong>
+          <em>{{ country.metrics[1].value }} CPI</em>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
   <div class="grid grid-65-35">
 
     {# News Feed #}
@@ -177,6 +212,26 @@
 
 <script>
 (function () {
+
+  var mapRoot = document.querySelector("[data-world-map]");
+  if (mapRoot) {
+    var tooltip = mapRoot.querySelector("[data-map-tooltip-box]");
+    mapRoot.addEventListener("mousemove", function (evt) {
+      var target = evt.target.closest("[data-map-tooltip]");
+      if (!target || !tooltip) return;
+      var stage = target.closest(".world-map-stage") || mapRoot;
+      var rect = stage.getBoundingClientRect();
+      var x = evt.clientX - rect.left;
+      var y = evt.clientY - rect.top;
+      tooltip.textContent = target.dataset.mapTooltip || "";
+      tooltip.style.left = Math.max(12, Math.min(x + 18, stage.clientWidth - 260)) + "px";
+      tooltip.style.top = Math.max(y - 18, 12) + "px";
+      tooltip.setAttribute("aria-hidden", "false");
+    });
+    mapRoot.addEventListener("mouseleave", function () {
+      if (tooltip) tooltip.setAttribute("aria-hidden", "true");
+    });
+  }
 
   /* ── News feed filters ─────────────────────────────────────────────── */
   const panel = document.querySelector("[data-landing-news-list]");

@@ -11,13 +11,117 @@
 {%- endmacro %}
 
 <div id="content">
+  <div class="world-terminal" data-world-map>
+    <div class="world-terminal__bar">
+      <div>
+        <span class="world-terminal__dot is-red"></span>
+        <span class="world-terminal__dot is-amber"></span>
+        <span class="world-terminal__dot is-green"></span>
+        <strong>Global Macro Heatmap</strong>
+      </div>
+      <nav aria-label="Map tools">
+        <span>Static View</span>
+        <span>G10</span>
+        <span>Macro Pulse</span>
+      </nav>
+    </div>
+
+    <div class="world-terminal__grid">
+      <section class="world-terminal__map">
+        <div class="world-map-stage world-map-stage--static" aria-label="Static world macro map">
+          <img
+            class="world-map-image"
+            src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Blank_world_map_Robinson_projection.svg"
+            alt=""
+            loading="eager"
+          >
+          <span class="world-map-region region-na"></span>
+          <span class="world-map-region region-europe"></span>
+          <span class="world-map-region region-apac"></span>
+          {% for country in world_map_countries %}
+            <a class="world-map-country world-map-country--static"
+               href="{{ country.href }}"
+               style="left:{{ country.x }}%;top:{{ country.y }}%;"
+               aria-label="{{ country.name }} macro profile">
+              <span class="world-map-pulse"></span>
+              <span class="world-map-dot">{{ country.code }}</span>
+              <span class="world-map-card">
+                <strong>{{ country.name }} - {{ country.currency_code }}</strong>
+                {% for metric in country.metrics %}
+                  <span><em>{{ metric.label }}</em><b>{{ metric.value }}</b></span>
+                {% endfor %}
+                <small>Updated {{ country.latest_release_at }}</small>
+              </span>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+
+      <aside class="world-terminal__side">
+        <article class="world-widget world-widget--mini-map">
+          <header><strong>Regional Watch</strong><span>Live</span></header>
+          <div class="mini-map-bars">
+            {% for country in world_map_countries[:5] %}
+              <a href="{{ country.href }}">
+                <span>{{ country.currency_code }}</span>
+                <i style="width:{{ 38 + loop.index * 9 }}%;"></i>
+                <b>{{ country.metrics[1].value }}</b>
+              </a>
+            {% endfor %}
+          </div>
+        </article>
+        <article class="world-widget">
+          <header><strong>Policy Heat</strong><span>Rates</span></header>
+          <div class="world-line-chart">
+            <i style="height:24%;"></i><i style="height:36%;"></i><i style="height:28%;"></i><i style="height:52%;"></i>
+            <i style="height:45%;"></i><i style="height:68%;"></i><i style="height:61%;"></i><i style="height:74%;"></i>
+          </div>
+        </article>
+        <article class="world-widget world-widget--signal">
+          <header><strong>Risk Tape</strong><span>Macro</span></header>
+          {% for country in world_map_countries[5:9] %}
+            <a href="{{ country.href }}"><span>{{ country.flag }} {{ country.name }}</span><b>{{ country.metrics[3].value }}</b></a>
+          {% endfor %}
+        </article>
+      </aside>
+    </div>
+
+    <div class="world-terminal__bottom">
+      <article class="world-widget">
+        <header><strong>Country Signals</strong><span>Snapshot</span></header>
+        {% for country in world_map_countries[:6] %}
+          <a class="world-signal-row" href="{{ country.href }}">
+            <span>{{ country.flag }} {{ country.currency_code }}</span>
+            <b>{{ country.metrics[0].value }}</b>
+            <em>{{ country.metrics[2].value }} labour</em>
+          </a>
+        {% endfor %}
+      </article>
+      <article class="world-widget">
+        <header><strong>Inflation Path</strong><span>CPI</span></header>
+        <div class="world-combo-chart">
+          {% for country in world_map_countries[:8] %}
+            <i style="height:{{ 22 + loop.index * 7 }}%;"></i>
+          {% endfor %}
+        </div>
+      </article>
+      <article class="world-widget">
+        <header><strong>GDP Momentum</strong><span>Growth</span></header>
+        <div class="world-donut-row">
+          <span style="--p:62;"><b>62</b></span>
+          <span style="--p:44;"><b>44</b></span>
+          <span style="--p:71;"><b>71</b></span>
+        </div>
+      </article>
+    </div>
+  </div>
   <div class="section-title" style="margin-top:0;">
     <h2>World Macro Map</h2>
     <span class="meta">hover for key country data · click for full profile</span>
   </div>
 
   {# ── 1. News Feed + Calendar (65/35) ─────────────────────────────── #}
-  <div class="panel world-map-panel" data-world-map>
+  <div class="panel world-map-panel">
     <div class="world-map-stage world-map-stage--static" aria-label="Static world macro map">
       <img
         class="world-map-image"

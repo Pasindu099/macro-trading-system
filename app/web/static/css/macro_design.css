@@ -346,6 +346,218 @@ h3 { font-size: 13px; font-family: var(--mono); text-transform: uppercase; lette
 .panel-header .title { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-heading); font-weight: 600; }
 .panel-header .meta { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
 
+.world-terminal {
+  position: relative;
+  margin-bottom: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(43, 62, 74, 0.75);
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 42% 20%, rgba(31, 111, 145, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(13, 20, 27, 0.98), rgba(5, 9, 12, 0.98));
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.42);
+}
+
+#content > .world-terminal + .section-title,
+.world-terminal ~ .world-map-panel {
+  display: none;
+}
+
+.world-terminal__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(44, 61, 72, 0.8);
+  background: linear-gradient(180deg, rgba(17, 27, 36, 0.96), rgba(8, 13, 18, 0.96));
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.world-terminal__bar > div,
+.world-terminal__bar nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.world-terminal__bar strong {
+  color: var(--text-heading);
+  font-size: 11px;
+}
+
+.world-terminal__bar nav span {
+  padding-left: 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.world-terminal__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  box-shadow: 0 0 12px currentColor;
+}
+.world-terminal__dot.is-red { background: #f04438; color: #f04438; }
+.world-terminal__dot.is-amber { background: #f97316; color: #f97316; }
+.world-terminal__dot.is-green { background: #2ee58f; color: #2ee58f; }
+
+.world-terminal__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 10px;
+  padding: 10px;
+}
+
+.world-terminal__map {
+  min-width: 0;
+}
+
+.world-terminal__map .world-map-stage {
+  min-height: 520px;
+  aspect-ratio: 1.95 / 1;
+  border-radius: 4px;
+}
+
+.world-terminal__side {
+  display: grid;
+  grid-template-rows: 1.1fr 0.9fr 1fr;
+  gap: 10px;
+}
+
+.world-terminal__bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  padding: 0 10px 10px;
+}
+
+.world-widget {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(39, 56, 68, 0.86);
+  border-radius: 4px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    rgba(8, 14, 19, 0.88);
+  background-size: 22px 22px, 22px 22px, auto;
+}
+
+.world-widget header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.world-widget header strong {
+  color: var(--text-heading);
+}
+
+.world-widget header span {
+  color: #2ee58f;
+}
+
+.mini-map-bars,
+.world-widget--signal {
+  display: grid;
+  gap: 8px;
+}
+
+.mini-map-bars a,
+.world-widget--signal a,
+.world-signal-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text-body);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.mini-map-bars i {
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2ee58f, #f6c64f, #f97316);
+  box-shadow: 0 0 16px rgba(46, 229, 143, 0.2);
+}
+
+.mini-map-bars b,
+.world-widget--signal b,
+.world-signal-row b {
+  color: var(--text-heading);
+}
+
+.world-line-chart,
+.world-combo-chart {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  height: 118px;
+  padding: 12px 8px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 100% 25%, 12.5% 100%;
+}
+
+.world-line-chart i,
+.world-combo-chart i {
+  flex: 1;
+  min-width: 8px;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(180deg, #2ee58f, #f97316);
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.22);
+}
+
+.world-signal-row {
+  grid-template-columns: 92px 64px minmax(0, 1fr);
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.world-signal-row em {
+  color: var(--text-muted);
+  font-style: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.world-donut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  min-height: 118px;
+  gap: 12px;
+}
+
+.world-donut-row span {
+  display: grid;
+  place-items: center;
+  width: 78px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle closest-side, #081017 64%, transparent 66%),
+    conic-gradient(#f97316 calc(var(--p) * 1%), rgba(46, 229, 143, 0.22) 0);
+  color: var(--text-heading);
+  font-family: var(--mono);
+  font-size: 14px;
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.4), 0 0 18px rgba(249, 115, 22, 0.16);
+}
+
 .world-map-panel {
   margin-bottom: 24px;
   overflow: hidden;
@@ -366,24 +578,56 @@ h3 { font-size: 13px; font-family: var(--mono); text-transform: uppercase; lette
 .world-map-stage--static {
   overflow: hidden;
   background:
-    linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px),
-    radial-gradient(circle at 52% 38%, rgba(32,199,232,0.14), transparent 38%),
-    linear-gradient(135deg, rgba(4,13,29,0.96), rgba(8,12,20,0.92) 48%, rgba(13,11,9,0.96));
-  background-size: 36px 36px, 36px 36px, auto, auto;
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.032) 1px, transparent 1px),
+    radial-gradient(circle at 50% 44%, rgba(17, 85, 119, 0.22), transparent 45%),
+    linear-gradient(135deg, rgba(5, 12, 18, 0.98), rgba(8, 14, 18, 0.96) 50%, rgba(5, 9, 11, 0.98));
+  background-size: 32px 32px, 32px 32px, auto, auto;
 }
 .world-map-image {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(100%, 1360px);
+  width: min(98%, 1220px);
   max-width: none;
   transform: translate(-50%, -50%);
-  opacity: 0.78;
-  filter: invert(1) sepia(1) saturate(1.15) hue-rotate(160deg) brightness(0.9) contrast(1.25);
+  opacity: 0.92;
+  filter: invert(61%) sepia(89%) saturate(1085%) hue-rotate(341deg) brightness(103%) contrast(98%);
   mix-blend-mode: screen;
   pointer-events: none;
   user-select: none;
+}
+.world-map-region {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  pointer-events: none;
+  background: rgba(46, 229, 143, 0.72);
+  filter: blur(0.2px);
+  mix-blend-mode: screen;
+  box-shadow: 0 0 28px rgba(46, 229, 143, 0.28);
+  clip-path: polygon(10% 30%, 34% 2%, 72% 12%, 96% 42%, 82% 82%, 36% 92%, 4% 66%);
+}
+.world-map-region.region-na {
+  left: 10%;
+  top: 22%;
+  width: 13%;
+  height: 19%;
+  transform: rotate(-12deg);
+}
+.world-map-region.region-europe {
+  left: 48%;
+  top: 22%;
+  width: 8%;
+  height: 10%;
+  transform: rotate(9deg);
+}
+.world-map-region.region-apac {
+  left: 79%;
+  top: 61%;
+  width: 11%;
+  height: 10%;
+  transform: rotate(8deg);
 }
 .world-map-base {
   position: absolute;
@@ -1137,9 +1381,40 @@ table.tbl td.num, table.tbl th.num { text-align: right; font-variant-numeric: ta
   .world-map-strip {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  .world-terminal__grid {
+    grid-template-columns: 1fr;
+  }
+  .world-terminal__side,
+  .world-terminal__bottom {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: none;
+  }
 }
 
 @media (max-width: 760px) {
+  .world-terminal__bar,
+  .world-terminal__bar nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .world-terminal__bar {
+    padding: 10px 12px;
+  }
+  .world-terminal__bar nav {
+    gap: 6px;
+  }
+  .world-terminal__bar nav span {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .world-terminal__side,
+  .world-terminal__bottom {
+    grid-template-columns: 1fr;
+  }
+  .world-terminal__map .world-map-stage {
+    min-height: 310px;
+    aspect-ratio: 1.35 / 1;
+  }
   .world-map-stage {
     min-height: 260px;
     aspect-ratio: 1.45 / 1;

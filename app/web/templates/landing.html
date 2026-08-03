@@ -1,8 +1,6 @@
 {% extends "base.html" %}
 
-{% block extra_head %}
-<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-{% endblock %}
+{% block extra_head %}{% endblock %}
 
 {% block body %}
 {% set stance_rows = currency_stance[1] if currency_stance and currency_stance[1] else [] %}
@@ -20,8 +18,29 @@
 
   {# ── 1. News Feed + Calendar (65/35) ─────────────────────────────── #}
   <div class="panel world-map-panel" data-world-map>
-    <div class="world-map-stage world-map-stage--plotly" aria-label="Interactive world macro map">
-      <div id="world-macro-map" class="world-map-plot" data-countries='{{ world_map_countries|tojson }}'></div>
+    <div class="world-map-stage world-map-stage--static" aria-label="Static world macro map">
+      <img
+        class="world-map-image"
+        src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Blank_world_map_Robinson_projection.svg"
+        alt=""
+        loading="eager"
+      >
+      {% for country in world_map_countries %}
+        <a class="world-map-country world-map-country--static"
+           href="{{ country.href }}"
+           style="left:{{ country.x }}%;top:{{ country.y }}%;"
+           aria-label="{{ country.name }} macro profile">
+          <span class="world-map-pulse"></span>
+          <span class="world-map-dot">{{ country.code }}</span>
+          <span class="world-map-card">
+            <strong>{{ country.name }} · {{ country.currency_code }}</strong>
+            {% for metric in country.metrics %}
+              <span><em>{{ metric.label }}</em><b>{{ metric.value }}</b></span>
+            {% endfor %}
+            <small>Updated {{ country.latest_release_at }}</small>
+          </span>
+        </a>
+      {% endfor %}
     </div>
     <div class="world-map-strip">
       {% for country in world_map_countries[:6] %}
@@ -198,103 +217,6 @@
 
 <script>
 (function () {
-
-  var mapRoot = document.querySelector("[data-world-map]");
-  if (mapRoot) {
-    var plotEl = document.getElementById("world-macro-map");
-    var iso3 = {
-      US: "USA", CA: "CAN", UK: "GBR", JP: "JPN", AU: "AUS", NZ: "NZL", CH: "CHE",
-      DE: "DEU", FR: "FRA", EU: "DEU"
-    };
-    var euroArea = ["ITA", "ESP", "NLD", "BEL", "AUT", "FIN", "PRT", "IRL", "GRC"];
-    var palette = ["#20c7e8", "#2cc6a3", "#ff9f43", "#ff5ac8", "#7c8cff", "#f97316", "#10b981", "#f43f5e"];
-    var escMap = (v) => String(v === null || v === undefined ? "" : v).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-
-    function renderWorldMap() {
-      if (!plotEl || !window.Plotly) {
-        window.setTimeout(renderWorldMap, 80);
-        return;
-      }
-      var countries = [];
-      try { countries = JSON.parse(plotEl.dataset.countries || "[]"); } catch (_) { countries = []; }
-      var rows = [];
-      countries.forEach(function (country, index) {
-        var locations = country.code === "EU" ? euroArea : [iso3[country.code]].filter(Boolean);
-        locations.forEach(function (location) {
-          rows.push({
-            location: location,
-            z: index + 1,
-            color: palette[index % palette.length],
-            text: country.name,
-            hover: "<b>" + escMap(country.name) + " · " + escMap(country.currency_code) + "</b><br>" +
-              (country.metrics || []).map(function (metric) {
-                return escMap(metric.label) + ": <b>" + escMap(metric.value) + "</b>";
-              }).join("<br>") +
-              "<br>Updated: " + escMap(country.latest_release_at) +
-              "<extra>Click for full profile</extra>",
-            href: country.href
-          });
-        });
-      });
-
-      var data = [{
-        type: "choropleth",
-        locationmode: "ISO-3",
-        locations: rows.map(function (row) { return row.location; }),
-        z: rows.map(function (row) { return row.z; }),
-        text: rows.map(function (row) { return row.text; }),
-        customdata: rows.map(function (row) { return row.href; }),
-        hovertemplate: rows.map(function (row) { return row.hover; }),
-        colorscale: rows.map(function (row, index) {
-          var scalePosition = rows.length <= 1 ? 1 : index / (rows.length - 1);
-          return [scalePosition, row.color];
-        }),
-        showscale: false,
-        marker: {
-          line: { color: "rgba(255,255,255,0.55)", width: 0.65 }
-        }
-      }];
-
-      var layout = {
-        paper_bgcolor: "rgba(0,0,0,0)",
-        plot_bgcolor: "rgba(0,0,0,0)",
-        margin: { l: 0, r: 0, t: 0, b: 0 },
-        geo: {
-          projection: { type: "natural earth", scale: 1.08 },
-          bgcolor: "rgba(0,0,0,0)",
-          showframe: false,
-          showcoastlines: true,
-          coastlinecolor: "rgba(255,255,255,0.26)",
-          coastlinewidth: 0.7,
-          showcountries: true,
-          countrycolor: "rgba(255,255,255,0.22)",
-          countrywidth: 0.55,
-          showland: true,
-          landcolor: "rgba(33,42,57,0.72)",
-          showocean: true,
-          oceancolor: "rgba(4,13,29,0.92)",
-          lonaxis: { showgrid: true, gridcolor: "rgba(255,255,255,0.045)", dtick: 20 },
-          lataxis: { showgrid: true, gridcolor: "rgba(255,255,255,0.045)", dtick: 15 }
-        },
-        hoverlabel: {
-          bgcolor: "rgba(8,12,20,0.96)",
-          bordercolor: "rgba(32,199,232,0.55)",
-          font: { color: "#f5f0eb", family: "JetBrains Mono, monospace", size: 12 }
-        }
-      };
-
-      Plotly.newPlot(plotEl, data, layout, {
-        displayModeBar: false,
-        responsive: true,
-        scrollZoom: false
-      });
-      plotEl.on("plotly_click", function (eventData) {
-        var href = eventData?.points?.[0]?.customdata;
-        if (href) window.location.href = href;
-      });
-    }
-    renderWorldMap();
-  }
 
   /* ── News feed filters ─────────────────────────────────────────────── */
   const panel = document.querySelector("[data-landing-news-list]");

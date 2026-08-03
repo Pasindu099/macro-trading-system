@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div id="content">
+    <div class="section-title">
+        <h2>Event Reaction Log</h2>
+        <span class="meta">Pick a calendar release, log the print, and record how DXY and the majors reacted at each horizon.</span>
+        <span class="spacer"></span>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <span class="title">Find a release</span>
+        </div>
+        <div class="evl-filters">
+            <label>
+                <span class="meta">Date</span>
+                <input class="input" type="date" id="evl-date" value="{{ today }}">
+            </label>
+            <label>
+                <span class="meta">Country</span>
+                <select class="input" id="evl-country">
+                    <option value="">All countries</option>
+                    {% for country in countries %}
+                        <option value="{{ country.code }}">{{ country.name }} ({{ country.currency_code }})</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                <span class="meta">Impact</span>
+                <select class="input" id="evl-importance">
+                    <option value="">Any impact</option>
+                    <option value="1">High</option>
+                    <option value="2">Medium</option>
+                    <option value="3">Low</option>
+                </select>
+            </label>
+        </div>
+        <div class="evl-picker">
+            <select class="input" id="evl-candidates">
+                <option value="">Search results appear here…</option>
+            </select>
+            <button class="btn" id="evl-log-btn" type="button" disabled>Log this event</button>
+        </div>
+        <p class="meta evl-hint" id="evl-status">&nbsp;</p>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <span class="title">Logged events</span>
+            <span class="meta">{{ events|length }} total</span>
+        </div>
+        <div class="evl-table-wrap">
+            <table class="tbl">
+                <thead>
+                    <tr>
+                        <th>Released</th>
+                        <th>Country</th>
+                        <th>Indicator</th>
+                        <th>Impact</th>
+                        <th class="num">Forecast</th>
+                        <th class="num">Actual</th>
+                        <th class="num">Previous</th>
+                        <th>AI read</th>
+                        <th>Price cells</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr class="evl-row" data-href="/event-log/{{ event.note_id }}">
+                        <td>{{ event.released_at.strftime("%Y-%m-%d %H:%M") }} UTC</td>
+                        <td>{{ event.country_code }} · {{ event.currency_code }}</td>
+                        <td>{{ event.indicator_name }}</td>
+                        <td><span class="badge {{ 'bear' if event.importance_label == 'High' else 'neutral' }}">{{ event.importance_label }}</span></td>
+                        <td class="num">{{ event.forecast_value if event.forecast_value is not none else "—" }}</td>
+                        <td class="num">{{ event.actual_value if event.actual_value is not none else "—" }}</td>
+                        <td class="num">{{ event.previous_value if event.previous_value is not none else "—" }}</td>
+                        <td>{{ "Yes" if event.has_ai_interpretation else "—" }}</td>
+                        <td>{{ event.cells_filled }} / {{ event.cells_total }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="9" class="evl-empty">No events logged yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.evl-filters { display:flex; flex-wrap:wrap; gap:16px; margin-bottom:16px; }
+.evl-filters label { display:flex; flex-direction:column; gap:5px; }
+.evl-filters .input { width:auto; min-width:170px; }
+.evl-picker { display:flex; gap:10px; align-items:center; }
+.evl-picker .input { flex:1; }
+.evl-hint { margin-top:10px; min-height:1.2em; }
+.evl-table-wrap { overflow-x:auto; }
+.evl-row { cursor:pointer; }
+.evl-empty { text-align:center; color:var(--text-muted); }
+</style>
+
+<script src="{{ url_for('static', path='js/event_log.js') }}?v=20260706b" defer></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    EventLog.initListPage();
+});
+</script>
+{% endblock %}

@@ -20,7 +20,9 @@ from sqlalchemy import (
     Computed,
     Date,
     DateTime,
+    Enum,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     SmallInteger,
@@ -549,4 +551,259 @@ class OISCache(Base):
         return (
             f"<OISCache bank={self.bank!r} curve={self.curve_date.isoformat()} "
             f"tenor_days={self.tenor_days}>"
+        )
+
+
+class EventReactionNote(Base):
+    """A manually-logged news event, for building the event-trading dataset.
+
+    One row per indicator_release the user chose to log. forecast/actual are
+    entered by hand (the calendar's own estimate/actual may not be fresh at
+    release time); previous_value is captured from the prior release so it's
+    frozen even if history gets revised later. ai_interpretation is generated
+    on demand and then hand-edited — never treated as authoritative.
+    """
+
+    __tablename__ = "event_reaction_notes"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    indicator_release_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("indicator_releases.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    forecast_value: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
+    actual_value: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
+    previous_value: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
+    manual_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ai_interpretation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ai_generated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    # Relationships
+    indicator_release: Mapped[IndicatorRelease] = relationship("IndicatorRelease")
+    price_reactions: Mapped[list[EventPriceReaction]] = relationship(
+        "EventPriceReaction",
+        back_populates="event",
+        cascade="all, delete-orphan",
+    )
+
+    def __repr__(self) -> str:
+        return f"<EventReactionNote id={self.id} release_id={self.indicator_release_id}>"
+
+
+class EventPriceReaction(Base):
+    """One (instrument, horizon) price cell for a logged event.
+
+    raw_price is pasted by hand off a chart. pip_change/pct_change are
+    computed server-side from the event's t0 price using each instrument's
+    pip convention, so later aggregation queries never have to redo that math.
+    """
+
+    __tablename__ = "event_price_reactions"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    event_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("event_reaction_notes.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    instrument: Mapped[str] = mapped_column(String(10), nullable=False)
+    horizon: Mapped[str] = mapped_column(String(4), nullable=False)
+    raw_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 6), nullable=True)
+    pip_change: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    pct_change: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "event_id", "instrument", "horizon", name="uq_event_price_reactions_cell"
+        ),
+    )
+
+    # Relationships
+    event: Mapped[EventReactionNote] = relationship(
+        "EventReactionNote", back_populates="price_reactions"
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<EventPriceReaction event_id={self.event_id} "
+            f"instrument={self.instrument!r} horizon={self.horizon!r}>"
+        )
+
+
+class RawNews(Base):
+    """Unprocessed news item exactly as fetched from a source."""
+
+    __tablename__ = "raw_news"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    source: Mapped[str] = mapped_column(Text, nullable=False)
+    source_category: Mapped[str | None] = mapped_column(Text, nullable=True)
+    title: Mapped[str] = mapped_column(Text, nullable=False)
+    body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    fetched_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    raw_payload: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    is_gated_relevant: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
+
+    __table_args__ = (
+        Index("ix_raw_news_published_at", "published_at"),
+    )
+
+    enriched_items: Mapped[list[EnrichedNews]] = relationship(
+        "EnrichedNews",
+        back_populates="raw_news",
+        cascade="all, delete-orphan",
+    )
+
+    def __repr__(self) -> str:
+        return f"<RawNews id={self.id} source={self.source!r} published={self.published_at}>"
+
+
+class EnrichedNews(Base):
+    """AI/enrichment output derived from a raw news item."""
+
+    __tablename__ = "enriched_news"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    raw_news_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("raw_news.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    tier: Mapped[str] = mapped_column(Text, nullable=False)
+    country: Mapped[str | None] = mapped_column(Text, nullable=True)
+    surprise_factor: Mapped[str | None] = mapped_column(Text, nullable=True)
+    currency_impact: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    inflation_impact: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    employment_growth_impact: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    gold_analysis: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    historical_analog: Mapped[str | None] = mapped_column(Text, nullable=True)
+    invalidation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    confidence: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    market_context: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    contains_unverified_entity: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    __table_args__ = (
+        Index("ix_enriched_news_tier", "tier"),
+        Index("ix_enriched_news_raw_news_id", "raw_news_id"),
+        Index(
+            "ix_enriched_news_gold_net_direction",
+            text("(gold_analysis ->> 'net_direction')"),
+        ),
+    )
+
+    raw_news: Mapped[RawNews] = relationship("RawNews", back_populates="enriched_items")
+    price_snapshots: Mapped[list[PriceSnapshot]] = relationship(
+        "PriceSnapshot",
+        back_populates="enriched_news",
+        cascade="all, delete-orphan",
+    )
+
+    def __repr__(self) -> str:
+        return f"<EnrichedNews id={self.id} raw_news_id={self.raw_news_id} tier={self.tier!r}>"
+
+
+class PriceSnapshot(Base):
+    """Price capture around an enriched news item."""
+
+    __tablename__ = "price_snapshots"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    enriched_news_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("enriched_news.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    instrument: Mapped[str] = mapped_column(String(30), nullable=False)
+    snapshot_type: Mapped[str] = mapped_column(
+        Enum(
+            "immediate",
+            "15m",
+            "1h",
+            "4h",
+            "eod",
+            name="price_snapshot_type",
+        ),
+        nullable=False,
+    )
+    scheduled_for: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    price: Mapped[Decimal] = mapped_column(Numeric(20, 6), nullable=False)
+    price_change_from_immediate_pct: Mapped[Decimal | None] = mapped_column(
+        Numeric(10, 4), nullable=True
+    )
+
+    __table_args__ = (
+        Index("ix_price_snapshots_enriched_news_id", "enriched_news_id"),
+        Index("ix_price_snapshots_instrument_snapshot_type", "instrument", "snapshot_type"),
+    )
+
+    enriched_news: Mapped[EnrichedNews] = relationship(
+        "EnrichedNews", back_populates="price_snapshots"
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<PriceSnapshot enriched_news_id={self.enriched_news_id} "
+            f"instrument={self.instrument!r} type={self.snapshot_type!r}>"
+        )
+
+
+class SourceHealth(Base):
+    """Latest ingestion health snapshot for a news source."""
+
+    __tablename__ = "source_health"
+
+    source_name: Mapped[str] = mapped_column(Text, primary_key=True)
+    last_item_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_checked_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    is_healthy: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true")
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<SourceHealth source={self.source_name!r} "
+            f"healthy={self.is_healthy} checked={self.last_checked_at}>"
         )

@@ -11,13 +11,15 @@ Routes:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.services import event_reaction_log
 from app.api.schemas import (
     AdminHealthPayload,
     CountryHealth,
@@ -464,3 +466,150 @@ async def admin_refresh_indicator_series(
         "latest_period": latest_print.period if latest_print else None,
         "latest_actual": float(latest_print.actual) if latest_print else None,
     }
+
+
+# ── Event reaction log ──────────────────────────────────────────────────────
+
+class UpdateNoteRequest(BaseModel):
+    forecast_value: Decimal | None = None
+    actual_value: Decimal | None = None
+    previous_value: Decimal | None = None
+    manual_notes: str | None = None
+    ai_interpretation: str | None = None
+
+
+class SavePriceCellRequest(BaseModel):
+    instrument: str = Field(min_length=1, max_length=10)
+    horizon: str = Field(min_length=1, max_length=4)
+    raw_price: Decimal
+
+
+class CreateNoteRequest(BaseModel):
+    indicator_release_id: int
+
+
+def _note_to_dict(note) -> dict:
+    return {
+        "id": note.id,
+        "indicator_release_id": note.indicator_release_id,
+        "forecast_value": note.forecast_value,
+        "actual_value": note.actual_value,
+        "previous_value": note.previous_value,
+        "manual_notes": note.manual_notes,
+        "ai_interpretation": note.ai_interpretation,
+        "ai_generated_at": note.ai_generated_at,
+    }
+
+
+@router.get("/event-log/candidates")
+async def get_event_log_candidates(
+    date: date = Query(...),
+    country: str | None = Query(default=None, min_length=2, max_length=2),
+    importance: int | None = Query(default=None, ge=1, le=3),
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    candidates = await event_reaction_log.list_candidate_releases(
+        session, release_date=date, country_code=country, importance=importance
+    )
+    return {"candidates": candidates}
+
+
+@router.post("/event-log/notes")
+async def create_event_log_note(
+    payload: CreateNoteRequest,
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    note = await event_reaction_log.get_or_create_note(
+        session, payload.indicator_release_id
+    )
+    await session.commit()
+    return _note_to_dict(note)
+
+
+@router.get("/event-log/notes/{note_id}")
+async def get_event_log_note(
+    note_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    detail = await event_reaction_log.get_event_detail(session, note_id)
+    if detail is None:
+        raise HTTPException(status_code=404, detail="Event note not found.")
+    note = detail["note"]
+    return {
+        **_note_to_dict(note),
+        "indicator_name": detail["indicator"].display_name if detail["indicator"] else None,
+        "country_code": detail["country"].code if detail["country"] else None,
+        "currency_code": detail["country"].currency_code if detail["country"] else None,
+        "released_at": detail["release"].released_at if detail["release"] else None,
+        "grid": detail["grid"],
+        "instruments": detail["instruments"],
+        "horizons": detail["horizons"],
+    }
+
+
+@router.patch("/event-log/notes/{note_id}")
+async def update_event_log_note(
+    note_id: int,
+    payload: UpdateNoteRequest,
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    try:
+        note = await event_reaction_log.update_note_values(
+            session, note_id, payload.model_dump(exclude_unset=True)
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    await session.commit()
+    return _note_to_dict(note)
+
+
+@router.post("/event-log/notes/{note_id}/ai")
+async def generate_event_log_ai(
+    note_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    try:
+        note = await event_reaction_log.generate_ai_interpretation(session, note_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    await session.commit()
+    if note.ai_interpretation is None:
+        raise HTTPException(
+            status_code=502, detail="AI interpretation generation failed."
+        )
+    return _note_to_dict(note)
+
+
+@router.put("/event-log/notes/{note_id}/price")
+async def save_event_log_price_cell(
+    note_id: int,
+    payload: SavePriceCellRequest,
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    try:
+        rows = await event_reaction_log.upsert_price_cell(
+            session, note_id, payload.instrument, payload.horizon, payload.raw_price
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    await session.commit()
+    return {
+        "instrument": payload.instrument,
+        "cells": [
+            {
+                "horizon": row.horizon,
+                "raw_price": row.raw_price,
+                "pip_change": row.pip_change,
+                "pct_change": row.pct_change,
+            }
+            for row in rows
+        ],
+    }
+
+
+@router.get("/event-log")
+async def list_event_log(
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    events = await event_reaction_log.list_events(session)
+    return {"events": events}

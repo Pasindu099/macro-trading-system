@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block body %}
+{% set note = detail.note %}
+{% set indicator = detail.indicator %}
+{% set country = detail.country %}
+{% set release = detail.release %}
+<div id="content" data-note-id="{{ note.id }}">
+    <div class="section-title">
+        <h2>{{ indicator.display_name if indicator else "Unknown indicator" }}</h2>
+        <span class="badge {{ 'bear' if indicator and indicator.importance == 1 else 'neutral' }}">
+            {{ "High" if indicator and indicator.importance == 1 else ("Medium" if indicator and indicator.importance == 2 else "Low") }}
+        </span>
+        <span class="meta">{{ country.code if country else "?" }} · {{ country.currency_code if country else "?" }}
+            · Released {{ release.released_at.strftime("%Y-%m-%d %H:%M") }} UTC</span>
+        <span class="spacer"></span>
+        <a class="btn btn-sm" href="/event-log">Back to log</a>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header"><span class="title">Forecast / Actual / Previous</span></div>
+        <div class="evd-values">
+            <label>
+                <span class="meta">Forecast</span>
+                <input class="input" type="number" step="any" id="evd-forecast" value="{{ note.forecast_value if note.forecast_value is not none else '' }}">
+            </label>
+            <label>
+                <span class="meta">Actual</span>
+                <input class="input" type="number" step="any" id="evd-actual" value="{{ note.actual_value if note.actual_value is not none else '' }}">
+            </label>
+            <label>
+                <span class="meta">Previous <small>(auto-filled, editable)</small></span>
+                <input class="input" type="number" step="any" id="evd-previous" value="{{ note.previous_value if note.previous_value is not none else '' }}">
+            </label>
+        </div>
+        <label class="evd-notes-label">
+            <span class="meta">Your notes</span>
+            <textarea class="input" id="evd-manual-notes" rows="3" placeholder="Anything the AI wouldn't know — e.g. Fed just signaled a pause…">{{ note.manual_notes or "" }}</textarea>
+        </label>
+        <p class="meta evd-save-hint" id="evd-save-status">&nbsp;</p>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <span class="title">AI read — monetary policy &amp; market impact</span>
+            <span class="spacer"></span>
+            <button class="btn btn-sm" id="evd-generate-ai" type="button">Generate interpretation</button>
+        </div>
+        <textarea class="input" id="evd-ai-text" rows="4" placeholder="Click Generate, then edit as needed.">{{ note.ai_interpretation or "" }}</textarea>
+        <p class="meta evd-save-hint" id="evd-ai-status">
+            {% if note.ai_generated_at %}Last generated {{ note.ai_generated_at.strftime("%Y-%m-%d %H:%M") }} UTC{% endif %}
+        </p>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <span class="title">Market reaction — price grid</span>
+            <span class="meta">Paste the raw price at each horizon; pip/% change is computed against the t0 (release-time) price.</span>
+        </div>
+        <div class="evd-grid-wrap">
+            <table class="tbl evd-grid">
+                <thead>
+                    <tr>
+                        <th>Instrument</th>
+                        {% for horizon in detail.horizons %}
+                            <th>{{ horizon }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for instrument in detail.instruments %}
+                    <tr>
+                        <th>{{ instrument }}</th>
+                        {% for horizon in detail.horizons %}
+                            {% set cell = detail.grid[instrument][horizon] %}
+                            <td>
+                                <input
+                                    class="input evd-cell-input" type="number" step="any"
+                                    data-instrument="{{ instrument }}" data-horizon="{{ horizon }}"
+                                    value="{{ cell.raw_price if cell and cell.raw_price is not none else '' }}"
+                                    placeholder="price">
+                                <span class="meta evd-cell-change" data-instrument="{{ instrument }}" data-horizon="{{ horizon }}">
+                                    {% if cell and cell.pip_change is not none %}{{ cell.pip_change }}p{% elif cell and cell.pct_change is not none %}{{ cell.pct_change }}%{% endif %}
+                                </span>
+                            </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.evd-values { display:flex; gap:16px; margin-bottom:14px; }
+.evd-values label { display:flex; flex-direction:column; gap:5px; }
+.evd-values .input { width:160px; }
+.evd-notes-label { display:flex; flex-direction:column; gap:5px; }
+.evd-notes-label textarea, #evd-ai-text { width:100%; resize:vertical; }
+.evd-save-hint { margin-top:8px; min-height:1.2em; }
+.evd-grid-wrap { overflow-x:auto; }
+.evd-grid th, .evd-grid td { text-align:center; white-space:nowrap; }
+.evd-grid tbody th { text-align:left; font-family:var(--mono); }
+.evd-cell-input { width:82px; padding:4px 6px; font-size:0.78rem; }
+.evd-cell-change { display:block; margin-top:2px; font-family:var(--mono); font-size:0.7rem; }
+.evd-cell-change.is-positive { color:var(--bull); }
+.evd-cell-change.is-negative { color:var(--bear); }
+</style>
+
+<script src="{{ url_for('static', path='js/event_log.js') }}?v=20260706b" defer></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    EventLog.initDetailPage();
+});
+</script>
+{% endblock %}

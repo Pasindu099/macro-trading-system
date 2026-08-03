@@ -352,7 +352,7 @@ h3 { font-size: 13px; font-family: var(--mono); text-transform: uppercase; lette
 }
 .world-map-stage {
   position: relative;
-  min-height: 360px;
+  min-height: 620px;
   aspect-ratio: 2.35 / 1;
   border-radius: var(--radius);
   background:
@@ -362,6 +362,25 @@ h3 { font-size: 13px; font-family: var(--mono); text-transform: uppercase; lette
     rgba(7, 12, 18, 0.58);
   background-size: 40px 40px, 40px 40px, auto, auto;
   border: 1px solid var(--border);
+}
+.world-map-stage--plotly {
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px),
+    radial-gradient(circle at 52% 38%, rgba(32,199,232,0.14), transparent 38%),
+    linear-gradient(135deg, rgba(4,13,29,0.96), rgba(8,12,20,0.92) 48%, rgba(13,11,9,0.96));
+  background-size: 36px 36px, 36px 36px, auto, auto;
+}
+.world-map-plot {
+  position: absolute;
+  inset: 0;
+}
+.world-map-plot .js-plotly-plot,
+.world-map-plot .plot-container,
+.world-map-plot .svg-container {
+  width: 100% !important;
+  height: 100% !important;
 }
 .world-map-base {
   position: absolute;

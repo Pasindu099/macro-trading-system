@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}?v=20260626sb">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/macro_design.css') }}?v=20260803commandmap">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/macro_design.css') }}?v=20260803term4">
     <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
     <script src="{{ url_for('static', path='js/chart.umd.min.js') }}" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js" defer></script>
@@ -74,8 +74,74 @@
 </style>
     {% block extra_head %}{% endblock %}
 </head>
-<body class="{% if request is defined and request.url.path not in ['/login', '/setup'] %}has-reference-shell{% endif %}">
-{% if request is defined and request.url.path not in ["/login", "/setup"] %}
+{% set is_bare = request is not defined or request.url.path in ["/login", "/setup"] %}
+{% set is_terminal = terminal_shell is defined and terminal_shell %}
+{% set is_admin = request is defined and request.state.current_user and request.state.current_user.role == "admin" %}
+{#
+  Nav source for the terminal topbar popover. The sidebar below keeps its own
+  markup because each item carries a bespoke inline SVG; this list is the
+  icon-less equivalent. Keep the two in sync when adding a page.
+#}
+{% set nav_groups = [
+  ("Markets", [
+    ("/", "Dashboard", false), ("/#fx", "FX Strength", false),
+    ("/news-feed", "Intelligence", false), ("/cot", "COT", false),
+    ("/#cb", "CB Terminal", false), ("/rate-prob/FED", "Rate Probability", false),
+    ("/rate-probability", "Rate Probs Live", false), ("/cb-news", "CB News", false),
+    ("/fx-outlook", "FX Outlook", false), ("/rates", "Yields", false),
+    ("/calendar", "Calendar", false),
+  ]),
+  ("Research", [
+    ("/macro-monitor", "Macro Monitor", false), ("/cb-policy-tracker", "Policy Tracker", false),
+    ("/countries", "Countries", false), ("/bank-research", "Bank Research", false),
+    ("/brief-builder", "Brief Builder", false), ("/trade-planner", "Trade Planner", false),
+    ("/research-lab", "Research Lab", false), ("/event-log", "Event Log", true),
+  ]),
+  ("System", [
+    ("/analytics", "Analytics", false), ("/settings", "Settings", false),
+    ("/users", "Users", true),
+  ]),
+] %}
+<body class="{% if not is_bare %}has-reference-shell{% endif %}{% if is_terminal %} is-terminal{% endif %}">
+{% if is_terminal %}
+<div class="term-shell">
+  <header class="term-topbar">
+    <a class="term-logo" href="/"><span class="mark">M</span><span>MACRO</span></a>
+    <span class="term-ver">v1.4.2</span>
+    <span class="term-live"><i></i>LIVE</span>
+    <details class="term-nav">
+      <summary>Menu</summary>
+      <div class="term-nav__panel">
+        {% for group_name, items in nav_groups %}
+          <div class="term-nav__group">
+            <div class="term-nav__label">{{ group_name }}</div>
+            {% for href, label, admin_only in items %}
+              {% if not admin_only or is_admin %}
+                <a href="{{ href }}" {% if request.url.path == href %}class="active"{% endif %}>{{ label }}</a>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+    </details>
+    <div class="spacer"></div>
+    <div class="clock"><span class="dot"></span><span id="utcclock">--:--:-- UTC</span></div>
+    {% if request.state.current_user %}
+      <div class="term-user">
+        <strong>{{ request.state.current_user.display_name }}</strong>
+        <form method="post" action="/logout"><button class="btn btn-sm" type="submit">Sign out</button></form>
+      </div>
+    {% else %}
+      <a class="btn btn-sm primary" href="/login">Sign in</a>
+    {% endif %}
+    <button class="btn icon-only" title="Refresh" onclick="window.location.reload()">&#8635;</button>
+  </header>
+  <div id="news-alert-banner"
+       hx-get="/api/intelligence/alerts/latest"
+       hx-trigger="every 60s"
+       hx-swap="outerHTML">
+  </div>
+{% elif not is_bare %}
 <div class="app">
   <aside class="sidebar">
     <a class="sb-logo" href="/" aria-label="Macro Dashboard home">
@@ -156,6 +222,12 @@
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
           <span class="label">Trade Planner</span>
         </a>
+        {% if request.state.current_user and request.state.current_user.role == "admin" %}
+        <a href="/event-log" class="sb-item {% if request.url.path.startswith('/event-log') %}active{% endif %}">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+          <span class="label">Event Log</span>
+        </a>
+        {% endif %}
       </div>
       <div class="sb-group">
         <div class="sb-group-label">System</div>
@@ -227,7 +299,9 @@
     <div class="content wide">
 {% endif %}
 {% block body %}{% endblock %}
-{% if request is defined and request.url.path not in ["/login", "/setup"] %}
+{% if is_terminal %}
+</div>{# /term-shell #}
+{% elif not is_bare %}
     </div>
   </main>
 </div>

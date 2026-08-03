@@ -137,22 +137,35 @@ COUNTRY_FLAGS = {
     "CA": "\U0001F1E8\U0001F1E6",
     "CH": "\U0001F1E8\U0001F1ED",
 }
-WORLD_MAP_POSITIONS = {
-    "US": {"x": 19, "y": 43},
-    "CA": {"x": 18, "y": 30},
-    "EU": {"x": 50, "y": 38},
-    "DE": {"x": 51, "y": 37},
-    "FR": {"x": 49, "y": 40},
-    "UK": {"x": 46, "y": 36},
-    "CH": {"x": 50, "y": 41},
-    "JP": {"x": 82, "y": 43},
-    "AU": {"x": 79, "y": 72},
-    "NZ": {"x": 88, "y": 80},
+# GeoJSON feature names (properties.name in static/geo/world.geo.json) that each
+# covered country shades on the landing choropleth. Membership in this mapping is
+# what makes a country appear on the map at all. The euro area shades as a bloc so
+# Europe reads as one policy region; DE and FR are excluded because they carry
+# their own rows and shade from their own national data.
+WORLD_MAP_GEO_NAMES: dict[str, tuple[str, ...]] = {
+    "US": ("United States of America",),
+    "CA": ("Canada",),
+    "EU": (
+        "Austria", "Belgium", "Croatia", "Cyprus", "Estonia", "Finland",
+        "Greece", "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg",
+        "Netherlands", "Portugal", "Slovakia", "Slovenia", "Spain",
+    ),
+    "DE": ("Germany",),
+    "FR": ("France",),
+    "UK": ("United Kingdom",),
+    "CH": ("Switzerland",),
+    "JP": ("Japan",),
+    "AU": ("Australia",),
+    "NZ": ("New Zealand",),
 }
 MAP_METRIC_PREFERENCES = {
+    # DE and FR are deliberately absent: euro-area members do not set their own
+    # policy rate, so "no own rate" is the correct answer for them, not the ECB's.
     "rate": (
         "policy_rate",
         "fed_interest_rate_decision",
+        "ecb_deposit_rate",
+        "bank_rate",
         "cash_rate",
         "official_cash_rate",
         "overnight_rate",
@@ -1185,12 +1198,21 @@ async def _build_fundamental_currency_meter(
 async def _build_world_map_snapshots(
     session: AsyncSession,
     countries: list[Any],
+    meter_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    """Build latest macro snapshots for the landing-page world map."""
+    """Build latest macro snapshots for the landing-page world choropleth.
+
+    ``meter_rows`` is the output of :func:`_build_fundamental_currency_meter`; when
+    supplied, each snapshot picks up the composite strength score used to shade the
+    country on the map.
+    """
+    meter_by_currency = {
+        str(row["currency"]): row for row in (meter_rows or [])
+    }
     snapshots: list[dict[str, Any]] = []
     for country in countries:
-        position = WORLD_MAP_POSITIONS.get(country.code)
-        if position is None:
+        geo_names = WORLD_MAP_GEO_NAMES.get(country.code)
+        if geo_names is None:
             continue
 
         detail = await get_country_detail_payload(session, country.code)
@@ -1213,13 +1235,16 @@ async def _build_world_map_snapshots(
                 None,
             )
             release = indicator.latest_release if indicator else None
+            raw_value = release.actual if release else None
             metric_rows.append({
                 "key": key,
                 "label": label,
+                "raw": float(raw_value) if raw_value is not None else None,
                 "value": _format_map_metric(
-                    release.actual if release else None,
+                    raw_value,
                     indicator.unit if indicator else None,
                 ),
+                "unit": indicator.unit if indicator else None,
                 "detail": (
                     indicator.display_name
                     if indicator and release else "No latest print"
@@ -1235,19 +1260,249 @@ async def _build_world_map_snapshots(
             *[f"{row['label']}: {row['value']}" for row in metric_rows],
             f"Updated: {latest_release_at}",
         ]
+        meter = meter_by_currency.get(str(country.currency_code)) or {}
         snapshots.append({
             "code": country.code,
             "name": country.name,
             "currency_code": country.currency_code,
             "flag": _flag_for_country(country.code),
             "href": f"/country/{country.code.lower()}",
-            "x": position["x"],
-            "y": position["y"],
+            "geo_names": list(geo_names),
+            "score": meter.get("score"),
+            "raw_score": meter.get("raw_score"),
+            "score_percent": meter.get("score_percent"),
+            "stance_label": meter.get("label"),
             "latest_release_at": latest_release_at,
             "metrics": metric_rows,
             "tooltip": "\n".join(tooltip_lines),
         })
     return snapshots
+
+
+CB_BANK_NAMES = {
+    "USD": "Fed", "EUR": "ECB", "GBP": "BoE", "JPY": "BoJ",
+    "AUD": "RBA", "NZD": "RBNZ", "CAD": "BoC", "CHF": "SNB",
+}
+
+# Headquarters coordinates [lon, lat] for the central-bank map layer. Static
+# reference geography — these do not change with the data.
+CB_LOCATIONS = {
+    "USD": ("Fed", "Washington", -77.04, 38.89),
+    "EUR": ("ECB", "Frankfurt", 8.68, 50.11),
+    "GBP": ("BoE", "London", -0.09, 51.51),
+    "JPY": ("BoJ", "Tokyo", 139.77, 35.69),
+    "AUD": ("RBA", "Sydney", 151.21, -33.87),
+    "NZD": ("RBNZ", "Wellington", 174.78, -41.29),
+    "CAD": ("BoC", "Ottawa", -75.70, 45.42),
+    "CHF": ("SNB", "Zurich", 8.54, 47.37),
+}
+
+
+def _json_number(value: Any, default: float | None = None) -> float | None:
+    """Coerce a DB Decimal (or anything numeric) to a JSON-serialisable float."""
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _build_landing_payload(
+    world_map_countries: list[dict[str, Any]],
+    currency_meter: list[dict[str, Any]],
+    yield_differentials: dict[str, Any],
+    surprises: list[Any],
+) -> dict[str, Any]:
+    """Serialise everything landing_terminal.js needs into one JSON blob.
+
+    Keeps the template free of hand-assembled JavaScript literals. Every numeric
+    field goes through _json_number because the processed-layer queries hand back
+    Decimal, which json.dumps cannot encode.
+    """
+    yields = yield_differentials or {}
+    chart_data = yields.get("chart_data") or {}
+    meter_by_currency = {str(row["currency"]): row for row in currency_meter}
+
+    return {
+        "countries": [
+            {
+                "code": country["code"],
+                "name": country["name"],
+                "currency": country["currency_code"],
+                "flag": country["flag"],
+                "href": country["href"],
+                "geoNames": country["geo_names"],
+                "score": country["score"],
+                "rawScore": _json_number(country["raw_score"]),
+                "scorePercent": _json_number(country["score_percent"]),
+                "stance": country["stance_label"],
+                "updated": country["latest_release_at"],
+                "metrics": [
+                    {
+                        "key": metric["key"],
+                        "label": metric["label"],
+                        "value": metric["value"],
+                        "raw": _json_number(metric["raw"]),
+                    }
+                    for metric in country["metrics"]
+                ],
+            }
+            for country in world_map_countries
+        ],
+        "yields": {
+            "message": yields.get("message"),
+            "series": [
+                {
+                    "currency": series.get("currency"),
+                    "label": series.get("label"),
+                    "data": [
+                        [str(point[0]), _json_number(point[1])]
+                        for point in (series.get("data") or [])
+                    ],
+                }
+                for series in (chart_data.get("yield_series") or [])
+            ],
+        },
+        "banks": [
+            {
+                "bank": CB_BANK_NAMES.get(row["currency"], row["currency"]),
+                "currency": row["currency"],
+                "country": row["country_code"],
+                "score": _json_number(row["raw_score"]),
+                "scoreText": row["score"],
+                "percent": _json_number(row["score_percent"], 50),
+                "label": row["label"],
+                "latestDate": (
+                    row["latest_date"].strftime("%b %d")
+                    if row.get("latest_date") else "pending"
+                ),
+                "metrics": [
+                    {
+                        "label": metric["label"],
+                        "score": (
+                            metric["score_values"][0]["score"]
+                            if metric["score_values"] else "N/A"
+                        ),
+                        "percent": _json_number(
+                            metric["score_values"][0]["bar_percent"]
+                            if metric["score_values"] else None,
+                            50,
+                        ),
+                        "raw": _json_number(
+                            metric["score_values"][0]["raw_score"]
+                            if metric["score_values"] else None
+                        ),
+                    }
+                    for metric in row["metrics"]
+                ],
+            }
+            for row in currency_meter
+        ],
+        "surprises": [
+            {
+                "currency": item.currency_code,
+                "country": item.country_code,
+                "name": item.display_name,
+                "surprise": _json_number(item.surprise),
+                "date": item.released_at.strftime("%b %d") if item.released_at else "recent",
+            }
+            for item in surprises
+        ],
+        # Central-bank map layer. Score/stance come from the meter so a marker
+        # can be tinted by that bank's current stance.
+        "centralBanks": [
+            {
+                "currency": currency,
+                "bank": bank,
+                "city": city,
+                "lon": lon,
+                "lat": lat,
+                "score": _json_number(meter_by_currency.get(currency, {}).get("raw_score")),
+                "label": meter_by_currency.get(currency, {}).get("label"),
+            }
+            for currency, (bank, city, lon, lat) in CB_LOCATIONS.items()
+        ],
+    }
+
+
+def _build_landing_kpis(
+    meter_rows: list[dict[str, Any]],
+    yield_differentials: dict[str, Any],
+    surprises: list[Any],
+    news_items: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Assemble the five headline tiles above the landing choropleth.
+
+    Pure assembly over data already fetched by :func:`landing_page` — no queries.
+    """
+    scored = [row for row in meter_rows if row.get("raw_score") is not None]
+    scored.sort(key=lambda row: float(row["raw_score"]), reverse=True)
+    strongest = scored[0] if scored else None
+    weakest = scored[-1] if len(scored) > 1 else None
+
+    yield_rows = [
+        row for row in (yield_differentials or {}).get("rows", [])
+        if row.get("currency") != YIELD_BASE_CURRENCY
+        and row.get("spread_vs_base_bp") is not None
+    ]
+    widest = max(
+        yield_rows,
+        key=lambda row: abs(float(row["spread_vs_base_bp"])),
+        default=None,
+    )
+
+    def _surprise_value(item: Any) -> float:
+        value = getattr(item, "surprise", None)
+        return abs(float(value)) if value is not None else 0.0
+
+    biggest = max(surprises, key=_surprise_value, default=None)
+    biggest_value = getattr(biggest, "surprise", None) if biggest else None
+
+    return [
+        {
+            "label": "Strongest G10",
+            "value": strongest["currency"] if strongest else "N/A",
+            "detail": strongest["label"] if strongest else "meter not built",
+            "tone": "bull" if strongest else "neutral",
+        },
+        {
+            "label": "Weakest G10",
+            "value": weakest["currency"] if weakest else "N/A",
+            "detail": weakest["label"] if weakest else "meter not built",
+            "tone": "bear" if weakest else "neutral",
+        },
+        {
+            "label": f"Widest 10Y vs {YIELD_BASE_CURRENCY}",
+            "value": widest["spread_display"] if widest else "N/A",
+            "detail": widest["currency"] if widest else "yields unavailable",
+            # _spread_color_class returns is-positive / is-negative / is-neutral.
+            "tone": {
+                "is-positive": "bull",
+                "is-negative": "bear",
+            }.get(widest.get("spread_class"), "neutral") if widest else "neutral",
+        },
+        {
+            "label": "Biggest Surprise",
+            "value": (
+                f"{float(biggest_value):+.2f}"
+                if biggest_value is not None else "N/A"
+            ),
+            "detail": (
+                getattr(biggest, "display_name", None) or "no recent prints"
+            ) if biggest else "no recent prints",
+            "tone": (
+                "bull" if biggest_value is not None and float(biggest_value) >= 0
+                else "bear" if biggest_value is not None else "neutral"
+            ),
+        },
+        {
+            "label": "Headlines · 24h",
+            "value": str(len(news_items)),
+            "detail": "InvestingLive tape" if news_items else "tape idle",
+            "tone": "neutral",
+        },
+    ]
 
 
 def _yield_history_point(
@@ -2182,12 +2437,15 @@ async def landing_page(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ) -> HTMLResponse:
-    """Render the landing page with surprise strip and country cards."""
+    """Render the landing command-map terminal."""
     countries = await list_country_summaries(session)
     surprises = await list_biggest_surprises(session, days=7, limit=5)
-    currency_stance = await _build_currency_stance_dashboard(session)
+    # The meter is built first: the choropleth shades each country by its
+    # composite strength score, so the snapshots need the meter rows.
     currency_meter = await _build_fundamental_currency_meter(session)
-    world_map_countries = await _build_world_map_snapshots(session, countries)
+    world_map_countries = await _build_world_map_snapshots(
+        session, countries, currency_meter,
+    )
     yield_differentials = await _build_yield_differentials()
     news_items: list[dict[str, Any]] = []
 
@@ -2201,16 +2459,12 @@ async def landing_page(
     except (HTTPException, ValueError):
         news_items = []
 
-    country_cards = [
-        {
-            "code": country.code,
-            "flag": _flag_for_country(country.code),
-            "name": country.name,
-            "currency_code": country.currency_code,
-            "latest_release_at": country.latest_release_at,
-        }
-        for country in countries
-    ]
+    landing_kpis = _build_landing_kpis(
+        currency_meter, yield_differentials, surprises, news_items,
+    )
+    landing_payload = _build_landing_payload(
+        world_map_countries, currency_meter, yield_differentials, surprises,
+    )
 
     return templates.TemplateResponse(
         request,
@@ -2218,13 +2472,16 @@ async def landing_page(
         {
             "request": request,
             "page_title": "Macro Dashboard",
-            "country_cards": country_cards,
             "surprises": surprises,
             "news_items": news_items,
-            "currency_stance": currency_stance,
             "currency_meter": currency_meter,
             "world_map_countries": world_map_countries,
             "yield_differentials": yield_differentials,
+            "landing_kpis": landing_kpis,
+            "landing_payload": landing_payload,
+            "bank_names": CB_BANK_NAMES,
+            # Switches base.html to the full-bleed, viewport-locked shell.
+            "terminal_shell": True,
         },
     )
 
@@ -2689,6 +2946,49 @@ async def update_bank_research_admin_page(
         background_tasks.add_task(_refresh_bank_research_from_admin, folder_url)
 
     return RedirectResponse("/bank-research/admin", status_code=303)
+
+
+@router.get("/event-log", response_class=HTMLResponse)
+async def event_log_list_page(request: Request, session: AsyncSession = Depends(get_session)) -> HTMLResponse:
+    """List of manually logged news events, and the picker to log a new one."""
+    from app.services.event_reaction_log import list_events
+
+    events = await list_events(session)
+    countries_q = await session.execute(select(Country).order_by(Country.code))
+    countries = countries_q.scalars().all()
+    return templates.TemplateResponse(
+        request,
+        "event_log_list.html",
+        {
+            "request": request,
+            "page_title": "Event Log | Macro Dashboard",
+            "events": events,
+            "countries": countries,
+            "today": date.today().isoformat(),
+        },
+    )
+
+
+@router.get("/event-log/{note_id}", response_class=HTMLResponse)
+async def event_log_detail_page(
+    note_id: int, request: Request, session: AsyncSession = Depends(get_session)
+) -> HTMLResponse:
+    """Editable detail page for one logged event — note, AI read, price grid."""
+    from app.services.event_reaction_log import get_event_detail
+
+    detail = await get_event_detail(session, note_id)
+    if detail is None:
+        raise HTTPException(status_code=404, detail="Event note not found.")
+    return templates.TemplateResponse(
+        request,
+        "event_log_detail.html",
+        {
+            "request": request,
+            "page_title": "Event Log | Macro Dashboard",
+            "note_id": note_id,
+            "detail": detail,
+        },
+    )
 
 
 @router.get("/brief-builder", response_class=HTMLResponse)

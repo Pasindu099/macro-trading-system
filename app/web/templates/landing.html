@@ -1,463 +1,214 @@
 {% extends "base.html" %}
 
-{% block extra_head %}{% endblock %}
+{% block extra_head %}
+  <script defer src="/static/js/landing_terminal.js?v=20260803term4"></script>
+{% endblock %}
 
 {% block body %}
-{% set stance_rows = currency_stance[1] if currency_stance and currency_stance[1] else [] %}
-{% set bank_names = {"USD":"Fed","EUR":"ECB","GBP":"BoE","JPY":"BoJ","AUD":"RBA","NZD":"RBNZ","CAD":"BoC","CHF":"SNB"} %}
-
-{% macro flag(code, big=false) -%}
-  <span class="flag flag-{{ code }}" style="{% if big %}width:36px;height:27px;{% endif %}"></span>
+{% macro flag(code) -%}
+  <span class="flag flag-{{ code }}"></span>
 {%- endmacro %}
 
-<div id="content">
-  <div class="world-terminal" data-world-map>
-    <div class="world-terminal__bar">
-      <div>
-        <span class="world-terminal__dot is-red"></span>
-        <span class="world-terminal__dot is-amber"></span>
-        <span class="world-terminal__dot is-green"></span>
-        <strong>Global Macro Heatmap</strong>
-      </div>
-      <nav aria-label="Map tools">
-        <span>Static View</span>
-        <span>G10</span>
-        <span>Macro Pulse</span>
-      </nav>
+{#
+  Panels that fetch client-side declare data-panel="<key>"; landing_terminal.js
+  loads them lazily through a concurrency-limited queue and owns their empty,
+  error and signed-out states.
+#}
+{% macro lazy(key, title, meta, badge="") -%}
+  <section class="tpanel" data-panel="{{ key }}">
+    <header class="tpanel__hd">
+      <strong>{{ title }}</strong>
+      {% if badge %}<span class="tbadge">{{ badge }}</span>{% endif %}
+      <span class="tpanel__meta">{{ meta }}</span>
+    </header>
+    <div class="tpanel__bd" data-panel-body>
+      <div class="tskeleton"><i></i><i></i><i></i><i></i></div>
+    </div>
+  </section>
+{%- endmacro %}
+
+<div class="term-body">
+
+  {# ══ MAP COLUMN ═══════════════════════════════════════════════════════ #}
+  <section class="term-map">
+    <div class="command-map is-loading" data-command-map role="img" aria-label="World macro heatmap">
+      <div class="map-fallback">Loading world geometry…</div>
     </div>
 
-    <div class="world-terminal__grid">
-      <section class="world-terminal__map">
-        <div class="world-map-stage world-map-stage--static" aria-label="Static world macro map">
-          <img
-            class="world-map-image"
-            src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Blank_world_map_Robinson_projection.svg"
-            alt=""
-            loading="eager"
-          >
-          <span class="world-map-region region-na"></span>
-          <span class="world-map-region region-europe"></span>
-          <span class="world-map-region region-apac"></span>
-          {% for country in world_map_countries %}
-            <a class="world-map-country world-map-country--static"
-               href="{{ country.href }}"
-               style="left:{{ country.x }}%;top:{{ country.y }}%;"
-               aria-label="{{ country.name }} macro profile">
-              <span class="world-map-pulse"></span>
-              <span class="world-map-dot">{{ country.code }}</span>
-              <span class="world-map-card">
-                <strong>{{ country.name }} - {{ country.currency_code }}</strong>
-                {% for metric in country.metrics %}
-                  <span><em>{{ metric.label }}</em><b>{{ metric.value }}</b></span>
-                {% endfor %}
-                <small>Updated {{ country.latest_release_at }}</small>
-              </span>
-            </a>
-          {% endfor %}
-        </div>
-      </section>
-
-      <aside class="world-terminal__side">
-        <article class="world-widget world-widget--mini-map">
-          <header><strong>Regional Watch</strong><span>Live</span></header>
-          <div class="mini-map-bars">
-            {% for country in world_map_countries[:5] %}
-              <a href="{{ country.href }}">
-                <span>{{ country.currency_code }}</span>
-                <i style="width:{{ 38 + loop.index * 9 }}%;"></i>
-                <b>{{ country.metrics[1].value }}</b>
-              </a>
-            {% endfor %}
-          </div>
-        </article>
-        <article class="world-widget">
-          <header><strong>Policy Heat</strong><span>Rates</span></header>
-          <div class="world-line-chart">
-            <i style="height:24%;"></i><i style="height:36%;"></i><i style="height:28%;"></i><i style="height:52%;"></i>
-            <i style="height:45%;"></i><i style="height:68%;"></i><i style="height:61%;"></i><i style="height:74%;"></i>
-          </div>
-        </article>
-        <article class="world-widget world-widget--signal">
-          <header><strong>Risk Tape</strong><span>Macro</span></header>
-          {% for country in world_map_countries[5:9] %}
-            <a href="{{ country.href }}"><span>{{ country.flag }} {{ country.name }}</span><b>{{ country.metrics[3].value }}</b></a>
-          {% endfor %}
-        </article>
-      </aside>
+    <div class="map-ov map-ov--metrics pills" data-map-metrics>
+      <button class="pill active" type="button" data-map-metric="composite">Composite</button>
+      <button class="pill" type="button" data-map-metric="rate">Rate</button>
+      <button class="pill" type="button" data-map-metric="inflation">Inflation</button>
+      <button class="pill" type="button" data-map-metric="labour">Labour</button>
+      <button class="pill" type="button" data-map-metric="gdp">GDP</button>
     </div>
 
-    <div class="world-terminal__bottom">
-      <article class="world-widget">
-        <header><strong>Country Signals</strong><span>Snapshot</span></header>
-        {% for country in world_map_countries[:6] %}
-          <a class="world-signal-row" href="{{ country.href }}">
-            <span>{{ country.flag }} {{ country.currency_code }}</span>
-            <b>{{ country.metrics[0].value }}</b>
-            <em>{{ country.metrics[2].value }} labour</em>
-          </a>
-        {% endfor %}
-      </article>
-      <article class="world-widget">
-        <header><strong>Inflation Path</strong><span>CPI</span></header>
-        <div class="world-combo-chart">
-          {% for country in world_map_countries[:8] %}
-            <i style="height:{{ 22 + loop.index * 7 }}%;"></i>
-          {% endfor %}
-        </div>
-      </article>
-      <article class="world-widget">
-        <header><strong>GDP Momentum</strong><span>Growth</span></header>
-        <div class="world-donut-row">
-          <span style="--p:62;"><b>62</b></span>
-          <span style="--p:44;"><b>44</b></span>
-          <span style="--p:71;"><b>71</b></span>
-        </div>
-      </article>
+    <div class="map-ov map-ov--zoom" data-map-zoom>
+      <button type="button" data-zoom="in" title="Zoom in" aria-label="Zoom in">+</button>
+      <button type="button" data-zoom="out" title="Zoom out" aria-label="Zoom out">&minus;</button>
+      <button type="button" data-zoom="reset" title="Reset view" aria-label="Reset view">&#9678;</button>
     </div>
-  </div>
-  <div class="grid grid-65-35">
 
-    {# News Feed #}
-    <div class="panel">
-      <div class="panel-header">
-        <span class="title">InvestingLive · Tape</span>
-        <span class="badge info">Live</span>
-        <span class="meta">last sync now</span>
-        <button class="btn btn-sm" type="button" onclick="window.location.reload()">Refresh</button>
-      </div>
-      <div class="pills" style="margin-bottom:8px;" data-landing-news-filters="category">
-        <button class="pill active" type="button" data-news-category="All">All</button>
-        <button class="pill" type="button" data-news-category="Macro">Macro</button>
-        <button class="pill" type="button" data-news-category="FX">FX</button>
-        <button class="pill" type="button" data-news-category="Equities">Equities</button>
-        <button class="pill" type="button" data-news-category="Central banks">Central Banks</button>
-        <button class="pill" type="button" data-news-category="Geopolitical">Geopolitical</button>
-      </div>
-      <div class="pills" style="margin-bottom:12px;" data-landing-news-filters="source">
-        <button class="pill active" type="button" data-news-source="All">All Sources</button>
-        <button class="pill" type="button" data-news-source="investinglive.com">InvestingLive</button>
-      </div>
-      <div class="col" style="gap:8px;max-height:520px;overflow-y:auto;padding-right:4px;" data-landing-news-list>
+    <details class="map-ov map-ov--layers" data-map-layers open>
+      <summary>Layers</summary>
+      <label><input type="checkbox" data-layer="banks" checked> Central banks</label>
+      <label><input type="checkbox" data-layer="events"> High-impact events</label>
+      <label><input type="checkbox" data-layer="surprises"> Recent surprises</label>
+    </details>
+
+    <div class="map-ov map-ov--scale">
+      <div class="map-scale" data-map-scale></div>
+      <span class="map-note">{{ world_map_countries|length }} covered · euro area shades as a bloc</span>
+    </div>
+  </section>
+
+  {# ══ COLUMN 1 · Flow ══════════════════════════════════════════════════ #}
+  <div class="term-col">
+    <section class="tpanel tpanel--grow">
+      <header class="tpanel__hd">
+        <strong>Live News</strong>
+        <span class="tbadge is-live">{{ news_items|length }}</span>
+        <span class="tpanel__meta">InvestingLive</span>
+      </header>
+      <div class="tpanel__bd tpanel__bd--scroll">
         {% for item in news_items %}
-          <a class="news-item {% if loop.first %}selected{% endif %}" href="{{ item.link }}" target="_blank" rel="noopener"
-             data-news-item data-news-category="{{ item.category }}" data-news-source="{{ item.source }}">
-            <div class="head">{{ item.title }}</div>
-            <div class="meta">
-              <span class="src">{{ item.source }}</span>
-              <span>·</span>
-              <span>{{ item.published_at if item.published_at else "Live" }}</span>
-              <span class="badge info">{{ item.category }}</span>
-            </div>
+          <a class="trow trow--news" href="{{ item.link }}" target="_blank" rel="noopener">
+            <span class="trow__title">{{ item.title }}</span>
+            <span class="trow__sub">{{ item.published_at if item.published_at else "live" }} · {{ item.category }}</span>
           </a>
         {% else %}
-          <div class="news-item selected">
-            <div class="head">Live market tape is waiting for the next macro headline.</div>
-            <div class="meta"><span class="src">Macro Dashboard</span><span>·</span><span>now</span><span class="badge beta">Idle</span></div>
-          </div>
+          <div class="tempty">Tape idle — waiting for the next headline.</div>
         {% endfor %}
       </div>
-    </div>
+    </section>
 
-    {# Calendar Preview #}
-    <div class="panel">
-      <div class="panel-header">
-        <span class="title">Calendar Preview</span>
-        <span class="meta">next 7 days</span>
-        <a href="/calendar" class="btn btn-sm" style="margin-left:auto;">Full calendar</a>
-      </div>
-      <div class="row" style="gap:6px;margin-bottom:12px;flex-wrap:wrap;" data-calendar-filters>
-        <button class="pill active" type="button" data-calendar-filter-type="all" data-calendar-filter-value="all">All</button>
-        <button class="pill" type="button" data-calendar-filter-type="importance" data-calendar-filter-value="1">High</button>
-        <button class="pill" type="button" data-calendar-filter-type="importance" data-calendar-filter-value="2">Med</button>
-      </div>
-      <div class="col" style="gap:2px;" data-calendar-preview>
-        <div class="row" style="padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;gap:10px;">
-          <span class="muted" style="width:46px;">TBD</span>
-          {{ flag("USD") }}
-          <span style="flex:1;color:var(--text-body)">Loading upcoming events...</span>
-          <span class="imp high"></span>
-        </div>
-      </div>
-    </div>
-
+    {{ lazy("cbnews", "CB News", "8 banks", "LIVE") }}
+    {{ lazy("calendar", "Calendar", "next 7d") }}
   </div>
 
-  {# ── 2. FX Strength Ranking ───────────────────────────────────────── #}
-  <div class="section-title" style="margin-top:24px;">
-    <h2>FX Strength Ranking · G10</h2>
-    <span class="meta">composite macro signal meter</span>
-  </div>
-  <div class="panel" style="padding:0;overflow:hidden;">
-    <div class="table-wrap">
-      <table class="tbl">
-        <thead>
-          <tr>
-            <th style="width:40px;">#</th>
-            <th>Currency</th>
-            <th class="num">Score</th>
-            <th style="width:140px;">Visual</th>
-            <th>Stance</th>
-            <th class="num">INF</th>
-            <th class="num">GRW</th>
-            <th class="num">LAB</th>
-            <th class="num">Date</th>
-          </tr>
-        </thead>
-        <tbody>
+  {# ══ COLUMN 2 · FX & positioning ══════════════════════════════════════ #}
+  <div class="term-col">
+    <section class="tpanel">
+      <header class="tpanel__hd">
+        <strong>FX Strength</strong>
+        <span class="tbadge">G10</span>
+        <a class="tpanel__meta" href="/#fx">all</a>
+      </header>
+      <div class="tpanel__bd">
+        {% for row in currency_meter %}
+          {% set stance = "bull" if row.raw_score is not none and row.raw_score >= 0.25 else ("bear" if row.raw_score is not none and row.raw_score <= -0.25 else "neutral") %}
+          <a class="trow trow--fx" href="/country/{{ row.country_code|lower }}">
+            {{ flag(row.currency) }}
+            <span class="trow__code">{{ row.currency }}</span>
+            <span class="bar-track"><span class="bar-fill {{ stance }}" style="width:{{ row.score_percent }}%"></span></span>
+            <b class="{{ stance }}">{{ row.score }}</b>
+          </a>
+        {% else %}
+          <div class="tempty">Currency meter has not been built yet.</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="tpanel" data-landing-cb>
+      <header class="tpanel__hd">
+        <strong>Hawk / Dove</strong>
+        <span class="tpanel__meta">policy divergence</span>
+      </header>
+      <div class="tpanel__bd">
+        <div class="hd-bar hd-bar--mini">
+          <div class="track"></div>
           {% for row in currency_meter %}
-            {% set stance = "bull" if row.raw_score is not none and row.raw_score >= 0.25 else ("bear" if row.raw_score is not none and row.raw_score <= -0.25 else "neutral") %}
-            <tr>
-              <td class="muted">{{ "%02d"|format(loop.index) }}</td>
-              <td>
-                <a class="row" href="/country/{{ row.country_code|lower }}">
-                  {{ flag(row.currency) }}
-                  <span style="font-weight:600;color:var(--text-heading);letter-spacing:0.04em;">{{ row.currency }}</span>
-                </a>
-              </td>
-              <td class="num" style="color:var(--text-heading);font-weight:600;">{{ row.score }}</td>
-              <td><div class="bar-track"><div class="bar-fill {{ stance }}" style="width:{{ row.score_percent }}%"></div></div></td>
-              <td><span class="badge {{ stance }}">{{ stance }}</span></td>
-              <td class="num">{{ row.metrics[0].score_values[0].score if row.metrics|length > 0 and row.metrics[0].score_values else "N/A" }}</td>
-              <td class="num">{{ row.metrics[1].score_values[0].score if row.metrics|length > 1 and row.metrics[1].score_values else "N/A" }}</td>
-              <td class="num">{{ row.metrics[2].score_values[0].score if row.metrics|length > 2 and row.metrics[2].score_values else "N/A" }}</td>
-              <td class="num"><span class="delta flat">{{ row.latest_date.strftime("%b %d") if row.latest_date else "pending" }}</span></td>
-            </tr>
-          {% else %}
-            <tr><td colspan="9">Currency meter data has not been built yet.</td></tr>
+            <div class="dot" style="left:{{ row.score_percent }}%">
+              <div class="lbl">{{ bank_names.get(row.currency, row.currency) }}</div>
+            </div>
           {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  {# ── 3. Hawk/Dove Spectrum + Components ──────────────────────────── #}
-  <div class="section-title" style="margin-top:24px;" id="cb">
-    <h2>CB Terminal · Hawk/Dove Spectrum</h2>
-    <span class="meta">policy divergence across G10 central banks</span>
-  </div>
-  <div class="panel" data-landing-cb>
-    <div class="tabs" style="margin-bottom:18px;" data-landing-cb-tabs>
-      {% for row in currency_meter %}
-        {% set bank_name = bank_names.get(row.currency, row.currency) %}
-        <button class="tab {% if loop.first %}active{% endif %}" type="button"
-                data-bank="{{ bank_name }}" data-currency="{{ row.currency }}">{{ bank_name }}</button>
-      {% else %}
-        <span class="muted">Central-bank score data has not been built yet.</span>
-      {% endfor %}
-    </div>
-    <div class="hd-bar">
-      <div class="track"></div>
-      {% for row in currency_meter %}
-        {% set bank_name = bank_names.get(row.currency, row.currency) %}
-        <div class="dot" style="left:{{ row.score_percent }}%">
-          <div class="lbl">{{ bank_name }} - {{ row.score_percent }}</div>
+          <div class="endlbl" style="left:0;">Dovish</div>
+          <div class="endlbl" style="right:0;">Hawkish</div>
         </div>
-      {% endfor %}
-      <div class="endlbl" style="left:0;">Dovish</div>
-      <div class="endlbl" style="right:0;">Hawkish</div>
-    </div>
-    <div class="grid grid-3" style="margin-top:18px;gap:12px;">
-      <div class="panel tight" style="background:var(--panel-2);">
-        <div class="label-xs" style="margin-bottom:8px;">Hawk/Dove Components</div>
-        <div class="col" style="gap:8px;font-family:var(--mono);font-size:11px;" data-cb-components></div>
-      </div>
-      <div class="panel tight" style="background:var(--panel-2);">
-        <div class="label-xs" style="margin-bottom:8px;">Macro Surprises</div>
-        <div class="col" style="gap:0;font-family:var(--mono);font-size:11px;" data-cb-surprises></div>
-      </div>
-      <div class="panel tight" style="background:var(--panel-2);display:flex;flex-direction:column;gap:10px;">
-        <div class="label-xs">AI Stance Analysis</div>
-        <button class="btn primary" style="align-self:flex-start;" type="button" data-cb-landing-analyze>Analyze Stance</button>
-        <div style="font-size:11px;color:var(--text-body);line-height:1.55;font-family:var(--mono)" data-cb-analysis>
-          Select a bank or run analysis to summarize recent central-bank communications.
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div>{# /content #}
-
-<script>
-(function () {
-
-  /* ── News feed filters ─────────────────────────────────────────────── */
-  const panel = document.querySelector("[data-landing-news-list]");
-  if (panel) {
-    const state = { category: "All", source: "All" };
-    const items = Array.from(panel.querySelectorAll("[data-news-item]"));
-    const normalize = (v) => String(v || "").trim().toLowerCase();
-    const applyFilters = () => {
-      let count = 0;
-      items.forEach((item) => {
-        const ok = (state.category === "All" || normalize(item.dataset.newsCategory) === normalize(state.category))
-                && (state.source === "All" || normalize(item.dataset.newsSource) === normalize(state.source));
-        item.hidden = !ok;
-        item.classList.toggle("selected", ok && count === 0);
-        if (ok) count++;
-      });
-      let empty = panel.querySelector("[data-news-empty]");
-      if (!count) {
-        if (!empty) {
-          empty = document.createElement("div");
-          empty.className = "news-item selected";
-          empty.dataset.newsEmpty = "true";
-          empty.innerHTML = '<div class="head">No headlines matched these filters.</div><div class="meta"><span class="src">InvestingLive</span><span>-</span><span>adjust filters</span><span class="badge beta">Empty</span></div>';
-          panel.appendChild(empty);
-        }
-        empty.hidden = false;
-      } else if (empty) {
-        empty.hidden = true;
-      }
-    };
-    document.querySelectorAll("[data-news-category]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        state.category = btn.dataset.newsCategory || "All";
-        btn.closest("[data-landing-news-filters]")?.querySelectorAll(".pill").forEach((p) => p.classList.remove("active"));
-        btn.classList.add("active");
-        applyFilters();
-      });
-    });
-    document.querySelectorAll("[data-news-source]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        state.source = btn.dataset.newsSource || "All";
-        btn.closest("[data-landing-news-filters]")?.querySelectorAll(".pill").forEach((p) => p.classList.remove("active"));
-        btn.classList.add("active");
-        applyFilters();
-      });
-    });
-  }
-
-  /* ── Calendar preview ──────────────────────────────────────────────── */
-  const calList = document.querySelector("[data-calendar-preview]");
-  const calFilters = document.querySelector("[data-calendar-filters]");
-  if (calList) {
-    fetch("/api/calendar?days_back=0&days_forward=7&limit=40")
-      .then((r) => r.ok ? r.json() : null)
-      .then((payload) => {
-        const events = payload?.data?.events || [];
-        if (!events.length) return;
-        const esc = (v) => String(v || "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-        const code = (e) => e.currency_code || e.country_code || "USD";
-        let active = { type: "all", value: "all" };
-        const render = () => {
-          const shown = events.filter((e) => {
-            if (active.type === "importance") return String(e.importance || "") === active.value;
-            return true;
-          });
-          calList.innerHTML = shown.length ? shown.slice(0, 10).map((e) => {
-            const time = e.released_at ? new Date(e.released_at).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) : "TBD";
-            const imp = Number(e.importance) === 1 ? "high" : Number(e.importance) === 2 ? "med" : "low";
-            return `<a class="row" href="/calendar" style="padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;gap:10px;"><span class="muted" style="width:46px;">${esc(time)}</span><span class="flag flag-${esc(code(e))}"></span><span style="flex:1;color:var(--text-body)">${esc(e.display_name||"Event")}</span><span class="imp ${imp}"></span></a>`;
-          }).join("") : '<div style="padding:8px 0;font-family:var(--mono);font-size:11px;color:var(--text-muted);">No events match this filter.</div>';
-        };
-        if (calFilters) {
-          calFilters.addEventListener("click", (evt) => {
-            const btn = evt.target.closest("[data-calendar-filter-type]");
-            if (!btn) return;
-            active = { type: btn.dataset.calendarFilterType || "all", value: btn.dataset.calendarFilterValue || "all" };
-            calFilters.querySelectorAll(".pill").forEach((p) => p.classList.toggle("active", p === btn));
-            render();
-          });
-        }
-        render();
-      }).catch(() => {});
-  }
-
-  /* ── CB Terminal ───────────────────────────────────────────────────── */
-  var cbBanks = [
-    {% for row in currency_meter %}
-      {% set bank_name = bank_names.get(row.currency, row.currency) if bank_names is defined else row.currency %}
-      {
-        bank: {{ bank_name|tojson }},
-        currency: {{ row.currency|tojson }},
-        country: {{ row.country_code|tojson }},
-        score: {{ (row.raw_score|float) if row.raw_score is not none else "null" }},
-        scoreText: {{ row.score|tojson }},
-        percent: {{ row.score_percent if row.score_percent is not none else 50 }},
-        label: {{ row.label|tojson }},
-        latestDate: {{ row.latest_date.strftime("%b %d")|tojson if row.latest_date else '"pending"' }},
-        metrics: [
-          {% for metric in row.metrics %}
-            {% set current = metric.score_values[0] if metric.score_values else none %}
-            {
-              label: {{ metric.label|tojson }},
-              score: {{ current.score|tojson if current else '"N/A"' }},
-              percent: {{ current.bar_percent if current and current.bar_percent is not none else 50 }},
-              raw: {{ (current.raw_score|float) if current and current.raw_score is not none else "null" }}
-            }{% if not loop.last %},{% endif %}
+        <div class="tabs tabs--mini" data-landing-cb-tabs>
+          {% for row in currency_meter %}
+            <button class="tab {% if loop.first %}active{% endif %}" type="button"
+                    data-currency="{{ row.currency }}">{{ bank_names.get(row.currency, row.currency) }}</button>
           {% endfor %}
-        ]
-      }{% if not loop.last %},{% endif %}
-    {% endfor %}
-  ];
-  var cbSurprises = [
-    {% for s in surprises %}
-      {
-        currency: {{ s.currency_code|tojson }},
-        name: {{ s.display_name|tojson }},
-        surprise: {{ (s.surprise|float) if s.surprise is defined and s.surprise is not none else "null" }},
-        date: {{ s.released_at.strftime("%b %d")|tojson if s.released_at is defined and s.released_at else '"recent"' }}
-      }{% if not loop.last %},{% endif %}
-    {% endfor %}
-  ];
+        </div>
+        <div class="cb-components" data-cb-components></div>
+        <div data-cb-analysis class="tnote">Select a bank to see its component scores.</div>
+      </div>
+    </section>
 
-  var cbState = { currency: cbBanks[0] ? cbBanks[0].currency : "" };
-  var cbRoot = document.querySelector("[data-landing-cb]");
-  var esc = (v) => String(v === null || v === undefined ? "" : v).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-  var toneClass = (s) => Number(s||0) >= 0.25 ? "bull" : Number(s||0) <= -0.25 ? "bear" : "neutral";
-  var signed = (v) => { var n = Number(v||0); return (n >= 0 ? "+" : "") + n.toFixed(Math.abs(n) >= 10 ? 0 : 1); };
+    {{ lazy("cot", "COT Positioning", "CFTC") }}
+    {{ lazy("retail", "Retail Sentiment", "merged") }}
+  </div>
 
-  var renderCb = function () {
-    if (!cbRoot || !cbBanks.length) return;
-    var bank = cbBanks.find((b) => b.currency === cbState.currency) || cbBanks[0];
-    cbState.currency = bank.currency;
-    cbRoot.querySelectorAll("[data-currency]").forEach((btn) => btn.classList.toggle("active", btn.dataset.currency === bank.currency));
+  {# ══ COLUMN 3 · Rates & macro ═════════════════════════════════════════ #}
+  <div class="term-col">
+    <section class="tpanel">
+      <header class="tpanel__hd">
+        <strong>Fixed Income</strong>
+        <span class="tbadge">10Y</span>
+        <a class="tpanel__meta" href="/rates">yields</a>
+      </header>
+      <div class="tpanel__bd">
+        <div class="tspark" data-rate-path></div>
+        {% for row in yield_differentials.rows %}
+          <a class="trow trow--yield" href="/rates">
+            <span class="trow__code">{{ row.currency }}</span>
+            <b>{{ row.yield_display }}</b>
+            <em class="{{ row.change_5d_class }}">{{ row.change_5d_display }}</em>
+          </a>
+        {% else %}
+          <div class="tempty">{{ yield_differentials.message or "Bond yields unavailable." }}</div>
+        {% endfor %}
+      </div>
+    </section>
 
-    var components = cbRoot.querySelector("[data-cb-components]");
-    if (components) {
-      components.innerHTML = bank.metrics.slice(0, 4).map((m) => {
-        var cls = toneClass(m.raw);
-        return `<div><div class="between"><span>${esc(m.label)}</span><strong class="${cls}">${esc(m.score)}</strong></div><div class="bar-track"><div class="bar-fill ${cls}" style="width:${Number(m.percent||50)}%"></div></div></div>`;
-      }).join("") + `<div class="muted" style="margin-top:4px;">Latest score ${esc(bank.latestDate)} — ${esc(bank.label)}</div>`;
-    }
+    {{ lazy("rateprob", "Rate Probability", "next meeting") }}
 
-    var surpriseBox = cbRoot.querySelector("[data-cb-surprises]");
-    if (surpriseBox) {
-      var matched = cbSurprises.filter((s) => s.currency === bank.currency).slice(0, 5);
-      surpriseBox.innerHTML = matched.length ? matched.map((s) => {
-        var cls = Number(s.surprise||0) >= 0 ? "bull" : "bear";
-        return `<div class="row" style="gap:10px;padding:6px 0;border-bottom:1px dashed var(--border);"><span class="muted" style="width:46px;">${esc(s.date)}</span><span style="flex:1;color:var(--text-body)">${esc(s.name)}</span><span class="${cls}">${signed(s.surprise)}</span></div>`;
-      }).join("") : `<div class="muted">No recent surprises for ${esc(bank.currency)}.</div>`;
-    }
+    <section class="tpanel">
+      <header class="tpanel__hd">
+        <strong>Macro Surprises</strong>
+        <span class="tpanel__meta">7d</span>
+      </header>
+      <div class="tpanel__bd">
+        {% for s in surprises %}
+          <div class="trow trow--surprise">
+            <span class="trow__code">{{ s.currency_code }}</span>
+            <span class="trow__title">{{ s.display_name }}</span>
+            <b class="{{ 'bull' if s.surprise >= 0 else 'bear' }}">{{ "%+.2f"|format(s.surprise) }}</b>
+          </div>
+        {% else %}
+          <div class="tempty">No releases beat or missed in the last 7 days.</div>
+        {% endfor %}
+      </div>
+    </section>
 
-    var analysis = cbRoot.querySelector("[data-cb-analysis]");
-    if (analysis) {
-      analysis.innerHTML = `<strong>${esc(bank.bank)}</strong> is ${esc(bank.label.toLowerCase())} with a score of <strong>${esc(bank.scoreText)}</strong>.`;
-    }
-  };
+    <section class="tpanel">
+      <header class="tpanel__hd">
+        <strong>Country Signals</strong>
+        <span class="tpanel__meta">policy · labour</span>
+      </header>
+      <div class="tpanel__bd tpanel__bd--scroll">
+        {% for country in world_map_countries %}
+          <a class="trow trow--signal" href="{{ country.href }}">
+            <span class="trow__code">{{ country.code }}</span>
+            <b>{{ country.metrics[0].value }}</b>
+            <em>{{ country.metrics[2].value }}</em>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
 
-  if (cbRoot) {
-    cbRoot.addEventListener("click", (evt) => {
-      var tab = evt.target.closest("[data-currency]");
-      if (tab) { cbState.currency = tab.dataset.currency || cbState.currency; renderCb(); return; }
-      if (evt.target.closest("[data-cb-landing-analyze]")) {
-        var bank = cbBanks.find((b) => b.currency === cbState.currency) || cbBanks[0];
-        var out = cbRoot.querySelector("[data-cb-analysis]");
-        if (out) out.textContent = `Analyzing ${bank.bank} communications...`;
-        fetch("/api/cb/analysis?bank=" + encodeURIComponent(bank.currency), { method: "POST" })
-          .then((r) => r.json().then((d) => ({ ok: r.ok, d })))
-          .then(({ ok, d }) => {
-            if (!ok) throw new Error(d?.detail || "Analysis failed");
-            var cls = d.stance === "hawkish" ? "bull" : d.stance === "dovish" ? "bear" : "neutral";
-            out.innerHTML = `<span class="${cls}">${esc(d.stance||"neutral")}</span> — ${Number(d.confidence||0)}% confidence. ${esc(d.summary||"")}${d.fx_implication ? "<br>" + esc(d.fx_implication) : ""}`;
-          })
-          .catch((e) => { if (out) out.textContent = e.message || "Analysis unavailable."; });
-      }
-    });
-    renderCb();
-  }
+    <section class="tpanel">
+      <header class="tpanel__hd">
+        <strong>Inflation Path</strong>
+        <span class="tpanel__meta">latest CPI</span>
+      </header>
+      <div class="tpanel__bd"><div class="tchart" data-inflation-chart></div></div>
+    </section>
+  </div>
 
-})();
-</script>
+</div>{# /term-body #}
+
+<script type="application/json" id="landing-data">{{ landing_payload|tojson }}</script>
 
 {% endblock %}

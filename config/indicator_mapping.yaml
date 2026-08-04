@@ -731,6 +731,28 @@ mappings:
     unit: "%"
     importance: 2
 
+  - eodhd_type: ISM Services PMI
+    eodhd_comparison: null
+    country: US
+    canonical_name: ism_services_pmi
+    display_name: ISM Services PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 1
+    notes: ">50 expansion, <50 contraction. EODHD's current name for this series."
+
+  - eodhd_type: ISM Non-Manufacturing PMI
+    eodhd_comparison: null
+    country: US
+    canonical_name: ism_services_pmi
+    display_name: ISM Services PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 1
+    notes: ">50 expansion, <50 contraction. Legacy EODHD name for the same series as 'ISM Services PMI'."
+
   - eodhd_type: ISM Services Business Activity
     eodhd_comparison: null
     country: US

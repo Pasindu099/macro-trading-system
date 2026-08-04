@@ -211,6 +211,330 @@
   }
 }
 
+.currency-research {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 18px;
+}
+
+.currency-research__header,
+.currency-research__topline,
+.currency-research__summary,
+.tone-history header,
+.research-tier header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.currency-research__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.currency-research button,
+.chart-dropzone button {
+  min-height: 34px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 8px;
+  background: #f4f7fb;
+  color: #101820;
+  font-family: var(--mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.currency-research__actions button:first-child {
+  background: #69c4a5;
+  border-color: #69c4a5;
+}
+
+.currency-research__topline {
+  display: grid;
+  grid-template-columns: 120px 170px 170px minmax(180px, 1fr);
+  align-items: end;
+}
+
+.currency-research label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.currency-research select,
+.currency-research input,
+.currency-research textarea {
+  min-height: 36px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  background: #161b20;
+  color: var(--text-heading);
+  font-family: var(--mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.currency-research textarea {
+  min-height: 86px;
+  padding: 10px;
+  resize: vertical;
+  text-transform: none;
+}
+
+.currency-research__status,
+.currency-research__summary article {
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  background: #171d22;
+  padding: 10px 12px;
+}
+
+.currency-research__status span,
+.currency-research__summary span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-muted);
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.currency-research__status strong,
+.currency-research__summary strong {
+  color: var(--text-heading);
+  font-family: var(--mono, monospace);
+}
+
+.currency-research__summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.currency-research__summary small {
+  display: block;
+  margin-top: 5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.tone-bullish {
+  color: var(--bull, #23c483) !important;
+}
+
+.tone-bearish {
+  color: var(--bear, #ef665f) !important;
+}
+
+.tone-neutral {
+  color: #f3ba63 !important;
+}
+
+.currency-research__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 14px;
+  align-items: start;
+}
+
+.currency-research__checklist,
+.currency-research__side {
+  display: grid;
+  gap: 12px;
+}
+
+.research-tier {
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  background: #12171c;
+  overflow: hidden;
+}
+
+.research-tier header {
+  padding: 11px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: #182027;
+}
+
+.research-tier header span {
+  color: #69c4a5;
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.research-tier header strong {
+  color: var(--text-heading);
+  font-size: 13px;
+}
+
+.research-check {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+.research-check:last-child {
+  border-bottom: 0;
+}
+
+.research-check strong {
+  display: block;
+  color: var(--text-heading);
+  font-size: 13px;
+}
+
+.research-check small {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.research-check textarea {
+  grid-column: 1 / -1;
+  min-height: 62px;
+}
+
+.chart-dropzone {
+  display: grid;
+  gap: 8px;
+  border: 1px dashed rgba(105,196,165,.48);
+  border-radius: 8px;
+  background: rgba(105,196,165,.08);
+  padding: 14px;
+}
+
+.chart-dropzone:focus {
+  outline: 2px solid rgba(105,196,165,.45);
+  outline-offset: 2px;
+}
+
+.chart-dropzone strong {
+  color: var(--text-heading);
+}
+
+.chart-dropzone span,
+.chart-preview-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.chart-dropzone input {
+  display: none;
+}
+
+.chart-preview-list,
+.tone-history,
+.tone-history [data-tone-history-list] {
+  display: grid;
+  gap: 9px;
+}
+
+.chart-preview {
+  margin: 0;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #11161b;
+}
+
+.chart-preview img {
+  display: block;
+  width: 100%;
+  max-height: 210px;
+  object-fit: contain;
+  background: #070b0f;
+}
+
+.chart-preview figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.chart-preview figcaption button,
+.tone-history header button {
+  min-height: 28px;
+  padding: 0 9px;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.tone-history {
+  border-top: 1px solid rgba(255,255,255,.1);
+  padding-top: 12px;
+}
+
+.tone-history header strong {
+  color: var(--text-heading);
+}
+
+.tone-history [data-tone-history-list] button {
+  display: grid;
+  gap: 3px;
+  justify-items: start;
+  width: 100%;
+  min-height: 48px;
+  padding: 9px 10px;
+  background: #171d22;
+  color: var(--text-heading);
+  text-align: left;
+}
+
+.tone-history [data-tone-history-list] span {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+@media (max-width: 1120px) {
+  .currency-research__topline,
+  .currency-research__summary,
+  .currency-research__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .sidebar,
+  .topbar,
+  .currency-research__actions,
+  .chart-dropzone,
+  .correlation-lab {
+    display: none !important;
+  }
+
+  .app,
+  .main,
+  .content {
+    display: block !important;
+  }
+
+  .currency-research,
+  .research-tier,
+  .research-check {
+    break-inside: avoid;
+  }
+}
+
 @media (max-width: 720px) {
   .correlation-lab__stats {
     grid-template-columns: 1fr;

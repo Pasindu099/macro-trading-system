@@ -19,6 +19,9 @@ Usage:
 
     # Specific date range:
     python scripts/run_manual_ingest.py --from 2026-04-01 --to 2026-04-18
+
+    # Deep historical backfill, chunked to avoid vendor result caps:
+    python scripts/run_manual_ingest.py --from 2020-01-01 --chunk-days 90
 """
 
 from __future__ import annotations
@@ -65,6 +68,16 @@ def parse_args() -> argparse.Namespace:
         dest="to_date",
         help="End date YYYY-MM-DD (default: today)",
     )
+    p.add_argument(
+        "--chunk-days",
+        type=int,
+        default=45,
+        help=(
+            "Split the request into this many days per API call. "
+            "Keeps long historical backfills below EODHD's per-call row cap "
+            "(default 45)."
+        ),
+    )
     return p.parse_args()
 
 
@@ -72,6 +85,24 @@ def parse_date(s: str | None, default: date) -> date:
     if s is None:
         return default
     return datetime.strptime(s, "%Y-%m-%d").date()
+
+
+def iter_date_chunks(
+    from_date: date,
+    to_date: date,
+    chunk_days: int,
+) -> list[tuple[date, date]]:
+    """Return inclusive date windows no longer than chunk_days."""
+    if chunk_days < 1:
+        raise ValueError("--chunk-days must be at least 1")
+
+    chunks: list[tuple[date, date]] = []
+    start = from_date
+    while start <= to_date:
+        end = min(start + timedelta(days=chunk_days - 1), to_date)
+        chunks.append((start, end))
+        start = end + timedelta(days=1)
+    return chunks
 
 
 async def main_async(args: argparse.Namespace) -> int:
@@ -94,9 +125,11 @@ async def main_async(args: argparse.Namespace) -> int:
     else:
         countries = sorted(ALLOWED_COUNTRIES)
 
+    chunks = iter_date_chunks(from_date, to_date, args.chunk_days)
+
     logger.info(
-        "Manual ingest: countries=%s from=%s to=%s",
-        countries, from_date, to_date,
+        "Manual ingest: countries=%s from=%s to=%s chunks=%d chunk_days=%d",
+        countries, from_date, to_date, len(chunks), args.chunk_days,
     )
 
     canonicalizer = Canonicalizer.from_default_config()
@@ -109,29 +142,33 @@ async def main_async(args: argparse.Namespace) -> int:
     async with run_logger("manual_backfill", countries=countries) as run:
         async with EODHDClient() as client:
             for c in countries:
-                try:
-                    events = await client.fetch_economic_events(
-                        country=c, from_date=from_date, to_date=to_date,
+                for chunk_start, chunk_end in chunks:
+                    try:
+                        events = await client.fetch_economic_events(
+                            country=c, from_date=chunk_start, to_date=chunk_end,
+                        )
+                        run.record_api_call(1)
+                    except EODHDError as exc:
+                        logger.error(
+                            "Fetch failed for %s %s..%s: %s",
+                            c, chunk_start, chunk_end, exc,
+                        )
+                        run.errors.append(f"{c} {chunk_start}..{chunk_end}: {exc}")
+                        continue
+
+                    async with session_scope() as session:
+                        stats = await service.ingest_events(session, events)
+                    run.record_stats(stats)
+
+                    total_inserted += stats.inserted
+                    total_updated += stats.updated
+                    total_unmapped += stats.unmapped
+
+                    logger.info(
+                        "  %s %s..%s: fetched=%d inserted=%d updated=%d same=%d unmapped=%d",
+                        c, chunk_start, chunk_end, len(events), stats.inserted,
+                        stats.updated, stats.skipped_same, stats.unmapped,
                     )
-                    run.record_api_call(1)
-                except EODHDError as exc:
-                    logger.error("Fetch failed for %s: %s", c, exc)
-                    run.errors.append(f"{c}: {exc}")
-                    continue
-
-                async with session_scope() as session:
-                    stats = await service.ingest_events(session, events)
-                run.record_stats(stats)
-
-                total_inserted += stats.inserted
-                total_updated += stats.updated
-                total_unmapped += stats.unmapped
-
-                logger.info(
-                    "  %s: fetched=%d inserted=%d updated=%d same=%d unmapped=%d",
-                    c, len(events), stats.inserted, stats.updated,
-                    stats.skipped_same, stats.unmapped,
-                )
 
     logger.info("═══════════════════════════════════════════════════")
     logger.info("MANUAL INGEST COMPLETE")

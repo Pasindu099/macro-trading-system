@@ -3,7 +3,7 @@
     if (!root) return;
 
     const storageKey = "macroCurrencyResearchV2";
-    const draftChartImages = [];
+    const itemChartImages = {};
     const toneRank = { bearish: -1, neutral: 0, bullish: 1 };
     const toneLabels = { bearish: "Bearish", neutral: "Neutral", bullish: "Bullish" };
 
@@ -380,9 +380,6 @@ Momentum/trend indicators - Timing only
         toneChangeDetail: root.querySelector("[data-tone-change-detail]"),
         toneBalance: root.querySelector("[data-tone-balance]"),
         historyList: root.querySelector("[data-tone-history-list]"),
-        chartInput: root.querySelector("[data-chart-input]"),
-        chartPreviewList: root.querySelector("[data-chart-preview-list]"),
-        dropzone: root.querySelector("[data-chart-dropzone]"),
     };
 
     const today = () => new Date().toISOString().slice(0, 10);
@@ -447,6 +444,28 @@ Momentum/trend indicators - Timing only
         `;
     }
 
+    function renderItemCharts(id) {
+        const charts = itemChartImages[id] || [];
+        return `
+            <div class="item-chart-zone" data-item-chart-zone="${esc(id)}" tabindex="0">
+                <div>
+                    <strong>Charts for this point</strong>
+                    <span>Paste here or upload evidence for this checklist item.</span>
+                </div>
+                <input type="file" accept="image/*" multiple data-item-chart-input="${esc(id)}">
+                <button type="button" data-item-chart-upload="${esc(id)}">Add chart</button>
+            </div>
+            <div class="item-chart-list" data-item-chart-list="${esc(id)}">
+                ${charts.length ? charts.map((chart, index) => `
+                    <figure class="item-chart-preview">
+                        <img src="${chart.dataUrl}" alt="${esc(chart.name)}">
+                        <figcaption>${esc(chart.name)} <button type="button" data-remove-item-chart="${esc(id)}" data-chart-index="${index}">Remove</button></figcaption>
+                    </figure>
+                `).join("") : ""}
+            </div>
+        `;
+    }
+
     function syncPickers() {
         root.querySelectorAll("[data-currency-option]").forEach((button) => {
             button.classList.toggle("is-active", button.dataset.currencyOption === els.currency.value);
@@ -474,20 +493,12 @@ Momentum/trend indicators - Timing only
                             </div>
                             ${toneButtonGroup("data-item-tone", "data-value", id, itemTone)}
                             <textarea data-item-notes="${esc(id)}" placeholder="Notes for this point">${esc(item.notes)}</textarea>
+                            ${renderItemCharts(id)}
                         </article>
                     `;
                 }).join("")}
             </section>
         `).join("");
-    }
-
-    function renderCharts() {
-        els.chartPreviewList.innerHTML = draftChartImages.length ? draftChartImages.map((chart, index) => `
-            <figure class="chart-preview">
-                <img src="${chart.dataUrl}" alt="${esc(chart.name)}">
-                <figcaption>${esc(chart.name)} <button type="button" data-remove-chart="${index}">Remove</button></figcaption>
-            </figure>
-        `).join("") : '<div class="chart-preview-empty">No charts in the current report draft.</div>';
     }
 
     function renderSummary() {
@@ -564,24 +575,40 @@ Momentum/trend indicators - Timing only
 
     function clearDraft() {
         draft = emptyDraft();
-        draftChartImages.length = 0;
-        renderCharts();
+        clearItemCharts();
         hydrateForm();
     }
 
     function switchCurrency() {
         draft = emptyDraft();
-        draftChartImages.length = 0;
-        renderCharts();
+        clearItemCharts();
         hydrateForm();
     }
 
-    function readFiles(files) {
+    function clearItemCharts() {
+        Object.keys(itemChartImages).forEach((key) => delete itemChartImages[key]);
+    }
+
+    function renderItemChartList(itemId) {
+        const list = root.querySelector(`[data-item-chart-list="${CSS.escape(itemId)}"]`);
+        if (!list) return;
+        const charts = itemChartImages[itemId] || [];
+        list.innerHTML = charts.map((chart, index) => `
+            <figure class="item-chart-preview">
+                <img src="${chart.dataUrl}" alt="${esc(chart.name)}">
+                <figcaption>${esc(chart.name)} <button type="button" data-remove-item-chart="${esc(itemId)}" data-chart-index="${index}">Remove</button></figcaption>
+            </figure>
+        `).join("");
+    }
+
+    function readFiles(files, itemId) {
+        if (!itemId) return;
+        itemChartImages[itemId] ||= [];
         Array.from(files || []).filter((file) => file.type.startsWith("image/")).forEach((file) => {
             const reader = new FileReader();
             reader.onload = () => {
-                draftChartImages.push({ name: file.name || "Pasted chart", type: file.type || "image/png", dataUrl: String(reader.result || "") });
-                renderCharts();
+                itemChartImages[itemId].push({ name: file.name || "Pasted chart", type: file.type || "image/png", dataUrl: String(reader.result || "") });
+                renderItemChartList(itemId);
             };
             reader.readAsDataURL(file);
         });
@@ -649,23 +676,20 @@ Momentum/trend indicators - Timing only
                 const item = draft.items[id] || {};
                 const notes = item.notes ? ` - ${item.notes}` : "";
                 text(`${toneLabels[item.tone || "neutral"]}: ${title}${notes}`, margin + 12, 8);
+                const charts = itemChartImages[id] || [];
+                for (const chart of charts) {
+                    addPageIfNeeded(190);
+                    text(chart.name || "Chart", margin + 20, 8, "bold", [92, 64, 36]);
+                    try {
+                        const imageType = String(chart.type || "").includes("jpeg") || String(chart.type || "").includes("jpg") ? "JPEG" : "PNG";
+                        pdf.addImage(chart.dataUrl, imageType, margin + 20, y, pageWidth - margin * 2 - 20, 150, undefined, "FAST");
+                        y += 166;
+                    } catch (error) {
+                        text("Chart could not be embedded in PDF.", margin + 20, 8);
+                    }
+                }
             });
         });
-
-        if (draftChartImages.length) {
-            section("Charts");
-            for (const chart of draftChartImages) {
-                addPageIfNeeded(270);
-                text(chart.name || "Chart", margin, 9, "bold");
-                try {
-                    const imageType = String(chart.type || "").includes("jpeg") || String(chart.type || "").includes("jpg") ? "JPEG" : "PNG";
-                    pdf.addImage(chart.dataUrl, imageType, margin, y, pageWidth - margin * 2, 220, undefined, "FAST");
-                    y += 236;
-                } catch (error) {
-                    text("Chart could not be embedded in PDF.", margin, 9);
-                }
-            }
-        }
 
         pdf.save(`${draft.currency.toLowerCase()}-alpha-research-${draft.date}.pdf`);
     }
@@ -706,27 +730,32 @@ Momentum/trend indicators - Timing only
             readForm();
             renderSummary();
         }
-        if (event.target.closest("[data-chart-upload]")) els.chartInput.click();
+        const upload = event.target.closest("[data-item-chart-upload]");
+        if (upload) {
+            root.querySelector(`[data-item-chart-input="${CSS.escape(upload.dataset.itemChartUpload)}"]`)?.click();
+        }
         if (event.target.closest("[data-clear-draft]")) clearDraft();
-        const remove = event.target.closest("[data-remove-chart]");
+        const remove = event.target.closest("[data-remove-item-chart]");
         if (remove) {
-            draftChartImages.splice(Number(remove.dataset.removeChart), 1);
-            renderCharts();
+            const itemId = remove.dataset.removeItemChart;
+            itemChartImages[itemId]?.splice(Number(remove.dataset.chartIndex), 1);
+            renderItemChartList(itemId);
         }
         const load = event.target.closest("[data-load-snapshot]");
         if (load) loadSnapshot(load.dataset.loadSnapshot);
     });
-    els.chartInput.addEventListener("change", () => readFiles(els.chartInput.files));
-    els.dropzone.addEventListener("paste", (event) => {
-        readFiles(event.clipboardData?.files);
+    root.addEventListener("change", (event) => {
+        const input = event.target.closest("[data-item-chart-input]");
+        if (input) readFiles(input.files, input.dataset.itemChartInput);
     });
     document.addEventListener("paste", (event) => {
-        if (!root.contains(document.activeElement)) return;
-        readFiles(event.clipboardData?.files);
+        const zone = document.activeElement?.closest?.("[data-item-chart-zone], .research-check");
+        if (!zone || !root.contains(zone)) return;
+        const itemId = zone.dataset.itemChartZone || zone.querySelector("[data-item-chart-zone]")?.dataset.itemChartZone;
+        readFiles(event.clipboardData?.files, itemId);
     });
 
     els.currency.value = "CAD";
     els.date.value = today();
     hydrateForm();
-    renderCharts();
 })();

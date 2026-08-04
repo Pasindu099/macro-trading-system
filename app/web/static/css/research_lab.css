@@ -238,7 +238,8 @@
 }
 
 .currency-research button,
-.chart-dropzone button {
+.chart-dropzone button,
+.item-chart-zone button {
   min-height: 34px;
   border: 1px solid var(--border-strong, rgba(255,255,255,.14));
   border-radius: 8px;
@@ -257,7 +258,8 @@
 }
 
 .currency-research button:hover,
-.chart-dropzone button:hover {
+.chart-dropzone button:hover,
+.item-chart-zone button:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -518,7 +520,8 @@
   min-height: 62px;
 }
 
-.chart-dropzone {
+.chart-note,
+.item-chart-zone {
   display: grid;
   gap: 8px;
   border: 1px dashed rgba(249, 115, 22, 0.42);
@@ -527,34 +530,53 @@
   padding: 14px;
 }
 
-.chart-dropzone:focus {
+.chart-note {
+  border-style: solid;
+}
+
+.item-chart-zone {
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  padding: 10px;
+}
+
+.chart-dropzone:focus,
+.item-chart-zone:focus {
   outline: 2px solid rgba(249, 115, 22, 0.42);
   outline-offset: 2px;
 }
 
-.chart-dropzone strong {
+.chart-dropzone strong,
+.chart-note strong,
+.item-chart-zone strong {
   color: var(--text-heading);
 }
 
 .chart-dropzone span,
+.chart-note span,
+.item-chart-zone span,
 .chart-preview-empty {
   color: var(--text-muted);
   font-size: 12px;
   line-height: 1.5;
 }
 
-.chart-dropzone input {
+.chart-dropzone input,
+.item-chart-zone input {
   display: none;
 }
 
 .chart-preview-list,
+.item-chart-list,
 .tone-history,
 .tone-history [data-tone-history-list] {
   display: grid;
   gap: 9px;
 }
 
-.chart-preview {
+.chart-preview,
+.item-chart-preview {
   margin: 0;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -562,15 +584,22 @@
   background: rgba(12, 9, 7, 0.78);
 }
 
-.chart-preview img {
+.chart-preview img,
+.item-chart-preview img {
   display: block;
   width: 100%;
-  max-height: 210px;
+  max-height: 260px;
   object-fit: contain;
   background: #0b0806;
 }
 
-.chart-preview figcaption {
+.item-chart-list {
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.chart-preview figcaption,
+.item-chart-preview figcaption {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -581,6 +610,7 @@
 }
 
 .chart-preview figcaption button,
+.item-chart-preview figcaption button,
 .tone-history header button {
   min-height: 28px;
   padding: 0 9px;

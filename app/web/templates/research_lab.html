@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/research_lab.css') }}?v=20260804tonecolors">
+<link rel="stylesheet" href="{{ url_for('static', path='css/research_lab.css') }}?v=20260804rowcharts">
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 {% endblock %}
 
@@ -133,13 +133,10 @@
                     <textarea data-research-field="risks" placeholder="What would flip the currency view?"></textarea>
                 </label>
 
-                <div class="chart-dropzone" data-chart-dropzone tabindex="0">
-                    <strong>Paste or upload charts</strong>
-                    <span>Charts stay in this report draft and are embedded in the exported PDF.</span>
-                    <input type="file" accept="image/*" multiple data-chart-input>
-                    <button type="button" data-chart-upload>Choose files</button>
+                <div class="chart-note">
+                    <strong>Charts attach inside checklist rows</strong>
+                    <span>Paste or upload each chart beside the point it supports. They stay in the active PDF draft only.</span>
                 </div>
-                <div class="chart-preview-list" data-chart-preview-list></div>
 
                 <div class="tone-history">
                     <header>
@@ -164,5 +161,5 @@
     import { initCorrelationLab } from "{{ url_for('static', path='js/correlation_lab.js') }}?v=20260510corr";
     initCorrelationLab();
 </script>
-<script src="{{ url_for('static', path='js/currency_research_lab.js') }}?v=20260804tonecolors" defer></script>
+<script src="{{ url_for('static', path='js/currency_research_lab.js') }}?v=20260804rowcharts" defer></script>
 {% endblock %}

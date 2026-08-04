@@ -269,7 +269,7 @@
 
 .currency-research__topline {
   display: grid;
-  grid-template-columns: 120px 170px 170px minmax(180px, 1fr);
+  grid-template-columns: minmax(300px, 1.4fr) 170px minmax(260px, 1fr) minmax(180px, 1fr);
   align-items: end;
 }
 
@@ -309,6 +309,72 @@
   padding: 10px;
   resize: vertical;
   text-transform: none;
+}
+
+.research-hidden-select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.currency-picker,
+.tone-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.currency-picker button,
+.tone-toggle__btn {
+  min-height: 32px;
+  border-radius: 6px;
+  padding: 0 10px;
+  background: rgba(12, 9, 7, 0.78);
+  color: var(--text-muted);
+}
+
+.currency-picker button {
+  min-width: 48px;
+}
+
+.currency-picker button.is-active {
+  border-color: var(--accent);
+  background: rgba(249, 115, 22, 0.16);
+  color: var(--accent);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.tone-toggle {
+  justify-content: flex-end;
+}
+
+.tone-toggle--topline {
+  justify-content: flex-start;
+}
+
+.tone-toggle__btn {
+  min-width: 72px;
+}
+
+.tone-toggle__btn--bullish.is-active {
+  border-color: rgba(35, 196, 131, 0.74);
+  background: rgba(35, 196, 131, 0.14);
+  color: var(--bull, #23c483);
+}
+
+.tone-toggle__btn--neutral.is-active {
+  border-color: rgba(245, 158, 11, 0.72);
+  background: rgba(245, 158, 11, 0.14);
+  color: #f59e0b;
+}
+
+.tone-toggle__btn--bearish.is-active {
+  border-color: rgba(239, 102, 95, 0.74);
+  background: rgba(239, 102, 95, 0.14);
+  color: var(--bear, #ef665f);
 }
 
 .currency-research__status,
@@ -401,7 +467,7 @@
 
 .research-check {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 120px;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, auto);
   gap: 10px;
   padding: 12px;
   border-bottom: 1px solid var(--border);

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/research_lab.css') }}?v=20260510corr">
+<link rel="stylesheet" href="{{ url_for('static', path='css/research_lab.css') }}?v=20260804controls">
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 {% endblock %}
 
@@ -59,7 +59,7 @@
         <div class="currency-research__topline">
             <label>
                 Currency
-                <select data-research-currency>
+                <select class="research-hidden-select" data-research-currency tabindex="-1" aria-hidden="true">
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
                     <option value="GBP">GBP</option>
@@ -69,6 +69,11 @@
                     <option value="CHF">CHF</option>
                     <option value="NZD">NZD</option>
                 </select>
+                <div class="currency-picker" data-currency-picker>
+                    {% for currency in ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD"] %}
+                    <button type="button" data-currency-option="{{ currency }}">{{ currency }}</button>
+                    {% endfor %}
+                </div>
             </label>
             <label>
                 Research date
@@ -76,11 +81,16 @@
             </label>
             <label>
                 Overall tone
-                <select data-research-overall-tone>
+                <select class="research-hidden-select" data-research-overall-tone tabindex="-1" aria-hidden="true">
                     <option value="neutral">Neutral</option>
                     <option value="bullish">Bullish</option>
                     <option value="bearish">Bearish</option>
                 </select>
+                <div class="tone-toggle tone-toggle--topline" data-overall-tone-picker>
+                    <button type="button" data-overall-tone-option="bullish">Bullish</button>
+                    <button type="button" data-overall-tone-option="neutral">Neutral</button>
+                    <button type="button" data-overall-tone-option="bearish">Bearish</button>
+                </div>
             </label>
             <div class="currency-research__status">
                 <span>Last update</span>
@@ -154,5 +164,5 @@
     import { initCorrelationLab } from "{{ url_for('static', path='js/correlation_lab.js') }}?v=20260510corr";
     initCorrelationLab();
 </script>
-<script src="{{ url_for('static', path='js/currency_research_lab.js') }}?v=20260804g10" defer></script>
+<script src="{{ url_for('static', path='js/currency_research_lab.js') }}?v=20260804controls" defer></script>
 {% endblock %}

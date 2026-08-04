@@ -370,6 +370,8 @@ Momentum/trend indicators - Timing only
         currency: root.querySelector("[data-research-currency]"),
         date: root.querySelector("[data-research-date]"),
         overallTone: root.querySelector("[data-research-overall-tone]"),
+        currencyPicker: root.querySelector("[data-currency-picker]"),
+        overallTonePicker: root.querySelector("[data-overall-tone-picker]"),
         checklist: root.querySelector("[data-research-checklist]"),
         lastUpdated: root.querySelector("[data-research-last-updated]"),
         currentTone: root.querySelector("[data-current-tone]"),
@@ -430,6 +432,30 @@ Momentum/trend indicators - Timing only
         return ["Flat", changedItems.slice(0, 3).join("; ") || "No checklist tone changes."];
     }
 
+    function toneButtonGroup(attrName, valueAttr, id, currentTone) {
+        return `
+            <div class="tone-toggle" role="group" aria-label="Tone">
+                ${["bullish", "neutral", "bearish"].map((tone) => `
+                    <button
+                        class="tone-toggle__btn tone-toggle__btn--${tone} ${currentTone === tone ? "is-active" : ""}"
+                        type="button"
+                        ${attrName}="${esc(id)}"
+                        ${valueAttr}="${tone}"
+                    >${toneLabels[tone]}</button>
+                `).join("")}
+            </div>
+        `;
+    }
+
+    function syncPickers() {
+        root.querySelectorAll("[data-currency-option]").forEach((button) => {
+            button.classList.toggle("is-active", button.dataset.currencyOption === els.currency.value);
+        });
+        root.querySelectorAll("[data-overall-tone-option]").forEach((button) => {
+            button.classList.toggle("is-active", button.dataset.overallToneOption === els.overallTone.value);
+        });
+    }
+
     function renderChecklist() {
         els.checklist.innerHTML = activeChecklist().map(([tier, items], tierIndex) => `
             <section class="research-tier">
@@ -445,11 +471,7 @@ Momentum/trend indicators - Timing only
                                 <strong>${esc(title)}</strong>
                                 <small>${esc(detail)}</small>
                             </div>
-                            <select data-item-tone="${esc(id)}">
-                                <option value="neutral" ${item.tone === "neutral" ? "selected" : ""}>Neutral</option>
-                                <option value="bullish" ${item.tone === "bullish" ? "selected" : ""}>Bullish</option>
-                                <option value="bearish" ${item.tone === "bearish" ? "selected" : ""}>Bearish</option>
-                            </select>
+                            ${toneButtonGroup("data-item-tone", "data-value", id, item.tone || "neutral")}
                             <textarea data-item-notes="${esc(id)}" placeholder="Notes for this point">${esc(item.notes)}</textarea>
                         </article>
                     `;
@@ -485,9 +507,11 @@ Momentum/trend indicators - Timing only
             const [changeLabel] = toneChangeText(item, snapshots[index + 1]);
             return `<button type="button" data-load-snapshot="${esc(item.id)}"><strong>${esc(item.date)} - ${toneLabels[item.overallTone]}</strong><span>${esc(changeLabel)}</span></button>`;
         }).join("") : '<div class="chart-preview-empty">No saved snapshots yet.</div>';
+        syncPickers();
     }
 
     function hydrateForm() {
+        els.currency.value = draft.currency || els.currency.value;
         els.date.value = draft.date || today();
         els.overallTone.value = draft.overallTone || "neutral";
         root.querySelectorAll("[data-research-field]").forEach((field) => {
@@ -505,8 +529,9 @@ Momentum/trend indicators - Timing only
             draft.fields[field.dataset.researchField] = field.value;
         });
         root.querySelectorAll("[data-item-tone]").forEach((field) => {
+            if (!field.classList.contains("is-active")) return;
             draft.items[field.dataset.itemTone] ||= { tone: "neutral", notes: "" };
-            draft.items[field.dataset.itemTone].tone = field.value;
+            draft.items[field.dataset.itemTone].tone = field.dataset.value || "neutral";
         });
         root.querySelectorAll("[data-item-notes]").forEach((field) => {
             draft.items[field.dataset.itemNotes] ||= { tone: "neutral", notes: "" };
@@ -645,7 +670,7 @@ Momentum/trend indicators - Timing only
     }
 
     root.addEventListener("input", (event) => {
-        if (event.target.matches("[data-research-field], [data-item-notes], [data-item-tone], [data-research-date], [data-research-overall-tone]")) {
+        if (event.target.matches("[data-research-field], [data-item-notes], [data-research-date]")) {
             readForm();
             renderSummary();
         }
@@ -656,6 +681,25 @@ Momentum/trend indicators - Timing only
     root.addEventListener("click", (event) => {
         if (event.target.closest("[data-save-research]")) saveSnapshot();
         if (event.target.closest("[data-export-research]")) exportPdf();
+        const currencyOption = event.target.closest("[data-currency-option]");
+        if (currencyOption) {
+            els.currency.value = currencyOption.dataset.currencyOption;
+            switchCurrency();
+        }
+        const overallToneOption = event.target.closest("[data-overall-tone-option]");
+        if (overallToneOption) {
+            els.overallTone.value = overallToneOption.dataset.overallToneOption;
+            readForm();
+            renderSummary();
+        }
+        const itemTone = event.target.closest("[data-item-tone]");
+        if (itemTone) {
+            root.querySelectorAll(`[data-item-tone="${CSS.escape(itemTone.dataset.itemTone)}"]`).forEach((button) => {
+                button.classList.toggle("is-active", button === itemTone);
+            });
+            readForm();
+            renderSummary();
+        }
         if (event.target.closest("[data-chart-upload]")) els.chartInput.click();
         if (event.target.closest("[data-clear-draft]")) clearDraft();
         const remove = event.target.closest("[data-remove-chart]");

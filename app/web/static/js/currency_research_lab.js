@@ -399,7 +399,7 @@ Momentum/trend indicators - Timing only
         date: els.date.value || today(),
         overallTone: "neutral",
         fields: { summary: "", alpha: "", risks: "" },
-        items: Object.fromEntries(checklistItems().map(([id]) => [id, { tone: "neutral", notes: "" }])),
+        items: Object.fromEntries(checklistItems().map(([id]) => [id, { tone: "neutral", notes: "", includeInReport: true }])),
     });
 
     let draft = emptyDraft();
@@ -485,13 +485,22 @@ Momentum/trend indicators - Timing only
                 ${items.map(([id, title, detail]) => {
                     const item = draft.items[id] || { tone: "neutral", notes: "" };
                     const itemTone = item.tone || "neutral";
+                    const includeInReport = item.includeInReport !== false;
                     return `
-                        <article class="research-check research-check--${itemTone}">
+                        <article class="research-check research-check--${itemTone} ${includeInReport ? "" : "is-report-excluded"}">
                             <div>
                                 <strong>${esc(title)}</strong>
                                 <small>${esc(detail)}</small>
                             </div>
-                            ${toneButtonGroup("data-item-tone", "data-value", id, itemTone)}
+                            <div class="research-check__controls">
+                                <button
+                                    class="report-toggle ${includeInReport ? "is-included" : "is-excluded"}"
+                                    type="button"
+                                    data-report-toggle="${esc(id)}"
+                                    aria-pressed="${includeInReport ? "true" : "false"}"
+                                >${includeInReport ? "Include in PDF" : "Excluded from PDF"}</button>
+                                ${toneButtonGroup("data-item-tone", "data-value", id, itemTone)}
+                            </div>
                             <textarea data-item-notes="${esc(id)}" placeholder="Notes for this point">${esc(item.notes)}</textarea>
                             ${renderItemCharts(id)}
                         </article>
@@ -546,8 +555,12 @@ Momentum/trend indicators - Timing only
             draft.items[field.dataset.itemTone].tone = field.dataset.value || "neutral";
         });
         root.querySelectorAll("[data-item-notes]").forEach((field) => {
-            draft.items[field.dataset.itemNotes] ||= { tone: "neutral", notes: "" };
+            draft.items[field.dataset.itemNotes] ||= { tone: "neutral", notes: "", includeInReport: true };
             draft.items[field.dataset.itemNotes].notes = field.value;
+        });
+        root.querySelectorAll("[data-report-toggle]").forEach((button) => {
+            draft.items[button.dataset.reportToggle] ||= { tone: "neutral", notes: "", includeInReport: true };
+            draft.items[button.dataset.reportToggle].includeInReport = button.classList.contains("is-included");
         });
     }
 
@@ -669,10 +682,12 @@ Momentum/trend indicators - Timing only
 
         section("Checklist");
         activeChecklist().forEach(([tier, items], tierIndex) => {
+            const includedItems = items.filter(([id]) => (draft.items[id] || {}).includeInReport !== false);
+            if (!includedItems.length) return;
             addPageIfNeeded(34);
             const label = tier.startsWith("Interest") || tier.startsWith("Other") ? tier : `Tier ${tierIndex + 1} - ${tier}`;
             text(label, margin, 10, "bold", [38, 46, 56]);
-            items.forEach(([id, title]) => {
+            includedItems.forEach(([id, title]) => {
                 const item = draft.items[id] || {};
                 const notes = item.notes ? ` - ${item.notes}` : "";
                 text(`${toneLabels[item.tone || "neutral"]}: ${title}${notes}`, margin + 12, 8);
@@ -729,6 +744,15 @@ Momentum/trend indicators - Timing only
             }
             readForm();
             renderSummary();
+        }
+        const reportToggle = event.target.closest("[data-report-toggle]");
+        if (reportToggle) {
+            const included = reportToggle.classList.toggle("is-included");
+            reportToggle.classList.toggle("is-excluded", !included);
+            reportToggle.setAttribute("aria-pressed", included ? "true" : "false");
+            reportToggle.textContent = included ? "Include in PDF" : "Excluded from PDF";
+            reportToggle.closest(".research-check")?.classList.toggle("is-report-excluded", !included);
+            readForm();
         }
         const upload = event.target.closest("[data-item-chart-upload]");
         if (upload) {

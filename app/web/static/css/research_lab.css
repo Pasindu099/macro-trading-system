@@ -482,6 +482,16 @@
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
+.research-check.is-report-excluded {
+  opacity: 0.58;
+}
+
+.research-check.is-report-excluded textarea,
+.research-check.is-report-excluded .item-chart-zone,
+.research-check.is-report-excluded .item-chart-list {
+  filter: grayscale(0.55);
+}
+
 .research-check--bullish {
   border-left-color: #23c483;
   background: linear-gradient(90deg, rgba(35, 196, 131, 0.10), transparent 36%);
@@ -518,6 +528,34 @@
 .research-check textarea {
   grid-column: 1 / -1;
   min-height: 62px;
+}
+
+.research-check__controls {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.report-toggle {
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 11px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.report-toggle.is-included {
+  border-color: rgba(249, 115, 22, 0.58);
+  background: rgba(249, 115, 22, 0.13);
+  color: var(--accent);
+}
+
+.report-toggle.is-excluded {
+  border-color: rgba(148, 163, 184, 0.32);
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--text-muted);
+  text-decoration: line-through;
 }
 
 .chart-note,

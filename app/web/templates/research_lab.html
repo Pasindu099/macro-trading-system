@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/research_lab.css') }}?v=20260804rowcharts">
+<link rel="stylesheet" href="{{ url_for('static', path='css/research_lab.css') }}?v=20260804reporttoggle">
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 {% endblock %}
 
@@ -161,5 +161,5 @@
     import { initCorrelationLab } from "{{ url_for('static', path='js/correlation_lab.js') }}?v=20260510corr";
     initCorrelationLab();
 </script>
-<script src="{{ url_for('static', path='js/currency_research_lab.js') }}?v=20260804rowcharts" defer></script>
+<script src="{{ url_for('static', path='js/currency_research_lab.js') }}?v=20260804reporttoggle" defer></script>
 {% endblock %}

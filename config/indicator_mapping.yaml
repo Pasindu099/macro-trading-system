@@ -645,6 +645,26 @@ mappings:
     unit: index
     importance: 2
 
+  - eodhd_type: Michigan Current Conditions
+    eodhd_comparison: null
+    country: US
+    canonical_name: umich_current_conditions
+    display_name: UMich Current Conditions
+    primary_category: Sentiment
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: Michigan Consumer Expectations
+    eodhd_comparison: null
+    country: US
+    canonical_name: umich_consumer_expectations
+    display_name: UMich Consumer Expectations
+    primary_category: Sentiment
+    frequency: monthly
+    unit: index
+    importance: 2
+
   - eodhd_type: NFIB Business Optimism Index
     eodhd_comparison: null
     country: US
@@ -810,6 +830,57 @@ mappings:
   # ════════════════════════════════════════════════════════════════════════
 
   # ── UK / Inflation ──────────────────────────────────────────────────────
+  - eodhd_type: Imports
+    eodhd_comparison: null
+    country: US
+    canonical_name: imports
+    display_name: Imports
+    primary_category: Trade
+    frequency: monthly
+    unit: bn_usd
+    importance: 2
+
+  - eodhd_type: Wholesale Inventories
+    eodhd_comparison: mom
+    country: US
+    canonical_name: wholesale_inventories_mom
+    display_name: Wholesale Inventories (MoM)
+    primary_category: Growth
+    secondary_categories: [Trade]
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Retail Inventories Ex Autos
+    eodhd_comparison: mom
+    country: US
+    canonical_name: retail_inventories_ex_autos_mom
+    display_name: Retail Inventories Ex Autos (MoM)
+    primary_category: Growth
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Durable Goods Orders Ex Transp
+    eodhd_comparison: mom
+    country: US
+    canonical_name: durable_goods_ex_transport_mom
+    display_name: Durable Goods Ex Transportation (MoM)
+    primary_category: Growth
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Building Permits
+    eodhd_comparison: null
+    country: US
+    canonical_name: building_permits
+    display_name: Building Permits
+    primary_category: Housing
+    frequency: monthly
+    unit: thousands
+    importance: 2
+
   - eodhd_type: Core Inflation Rate
     eodhd_comparison: yoy
     country: UK
@@ -1463,6 +1534,179 @@ mappings:
   # ════════════════════════════════════════════════════════════════════════
   #  GERMANY (DE) — starter mappings
   # ════════════════════════════════════════════════════════════════════════
+
+  - eodhd_type: GDP Growth Rate
+    eodhd_comparison: yoy
+    country: EU
+    canonical_name: gdp_yoy
+    display_name: GDP (YoY)
+    primary_category: Growth
+    frequency: quarterly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Deposit Facility Rate
+    eodhd_comparison: null
+    country: EU
+    canonical_name: ecb_deposit_rate
+    display_name: ECB Deposit Rate
+    primary_category: Monetary Policy
+    frequency: irregular
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Marginal Lending Rate
+    eodhd_comparison: null
+    country: EU
+    canonical_name: ecb_marginal_lending_rate
+    display_name: ECB Marginal Lending Rate
+    primary_category: Monetary Policy
+    frequency: irregular
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Markit Manufacturing PMI
+    eodhd_comparison: null
+    country: EU
+    canonical_name: manufacturing_pmi
+    display_name: Manufacturing PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: Markit Services PMI
+    eodhd_comparison: null
+    country: EU
+    canonical_name: services_pmi
+    display_name: Services PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: Markit Composite PMI
+    eodhd_comparison: null
+    country: EU
+    canonical_name: composite_pmi
+    display_name: Composite PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: Current Account
+    eodhd_comparison: null
+    country: EU
+    canonical_name: current_account
+    display_name: Current Account
+    primary_category: Trade
+    frequency: monthly
+    unit: bn_eur
+    importance: 2
+
+  - eodhd_type: Balance of Trade
+    eodhd_comparison: null
+    country: EU
+    canonical_name: balance_of_trade
+    display_name: Balance of Trade
+    primary_category: Trade
+    frequency: monthly
+    unit: bn_eur
+    importance: 2
+
+  - eodhd_type: Industrial Production
+    eodhd_comparison: mom
+    country: EU
+    canonical_name: industrial_production_mom
+    display_name: Industrial Production (MoM)
+    primary_category: Growth
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Industrial Production
+    eodhd_comparison: yoy
+    country: EU
+    canonical_name: industrial_production_yoy
+    display_name: Industrial Production (YoY)
+    primary_category: Growth
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Retail Sales
+    eodhd_comparison: mom
+    country: EU
+    canonical_name: retail_sales_mom
+    display_name: Retail Sales (MoM)
+    primary_category: Growth
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Retail Sales
+    eodhd_comparison: yoy
+    country: EU
+    canonical_name: retail_sales_yoy
+    display_name: Retail Sales (YoY)
+    primary_category: Growth
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Producer Price Index
+    eodhd_comparison: mom
+    country: EU
+    canonical_name: ppi_mom
+    display_name: Producer Price Index (MoM)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Producer Price Index
+    eodhd_comparison: yoy
+    country: EU
+    canonical_name: ppi_yoy
+    display_name: Producer Price Index (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: M3 Money Supply
+    eodhd_comparison: yoy
+    country: EU
+    canonical_name: m3_money_supply_yoy
+    display_name: M3 Money Supply (YoY)
+    primary_category: Monetary Policy
+    secondary_categories: [Growth]
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Loans to Households
+    eodhd_comparison: yoy
+    country: EU
+    canonical_name: loans_to_households_yoy
+    display_name: Loans to Households (YoY)
+    primary_category: Monetary Policy
+    secondary_categories: [Growth]
+    frequency: monthly
+    unit: "%"
+    importance: 3
+
+  - eodhd_type: Loans to Companies
+    eodhd_comparison: yoy
+    country: EU
+    canonical_name: loans_to_companies_yoy
+    display_name: Loans to Companies (YoY)
+    primary_category: Monetary Policy
+    secondary_categories: [Growth]
+    frequency: monthly
+    unit: "%"
+    importance: 3
 
   - eodhd_type: Inflation Rate
     eodhd_comparison: yoy
@@ -2696,6 +2940,26 @@ mappings:
     unit: "%"
     importance: 1
 
+  - eodhd_type: Tokyo CPI Ex Food and Energy
+    eodhd_comparison: yoy
+    country: JP
+    canonical_name: tokyo_core_cpi_yoy
+    display_name: Tokyo Core CPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Tokyo Core CPI
+    eodhd_comparison: yoy
+    country: JP
+    canonical_name: tokyo_core_cpi_yoy
+    display_name: Tokyo Core CPI (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
   - eodhd_type: CPI
     eodhd_comparison: null
     country: JP
@@ -3296,6 +3560,16 @@ mappings:
     unit: thousands
     importance: 1
 
+  - eodhd_type: Participation Rate
+    eodhd_comparison: null
+    country: AU
+    canonical_name: participation_rate
+    display_name: Labor Force Participation Rate
+    primary_category: Labor
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
   - eodhd_type: Full Time Employment Chg
     eodhd_comparison: null
     country: AU
@@ -3317,6 +3591,28 @@ mappings:
     unit: thousands
     importance: 1
     notes: "High-signal labor mix detail for AUD."
+
+  - eodhd_type: Wage Price Index
+    eodhd_comparison: qoq
+    country: AU
+    canonical_name: wage_price_index_qoq
+    display_name: Wage Price Index (QoQ)
+    primary_category: Labor
+    secondary_categories: [Inflation]
+    frequency: quarterly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Wage Price Index
+    eodhd_comparison: yoy
+    country: AU
+    canonical_name: wage_price_index_yoy
+    display_name: Wage Price Index (YoY)
+    primary_category: Labor
+    secondary_categories: [Inflation]
+    frequency: quarterly
+    unit: "%"
+    importance: 1
 
   - eodhd_type: RBA Interest Rate Decision
     eodhd_comparison: null
@@ -3357,6 +3653,26 @@ mappings:
     frequency: monthly
     unit: "%"
     importance: 3
+
+  - eodhd_type: GDP Growth Rate
+    eodhd_comparison: qoq
+    country: AU
+    canonical_name: gdp_qoq
+    display_name: GDP (QoQ)
+    primary_category: Growth
+    frequency: quarterly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: GDP Growth Rate
+    eodhd_comparison: yoy
+    country: AU
+    canonical_name: gdp_yoy
+    display_name: GDP (YoY)
+    primary_category: Growth
+    frequency: quarterly
+    unit: "%"
+    importance: 1
 
   - eodhd_type: Household Spending
     eodhd_comparison: mom
@@ -3489,6 +3805,16 @@ mappings:
     unit: index
     importance: 2
 
+  - eodhd_type: Markit Manufacturing PMI
+    eodhd_comparison: null
+    country: AU
+    canonical_name: manufacturing_pmi
+    display_name: Manufacturing PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
   - eodhd_type: S&P Global Services PMI
     eodhd_comparison: null
     country: AU
@@ -3529,6 +3855,16 @@ mappings:
     unit: index
     importance: 2
 
+  - eodhd_type: Markit Services PMI
+    eodhd_comparison: null
+    country: AU
+    canonical_name: services_pmi
+    display_name: Services PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
   - eodhd_type: S&P Global Composite PMI
     eodhd_comparison: null
     country: AU
@@ -3560,6 +3896,16 @@ mappings:
     importance: 2
 
   - eodhd_type: Judo Bank Composite PMI
+    eodhd_comparison: null
+    country: AU
+    canonical_name: composite_pmi
+    display_name: Composite PMI
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: Markit Composite PMI
     eodhd_comparison: null
     country: AU
     canonical_name: composite_pmi
@@ -3618,6 +3964,46 @@ mappings:
     frequency: monthly
     unit: "%"
     importance: 2
+
+  - eodhd_type: House Price Index
+    eodhd_comparison: qoq
+    country: AU
+    canonical_name: house_price_index_qoq
+    display_name: House Price Index (QoQ)
+    primary_category: Housing
+    frequency: quarterly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: House Price Index
+    eodhd_comparison: yoy
+    country: AU
+    canonical_name: house_price_index_yoy
+    display_name: House Price Index (YoY)
+    primary_category: Housing
+    frequency: quarterly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Home Loans
+    eodhd_comparison: mom
+    country: AU
+    canonical_name: home_loans_mom
+    display_name: Home Loans (MoM)
+    primary_category: Housing
+    frequency: monthly
+    unit: "%"
+    importance: 2
+
+  - eodhd_type: Investment Lending for Homes
+    eodhd_comparison: null
+    country: AU
+    canonical_name: investment_lending_for_homes
+    display_name: Investment Lending for Homes
+    primary_category: Housing
+    frequency: monthly
+    unit: bn_aud
+    importance: 3
 
   - eodhd_type: CoreLogic Dwelling Prices
     eodhd_comparison: mom
@@ -3700,6 +4086,17 @@ mappings:
     primary_category: Growth
     frequency: monthly
     unit: index
+    importance: 3
+
+  - eodhd_type: ANZ Job Advertisements
+    eodhd_comparison: mom
+    country: AU
+    canonical_name: anz_job_advertisements_mom
+    display_name: ANZ Job Advertisements (MoM)
+    primary_category: Labor
+    secondary_categories: [Sentiment]
+    frequency: monthly
+    unit: "%"
     importance: 3
 
   - eodhd_type: Balance of Trade

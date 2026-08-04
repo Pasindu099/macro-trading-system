@@ -1835,3 +1835,108 @@ body.has-reference-shell .warn {
     grid-template-columns: 1fr;
   }
 }
+
+/* Country pages: keep data emphasis inside the warm terminal theme. */
+body.has-reference-shell .country-kpi-card,
+body.has-reference-shell .country-kpi-grid article {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px),
+    rgba(13, 10, 8, 0.78) !important;
+  background-size: 32px 32px !important;
+}
+
+body.has-reference-shell .country-kpi-card::before,
+body.has-reference-shell .country-kpi-grid article::before {
+  background: rgba(249, 115, 22, 0.32) !important;
+  box-shadow: none !important;
+}
+
+body.has-reference-shell .country-kpi-card.is-positive::before,
+body.has-reference-shell .country-kpi-grid article.is-positive::before {
+  background: rgba(111, 155, 117, 0.46) !important;
+}
+
+body.has-reference-shell .country-kpi-card.is-negative::before,
+body.has-reference-shell .country-kpi-grid article.is-negative::before {
+  background: rgba(190, 93, 82, 0.48) !important;
+}
+
+body.has-reference-shell .country-kpi-card strong,
+body.has-reference-shell .country-kpi-grid article strong,
+body.has-reference-shell .country-signal-box strong {
+  background: transparent !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+body.has-reference-shell .country-kpi-card.is-positive strong,
+body.has-reference-shell .country-signal-box.is-positive strong,
+body.has-reference-shell .country-event-list .is-positive {
+  color: #8fbf95 !important;
+}
+
+body.has-reference-shell .country-kpi-card.is-negative strong,
+body.has-reference-shell .country-signal-box.is-negative strong,
+body.has-reference-shell .country-event-list .is-negative {
+  color: #d97768 !important;
+}
+
+body.has-reference-shell .country-kpi-card.is-neutral strong,
+body.has-reference-shell .country-signal-box.is-neutral strong {
+  color: var(--text-heading) !important;
+}
+
+body.has-reference-shell .country-signal-box i {
+  height: 2px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.has-reference-shell .country-signal-box b {
+  background: linear-gradient(90deg, rgba(249, 115, 22, 0.22), rgba(249, 115, 22, 0.58)) !important;
+  box-shadow: none !important;
+}
+
+body.has-reference-shell .country-signal-box.is-positive b {
+  background: linear-gradient(90deg, rgba(111, 155, 117, 0.18), rgba(111, 155, 117, 0.56)) !important;
+}
+
+body.has-reference-shell .country-signal-box.is-negative b {
+  background: linear-gradient(90deg, rgba(190, 93, 82, 0.18), rgba(190, 93, 82, 0.56)) !important;
+}
+
+body.has-reference-shell .country-history-tabs button.is-active,
+body.has-reference-shell .country-release-list button.is-active,
+body.has-reference-shell .research-chip-row button.is-active,
+body.has-reference-shell .rates-research__maturities button.is-active {
+  border-color: rgba(249, 115, 22, 0.46) !important;
+  background: rgba(249, 115, 22, 0.10) !important;
+  color: #f0a15a !important;
+  box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.08) !important;
+}
+
+body.has-reference-shell .country-release-list em,
+body.has-reference-shell .country-event-list em,
+body.has-reference-shell .country-history-card .ind-row__detail a {
+  border: 1px solid rgba(249, 115, 22, 0.28) !important;
+  background: rgba(249, 115, 22, 0.08) !important;
+  color: #d99a5b !important;
+}
+
+body.has-reference-shell .country-history-card .ind-row__detail a:hover {
+  border-color: rgba(249, 115, 22, 0.48) !important;
+  background: rgba(249, 115, 22, 0.12) !important;
+}
+
+body.has-reference-shell .black-pill--green,
+body.has-reference-shell .black-pill--red,
+body.has-reference-shell .black-pill--blue,
+body.has-reference-shell .black-stance--bull,
+body.has-reference-shell .black-stance--bear,
+body.has-reference-shell .black-stance--neut {
+  border: 1px solid rgba(249, 115, 22, 0.24) !important;
+  background: rgba(249, 115, 22, 0.07) !important;
+  color: #d6a05f !important;
+}

@@ -216,7 +216,7 @@
   gap: 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--panel);
+  background: rgba(18, 13, 9, 0.72);
   padding: 18px;
 }
 
@@ -240,10 +240,10 @@
 .currency-research button,
 .chart-dropzone button {
   min-height: 34px;
-  border: 1px solid rgba(255,255,255,.14);
+  border: 1px solid var(--border-strong, rgba(255,255,255,.14));
   border-radius: 8px;
-  background: #f4f7fb;
-  color: #101820;
+  background: var(--panel-2);
+  color: var(--text-heading);
   font-family: var(--mono, monospace);
   font-size: 11px;
   font-weight: 700;
@@ -251,8 +251,20 @@
 }
 
 .currency-research__actions button:first-child {
-  background: #69c4a5;
-  border-color: #69c4a5;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #120d09;
+}
+
+.currency-research button:hover,
+.chart-dropzone button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.currency-research__actions button:first-child:hover {
+  color: #120d09;
+  filter: brightness(1.08);
 }
 
 .currency-research__topline {
@@ -275,13 +287,21 @@
 .currency-research input,
 .currency-research textarea {
   min-height: 36px;
-  border: 1px solid rgba(255,255,255,.1);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #161b20;
+  background: rgba(12, 9, 7, 0.78);
   color: var(--text-heading);
   font-family: var(--mono, monospace);
   font-size: 12px;
   letter-spacing: 0;
+}
+
+.currency-research select:focus,
+.currency-research input:focus,
+.currency-research textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.18);
 }
 
 .currency-research textarea {
@@ -293,9 +313,9 @@
 
 .currency-research__status,
 .currency-research__summary article {
-  border: 1px solid rgba(255,255,255,.1);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #171d22;
+  background: var(--panel-2);
   padding: 10px 12px;
 }
 
@@ -354,20 +374,21 @@
 }
 
 .research-tier {
-  border: 1px solid rgba(255,255,255,.1);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #12171c;
+  background: rgba(12, 9, 7, 0.64);
   overflow: hidden;
 }
 
 .research-tier header {
+  justify-content: flex-start;
   padding: 11px 12px;
-  border-bottom: 1px solid rgba(255,255,255,.08);
-  background: #182027;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
 }
 
 .research-tier header span {
-  color: #69c4a5;
+  color: var(--accent);
   font-family: var(--mono, monospace);
   font-size: 10px;
   text-transform: uppercase;
@@ -383,7 +404,7 @@
   grid-template-columns: minmax(0, 1fr) 120px;
   gap: 10px;
   padding: 12px;
-  border-bottom: 1px solid rgba(255,255,255,.07);
+  border-bottom: 1px solid var(--border);
 }
 
 .research-check:last-child {
@@ -412,14 +433,14 @@
 .chart-dropzone {
   display: grid;
   gap: 8px;
-  border: 1px dashed rgba(105,196,165,.48);
+  border: 1px dashed rgba(249, 115, 22, 0.42);
   border-radius: 8px;
-  background: rgba(105,196,165,.08);
+  background: var(--accent-dim, rgba(249, 115, 22, 0.12));
   padding: 14px;
 }
 
 .chart-dropzone:focus {
-  outline: 2px solid rgba(105,196,165,.45);
+  outline: 2px solid rgba(249, 115, 22, 0.42);
   outline-offset: 2px;
 }
 
@@ -447,10 +468,10 @@
 
 .chart-preview {
   margin: 0;
-  border: 1px solid rgba(255,255,255,.1);
+  border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
-  background: #11161b;
+  background: rgba(12, 9, 7, 0.78);
 }
 
 .chart-preview img {
@@ -458,7 +479,7 @@
   width: 100%;
   max-height: 210px;
   object-fit: contain;
-  background: #070b0f;
+  background: #0b0806;
 }
 
 .chart-preview figcaption {
@@ -480,7 +501,7 @@
 }
 
 .tone-history {
-  border-top: 1px solid rgba(255,255,255,.1);
+  border-top: 1px solid var(--border);
   padding-top: 12px;
 }
 
@@ -495,7 +516,7 @@
   width: 100%;
   min-height: 48px;
   padding: 9px 10px;
-  background: #171d22;
+  background: var(--panel-2);
   color: var(--text-heading);
   text-align: left;
 }

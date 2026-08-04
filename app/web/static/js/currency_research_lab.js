@@ -465,13 +465,14 @@ Momentum/trend indicators - Timing only
                 </header>
                 ${items.map(([id, title, detail]) => {
                     const item = draft.items[id] || { tone: "neutral", notes: "" };
+                    const itemTone = item.tone || "neutral";
                     return `
-                        <article class="research-check">
+                        <article class="research-check research-check--${itemTone}">
                             <div>
                                 <strong>${esc(title)}</strong>
                                 <small>${esc(detail)}</small>
                             </div>
-                            ${toneButtonGroup("data-item-tone", "data-value", id, item.tone || "neutral")}
+                            ${toneButtonGroup("data-item-tone", "data-value", id, itemTone)}
                             <textarea data-item-notes="${esc(id)}" placeholder="Notes for this point">${esc(item.notes)}</textarea>
                         </article>
                     `;
@@ -697,6 +698,11 @@ Momentum/trend indicators - Timing only
             root.querySelectorAll(`[data-item-tone="${CSS.escape(itemTone.dataset.itemTone)}"]`).forEach((button) => {
                 button.classList.toggle("is-active", button === itemTone);
             });
+            const row = itemTone.closest(".research-check");
+            if (row) {
+                row.classList.remove("research-check--bullish", "research-check--neutral", "research-check--bearish");
+                row.classList.add(`research-check--${itemTone.dataset.value || "neutral"}`);
+            }
             readForm();
             renderSummary();
         }

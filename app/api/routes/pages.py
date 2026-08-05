@@ -1505,6 +1505,237 @@ def _build_landing_kpis(
     ]
 
 
+def _latest_metric_score(row: dict[str, Any], label: str) -> float | None:
+    for metric in row.get("metrics") or []:
+        if str(metric.get("label")) != label:
+            continue
+        values = metric.get("score_values") or []
+        if not values:
+            return None
+        return _json_number(values[0].get("raw_score"))
+    return None
+
+
+def _metric_change(row: dict[str, Any], label: str) -> float | None:
+    for metric in row.get("metrics") or []:
+        if str(metric.get("label")) != label:
+            continue
+        values = metric.get("score_values") or []
+        if len(values) < 2:
+            return None
+        current = _json_number(values[0].get("raw_score"))
+        prior = _json_number(values[1].get("raw_score"))
+        if current is None or prior is None:
+            return None
+        return current - prior
+    return None
+
+
+def _bias_label(score: float | None) -> str:
+    if score is None:
+        return "Insufficient data"
+    if score >= 0.35:
+        return "Bullish"
+    if score <= -0.35:
+        return "Bearish"
+    return "Neutral"
+
+
+def _bias_class(label: str) -> str:
+    normalized = label.lower()
+    if "bull" in normalized:
+        return "bull"
+    if "bear" in normalized:
+        return "bear"
+    return "neutral"
+
+
+def _change_label(delta: float | None) -> str:
+    if delta is None:
+        return "No history"
+    if delta >= 0.25:
+        return "Improving"
+    if delta <= -0.25:
+        return "Deteriorating"
+    return "Stable"
+
+
+def _driver_tone(score: float | None) -> str:
+    if score is None:
+        return "No data"
+    if score >= 0.25:
+        return "Bullish"
+    if score <= -0.25:
+        return "Bearish"
+    return "Neutral"
+
+
+def _confidence_label(score: float | None, driver_scores: list[float | None]) -> str:
+    coverage = sum(value is not None for value in driver_scores)
+    if score is None or coverage < 2:
+        return "Low"
+    if abs(score) >= 0.75 and coverage >= 3:
+        return "High"
+    if abs(score) >= 0.35 or coverage >= 3:
+        return "Medium"
+    return "Low"
+
+
+def _build_actionable_dashboard_insights(
+    currency_meter: list[dict[str, Any]],
+    yield_differentials: dict[str, Any],
+    surprises: list[Any],
+) -> dict[str, Any]:
+    """Build transparent dashboard sections from real macro inputs.
+
+    This intentionally avoids opaque composite claims. Each row exposes the
+    current stance, the change versus one month ago, and the strongest visible
+    driver among the data-backed inflation/growth/labor/rates layers.
+    """
+    yield_by_currency = {
+        str(row.get("currency")): row
+        for row in (yield_differentials or {}).get("rows", [])
+    }
+
+    bias_rows: list[dict[str, Any]] = []
+    driver_matrix: list[dict[str, Any]] = []
+    change_rows: list[dict[str, Any]] = []
+    alert_rows: list[dict[str, Any]] = []
+
+    for row in currency_meter:
+        currency = str(row.get("currency") or "")
+        country_code = str(row.get("country_code") or "")
+        score = _json_number(row.get("raw_score"))
+        one_month_delta = _metric_change(row, "Overall")
+        inflation = _latest_metric_score(row, "Inflation")
+        growth = _latest_metric_score(row, "Growth")
+        labor = _latest_metric_score(row, "Labor")
+
+        yield_row = yield_by_currency.get(currency, {})
+        if currency == YIELD_BASE_CURRENCY:
+            rates_score = _json_number(yield_row.get("change_5d_bp"))
+            rates_tone = (
+                "Bullish" if rates_score is not None and rates_score >= 5
+                else "Bearish" if rates_score is not None and rates_score <= -5
+                else "Neutral" if rates_score is not None
+                else "No data"
+            )
+        else:
+            rates_score = _json_number(yield_row.get("spread_vs_base_bp"))
+            rates_tone = (
+                "Bullish" if rates_score is not None and rates_score >= 25
+                else "Bearish" if rates_score is not None and rates_score <= -25
+                else "Neutral" if rates_score is not None
+                else "No data"
+            )
+
+        drivers = [
+            ("Rates", rates_tone, rates_score),
+            ("Inflation", _driver_tone(inflation), inflation),
+            ("Growth", _driver_tone(growth), growth),
+            ("Labor", _driver_tone(labor), labor),
+        ]
+        scored_drivers = [item for item in drivers if item[2] is not None]
+        main_driver = max(
+            scored_drivers,
+            key=lambda item: abs(float(item[2])),
+            default=("No dominant driver", "No data", None),
+        )
+        bias = _bias_label(score)
+        change = _change_label(one_month_delta)
+        confidence = _confidence_label(score, [inflation, growth, labor])
+
+        bias_rows.append({
+            "currency": currency,
+            "country_code": country_code,
+            "href": f"/country/{country_code.lower()}" if country_code else "/countries",
+            "bias": bias,
+            "bias_class": _bias_class(bias),
+            "change": change,
+            "change_class": _bias_class("Bullish" if one_month_delta and one_month_delta > 0 else "Bearish" if one_month_delta and one_month_delta < 0 else "Neutral"),
+            "score": _format_score(score),
+            "delta": _format_score(one_month_delta),
+            "main_driver": main_driver[0],
+            "main_driver_tone": main_driver[1],
+            "confidence": confidence,
+            "updated": (
+                row["latest_date"].strftime("%b %d")
+                if row.get("latest_date") else "pending"
+            ),
+        })
+
+        driver_matrix.append({
+            "currency": currency,
+            "href": f"/country/{country_code.lower()}" if country_code else "/countries",
+            "drivers": [
+                {
+                    "label": label,
+                    "tone": tone,
+                    "class": _bias_class(tone),
+                    "value": (
+                        _format_bp(value) if label == "Rates" and value is not None
+                        else _format_score(value)
+                    ),
+                }
+                for label, tone, value in drivers
+            ],
+        })
+
+        if one_month_delta is not None:
+            change_rows.append({
+                "currency": currency,
+                "href": f"/country/{country_code.lower()}" if country_code else "/countries",
+                "change": change,
+                "delta": _format_score(one_month_delta),
+                "driver": main_driver[0],
+                "tone": bias,
+                "class": _bias_class("Bullish" if one_month_delta > 0 else "Bearish" if one_month_delta < 0 else "Neutral"),
+            })
+
+        if bias == "Neutral" and main_driver[0] != "No dominant driver" and main_driver[1] != "Neutral":
+            alert_rows.append({
+                "currency": currency,
+                "message": f"Neutral headline, but {main_driver[0].lower()} is {main_driver[1].lower()}.",
+                "class": _bias_class(main_driver[1]),
+                "href": f"/country/{country_code.lower()}" if country_code else "/countries",
+            })
+        elif confidence == "Low":
+            alert_rows.append({
+                "currency": currency,
+                "message": "Low confidence: check country page before using the signal.",
+                "class": "neutral",
+                "href": f"/country/{country_code.lower()}" if country_code else "/countries",
+            })
+
+    change_rows.sort(
+        key=lambda item: abs(float(item["delta"])) if item["delta"] not in {"N/A", ""} else 0,
+        reverse=True,
+    )
+
+    surprise_rows = []
+    for item in surprises[:6]:
+        value = _json_number(getattr(item, "surprise", None))
+        surprise_rows.append({
+            "currency": getattr(item, "currency_code", ""),
+            "country": getattr(item, "country_code", ""),
+            "name": getattr(item, "display_name", "Macro release"),
+            "value": f"{value:+.2f}" if value is not None else "N/A",
+            "class": "bull" if value is not None and value >= 0 else "bear" if value is not None else "neutral",
+            "date": (
+                item.released_at.strftime("%b %d")
+                if getattr(item, "released_at", None) else "recent"
+            ),
+        })
+
+    return {
+        "bias_rows": bias_rows,
+        "driver_matrix": driver_matrix,
+        "change_rows": change_rows[:6],
+        "surprise_rows": surprise_rows,
+        "alert_rows": alert_rows[:5],
+    }
+
+
 def _yield_history_point(
     rows: list[dict[str, Any]],
     offset: int,
@@ -2462,6 +2693,9 @@ async def landing_page(
     landing_kpis = _build_landing_kpis(
         currency_meter, yield_differentials, surprises, news_items,
     )
+    dashboard_insights = _build_actionable_dashboard_insights(
+        currency_meter, yield_differentials, surprises,
+    )
     landing_payload = _build_landing_payload(
         world_map_countries, currency_meter, yield_differentials, surprises,
     )
@@ -2478,6 +2712,7 @@ async def landing_page(
             "world_map_countries": world_map_countries,
             "yield_differentials": yield_differentials,
             "landing_kpis": landing_kpis,
+            "dashboard_insights": dashboard_insights,
             "landing_payload": landing_payload,
             "bank_names": CB_BANK_NAMES,
             # Switches base.html to the full-bleed, viewport-locked shell.

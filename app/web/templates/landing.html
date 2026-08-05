@@ -9,11 +9,6 @@
   <span class="flag flag-{{ code }}"></span>
 {%- endmacro %}
 
-{#
-  Panels that fetch client-side declare data-panel="<key>"; landing_terminal.js
-  loads them lazily through a concurrency-limited queue and owns their empty,
-  error and signed-out states.
-#}
 {% macro lazy(key, title, meta, badge="") -%}
   <section class="tpanel" data-panel="{{ key }}">
     <header class="tpanel__hd">
@@ -28,11 +23,9 @@
 {%- endmacro %}
 
 <div class="term-body">
-
-  {# ══ MAP COLUMN ═══════════════════════════════════════════════════════ #}
   <section class="term-map">
     <div class="command-map is-loading" data-command-map role="img" aria-label="World macro heatmap">
-      <div class="map-fallback">Loading world geometry…</div>
+      <div class="map-fallback">Loading world geometry...</div>
     </div>
 
     <div class="map-ov map-ov--metrics pills" data-map-metrics>
@@ -58,11 +51,10 @@
 
     <div class="map-ov map-ov--scale">
       <div class="map-scale" data-map-scale></div>
-      <span class="map-note">{{ world_map_countries|length }} covered · euro area shades as a bloc</span>
+      <span class="map-note">{{ world_map_countries|length }} covered / euro area shades as a bloc</span>
     </div>
   </section>
 
-  {# ══ COLUMN 1 · Flow ══════════════════════════════════════════════════ #}
   <div class="term-col">
     <section class="tpanel tpanel--grow">
       <header class="tpanel__hd">
@@ -74,10 +66,10 @@
         {% for item in news_items %}
           <a class="trow trow--news" href="{{ item.link }}" target="_blank" rel="noopener">
             <span class="trow__title">{{ item.title }}</span>
-            <span class="trow__sub">{{ item.published_at if item.published_at else "live" }} · {{ item.category }}</span>
+            <span class="trow__sub">{{ item.published_at if item.published_at else "live" }} / {{ item.category }}</span>
           </a>
         {% else %}
-          <div class="tempty">Tape idle — waiting for the next headline.</div>
+          <div class="tempty">Tape idle. Waiting for the next headline.</div>
         {% endfor %}
       </div>
     </section>
@@ -86,61 +78,68 @@
     {{ lazy("calendar", "Calendar", "next 7d") }}
   </div>
 
-  {# ══ COLUMN 2 · FX & positioning ══════════════════════════════════════ #}
   <div class="term-col">
-    <section class="tpanel">
+    <section class="tpanel tpanel--grow">
       <header class="tpanel__hd">
-        <strong>FX Strength</strong>
+        <strong>Currency Bias Board</strong>
         <span class="tbadge">G10</span>
-        <a class="tpanel__meta" href="/#fx">all</a>
+        <span class="tpanel__meta">bias / change / driver</span>
       </header>
-      <div class="tpanel__bd">
-        {% for row in currency_meter %}
-          {% set stance = "bull" if row.raw_score is not none and row.raw_score >= 0.25 else ("bear" if row.raw_score is not none and row.raw_score <= -0.25 else "neutral") %}
-          <a class="trow trow--fx" href="/country/{{ row.country_code|lower }}">
+      <div class="tpanel__bd tpanel__bd--scroll">
+        {% for row in dashboard_insights.bias_rows %}
+          <a class="trow trow--action" href="{{ row.href }}">
             {{ flag(row.currency) }}
             <span class="trow__code">{{ row.currency }}</span>
-            <span class="bar-track"><span class="bar-fill {{ stance }}" style="width:{{ row.score_percent }}%"></span></span>
-            <b class="{{ stance }}">{{ row.score }}</b>
+            <span class="trow__title">
+              {{ row.bias }} / {{ row.change }}
+              <small>{{ row.main_driver }} / {{ row.confidence }} confidence</small>
+            </span>
+            <b class="{{ row.bias_class }}">{{ row.delta }}</b>
           </a>
         {% else %}
-          <div class="tempty">Currency meter has not been built yet.</div>
+          <div class="tempty">Bias board unavailable. Rebuild the currency stance layer.</div>
         {% endfor %}
       </div>
     </section>
 
-    <section class="tpanel" data-landing-cb>
+    <section class="tpanel">
       <header class="tpanel__hd">
-        <strong>Hawk / Dove</strong>
-        <span class="tpanel__meta">policy divergence</span>
+        <strong>Driver Matrix</strong>
+        <span class="tpanel__meta">rates / inflation / growth / labor</span>
       </header>
-      <div class="tpanel__bd">
-        <div class="hd-bar hd-bar--mini">
-          <div class="track"></div>
-          {% for row in currency_meter %}
-            <div class="dot" style="left:{{ row.score_percent }}%">
-              <div class="lbl">{{ bank_names.get(row.currency, row.currency) }}</div>
-            </div>
-          {% endfor %}
-          <div class="endlbl" style="left:0;">Dovish</div>
-          <div class="endlbl" style="right:0;">Hawkish</div>
-        </div>
-        <div class="tabs tabs--mini" data-landing-cb-tabs>
-          {% for row in currency_meter %}
-            <button class="tab {% if loop.first %}active{% endif %}" type="button"
-                    data-currency="{{ row.currency }}">{{ bank_names.get(row.currency, row.currency) }}</button>
-          {% endfor %}
-        </div>
-        <div class="cb-components" data-cb-components></div>
-        <div data-cb-analysis class="tnote">Select a bank to see its component scores.</div>
+      <div class="tpanel__bd tpanel__bd--scroll">
+        {% for row in dashboard_insights.driver_matrix %}
+          <a class="trow trow--drivers" href="{{ row.href }}">
+            <span class="trow__code">{{ row.currency }}</span>
+            {% for driver in row.drivers %}
+              <em class="{{ driver.class }}" title="{{ driver.label }} {{ driver.value }}">{{ driver.label[0] }} {{ driver.tone[0] }}</em>
+            {% endfor %}
+          </a>
+        {% else %}
+          <div class="tempty">Driver matrix unavailable.</div>
+        {% endfor %}
       </div>
     </section>
 
-    {{ lazy("cot", "COT Positioning", "CFTC") }}
-    {{ lazy("retail", "Retail Sentiment", "merged") }}
+    <section class="tpanel">
+      <header class="tpanel__hd">
+        <strong>What Changed</strong>
+        <span class="tpanel__meta">vs 1M ago</span>
+      </header>
+      <div class="tpanel__bd">
+        {% for row in dashboard_insights.change_rows %}
+          <a class="trow trow--change" href="{{ row.href }}">
+            <span class="trow__code">{{ row.currency }}</span>
+            <span class="trow__title">{{ row.change }} <small>{{ row.driver }}</small></span>
+            <b class="{{ row.class }}">{{ row.delta }}</b>
+          </a>
+        {% else %}
+          <div class="tempty">No 1-month change history available yet.</div>
+        {% endfor %}
+      </div>
+    </section>
   </div>
 
-  {# ══ COLUMN 3 · Rates & macro ═════════════════════════════════════════ #}
   <div class="term-col">
     <section class="tpanel">
       <header class="tpanel__hd">
@@ -162,53 +161,45 @@
       </div>
     </section>
 
-    {{ lazy("rateprob", "Rate Probability", "next meeting") }}
+    {{ lazy("rateprob", "Rate Watch", "next meeting") }}
 
     <section class="tpanel">
       <header class="tpanel__hd">
-        <strong>Macro Surprises</strong>
-        <span class="tpanel__meta">7d</span>
+        <strong>Recent Data Catalysts</strong>
+        <span class="tpanel__meta">latest surprises</span>
       </header>
       <div class="tpanel__bd">
-        {% for s in surprises %}
+        {% for s in dashboard_insights.surprise_rows %}
           <div class="trow trow--surprise">
-            <span class="trow__code">{{ s.currency_code }}</span>
-            <span class="trow__title">{{ s.display_name }}</span>
-            <b class="{{ 'bull' if s.surprise >= 0 else 'bear' }}">{{ "%+.2f"|format(s.surprise) }}</b>
+            <span class="trow__code">{{ s.currency }}</span>
+            <span class="trow__title">{{ s.name }} <small>{{ s.date }}</small></span>
+            <b class="{{ s.class }}">{{ s.value }}</b>
           </div>
         {% else %}
-          <div class="tempty">No releases beat or missed in the last 7 days.</div>
+          <div class="tempty">No high-signal surprises in the latest window.</div>
         {% endfor %}
       </div>
     </section>
 
     <section class="tpanel">
       <header class="tpanel__hd">
-        <strong>Country Signals</strong>
-        <span class="tpanel__meta">policy · labour</span>
+        <strong>Research Alerts</strong>
+        <span class="tpanel__meta">needs review</span>
       </header>
-      <div class="tpanel__bd tpanel__bd--scroll">
-        {% for country in world_map_countries %}
-          <a class="trow trow--signal" href="{{ country.href }}">
-            <span class="trow__code">{{ country.code }}</span>
-            <b>{{ country.metrics[0].value }}</b>
-            <em>{{ country.metrics[2].value }}</em>
+      <div class="tpanel__bd">
+        {% for row in dashboard_insights.alert_rows %}
+          <a class="trow trow--alert" href="{{ row.href }}">
+            <span class="trow__code">{{ row.currency }}</span>
+            <span class="trow__title">{{ row.message }}</span>
+            <b class="{{ row.class }}">check</b>
           </a>
+        {% else %}
+          <div class="tempty">No contradictions flagged in the current dashboard read.</div>
         {% endfor %}
       </div>
-    </section>
-
-    <section class="tpanel">
-      <header class="tpanel__hd">
-        <strong>Inflation Path</strong>
-        <span class="tpanel__meta">latest CPI</span>
-      </header>
-      <div class="tpanel__bd"><div class="tchart" data-inflation-chart></div></div>
     </section>
   </div>
-
-</div>{# /term-body #}
+</div>
 
 <script type="application/json" id="landing-data">{{ landing_payload|tojson }}</script>
-
 {% endblock %}

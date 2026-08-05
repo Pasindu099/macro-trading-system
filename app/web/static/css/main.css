@@ -18,7 +18,7 @@
     --radius-lg: 8px;
     --radius-md: 8px;
     --radius-sm: 6px;
-    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --font-sans: "Roboto", Arial, sans-serif;
     --grid-gap: 18px;
     --glass-blur: blur(16px) saturate(160%);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -1069,7 +1069,7 @@
     --bt-red-dim: rgba(239, 68, 68, 0.12);
     --bt-amber: #f59e0b;
     --bt-amber-dim: rgba(245, 158, 11, 0.12);
-    --bt-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --bt-mono: "Roboto", Arial, sans-serif;
     display: flex;
     width: 100%;
     height: 100vh;
@@ -3017,7 +3017,7 @@ body.has-black-global-sidebar {
     --bt-red-dim: #2a0a0a;
     --bt-amber: #f59e0b;
     --bt-amber-dim: #2a1a00;
-    --bt-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --bt-mono: "Roboto", Arial, sans-serif;
     background: #000;
     color: #e8e8e8;
 }
@@ -7440,7 +7440,7 @@ a {
     --color-negative-bg: rgba(244, 63, 94, 0.1);
     --color-warning: #f59e0b;
     --color-neutral: #3b82f6;
-    --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-sans: "Roboto", Arial, sans-serif;
 }
 
 body,
@@ -8384,7 +8384,7 @@ body.has-black-global-sidebar {
 .term-strength { display: flex; align-items: center; }
 
 .term-bar {
-    font-family: 'Courier New', 'Lucida Console', Consolas, monospace;
+    font-family: "Roboto", Arial, sans-serif;
     font-size: 0.79rem;
     font-weight: 700;
     letter-spacing: 0.015em;
@@ -8515,7 +8515,7 @@ body.has-black-global-sidebar {
     --color-border-secondary: #2a2a2a;
     --color-text-primary: #e8e8e8;
     --color-text-secondary: #888888;
-    --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-sans: "Roboto", Arial, sans-serif;
 }
 
 .black-sidebar__logo,
@@ -8574,7 +8574,7 @@ body.has-black-global-sidebar {
     --bt-green: #22c55e;
     --bt-red: #ef4444;
     --bt-amber: #f59e0b;
-    --bt-mono: "IBM Plex Mono", Consolas, monospace;
+    --bt-mono: "Roboto", Arial, sans-serif;
     margin: 0;
     color: #e8e8e8;
     font-size: 13px;
@@ -9261,7 +9261,7 @@ body.has-black-global-sidebar .shell {
 body,
 .black-terminal-shell,
 body.has-black-global-sidebar {
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-family: "Roboto", Arial, sans-serif;
 }
 
 .black-sidebar__logo,
@@ -10486,7 +10486,7 @@ body.has-black-global-sidebar {
     border: 1px solid #2a2c2f;
     border-radius: 8px;
     overflow: hidden;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: "Roboto", Arial, sans-serif;
     font-size: 12px;
     color: #E8E9EA;
     margin-bottom: 18px;
@@ -10806,7 +10806,7 @@ body.has-black-global-sidebar {
     --bt-red-dim: #2a0a0a;
     --bt-amber: #f59e0b;
     --bt-amber-dim: #2a1a00;
-    --bt-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --bt-mono: "Roboto", Arial, sans-serif;
     display: grid;
     gap: 18px;
     color: var(--bt-text);
@@ -10908,7 +10908,7 @@ body.has-black-global-sidebar {
    Applied over existing styles — do not remove existing CSS above
    ================================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap');
 
 :root {
   /* Design system color tokens */
@@ -10928,8 +10928,8 @@ body.has-black-global-sidebar {
   --ds-text-body:   #cbd5e1;
   --ds-text-heading:#f1f5f9;
   --ds-text-faint:  #64748b;
-  --ds-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --ds-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ds-mono: 'Roboto', Arial, sans-serif;
+  --ds-sans: 'Roboto', Arial, sans-serif;
   --ds-sidebar-w:           220px;
   --ds-sidebar-w-collapsed: 56px;
   --ds-radius:    8px;

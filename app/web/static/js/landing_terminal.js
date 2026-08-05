@@ -33,7 +33,7 @@
     empty: "#1c1611",
     border: "rgba(255,255,255,0.08)",
     panel: "rgba(22,17,12,0.94)",
-    mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
+    mono: "'Roboto', Arial, sans-serif"
   };
 
   var esc = function (v) {

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-  <script defer src="/static/js/landing_terminal.js?v=20260803term7"></script>
+  <script defer src="/static/js/landing_terminal.js?v=20260805video1"></script>
 {% endblock %}
 
 {% block body %}
@@ -196,6 +196,23 @@
         {% else %}
           <div class="tempty">No contradictions flagged in the current dashboard read.</div>
         {% endfor %}
+      </div>
+    </section>
+
+    <section class="tpanel tpanel--video">
+      <header class="tpanel__hd">
+        <strong>Market Video</strong>
+        <span class="tpanel__meta">YouTube</span>
+      </header>
+      <div class="tpanel__bd">
+        <div class="youtube-frame">
+          <iframe
+            src="https://www.youtube.com/embed/QB5BNdBFujE"
+            title="Market video"
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen></iframe>
+        </div>
       </div>
     </section>
   </div>

@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import desc, func, or_, select, text
@@ -33,6 +33,13 @@ from app.db.models import (
     Indicator, IndicatorRelease, IngestionRun,
 )
 from app.services.meeting_calendar import SUPPORTED_BANKS, normalize_bank, get_upcoming_meetings
+from app.services.release_ledger import (
+    IMPORTANCE_LABELS,
+    QUICK_RANGES,
+    build_release_ledger,
+    resolve_filters,
+    surprise_chart_payload,
+)
 from app.services.rate_probability import (
     DATA_STATE_LIVE,
     DATA_STATE_NO_CURVE,
@@ -2494,6 +2501,13 @@ async def _render_country_template(
     if rows is None:
         rows = await _build_country_rows(session, country.code, active_category)
     category_tabs = _category_tabs_for_country(country_payload.indicators)
+
+    # The ledger defaults to the current month so the panel lands on the view
+    # it was asked for; every other window is one control away.
+    default_month = _now().strftime("%Y-%m")
+    ledger_filters = resolve_filters(country.code, month=default_month)
+    ledger = await build_release_ledger(session, ledger_filters)
+
     return templates.TemplateResponse(
         request,
         "country.html",
@@ -2507,6 +2521,16 @@ async def _render_country_template(
             "rows": rows,
             "country_profile_cards": _build_country_profile_cards(rows_by_category),
             "show_footnote": any(row["is_multi_category"] for row in rows),
+            "ledger": ledger,
+            "chart_payload": surprise_chart_payload(
+                ledger,
+                country_code=country.code,
+                country_name=country.name,
+            ),
+            "ledger_month": default_month,
+            "ledger_ranges": QUICK_RANGES,
+            "ledger_categories": ALL_CATEGORY_TABS,
+            "ledger_importance_labels": IMPORTANCE_LABELS,
         },
     )
 
@@ -3592,6 +3616,42 @@ async def country_tab_fragment(
             "country_code": country.code,
             "rows": rows,
             "show_footnote": any(row["is_multi_category"] for row in rows),
+        },
+    )
+
+
+@router.get("/country/{code}/releases", response_class=HTMLResponse)
+async def country_releases_fragment(
+    code: str,
+    request: Request,
+    month: str | None = None,
+    # Aliased so the query string can stay "range" (matching the form control)
+    # without shadowing the builtin inside this function.
+    range_key: str | None = Query(None, alias="range"),
+    category: str | None = None,
+    importance: str | None = None,
+    session: AsyncSession = Depends(get_session),
+) -> HTMLResponse:
+    """Render the HTMX fragment for the country release ledger."""
+    country = await get_country(session, code)
+    if country is None:
+        raise HTTPException(status_code=404, detail="Country not found")
+
+    filters = resolve_filters(
+        country.code,
+        month=month,
+        range_key=range_key,
+        category=category,
+        importance=importance,
+    )
+    ledger = await build_release_ledger(session, filters)
+    return templates.TemplateResponse(
+        request,
+        "_country_releases.html",
+        {
+            "request": request,
+            "country_code": country.code,
+            "ledger": ledger,
         },
     )
 

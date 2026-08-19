@@ -3306,9 +3306,15 @@ mappings:
   #  AUSTRALIA (AU) — starter mappings
   # ════════════════════════════════════════════════════════════════════════
 
+  # AU publishes two CPI YoY series and EODHD emits both under the same type
+  # names, separable only by period shape: quarterly periods (Q1-Q4) are the ABS
+  # quarterly CPI; month periods are the Monthly CPI Indicator, which became a
+  # complete monthly basket in late 2025. Without the period_shape split both
+  # land on one indicator and the series interleaves two frequencies.
   - eodhd_type: Inflation Rate
     eodhd_comparison: yoy
     country: AU
+    period_shape: quarterly
     canonical_name: cpi_headline_yoy
     display_name: Headline CPI (YoY)
     primary_category: Inflation
@@ -3317,9 +3323,44 @@ mappings:
     importance: 1
     notes: "AU publishes CPI quarterly (most others are monthly)."
 
+  - eodhd_type: Inflation Rate
+    eodhd_comparison: yoy
+    country: AU
+    period_shape: monthly
+    canonical_name: cpi_monthly_yoy
+    display_name: Monthly CPI Indicator (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+    notes: "ABS Monthly CPI Indicator, distinct from the quarterly CPI."
+
   - eodhd_type: CPI
     eodhd_comparison: yoy
     country: AU
+    period_shape: quarterly
+    canonical_name: cpi_headline_yoy
+    display_name: Headline CPI (YoY)
+    primary_category: Inflation
+    frequency: quarterly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: CPI
+    eodhd_comparison: yoy
+    country: AU
+    period_shape: monthly
+    canonical_name: cpi_monthly_yoy
+    display_name: Monthly CPI Indicator (YoY)
+    primary_category: Inflation
+    frequency: monthly
+    unit: "%"
+    importance: 1
+
+  - eodhd_type: Headline CPI
+    eodhd_comparison: yoy
+    country: AU
+    period_shape: quarterly
     canonical_name: cpi_headline_yoy
     display_name: Headline CPI (YoY)
     primary_category: Inflation
@@ -3330,10 +3371,11 @@ mappings:
   - eodhd_type: Headline CPI
     eodhd_comparison: yoy
     country: AU
-    canonical_name: cpi_headline_yoy
-    display_name: Headline CPI (YoY)
+    period_shape: monthly
+    canonical_name: cpi_monthly_yoy
+    display_name: Monthly CPI Indicator (YoY)
     primary_category: Inflation
-    frequency: quarterly
+    frequency: monthly
     unit: "%"
     importance: 1
 

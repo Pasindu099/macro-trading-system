@@ -61,6 +61,9 @@ _PATTERN_MONTH_SLASH_DAY = re.compile(r"^([A-Z][a-z]{2})/(\d{1,2})$")  # "Apr/15
 _PATTERN_MONTH_YEAR = re.compile(r"^([A-Z][a-z]{2})[ -](\d{2,4})$")  # "Mar 2026"
 _PATTERN_QUARTER_YEAR = re.compile(r"^Q([1-4])[ /-](\d{2,4})$")      # "Q4 2026"
 
+# Valid values for a mapping's optional period_shape discriminator.
+PERIOD_SHAPES = frozenset({"monthly", "quarterly"})
+
 
 @dataclass(frozen=True)
 class CanonicalMapping:
@@ -78,6 +81,12 @@ class CanonicalMapping:
     is_higher_better_for_currency: bool
     importance: int
     notes: str | None
+    # Optional discriminator for sources that publish two frequencies of the
+    # same series under one type name. Australia does this with CPI: from 2025
+    # both "Inflation Rate" and "CPI" carry quarterly ABS prints AND monthly
+    # CPI Indicator prints, which without this collapse onto one indicator.
+    # None means "match any period shape" — the ordinary case.
+    period_shape: str | None
 
 
 @dataclass(frozen=True)
@@ -133,7 +142,24 @@ class Canonicalizer:
         # If multiple YAML entries match the same key, the FIRST one wins
         # (precedence by YAML order). Later ones are ignored, with a warning.
         self._lookup: dict[tuple[str, str, str | None], CanonicalMapping] = {}
+        # Entries carrying a period_shape live in their own table and are tried
+        # first, so a shaped rule beats the generic one for its own shape while
+        # leaving the generic rule to catch everything else.
+        self._shaped: dict[tuple[str, str, str | None, str], CanonicalMapping] = {}
         for m in mappings:
+            if m.period_shape is not None:
+                shaped_key = (m.country, m.eodhd_type, m.eodhd_comparison, m.period_shape)
+                if shaped_key in self._shaped:
+                    logger.warning(
+                        "Duplicate shaped mapping key %s. First entry wins (%s); "
+                        "subsequent entry %s ignored.",
+                        shaped_key, self._shaped[shaped_key].canonical_name,
+                        m.canonical_name,
+                    )
+                    continue
+                self._shaped[shaped_key] = m
+                continue
+
             key = (m.country, m.eodhd_type, m.eodhd_comparison)
             if key in self._lookup:
                 logger.warning(
@@ -144,8 +170,9 @@ class Canonicalizer:
                 continue
             self._lookup[key] = m
         logger.info(
-            "Canonicalizer ready: %d mappings across %d lookup keys",
-            len(mappings), len(self._lookup),
+            "Canonicalizer ready: %d mappings across %d lookup keys "
+            "(%d period-shaped)",
+            len(mappings), len(self._lookup), len(self._shaped),
         )
 
     @classmethod
@@ -203,7 +230,14 @@ class Canonicalizer:
             return None
 
         lookup_key = (country, eodhd_type, eodhd_comparison)
-        mapping = self._lookup.get(lookup_key)
+        # A shaped rule wins for its own period shape; otherwise fall through to
+        # the generic rule, so adding a shaped rule never orphans other periods.
+        shape = _period_shape(raw_event.get("period"))
+        mapping = None
+        if shape is not None:
+            mapping = self._shaped.get((*lookup_key, shape))
+        if mapping is None:
+            mapping = self._lookup.get(lookup_key)
 
         if mapping is None:
             # Log unmapped event so admin page can surface it
@@ -244,6 +278,12 @@ def _parse_mapping_entry(entry: dict[str, Any]) -> CanonicalMapping:
 
     secondary = tuple(entry.get("secondary_categories") or [])
 
+    period_shape = entry.get("period_shape")
+    if period_shape is not None and period_shape not in PERIOD_SHAPES:
+        raise ValueError(
+            f"period_shape={period_shape!r} must be one of {sorted(PERIOD_SHAPES)}"
+        )
+
     return CanonicalMapping(
         eodhd_type=entry["eodhd_type"],
         eodhd_comparison=entry.get("eodhd_comparison"),
@@ -259,7 +299,27 @@ def _parse_mapping_entry(entry: dict[str, Any]) -> CanonicalMapping:
         ),
         importance=int(entry.get("importance", 2)),
         notes=entry.get("notes"),
+        period_shape=period_shape,
     )
+
+
+def _period_shape(period: str | None) -> str | None:
+    """Classify a raw EODHD period string as quarterly or monthly.
+
+    Returns None when the period is absent or in a form that says nothing about
+    frequency (an ISO date, say) — the caller then falls back to the generic
+    mapping rather than guessing.
+    """
+    if not period:
+        return None
+    period = period.strip()
+    if not period:
+        return None
+    if _PATTERN_QUARTER.match(period) or _PATTERN_QUARTER_YEAR.match(period):
+        return "quarterly"
+    if _PATTERN_MONTH.match(period) or _PATTERN_MONTH_YEAR.match(period):
+        return "monthly"
+    return None
 
 
 def _build_event(

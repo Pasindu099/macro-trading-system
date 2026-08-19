@@ -2654,6 +2654,388 @@
     color: var(--color-neutral);
 }
 
+/* ── Country surprise charts ──────────────────────────────────────────────── */
+.country-chart-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.chart-card__body {
+    position: relative;
+    padding: 12px 14px 10px;
+}
+
+.chart-canvas {
+    width: 100%;
+    height: 260px;
+}
+
+.chart-canvas--short { height: 210px; }
+
+.chart-note {
+    margin: 8px 0 0;
+    color: var(--text-faint);
+    font-size: 9px;
+    line-height: 1.6;
+}
+
+/* Export actions sit in the card's top-right, over the header rule, so they
+   never take a row of their own away from the plot. */
+.chart-actions {
+    position: absolute;
+    top: -30px;
+    right: 14px;
+    display: flex;
+    gap: 4px;
+}
+
+.chart-action {
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.25);
+    color: var(--text-muted);
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.chart-action:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.chart-action.is-done {
+    border-color: rgba(34, 197, 94, 0.4);
+    color: var(--bull);
+}
+
+.chart-action.is-error {
+    border-color: rgba(239, 68, 68, 0.4);
+    color: var(--bear);
+}
+
+@media (max-width: 1100px) {
+    .country-chart-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Release ledger ───────────────────────────────────────────────────────────
+   Styled against the macro_design tokens (--accent / --text-heading / --bull),
+   not the older --color-* set the rest of this file uses, so new country-page
+   work lands on the system the landing page already runs on. */
+.release-ledger-card {
+    margin-bottom: 12px;
+}
+
+.rl-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.rl-field {
+    display: grid;
+    gap: 4px;
+}
+
+.rl-field > span {
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.rl-field input,
+.rl-field select {
+    min-height: 26px;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.25);
+    color: var(--text-heading);
+    font-family: var(--sans);
+    font-size: 11px;
+}
+
+.rl-field input:focus,
+.rl-field select:focus {
+    border-color: var(--accent);
+    outline: none;
+}
+
+.rl-quick {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.rl-quick button {
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-body);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.rl-quick button:hover {
+    border-color: var(--border-strong);
+    color: var(--text-heading);
+}
+
+.rl-quick button.is-active {
+    border-color: var(--accent);
+    background: rgba(249, 115, 22, 0.12);
+    color: var(--accent);
+}
+
+.rl-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.rl-stat {
+    display: grid;
+    gap: 2px;
+    padding: 10px 14px;
+    background: rgba(16, 13, 10, 0.96);
+}
+
+.rl-stat > span {
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.rl-stat > strong {
+    color: var(--text-heading);
+    font-size: 18px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+
+.rl-stat > strong em {
+    font-style: normal;
+}
+
+.rl-stat > small {
+    color: var(--text-faint);
+    font-size: 9px;
+}
+
+.rl-pulse {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.rl-pulse__item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+}
+
+.rl-pulse__item > span {
+    color: var(--text-body);
+}
+
+.rl-pulse__item > strong {
+    font-variant-numeric: tabular-nums;
+}
+
+.rl-pulse__item > small {
+    color: var(--text-faint);
+}
+
+/* Centre-anchored bar: the centre line is zero, so a miss grows left and a
+   beat grows right from the same origin. */
+.rl-pulse__item i,
+.rl-score i {
+    position: relative;
+    display: block;
+    width: 56px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 2px;
+}
+
+.rl-pulse__item i::before,
+.rl-score i::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    bottom: -1px;
+    left: 50%;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.rl-pulse__item i b,
+.rl-score i b {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-radius: 2px;
+    background: var(--text-muted);
+}
+
+.rl-pulse__item i b.is-positive,
+.rl-score i b.is-positive { background: var(--bull); }
+
+.rl-pulse__item i b.is-negative,
+.rl-score i b.is-negative { background: var(--bear); }
+
+.rl-table {
+    display: grid;
+}
+
+.rl-head,
+.rl-row {
+    display: grid;
+    grid-template-columns:
+        62px minmax(180px, 1.6fr) 74px
+        repeat(4, minmax(74px, 0.7fr)) 118px;
+    gap: 8px;
+    align-items: center;
+    padding: 0 14px;
+}
+
+.rl-head {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.rl-row {
+    min-height: 40px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+    color: var(--text-body);
+    font-size: 11px;
+    text-decoration: none;
+}
+
+.rl-row:last-child { border-bottom: 0; }
+
+.rl-row:hover {
+    background: rgba(249, 115, 22, 0.05);
+}
+
+/* Importance is 1 = highest. The rail makes the top tier findable when the
+   window holds a few hundred rows. */
+.rl-row.imp-1 { box-shadow: inset 2px 0 0 var(--accent); }
+.rl-row.imp-2 { box-shadow: inset 2px 0 0 rgba(255, 255, 255, 0.14); }
+
+.rl-date {
+    color: var(--text-heading);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+.rl-date small {
+    display: block;
+    color: var(--text-faint);
+    font-size: 9px;
+    font-weight: 400;
+}
+
+.rl-name {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-heading);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rl-name small {
+    display: block;
+    overflow: hidden;
+    color: var(--text-faint);
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rl-period {
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.rl-num {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.rl-actual {
+    color: var(--text-heading);
+    font-weight: 600;
+}
+
+.rl-score {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.rl-score em {
+    min-width: 42px;
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.rl-summary .is-positive,
+.rl-pulse .is-positive,
+.rl-row .is-positive { color: var(--bull); }
+
+.rl-summary .is-negative,
+.rl-pulse .is-negative,
+.rl-row .is-negative { color: var(--bear); }
+
+.rl-summary .is-neutral,
+.rl-pulse .is-neutral,
+.rl-row .is-neutral { color: var(--text-muted); }
+
+.rl-empty {
+    padding: 24px 14px;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+@media (max-width: 1100px) {
+    .rl-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .rl-head { display: none; }
+    .rl-row {
+        grid-template-columns: 62px minmax(0, 1fr) auto;
+        row-gap: 2px;
+        padding: 8px 14px;
+    }
+    .rl-row .rl-period,
+    .rl-row .rl-num:not(.rl-actual) { display: none; }
+}
+
 .country-history-card .ind-table {
     border: 0;
     border-radius: 0;

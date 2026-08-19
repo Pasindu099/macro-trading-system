@@ -1,0 +1,88 @@
+{% set summary = ledger.summary %}
+<div class="rl-summary">
+    <div class="rl-stat">
+        <span>Releases</span>
+        <strong>{{ summary.total }}</strong>
+        <small>{{ ledger.window_label }}</small>
+    </div>
+    <div class="rl-stat">
+        <span>Surprise pulse</span>
+        <strong class="{{ summary.average_class }}">{{ summary.average_display }}</strong>
+        <small>{{ summary.pulse_label }}</small>
+    </div>
+    <div class="rl-stat">
+        <span>Beat / In line / Miss</span>
+        <strong>
+            <em class="is-positive">{{ summary.beats }}</em> /
+            {{ summary.inline }} /
+            <em class="is-negative">{{ summary.misses }}</em>
+        </strong>
+        <small>vs consensus, currency-oriented</small>
+    </div>
+    <div class="rl-stat">
+        <span>Unscored</span>
+        <strong>{{ summary.unscored }}</strong>
+        <small>no consensus or too little history</small>
+    </div>
+</div>
+
+{% if ledger.category_pulse %}
+    <div class="rl-pulse">
+        {% for item in ledger.category_pulse %}
+            <div class="rl-pulse__item">
+                <span>{{ item.category }}</span>
+                <i>
+                    <b class="{{ item.score_class }}"
+                       style="width: {{ item.score_width }}%;
+                              {% if item.average < 0 %}right: 50%;{% else %}left: 50%;{% endif %}"></b>
+                </i>
+                <strong class="{{ item.score_class }}">{{ item.average_display }}</strong>
+                <small>{{ item.count }}</small>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if ledger.rows %}
+    <div class="rl-table" role="table">
+        <div class="rl-head" role="row">
+            <span>Date</span>
+            <span>Indicator</span>
+            <span>Period</span>
+            <span class="rl-num">Actual</span>
+            <span class="rl-num">Consensus</span>
+            <span class="rl-num">Previous</span>
+            <span class="rl-num">Surprise</span>
+            <span>Score</span>
+        </div>
+        {% for row in ledger.rows %}
+            <a class="rl-row imp-{{ row.importance }}" role="row" href="{{ row.detail_href }}">
+                <span class="rl-date">
+                    {{ row.date_display }}<small>{{ row.time_display }}</small>
+                </span>
+                <span class="rl-name">
+                    {{ row.display_name }}
+                    <small>{{ row.category }} &middot; {{ row.importance_label }}</small>
+                </span>
+                <span class="rl-period">{{ row.period }}</span>
+                <span class="rl-num rl-actual {{ row.change_class }}">{{ row.actual_display }}</span>
+                <span class="rl-num">{{ row.estimate_display }}</span>
+                <span class="rl-num">{{ row.previous_display }}</span>
+                <span class="rl-num {{ row.score_class }}">{{ row.surprise_display }}</span>
+                <span class="rl-score">
+                    <i>
+                        <b class="{{ row.score_class }}"
+                           style="width: {{ row.score_width }}%;
+                                  {% if row.score is not none and row.score < 0 %}right: 50%;{% else %}left: 50%;{% endif %}"></b>
+                    </i>
+                    <em class="{{ row.score_class }}">{{ row.score_display }}</em>
+                </span>
+            </a>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="rl-empty">
+        No releases matched this window. Widen the range or clear the category
+        and importance filters.
+    </div>
+{% endif %}

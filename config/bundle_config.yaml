@@ -1,0 +1,307 @@
+# Event innovation scoring — bundle membership and decay buckets.
+#
+# Read by app/processing/event_innovation.py. Everything here is an EXPLICIT
+# manual mapping: bundle membership is never inferred from timestamp proximity,
+# and decay buckets are never inferred from indicator frequency.
+#
+# Indicator references use canonical_name from config/indicator_mapping.yaml.
+# A bare name applies to every country; "US:nfp" scopes it to one country.
+
+version: 1
+
+# ── scoring parameters ───────────────────────────────────────────────────────
+defaults:
+  # EWMA half-life for the surprise-volatility estimate, measured in
+  # OBSERVATIONS (prints), not days. 24 monthly prints ≈ a 2-year effective
+  # window — long enough to be stable, short enough that COVID-era surprise
+  # blowouts have decayed out of the 2020-2026 sample by now. Quarterly series
+  # get their own override below because 24 quarterly prints is 6 years.
+  ewma_halflife_observations: 24
+
+  # Winsorization applied to the prior-surprise sample BEFORE the EWMA scale is
+  # computed. Without it, one bad print (a COVID payrolls number, a data-entry
+  # error) permanently inflates the denominator and mutes every later surprise.
+  #
+  # 5/95 rather than the more usual 1/99 because of our sample size. A monthly
+  # indicator has ~70 prints across 2020-2026, so the 99th percentile lands
+  # between the top two observations and interpolates to roughly the outlier
+  # itself — clipping nothing. 5/95 clips ~3 observations at each tail, which is
+  # what actually defends the scale estimate. Move back toward 1/99 once
+  # indicators carry several hundred prints.
+  winsor_lower_percentile: 5.0
+  winsor_upper_percentile: 95.0
+
+  # An indicator needs at least this many prior surprises before its scale is
+  # trustworthy. Below it we store the raw surprise with scored = false.
+  min_observations: 8
+
+  # Normalized surprises are clipped here. Beyond ~6 sigma we are looking at a
+  # data error, not an event.
+  max_abs_normalized: 6.0
+
+  # A (country, release_date) group needs at least this many scored members
+  # before it becomes a bundle. A lone release is already its own score.
+  min_bundle_members: 2
+
+# Per-frequency override of the EWMA half-life. Keyed on indicators.frequency.
+ewma_halflife_by_frequency:
+  quarterly: 8      # ≈ 2 years of quarterly prints
+  weekly: 104       # ≈ 2 years of weekly prints
+
+# EODHD impact, stored as indicators.importance (1 = high, 2 = medium, 3 = low).
+# Releases above this threshold are still written to event_innovation_scores,
+# but with scored = false, so the threshold can be relaxed later without a
+# re-ingest.
+scored_importance_max: 2
+
+# ── decay ────────────────────────────────────────────────────────────────────
+# I(t) = I(0) * exp(-ln(2) * t / half_life_days)
+decay_half_lives_days:
+  high_freq_high_revision: 10
+  high_freq_low_revision: 21
+  low_freq_structural: 45
+  # meeting_adjacent deliberately has no half-life: a policy decision does not
+  # fade, it becomes the new baseline. Rows in this bucket are flagged
+  # rolls_up_to_policy_baseline = true and held at full weight until the
+  # cb_tracking roll-up consumes them. See TODO in event_innovation.py.
+  meeting_adjacent: null
+
+# Bucket assignment is manual. Anything not listed here is left unbucketed and
+# stored with scored = false — add it below to bring it into scoring.
+decay_buckets:
+
+  # Heavily revised, high-frequency prints. The first estimate is a noisy draw
+  # that the next release partially retracts, so its information decays fast.
+  high_freq_high_revision:
+    - nfp
+    - private_nonfarm_payrolls
+    - manufacturing_payrolls
+    - government_payrolls
+    - adp_employment_change
+    - employment_change            # AU / CA labour force survey
+    - full_time_employment_change
+    - part_time_employment_change
+    - initial_jobless_claims
+    - continuing_jobless_claims
+    - claimant_count_change
+    - hmrc_payrolls_change
+    - manufacturing_pmi_flash
+    - services_pmi_flash
+    - composite_pmi_flash
+
+  # High-frequency but rarely revised in a way that changes the signal.
+  high_freq_low_revision:
+    - cpi_headline_yoy
+    - cpi_headline_mom
+    - core_cpi_yoy
+    - core_cpi_mom
+    - cpi_monthly_yoy
+    - monthly_cpi_indicator
+    - hicp_yoy
+    - hicp_mom
+    - tokyo_core_cpi_yoy
+    - cpi_ex_food_energy_yoy
+    - cpi_median_yoy
+    - cpi_trimmed_mean_yoy
+    - cpi_common_yoy
+    - core_pce_price_index_yoy
+    - core_pce_price_index_mom
+    - pce_price_index_yoy
+    - pce_price_index_mom
+    - unemployment_rate
+    - participation_rate
+    - avg_hourly_earnings_yoy
+    - avg_hourly_earnings_mom
+    - avg_earnings_excl_bonus
+    - avg_earnings_incl_bonus
+    - retail_sales_mom
+    - retail_sales_yoy
+    - ism_manufacturing_pmi
+    - ism_services_pmi
+    - manufacturing_pmi
+    - services_pmi
+    - composite_pmi
+    - gdp_mom                      # UK / CA monthly GDP
+    - ppi_yoy
+    - ppi_mom
+    - ppi_output_yoy
+    - retail_price_index_yoy
+
+  # Quarterly / structural series. One print carries a whole quarter, so it
+  # stays informative until the next one lands.
+  low_freq_structural:
+    - gdp_qoq
+    - gdp_yoy
+    - cpi_headline_qoq
+    - rba_trimmed_mean_cpi_qoq
+    - rba_trimmed_mean_cpi_yoy
+    - rba_weighted_median_cpi_qoq
+    - rba_weighted_median_cpi_yoy
+    - wage_price_index_qoq
+    - wage_price_index_yoy
+    - employment_change_qoq
+    - employment_cost_index_qoq
+    - labour_cost_index_qoq
+    - labour_cost_index_yoy
+    - producer_price_index_qoq
+
+  # Policy decisions and the statements around them.
+  meeting_adjacent:
+    - fed_interest_rate_decision
+    - ecb_deposit_rate
+    - ecb_marginal_lending_rate
+    - boj_interest_rate_decision
+    - bank_rate                    # BoE
+    - cash_rate                    # RBA
+    - official_cash_rate           # RBNZ
+    - overnight_rate               # BoC
+    - policy_rate                  # SNB
+
+# ── bundles ──────────────────────────────────────────────────────────────────
+# Co-released indicators that must resolve to ONE latent shock rather than N
+# independent ones. Membership is explicit; a bundle is instantiated for a
+# (country, release_date) only when at least `min_bundle_members` of its
+# members actually print that day.
+#
+# Weights are a hand-set proxy for historical market-moving importance,
+# renormalized over the members that actually printed.
+# TODO(next): replace hand-set weights with a PCA / factor model fitted on
+# realized FX reaction per member. Simple weighted average until then.
+bundles:
+
+  - bundle_key: US_NFP_DAY
+    country: US
+    description: BLS Employment Situation — payrolls, revisions, household survey.
+    members:
+      - {indicator: nfp, weight: 1.00}
+      - {indicator: unemployment_rate, weight: 0.80}
+      - {indicator: avg_hourly_earnings_mom, weight: 0.60}
+      - {indicator: avg_hourly_earnings_yoy, weight: 0.40}
+      - {indicator: participation_rate, weight: 0.30}
+      - {indicator: private_nonfarm_payrolls, weight: 0.20}
+      - {indicator: manufacturing_payrolls, weight: 0.10}
+      - {indicator: government_payrolls, weight: 0.10}
+
+  - bundle_key: US_CPI_DAY
+    country: US
+    description: BLS CPI — core leads, headline follows.
+    members:
+      - {indicator: core_cpi_mom, weight: 1.00}
+      - {indicator: core_cpi_yoy, weight: 0.90}
+      - {indicator: cpi_headline_mom, weight: 0.60}
+      - {indicator: cpi_headline_yoy, weight: 0.55}
+
+  - bundle_key: US_PCE_DAY
+    country: US
+    description: BEA personal income & outlays — the Fed's preferred gauge.
+    members:
+      - {indicator: core_pce_price_index_mom, weight: 1.00}
+      - {indicator: core_pce_price_index_yoy, weight: 0.90}
+      - {indicator: pce_price_index_mom, weight: 0.50}
+      - {indicator: pce_price_index_yoy, weight: 0.45}
+
+  - bundle_key: EU_HICP_DAY
+    country: EU
+    description: Eurostat flash HICP — core and headline release together.
+    # hicp_yoy / hicp_mom are deliberately absent: those canonical names are only
+    # mapped for DE and FR, and the euro-area aggregate arrives under
+    # cpi_headline_yoy. Adding them here would be dead config.
+    members:
+      - {indicator: core_cpi_yoy, weight: 1.00}
+      - {indicator: cpi_headline_yoy, weight: 0.80}
+
+  - bundle_key: UK_CPI_DAY
+    country: UK
+    description: ONS consumer price inflation release.
+    members:
+      - {indicator: core_cpi_yoy, weight: 1.00}
+      - {indicator: cpi_headline_yoy, weight: 0.90}
+      - {indicator: retail_price_index_yoy, weight: 0.30}
+      - {indicator: ppi_output_yoy, weight: 0.20}
+
+  - bundle_key: UK_LABOUR_DAY
+    country: UK
+    description: ONS labour market overview — earnings, claimant count, ILO rate.
+    members:
+      - {indicator: avg_earnings_excl_bonus, weight: 1.00}
+      - {indicator: avg_earnings_incl_bonus, weight: 0.60}
+      - {indicator: unemployment_rate, weight: 0.70}
+      - {indicator: claimant_count_change, weight: 0.40}
+      - {indicator: hmrc_payrolls_change, weight: 0.30}
+
+  - bundle_key: CA_LABOUR_DAY
+    country: CA
+    description: StatCan Labour Force Survey.
+    members:
+      - {indicator: employment_change, weight: 1.00}
+      - {indicator: unemployment_rate, weight: 0.80}
+      - {indicator: full_time_employment_change, weight: 0.40}
+      - {indicator: part_time_employment_change, weight: 0.20}
+
+  - bundle_key: CA_CPI_DAY
+    country: CA
+    description: StatCan CPI — BoC core measures print alongside headline.
+    members:
+      - {indicator: cpi_trimmed_mean_yoy, weight: 1.00}
+      - {indicator: cpi_median_yoy, weight: 0.90}
+      - {indicator: cpi_headline_yoy, weight: 0.80}
+      - {indicator: cpi_common_yoy, weight: 0.50}
+      - {indicator: core_cpi_yoy, weight: 0.50}
+
+  - bundle_key: AU_LABOUR_DAY
+    country: AU
+    description: ABS Labour Force.
+    members:
+      - {indicator: employment_change, weight: 1.00}
+      - {indicator: unemployment_rate, weight: 0.80}
+      - {indicator: participation_rate, weight: 0.40}
+      - {indicator: full_time_employment_change, weight: 0.40}
+      - {indicator: part_time_employment_change, weight: 0.20}
+
+  - bundle_key: AU_CPI_DAY
+    country: AU
+    description: ABS CPI — RBA trimmed mean and weighted median print with headline.
+    members:
+      - {indicator: rba_trimmed_mean_cpi_qoq, weight: 1.00}
+      - {indicator: rba_trimmed_mean_cpi_yoy, weight: 0.90}
+      - {indicator: cpi_headline_qoq, weight: 0.70}
+      - {indicator: cpi_headline_yoy, weight: 0.65}
+      - {indicator: rba_weighted_median_cpi_qoq, weight: 0.40}
+      - {indicator: rba_weighted_median_cpi_yoy, weight: 0.35}
+
+  - bundle_key: NZ_LABOUR_DAY
+    country: NZ
+    description: Stats NZ Household Labour Force Survey.
+    members:
+      - {indicator: employment_change_qoq, weight: 1.00}
+      - {indicator: unemployment_rate, weight: 0.90}
+      - {indicator: participation_rate, weight: 0.40}
+      - {indicator: labour_cost_index_qoq, weight: 0.40}
+
+  - bundle_key: NZ_CPI_DAY
+    country: NZ
+    description: Stats NZ quarterly CPI.
+    members:
+      - {indicator: cpi_headline_qoq, weight: 1.00}
+      - {indicator: cpi_headline_yoy, weight: 0.90}
+
+  - bundle_key: JP_CPI_DAY
+    country: JP
+    description: MIC national CPI.
+    members:
+      - {indicator: core_cpi_yoy, weight: 1.00}
+      - {indicator: cpi_headline_yoy, weight: 0.70}
+      - {indicator: cpi_ex_food_energy_yoy, weight: 0.60}
+
+  # ── expansion stubs ────────────────────────────────────────────────────────
+  # Uncomment and fill in as the mapping coverage is confirmed. Left here so
+  # the next session knows what was deliberately deferred rather than missed.
+  #
+  # - bundle_key: US_ISM_MFG_DAY      # headline + new orders + prices + employment
+  # - bundle_key: US_ISM_SERVICES_DAY
+  # - bundle_key: US_FLASH_PMI_DAY    # mfg + services + composite flash
+  # - bundle_key: EU_FLASH_PMI_DAY
+  # - bundle_key: UK_FLASH_PMI_DAY
+  # - bundle_key: US_RETAIL_SALES_DAY # headline + ex-autos + control group
+  # - bundle_key: JP_TANKAN_DAY       # large/small × mfg/non-mfg + capex
+  # - bundle_key: CH_KOF_DAY

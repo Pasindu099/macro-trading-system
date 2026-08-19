@@ -15,6 +15,19 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: macro_dashboard_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   app:
     build: .
     container_name: macro_dashboard_app
@@ -22,7 +35,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://macro_user:MyMacro2026Pass@postgres:5432/macro_dashboard_dev
+      - DATABASE_URL=postgresql+asyncpg://macro_user:MyMacro2026Pass@macro_dashboard_postgres:5432/macro_dashboard_dev
+      - REDIS_URL=redis://redis:6379/0
       - EODHD_API_KEY=69e3b037bd2fa6.04084397
       - GOOGLE_DRIVE_API_KEY=${GOOGLE_DRIVE_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
@@ -37,11 +51,53 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - .:/app
       - /app/venv
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --proxy-headers --forwarded-allow-ips="*"
 
+  news_pipeline:
+    build:
+      context: ./news_pipeline
+    container_name: macro_dashboard_news_pipeline
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://macro_user:MyMacro2026Pass@macro_dashboard_postgres:5432/macro_dashboard_dev
+      - REDIS_URL=redis://redis:6379/0
+      - FRED_API_KEY=${FRED_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - LOG_LEVEL=INFO
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn news_pipeline.main:app --host 0.0.0.0 --port 8001
+
+  telegram_bot:
+    build:
+      context: ./news_pipeline
+    container_name: macro_dashboard_telegram_bot
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://macro_user:MyMacro2026Pass@macro_dashboard_postgres:5432/macro_dashboard_dev
+      - REDIS_URL=redis://redis:6379/0
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - TELEGRAM_TOPIC_THREAD_IDS=${TELEGRAM_TOPIC_THREAD_IDS:-{}}
+      - LOG_LEVEL=INFO
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python -m news_pipeline.telegram_bot
+
 volumes:
   postgres_data:
     name: macro_dashboard_postgres_data
+  redis_data:
+    name: macro_dashboard_redis_data

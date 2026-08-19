@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+  <script defer src="{{ url_for('static', path='js/chart_export.js') }}?v=20260812a"></script>
+  <script defer src="{{ url_for('static', path='js/country_charts.js') }}?v=20260812a"></script>
+{% endblock %}
+
 {% block body %}
 <main class="shell shell--country country-terminal">
     <header class="country-terminal__topbar">
@@ -106,6 +111,95 @@
             </article>
         </section>
 
+        <section class="country-chart-grid">
+            <article class="country-terminal-card chart-card">
+                <header>
+                    <strong>Macro surprise vs consensus</strong>
+                    <span>{{ ledger.window_label }}</span>
+                </header>
+                <div class="chart-card__body">
+                    {% if ledger.timeseries %}
+                        <div class="chart-canvas" id="chart-surprise-timeseries"></div>
+                        <p class="chart-note">
+                            Standardised against each indicator's own 3-year surprise
+                            history. Positive is {{ country.currency_code }}-positive:
+                            a lower-than-expected unemployment print scores positive.
+                        </p>
+                    {% else %}
+                        <div class="rl-empty">
+                            No scored releases in this window — widen the range or pick
+                            a month with consensus coverage.
+                        </div>
+                    {% endif %}
+                </div>
+            </article>
+
+            <article class="country-terminal-card chart-card">
+                <header>
+                    <strong>Surprise by category</strong>
+                    <span>which part is driving</span>
+                </header>
+                <div class="chart-card__body">
+                    {% if ledger.category_pulse %}
+                        <div class="chart-canvas chart-canvas--short" id="chart-category-pulse"></div>
+                    {% else %}
+                        <div class="rl-empty">No scored releases to break down yet.</div>
+                    {% endif %}
+                </div>
+            </article>
+        </section>
+
+        <script type="application/json" id="country-chart-data">{{ chart_payload|tojson }}</script>
+
+        <section class="country-terminal-card release-ledger-card">
+            <header>
+                <strong>Release ledger</strong>
+                <span>actual vs consensus</span>
+            </header>
+
+            <form class="rl-filters"
+                  id="release-ledger-filters"
+                  hx-get="/country/{{ country.code|lower }}/releases"
+                  hx-target="#country-releases-content"
+                  hx-swap="innerHTML"
+                  hx-trigger="change, rl-refresh">
+                <label class="rl-field">
+                    <span>Month</span>
+                    <input type="month" name="month" value="{{ ledger_month }}">
+                </label>
+                <input type="hidden" name="range" value="">
+                <div class="rl-quick" role="group" aria-label="Quick ranges">
+                    {% for key, label in ledger_ranges %}
+                        <button type="button" data-rl-range="{{ key }}">{{ label }}</button>
+                    {% endfor %}
+                </div>
+                <label class="rl-field">
+                    <span>Category</span>
+                    <select name="category">
+                        <option value="all">All</option>
+                        {% for category in ledger_categories %}
+                            <option value="{{ category }}">{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="rl-field">
+                    <span>Importance</span>
+                    <select name="importance">
+                        <option value="all">All tiers</option>
+                        {% for level, label in ledger_importance_labels.items() %}
+                            <option value="{{ level }}">
+                                {{ label }}{% if level > 1 %} &amp; above{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </form>
+
+            <section id="country-releases-content" aria-live="polite">
+                {% include "_country_releases.html" %}
+            </section>
+        </section>
+
         <section class="country-terminal-card country-history-card">
             <header>
                 <strong>Key indicators history</strong>
@@ -131,4 +225,32 @@
         </section>
     </section>
 </main>
+
+<script>
+/* Quick-range buttons and the month picker are two ways to set one window, so
+   choosing a range has to clear the month input — the server gives the month
+   precedence, and a stale month would silently ignore the button. */
+(function () {
+  var form = document.getElementById("release-ledger-filters");
+  if (!form) return;
+  var month = form.querySelector('input[name="month"]');
+  var range = form.querySelector('input[name="range"]');
+  var buttons = Array.prototype.slice.call(form.querySelectorAll("[data-rl-range]"));
+
+  buttons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      month.value = "";
+      range.value = button.dataset.rlRange;
+      buttons.forEach(function (other) { other.classList.remove("is-active"); });
+      button.classList.add("is-active");
+      form.dispatchEvent(new CustomEvent("rl-refresh"));
+    });
+  });
+
+  month.addEventListener("input", function () {
+    range.value = "";
+    buttons.forEach(function (other) { other.classList.remove("is-active"); });
+  });
+})();
+</script>
 {% endblock %}

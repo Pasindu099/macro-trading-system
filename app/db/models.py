@@ -786,6 +786,141 @@ class PriceSnapshot(Base):
         )
 
 
+DECAY_BUCKET_ENUM = Enum(
+    "high_freq_high_revision",
+    "high_freq_low_revision",
+    "low_freq_structural",
+    "meeting_adjacent",
+    name="decay_bucket",
+    create_type=False,
+)
+
+
+class ReleaseBundle(Base):
+    """Co-released indicators collapsed into one latent shock.
+
+    US NFP day publishes payrolls, the prior-month revision, the unemployment
+    rate, participation and average hourly earnings in the same instant.
+    Treating those as five shocks counts one event five times, so membership is
+    declared explicitly in config/bundle_config.yaml and each (bundle_key,
+    release_date) resolves to a single bundle_score.
+
+    meeting_adjacent bundles carry a NULL half_life_days: a policy decision does
+    not fade, it becomes the next baseline. See the roll-up TODO in
+    app/processing/event_innovation.py.
+    """
+
+    __tablename__ = "release_bundles"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    bundle_key: Mapped[str] = mapped_column(Text, nullable=False)
+    country: Mapped[str] = mapped_column(
+        String(2),
+        ForeignKey("countries.code", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    release_date: Mapped[date] = mapped_column(Date, nullable=False)
+    indicator_ids: Mapped[list[int]] = mapped_column(
+        ARRAY(Integer),
+        nullable=False,
+        server_default="{}",
+    )
+    bundle_score: Mapped[Decimal | None] = mapped_column(Numeric(10, 6), nullable=True)
+    decay_bucket: Mapped[str | None] = mapped_column(DECAY_BUCKET_ENUM, nullable=True)
+    half_life_days: Mapped[Decimal | None] = mapped_column(Numeric(6, 2), nullable=True)
+    member_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    __table_args__ = (
+        UniqueConstraint("bundle_key", "release_date", name="uq_release_bundles_key_date"),
+        Index("ix_release_bundles_country_date", "country", "release_date"),
+    )
+
+    scores: Mapped[list[EventInnovationScore]] = relationship(
+        "EventInnovationScore", back_populates="bundle"
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<ReleaseBundle key={self.bundle_key!r} "
+            f"date={self.release_date.isoformat()} score={self.bundle_score}>"
+        )
+
+
+class EventInnovationScore(Base):
+    """Normalized, decay-tagged surprise for one release.
+
+    surprise_scale is an EWMA RMS of the indicator's winsorized *prior*
+    surprises — point-in-time, so this table is safe to backtest against.
+    Full-history stdev is deliberately not used: on a 2020-2026 window it is
+    dominated by COVID-era prints.
+
+    Rows with scored = false are stored but excluded from downstream use. That
+    covers low-impact (EODHD impact = low) releases and indicators with too
+    little history or no decay bucket assigned yet, so the impact threshold can
+    be relaxed later without re-ingesting anything.
+    """
+
+    __tablename__ = "event_innovation_scores"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    release_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("indicator_releases.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    bundle_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("release_bundles.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    indicator_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("indicators.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    release_date: Mapped[date] = mapped_column(Date, nullable=False)
+    actual: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
+    consensus: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
+    surprise_raw: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
+    surprise_scale: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
+    surprise_normalized: Mapped[Decimal | None] = mapped_column(
+        Numeric(10, 6), nullable=True
+    )
+    decay_bucket: Mapped[str | None] = mapped_column(DECAY_BUCKET_ENUM, nullable=True)
+    half_life_days: Mapped[Decimal | None] = mapped_column(Numeric(6, 2), nullable=True)
+    scored: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    __table_args__ = (
+        UniqueConstraint("release_id", name="uq_event_innovation_release"),
+        Index("ix_event_innovation_scores_release_date", "release_date"),
+        Index("ix_event_innovation_scores_indicator_date", "indicator_id", "release_date"),
+        Index("ix_event_innovation_scores_bundle_id", "bundle_id"),
+    )
+
+    bundle: Mapped[ReleaseBundle | None] = relationship(
+        "ReleaseBundle", back_populates="scores"
+    )
+    release: Mapped[IndicatorRelease] = relationship("IndicatorRelease")
+    indicator: Mapped[Indicator] = relationship("Indicator")
+
+    def __repr__(self) -> str:
+        return (
+            f"<EventInnovationScore release_id={self.release_id} "
+            f"indicator_id={self.indicator_id} z={self.surprise_normalized} "
+            f"bucket={self.decay_bucket!r}>"
+        )
+
+
 class SourceHealth(Base):
     """Latest ingestion health snapshot for a news source."""
 

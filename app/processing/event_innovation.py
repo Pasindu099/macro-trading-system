@@ -682,8 +682,8 @@ _RELEASES_SQL = text(
     JOIN indicators i ON i.id = r.indicator_id
     WHERE r.indicator_id IS NOT NULL
       AND r.actual IS NOT NULL
-      AND (:country_code::text IS NULL OR i.country_code = :country_code)
-      AND (:date_from::date IS NULL OR r.released_at::date >= :date_from)
+      AND (CAST(:country_code AS text) IS NULL OR i.country_code = :country_code)
+      AND (CAST(:date_from AS date) IS NULL OR r.released_at::date >= :date_from)
     ORDER BY
         r.indicator_id,
         COALESCE(r.period_start_date::text, r.released_at::date::text),

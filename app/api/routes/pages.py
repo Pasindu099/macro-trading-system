@@ -3634,6 +3634,9 @@ async def event_innovation_fragment(
     # point of the impact filter is to keep the list to what moves a curve.
     include_unscored: bool = False,
     country: str | None = None,
+    # Drives the filter chips. Unknown values fall back to "all" rather than
+    # 404ing, so a stale bookmark degrades to the unfiltered panel.
+    category: str | None = None,
     session: AsyncSession = Depends(get_session),
 ) -> HTMLResponse:
     """Render the HTMX fragment for the event-driven policy delta panel.
@@ -3642,7 +3645,10 @@ async def event_innovation_fragment(
     column — how much of a shock survives depends on when you ask.
     """
     filters = resolve_feed_filters(
-        days, include_unscored=include_unscored, country_code=country
+        days,
+        include_unscored=include_unscored,
+        country_code=country,
+        category=category,
     )
     feed = await build_event_innovation_feed(session, filters)
     return templates.TemplateResponse(

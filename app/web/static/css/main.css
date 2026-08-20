@@ -11576,278 +11576,295 @@ body.has-black-global-sidebar {
   gap: 8px;
 }
 
-/* ── Event-driven policy delta ────────────────────────────────────────────────
-   Styled against the macro_design tokens (--accent / --hawk / --dove), matching
-   the release-ledger block above. Direction here is policy, not price, so it
-   uses the existing --hawk/--dove pair rather than --bull/--bear: this panel
-   answers "which way does this push the rate path", and reusing the green/red
-   currency-move palette would imply a P&L reading the number doesn't carry. */
-.eid-summary {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1px;
-    background: var(--border);
-    border-bottom: 1px solid var(--border);
-}
-
-.eid-stat {
-    display: grid;
-    gap: 2px;
-    padding: 8px 12px;
-    background: rgba(16, 13, 10, 0.96);
-}
-
-.eid-stat > span {
-    color: var(--text-muted);
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-}
-
-.eid-stat > strong {
-    color: var(--text-heading);
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.eid-stat > strong small {
-    color: var(--text-muted);
-    font-size: 10px;
-    font-weight: 500;
-    margin-left: 3px;
-}
-
-.eid-stat > strong em { font-style: normal; }
-
-.eid-stat > small {
-    color: var(--text-muted);
-    font-size: 10px;
-}
-
-/* Direction tokens. Applied to text via colour and to the bar fill via
-   background, so both live in one place. */
-.eid-summary .is-hawkish,
-.eid-row .is-hawkish { color: var(--hawk); }
-
-.eid-summary .is-dovish,
-.eid-row .is-dovish { color: var(--dove); }
-
-.eid-summary .is-neutral,
-.eid-row .is-neutral { color: var(--neutral); }
-
-.eid-list {
-    display: flex;
-    flex-direction: column;
-}
-
-.eid-row {
-    border-bottom: 1px solid var(--border);
-}
-
-.eid-row:last-child { border-bottom: none; }
-
-.eid-row__hd {
-    display: grid;
-    grid-template-columns: 54px minmax(0, 1.6fr) 68px minmax(80px, 1.2fr) 108px 14px;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
+/* Collapsible terminal panel. <details> so the open/closed state needs no JS;
+   the chevron is the only affordance the native marker would have given us. */
+.tpanel--collapsible > summary.tpanel__hd {
     cursor: pointer;
     list-style: none;
 }
 
-/* Safari still paints its own disclosure triangle without this. */
-.eid-row__hd::-webkit-details-marker { display: none; }
+.tpanel--collapsible > summary.tpanel__hd::-webkit-details-marker { display: none; }
 
-.eid-row__hd:hover { background: rgba(255, 255, 255, 0.03); }
+.tpanel--collapsible > summary.tpanel__hd:hover { background: rgba(255, 255, 255, 0.03); }
 
-.eid-row[open] > .eid-row__hd { background: rgba(255, 255, 255, 0.04); }
-
-/* A spent signal stays legible but stops competing with live ones. */
-.eid-row.is-spent > .eid-row__hd { opacity: 0.45; }
-
-.eid-row.is-spent:hover > .eid-row__hd,
-.eid-row.is-spent[open] > .eid-row__hd { opacity: 1; }
-
-.eid-row__cur {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.eid-row__cur b {
-    color: var(--text-body);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-}
-
-.eid-row__name {
-    display: grid;
-    gap: 1px;
-    min-width: 0;
-    color: var(--text-heading);
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.eid-row__name small {
-    color: var(--text-muted);
-    font-size: 10px;
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.eid-row__age {
-    color: var(--text-muted);
-    font-size: 10px;
-    white-space: nowrap;
-}
-
-/* Decay bar. The outer <i> is the shock at t=0 (width scaled by |score|); the
-   inner <b> is what survives now. Reading them together gives size and
-   remaining life in one glance, which a single-value bar cannot show. */
-.eid-bar {
-    display: block;
-    height: 6px;
-    border-radius: 3px;
-    background: rgba(255, 255, 255, 0.05);
-    overflow: hidden;
-}
-
-.eid-bar i {
-    display: block;
-    height: 100%;
-    border-radius: 3px;
-    /* The unfilled remainder of the track: where the signal started. */
-    background: rgba(255, 255, 255, 0.09);
-}
-
-.eid-bar b {
-    display: block;
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.3s ease;
-}
-
-.eid-row.is-hawkish .eid-bar b { background: var(--hawk); }
-.eid-row.is-dovish .eid-bar b { background: var(--dove); }
-.eid-row.is-neutral .eid-bar b { background: var(--neutral); }
-
-.eid-row__val {
-    display: grid;
-    gap: 1px;
-    justify-items: end;
-    text-align: right;
-}
-
-.eid-row__val b {
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.eid-row__val small {
-    color: var(--text-muted);
-    font-size: 9px;
-    white-space: nowrap;
-}
-
-.eid-row__chev {
+.tpanel__chev {
+    margin-left: auto;
     color: var(--text-faint);
     font-size: 14px;
     transition: transform 0.2s ease;
 }
 
-.eid-row[open] .eid-row__chev { transform: rotate(90deg); }
+.tpanel--collapsible[open] .tpanel__chev { transform: rotate(90deg); }
 
-/* ── expanded detail ─────────────────────────────────────────────────────── */
-.eid-detail {
-    padding: 4px 12px 12px;
-    background: rgba(0, 0, 0, 0.22);
+/* ── Event-driven policy delta ────────────────────────────────────────────────
+   Layout follows event-innovation-panel-reference.html: stat cards, filter
+   chips, and a seven-column row grid with a two-part decay bar.
+
+   Colours are the app's own macro_design tokens, not the reference's literals.
+   The reference proposes a cool blue/coral pair; this theme already ships a
+   policy-direction pair (--hawk amber / --dove indigo) used by .badge.hawk and
+   the dove-to-hawk gradient, and a second palette for the same semantic would
+   split the vocabulary. They are aliased below, so switching to the reference's
+   blue/coral is a two-line change here and nowhere else. */
+.eid-panel-tokens,
+.eid-summary,
+.eid-chips,
+.eid-list,
+.eid-empty,
+.eid-foot {
+    --eid-hawk: var(--hawk);
+    --eid-dove: var(--dove);
+    --eid-flat: var(--neutral);
 }
 
-.eid-detail__meta {
+.eid-summary {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px 14px;
-    padding: 6px 0 8px;
-    color: var(--text-muted);
-    font-size: 10px;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
 }
 
-.eid-detail__meta b {
-    color: var(--text-body);
-    font-weight: 600;
-}
-
-.eid-members {
-    display: flex;
-    flex-direction: column;
+.eid-stat {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    overflow: hidden;
+    background: rgba(0, 0, 0, 0.25);
 }
 
-.eid-members__hd,
-.eid-member {
-    display: grid;
-    grid-template-columns: minmax(0, 1.8fr) repeat(4, minmax(56px, 1fr));
-    gap: 8px;
-    padding: 5px 8px;
-    font-size: 11px;
-}
-
-.eid-members__hd {
-    background: rgba(255, 255, 255, 0.03);
+.eid-stat__label {
+    margin: 0 0 5px;
     color: var(--text-muted);
     font-size: 9px;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
 }
 
-.eid-member {
-    border-top: 1px solid var(--border);
-    color: var(--text-body);
+.eid-stat__value {
+    margin: 0;
+    color: var(--text-heading);
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.1;
 }
 
-.eid-member.is-unscored { opacity: 0.55; }
+.eid-stat__value span {
+    margin-left: 5px;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 500;
+}
 
-.eid-member__name {
+.eid-stat__value.is-hawk { color: var(--eid-hawk); }
+.eid-stat__value.is-dove { color: var(--eid-dove); }
+.eid-stat__value.is-flat { color: var(--text-heading); }
+
+/* ── filter chips ────────────────────────────────────────────────────────── */
+.eid-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.eid-chip {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-body);
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.eid-chip:hover {
+    border-color: var(--border-strong);
+    color: var(--text-heading);
+}
+
+.eid-chip.is-active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+}
+
+/* ── rows ────────────────────────────────────────────────────────────────── */
+.eid-item { border-bottom: 1px solid var(--border); }
+.eid-item:last-child { border-bottom: none; }
+
+.eid-row {
+    display: grid;
+    grid-template-columns: 16px 44px minmax(0, 1fr) 74px 68px minmax(96px, 132px) 62px;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+.eid-row--parent {
+    cursor: pointer;
+    list-style: none;
+    background: rgba(255, 255, 255, 0.015);
+}
+
+/* Safari still paints its own disclosure triangle without this. */
+.eid-row--parent::-webkit-details-marker { display: none; }
+
+.eid-row--parent:hover { background: rgba(255, 255, 255, 0.045); }
+
+.eid-item[open] > .eid-row--parent { background: rgba(255, 255, 255, 0.05); }
+
+/* A spent signal stays legible but stops competing with live ones. */
+.eid-item.is-spent > .eid-row--parent { opacity: 0.45; }
+.eid-item.is-spent:hover > .eid-row--parent,
+.eid-item.is-spent[open] > .eid-row--parent { opacity: 1; }
+
+.eid-row--child {
+    background: rgba(0, 0, 0, 0.22);
+    opacity: 0.8;
+    font-size: 11px;
+}
+
+.eid-row--child .eid-name { padding-left: 10px; }
+.eid-row--child.is-unscored { opacity: 0.5; }
+
+.eid-caret {
+    color: var(--text-faint);
+    font-size: 9px;
+    transition: transform 0.2s ease;
+}
+
+.eid-item[open] > .eid-row--parent .eid-caret { transform: rotate(90deg); }
+
+.eid-ccy {
+    color: var(--text-heading);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.eid-name-cell {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.eid-name {
     color: var(--text-heading);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.eid-member__name em {
+.eid-badge {
+    margin-left: 5px;
+    padding: 1px 5px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
     color: var(--text-muted);
     font-size: 9px;
     font-style: normal;
-    margin-left: 4px;
+    letter-spacing: 0.03em;
+}
+
+.eid-meta {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: 9px;
+    white-space: nowrap;
+}
+
+.eid-meta em { font-style: normal; }
+
+.eid-theme {
+    letter-spacing: 0.05em;
     text-transform: uppercase;
 }
 
-.eid-num {
+/* Member-state origin (Germany / France under EUR) — the one piece of meta
+   that changes what the row means, so it gets the readable colour. */
+.eid-origin { color: var(--text-body); }
+
+.eid-flag { color: var(--accent); }
+
+.eid-date {
+    color: var(--text-muted);
+    font-size: 10px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.eid-delta {
     font-family: var(--mono);
     font-variant-numeric: tabular-nums;
+    font-weight: 700;
     text-align: right;
 }
 
-.eid-detail__note {
-    margin: 8px 0 0;
-    color: var(--text-muted);
-    font-size: 10px;
-    line-height: 1.4;
+.eid-delta.is-hawk { color: var(--eid-hawk); }
+.eid-delta.is-dove { color: var(--eid-dove); }
+.eid-delta.is-flat { color: var(--text-muted); }
+
+/* Decay bar. The track is the shock at t=0 (its width scaled by |score|); the
+   fill inside it is the fraction surviving now. A single-value bar cannot show
+   magnitude and remaining life at the same time. */
+.eid-decay {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
 }
 
+.eid-track {
+    display: block;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border-strong);
+    overflow: hidden;
+}
+
+.eid-track b {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.eid-track b.is-hawk { background: var(--eid-hawk); }
+.eid-track b.is-dove { background: var(--eid-dove); }
+.eid-track b.is-flat { background: var(--eid-flat); }
+
+.eid-decay__label {
+    color: var(--text-muted);
+    font-size: 9px;
+    font-style: normal;
+    white-space: nowrap;
+}
+
+.eid-pct {
+    color: var(--text-body);
+    font-size: 10px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.eid-pct.is-locked {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* ── empty / footer ──────────────────────────────────────────────────────── */
 .eid-empty {
     display: grid;
     gap: 4px;
-    padding: 20px 14px;
+    padding: 22px 14px;
     text-align: center;
 }
 
@@ -11874,35 +11891,13 @@ body.has-black-global-sidebar {
     letter-spacing: 0.04em;
 }
 
-/* The panel is dense; below this the bar column is the first thing to go. */
-@media (max-width: 900px) {
-    .eid-row__hd {
-        grid-template-columns: 48px minmax(0, 1.4fr) 96px 14px;
-    }
-    .eid-row__age,
-    .eid-bar { display: none; }
-    .eid-members__hd,
-    .eid-member { grid-template-columns: minmax(0, 1.6fr) repeat(2, minmax(56px, 1fr)); }
-    .eid-members__hd span:nth-child(n+4),
-    .eid-member span:nth-child(n+4) { display: none; }
+/* The panel lives in a ~360px terminal column as well as full width, so the
+   grid sheds its optional columns rather than overflowing. */
+@media (max-width: 1000px) {
+    .eid-summary { flex-wrap: wrap; }
+    .eid-stat { flex-basis: calc(50% - 4px); }
+    .eid-row { grid-template-columns: 16px 40px minmax(0, 1fr) 62px minmax(70px, 96px); }
+    .eid-date,
+    .eid-pct { display: none; }
+    .eid-meta { flex-wrap: wrap; white-space: normal; }
 }
-
-/* Collapsible terminal panel. <details> so the open/closed state needs no JS;
-   the chevron is the only affordance the native marker would have given us. */
-.tpanel--collapsible > summary.tpanel__hd {
-    cursor: pointer;
-    list-style: none;
-}
-
-.tpanel--collapsible > summary.tpanel__hd::-webkit-details-marker { display: none; }
-
-.tpanel--collapsible > summary.tpanel__hd:hover { background: rgba(255, 255, 255, 0.03); }
-
-.tpanel__chev {
-    margin-left: auto;
-    color: var(--text-faint);
-    font-size: 14px;
-    transition: transform 0.2s ease;
-}
-
-.tpanel--collapsible[open] .tpanel__chev { transform: rotate(90deg); }

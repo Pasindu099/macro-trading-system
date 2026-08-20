@@ -1,131 +1,148 @@
 {#
   Event-driven policy delta — HTMX fragment.
 
-  One row per bundle or standalone release. The decay bar reads in two parts:
-  the track width is how big the shock was at t=0, the fill inside it is how
-  much survives now. Both are computed server-side per request.
+  Structure follows event-innovation-panel-reference.html: summary stat cards,
+  filter chips, then a seven-column row grid (caret / currency / name / date /
+  delta / decay / remaining). Colours and type come from the app's own
+  macro_design tokens rather than the reference's literals — see main.css.
 
-  Row expansion uses <details>/<summary> rather than an HTMX round trip — the
-  numbers are already in the payload, and a network hop to reveal four values
-  the browser is holding would only add latency and a spinner.
+  Bundle rows collapse: members are nested child rows inside the same
+  <details>, never siblings of the parent. Native <details> rather than an HTMX
+  round trip, because the child numbers are already in this payload and a
+  network hop to reveal them would only add latency and a spinner.
 #}
 {% set summary = feed.summary %}
+{% set base = "/panels/event-innovation?days=" ~ feed.window_days %}
 
 <div class="eid-summary">
     <div class="eid-stat">
-        <span>Live signals</span>
-        <strong>{{ summary.live }}<small>/ {{ summary.total }}</small></strong>
-        <small>still carrying weight</small>
+        <p class="eid-stat__label">Live signals</p>
+        <p class="eid-stat__value">
+            {{ summary.live }}<span>/ {{ summary.total }} carrying weight</span>
+        </p>
     </div>
     <div class="eid-stat">
-        <span>Net impulse</span>
-        <strong class="{{ summary.net_class }}">{{ summary.net_display }}</strong>
-        <small>{{ summary.net_label }}</small>
+        <p class="eid-stat__label">Net impulse</p>
+        <p class="eid-stat__value is-{{ summary.net_tone }}">
+            {{ summary.net_display }}<span>{{ summary.net_label }}</span>
+        </p>
     </div>
     <div class="eid-stat">
-        <span>Hawkish / Dovish</span>
-        <strong>
-            <em class="is-hawkish">{{ summary.hawkish }}</em> /
-            <em class="is-dovish">{{ summary.dovish }}</em>
-        </strong>
-        <small>{{ feed.window_label }}</small>
+        <p class="eid-stat__label">Hawkish / dovish</p>
+        <p class="eid-stat__value">
+            {{ summary.hawkish }} / {{ summary.dovish }}<span>{{ feed.window_label }}</span>
+        </p>
     </div>
+</div>
+
+{#
+  Chips re-request the fragment rather than filtering in the browser, so the
+  summary stats recompute against the filtered set instead of going stale.
+#}
+<div class="eid-chips" role="tablist">
+    <button class="eid-chip{% if not feed.category %} is-active{% endif %}"
+            role="tab" aria-selected="{{ 'true' if not feed.category else 'false' }}"
+            hx-get="{{ base }}" hx-target="closest .tpanel__bd" hx-swap="innerHTML">All</button>
+    {% for name in feed.category_filters %}
+        <button class="eid-chip{% if feed.category == name %} is-active{% endif %}"
+                role="tab" aria-selected="{{ 'true' if feed.category == name else 'false' }}"
+                hx-get="{{ base }}&category={{ name|urlencode }}"
+                hx-target="closest .tpanel__bd" hx-swap="innerHTML">{{ name }}</button>
+    {% endfor %}
 </div>
 
 {% if feed.rows %}
     <div class="eid-list">
         {% for row in feed.rows %}
-            <details class="eid-row {{ row.direction_class }}{% if row.is_spent %} is-spent{% endif %}"
-                     id="{{ row.row_id }}">
-                <summary class="eid-row__hd">
-                    <span class="eid-row__cur" title="{{ row.country_name }}">
-                        <span class="flag flag-{{ row.currency_code }}"></span>
-                        <b>{{ row.currency_code }}</b>
+            <details class="eid-item{% if row.is_spent %} is-spent{% endif %}" id="{{ row.row_id }}">
+                <summary class="eid-row eid-row--parent">
+                    <span class="eid-caret" aria-hidden="true">&#9656;</span>
+
+                    <span class="eid-ccy">{{ row.currency_code }}</span>
+
+                    <span class="eid-name-cell">
+                        <span class="eid-name">
+                            {{ row.name }}
+                            {%- if row.bundle_badge %}
+                                <em class="eid-badge">{{ row.bundle_badge }}</em>
+                            {%- endif %}
+                        </span>
+                        <span class="eid-meta">
+                            <em class="eid-theme">{{ row.category }}</em>
+                            {%- if row.period %}<em class="eid-period">&middot; {{ row.period }}</em>{% endif %}
+                            {#
+                              German and French prints are genuine EUR signals but
+                              are not the euro-area aggregate; without this they
+                              read as duplicate "EUR" rows.
+                            #}
+                            {%- if row.country_label %}
+                                <em class="eid-origin">&middot; {{ row.country_label }}</em>
+                            {%- endif %}
+                        </span>
                     </span>
 
-                    <span class="eid-row__name">
-                        {{ row.name }}
-                        <small>
-                            {{ row.detail }}
-                            {%- if row.kind == 'bundle' %} &middot; bundled{% endif %}
-                        </small>
-                    </span>
+                    <span class="eid-date">{{ row.age_display }}</span>
 
-                    <span class="eid-row__age">{{ row.age_display }}</span>
+                    <span class="eid-delta is-{{ row.tone }}">{{ row.current_display }}</span>
 
-                    {#
-                      Track = shock size at release, fill = fraction surviving.
-                      aria-label carries the same reading for screen readers,
-                      which get nothing from a pair of nested divs.
-                    #}
-                    <span class="eid-bar"
+                    <span class="eid-decay"
                           role="img"
-                          aria-label="{{ row.initial_display }} at release, {{ row.remaining_display }} remaining">
-                        <i style="width: {{ row.track_width }}%;">
-                            <b style="width: {{ row.fill_pct }}%;"></b>
-                        </i>
+                          aria-label="{{ row.initial_display }} at release, {{ row.remaining_display }}">
+                        <span class="eid-track" style="width: {{ row.magnitude_pct }}%;">
+                            <b class="is-{{ row.tone }}" style="width: {{ row.fill_pct }}%;"></b>
+                        </span>
+                        <em class="eid-decay__label">
+                            {%- if row.does_not_decay %}held{% else %}of {{ row.initial_display }}{% endif -%}
+                        </em>
                     </span>
 
-                    <span class="eid-row__val">
-                        <b class="{{ row.direction_class }}">{{ row.current_display }}</b>
-                        <small>
-                            {%- if row.does_not_decay -%}
-                                held / no decay
-                            {%- else -%}
-                                of {{ row.initial_display }} &middot; {{ row.remaining_display }} left
-                            {%- endif -%}
-                        </small>
+                    <span class="eid-pct{% if row.does_not_decay %} is-locked{% endif %}">
+                        {%- if row.does_not_decay %}no decay{% else %}{{ row.remaining_display }}{% endif -%}
                     </span>
-
-                    <span class="eid-row__chev" aria-hidden="true">&rsaquo;</span>
                 </summary>
 
-                <div class="eid-detail">
-                    <div class="eid-detail__meta">
-                        <span>Decay bucket <b>{{ row.members[0].decay_bucket_label }}</b></span>
-                        <span>Half-life <b>{{ row.members[0].half_life_display }}</b></span>
-                        <span>Released <b>{{ row.release_date.strftime('%d %b %Y') }}</b></span>
-                        <span>Age <b>{{ row.days_elapsed }}d</b></span>
+                {% for child in row.children %}
+                    <div class="eid-row eid-row--child{% if not child.scored %} is-unscored{% endif %}">
+                        <span class="eid-caret"></span>
+                        <span class="eid-ccy"></span>
+                        <span class="eid-name-cell">
+                            <span class="eid-name">&#8627; {{ child.name }}</span>
+                            <span class="eid-meta">
+                                <em>actual {{ child.actual_display }}</em>
+                                <em>&middot; cons {{ child.consensus_display }}</em>
+                                <em>&middot; surprise {{ child.surprise_display }}</em>
+                                {%- if child.period %}<em>&middot; {{ child.period }}</em>{% endif %}
+                                {%- if not child.scored %}<em class="eid-flag">&middot; unscored</em>{% endif %}
+                            </span>
+                        </span>
+                        <span class="eid-date">{{ child.half_life_display }}</span>
+                        <span class="eid-delta is-{{ child.tone }}">{{ child.current_display }}</span>
+                        <span class="eid-decay">
+                            <span class="eid-track" style="width: 100%;">
+                                <b class="is-{{ child.tone }}" style="width: {{ child.fill_pct }}%;"></b>
+                            </span>
+                            <em class="eid-decay__label">of {{ child.initial_display }}</em>
+                        </span>
+                        <span class="eid-pct">{{ child.decay_bucket_label }}</span>
                     </div>
-
-                    <div class="eid-members" role="table">
-                        <div class="eid-members__hd" role="row">
-                            <span>Indicator</span>
-                            <span class="eid-num">Actual</span>
-                            <span class="eid-num">Consensus</span>
-                            <span class="eid-num">Surprise</span>
-                            <span class="eid-num">Normalized</span>
-                        </div>
-                        {% for member in row.members %}
-                            <div class="eid-member{% if not member.scored %} is-unscored{% endif %}" role="row">
-                                <span class="eid-member__name">
-                                    {{ member.display_name }}
-                                    {% if not member.scored %}<em>unscored</em>{% endif %}
-                                </span>
-                                <span class="eid-num">{{ member.actual_display }}</span>
-                                <span class="eid-num">{{ member.consensus_display }}</span>
-                                <span class="eid-num">{{ member.surprise_display }}</span>
-                                <span class="eid-num {{ member.normalized_class }}">{{ member.normalized_display }}</span>
-                            </div>
-                        {% endfor %}
-                    </div>
-
-                    {% if row.kind == 'bundle' %}
-                        <p class="eid-detail__note">
-                            Bundled release &mdash; these indicators printed together and
-                            resolve to one score, not {{ row.members|length }} independent shocks.
-                        </p>
-                    {% endif %}
-                </div>
+                {% endfor %}
             </details>
         {% endfor %}
     </div>
 {% else %}
     <div class="eid-empty">
-        <strong>No high or medium impact releases in the {{ feed.window_label }}.</strong>
+        <strong>
+            No high or medium impact releases
+            {%- if feed.category %} in {{ feed.category }}{% endif %}
+            in the {{ feed.window_label }}.
+        </strong>
         <span>
-            Low-impact prints are still scored and stored &mdash; widen the window
-            or include low impact to see them.
+            {%- if feed.category -%}
+                Clear the filter, or widen the window.
+            {%- else -%}
+                Low-impact prints are still scored and stored &mdash; widen the
+                window or include low impact to see them.
+            {%- endif -%}
         </span>
     </div>
 {% endif %}

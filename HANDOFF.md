@@ -6,6 +6,81 @@ is the session-to-session state.
 
 ---
 
+## 2026-08-21 — Panel restyle to the UI reference + data audit
+
+Rebuilt the panel against `event-innovation-panel-reference.html` and audited the
+two data issues visible in production.
+
+### Restyle
+
+Structure now matches the reference exactly: summary stat cards, filter chips,
+and a seven-column row grid (caret / currency / name / date / delta / decay /
+remaining). Bundle members are **nested child rows inside the parent's
+`<details>`**, never siblings.
+
+**Colours follow the app, not the reference.** The reference proposes cool
+blue/coral; `macro_design.css` already ships a policy-direction pair
+(`--hawk` amber, `--dove` indigo) used by `.badge.hawk` and the dove→hawk
+gradient, and a second palette for the same semantic would split the vocabulary.
+They are aliased as `--eid-hawk` / `--eid-dove` / `--eid-flat` at the top of the
+panel's CSS block, so switching to the reference's blue/coral is a two-line
+change in one place. Fonts likewise use `--sans` / `--mono` (Roboto); the
+reference's Syne + DM Mono are not loaded by this app.
+
+**Filter chips** (All / Inflation / Growth / Labor / Monetary Policy) re-request
+the fragment rather than filtering client-side, so the summary stats recompute
+against the filtered set instead of going stale. A bundle's category is its
+heaviest member's, so NFP day filters under Labor without splitting apart.
+Unknown categories fall back to unfiltered rather than 404ing.
+
+### Data issue 1 — bundle members appearing as siblings: CONFIRMED, fix is data
+
+Not a template bug. `_assemble_rows` has always put members in the expansion
+only. The duplication was **stale bundle membership in the production
+database**: `bundle_config.yaml` was fixed and deployed on 2026-08-20, but
+membership is baked into `release_bundles` / `event_innovation_scores` at
+backfill time, and the backfill was never re-run on the VPS. Production showed
+`UK cpi_headline_mom` with `bundle_id = NULL` while `cpi_headline_yoy` carried
+`bundle_id = 481`.
+
+Fix is one command on the VPS, no code deploy needed:
+```
+docker compose exec app python -m scripts.build_event_innovation --truncate
+```
+
+### Data issue 2 — the +0.00σ rows: NOT stale, root cause was different
+
+The hypothesis was stale/non-releasing indicators leaking into the query. The
+audit does not support it. Every `+0.00σ` row in the production window has a
+real `release_date` inside it, a real `actual`, and a real `consensus` — they
+are genuine prints that matched consensus exactly (19 of 59 scored rows, mostly
+CPI components and an RBA hold). Nothing is being included that did not release.
+
+What *was* wrong is why they looked duplicated: **`DE` and `FR` are separate
+countries in `countries`, both carrying `currency_code = 'EUR'`.** French and
+German national CPI prints were rendering with the same "EUR" tag as the
+euro-area aggregate, so the screenshot showed what looked like four repeated
+"EUR Headline/Harmonised CPI" rows. They are four different releases from three
+different countries. Production has 10 countries; a dev DB has 8, which is why
+this never appeared locally.
+
+Those rows are kept — German CPI is a genuine EUR signal — but now carry a
+country label in the row meta. `resolve_primaries()` picks the policy-level
+country per currency (`EUR → EU`); everything else is a member state. That
+branch is unreachable on an 8-country dev database, so it is unit-tested
+directly against the production country shape.
+
+Exact-zero rows are kept and rendered flat/grey, which is what the reference's
+`.delta-cell.flat` / `.decay-fill.flat` treatment is for. They are evidence the
+print landed in line. Hiding them is a one-line filter if you'd rather.
+
+### Tests
+
+`tests/unit/test_event_innovation_feed.py` now 45 tests. Full suite: 158 passing
+(the one failure is the pre-existing Fed-meeting-date test).
+
+---
+
 ## 2026-08-20 — Event-driven policy delta panel (frontend)
 
 Built the dashboard panel over the scoring layer from 2026-08-19, and **ran the

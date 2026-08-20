@@ -6,6 +6,129 @@ is the session-to-session state.
 
 ---
 
+## 2026-08-20 — Event-driven policy delta panel (frontend)
+
+Built the dashboard panel over the scoring layer from 2026-08-19, and **ran the
+0016 migration + backfill** that the previous session left pending.
+
+### Migration and backfill are now done
+
+```
+alembic upgrade head          # 0015 -> 0016_event_innovation
+python -m scripts.build_event_innovation --truncate
+```
+
+Result: 17,308 deduplicated releases → 5,563 scored, 11,745 stored unscored,
+678 bundles, 173 meeting-adjacent rows awaiting the CB roll-up.
+
+Distribution sanity-checked and healthy: `stddev(surprise_normalized)` = 0.98
+(unit scale, as designed), mean |z| = 0.64, only 9 of 5,563 clipped at ±6 —
+the fat-tailed-but-not-broken profile the scaling was aiming for. Bundle counts
+land at ~70 per key across 2020-2026, i.e. one per month, as expected.
+
+### What was built
+
+**Endpoint** — `GET /panels/event-innovation` in `app/api/routes/pages.py`.
+Query params: `days` (default 14, clamped 1-90), `country`, `include_unscored`
+(default false). Returns the HTMX fragment.
+
+**Service** — `app/services/event_innovation_feed.py`. Loads scores + bundles,
+collapses bundled members into one row each, and **computes decay live at
+request time** from `half_life_days` and days-since-release. Nothing decayed is
+persisted — how much of a shock survives depends on when you ask. The decay
+maths is imported from `app.processing.event_innovation` rather than re-derived,
+so the panel and the scoring layer cannot drift.
+
+**Template** — `app/web/templates/_event_innovation.html`. One row per bundle or
+standalone release, newest first. Row expansion uses native `<details>` rather
+than an HTMX round trip: the member numbers are already in the payload, so a
+network hop to reveal them would only add latency and a spinner.
+
+**Styles** — `.eid-*` block appended to `main.css`, following the `.rl-*`
+release-ledger conventions and the macro_design tokens.
+
+**Placement** — collapsible `<details class="tpanel tpanel--collapsible">` in
+column 3 of the landing terminal, collapsed by default and deliberately *not*
+beside the Currency Bias Board. Loads on first expand
+(`hx-trigger="toggle once from:closest details"`) and then refreshes every 120s
+**only while open** (`every 120s [this.closest('details').open]`), so a collapsed
+panel costs nothing.
+
+**Tests** — `tests/unit/test_event_innovation_feed.py`, 33 tests. Full suite:
+147 passing.
+
+### Design decisions worth knowing
+
+**Hawkish/dovish uses `--hawk`/`--dove`, not `--bull`/`--bear`.** Both pairs
+already exist in `macro_design.css`. This panel answers "which way does this push
+the rate path", so it reuses the existing policy-direction palette; the green/red
+currency-move palette would imply a P&L reading the number does not carry.
+
+**The decay bar reads in two parts.** The track width is the shock size at t=0
+(scaled against `BAR_FULL_SCALE = 3.0`, since scores clip at 6 but a 3-sigma
+print is already outsized); the fill inside it is the fraction surviving now.
+A single-value bar cannot show size and remaining life at once. Track width is
+floored at 2% so an exactly-in-line print reads as "no surprise" rather than as
+a broken row.
+
+**Bundle labels are derived, not configured.** `US_NFP_DAY` → "NFP Day": the
+country already has its own column, and a `label:` field in bundle_config.yaml
+would be a second thing to keep in sync.
+
+### Bugs found and fixed this session
+
+**`:param::cast` silently breaks SQLAlchemy `text()`.** SQLAlchemy's bind-param
+regex has a negative lookahead for `:`, so `:country_code::text` is *not* parsed
+as a bind param — it is left in the SQL as literal text and Postgres rejects the
+statement. Both this module and `event_innovation.py` now use
+`CAST(:country_code AS text)`. Worth remembering: it fails at execution, not at
+import, and only on the code path that uses the parameter.
+
+**Bundles were leaking members, which the panel made visible.** UK CPI day was
+rendering as three rows (the bundle plus two loose MoM prints) — exactly the
+"one event, N shocks" problem bundling exists to prevent. A systematic query for
+"scored releases with no bundle_id on a day that has a bundle" found 12 such
+indicators. Added the genuine same-release members to `bundle_config.yaml`:
+
+- `UK_CPI_DAY`, `CA_CPI_DAY`, `EU_HICP_DAY`, `JP_CPI_DAY` ← the `*_mom` variants
+- `UK_LABOUR_DAY` ← `employment_change` (71 escapes, the worst offender)
+- `NZ_LABOUR_DAY` ← `labour_cost_index_yoy`
+- `AU_CPI_DAY` ← `monthly_cpi_indicator`
+
+Re-running the query afterwards leaves only three, all correctly standalone:
+US `initial_jobless_claims` / `continuing_jobless_claims` (a weekly Thursday
+release that merely coincides) and EU `unemployment_rate` (a labour print landing
+on HICP day, with no EU labour bundle to join). Bundles went 674 → 678.
+
+**Same-day duplicate labels.** The ONS publishes quarterly and monthly GDP (YoY)
+on one morning, both mapped to `gdp_yoy`, so the panel showed two identical
+"GDP (YoY)" rows. Not a bug — two genuine periods — but unreadable, so the row
+subtitle now carries the period.
+
+### Verified
+
+Endpoint exercised across every branch via TestClient: default window (25 rows),
+`country=US` (17), narrow window → empty state renders, `days=99999` → clamped to
+90 (152 rows), `include_unscored=true` (81). Landing page renders with the panel
+wired in. Template rendered end-to-end against live data.
+
+### Stubbed / not built (per brief)
+
+- Projection tracker badges — needs `cb_projections` / `cb_tracking`.
+- Drill-down-per-currency views. The endpoint already takes `?country=`, so the
+  data path exists; only the UI is missing.
+- Real-time push. Polling only.
+
+### Candidates for next session
+
+- A `US_JOBLESS_CLAIMS_DAY` bundle (initial + continuing + 4-week average always
+  print together) — the last real bundling gap, deliberately left alone because
+  it is weekly and high-churn.
+- A standalone full-width page for the panel; the fragment is already reusable.
+- The `meeting_adjacent` roll-up (173 rows waiting) still blocks on `cb_tracking`.
+
+---
+
 ## 2026-08-19 — Event innovation scoring layer
 
 Built the `event_innovation` scoring layer: the canonical surprise measure for
@@ -124,21 +247,9 @@ point-in-time, and does no bundling or decay.
 
 ### Not yet verified
 
-**The migration has not been run and the backfill has not been executed** — the
-Postgres container was not running in this session, so `alembic current` could
-not reach the database. Verified instead: both tables compile cleanly against the
-Postgres dialect, the revision chains correctly off `0015`, and every module
-imports. Next session should run:
-
-```
-docker compose up -d db
-python -m alembic upgrade head
-python -m scripts.build_event_innovation --truncate
-```
-
-and sanity-check the resulting distribution of `surprise_normalized` (expect
-roughly unit scale, fat tails, clipped at ±6) and the `US_NFP_DAY` bundle count
-(expect ~70 monthly bundles across 2020-2026).
+~~The migration has not been run and the backfill has not been executed.~~
+**Done on 2026-08-20** — see the entry above for the numbers. The predicted
+distribution (unit scale, fat tails, ~70 bundles per key) held.
 
 ### Pre-existing failures (not caused by this work)
 

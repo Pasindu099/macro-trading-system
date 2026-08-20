@@ -32,6 +32,11 @@ from app.db.models import (
     Country, CbPolicyDocument, CbEconomicProjection,
     Indicator, IndicatorRelease, IngestionRun,
 )
+from app.services.event_innovation_feed import (
+    DEFAULT_WINDOW_DAYS,
+    build_event_innovation_feed,
+    resolve_feed_filters,
+)
 from app.services.meeting_calendar import SUPPORTED_BANKS, normalize_bank, get_upcoming_meetings
 from app.services.release_ledger import (
     IMPORTANCE_LABELS,
@@ -3617,6 +3622,33 @@ async def country_tab_fragment(
             "rows": rows,
             "show_footnote": any(row["is_multi_category"] for row in rows),
         },
+    )
+
+
+@router.get("/panels/event-innovation", response_class=HTMLResponse)
+async def event_innovation_fragment(
+    request: Request,
+    days: int = DEFAULT_WINDOW_DAYS,
+    # Low-impact releases are scored and stored with scored=false, so the panel
+    # can surface them later without a re-ingest. Off by default: the whole
+    # point of the impact filter is to keep the list to what moves a curve.
+    include_unscored: bool = False,
+    country: str | None = None,
+    session: AsyncSession = Depends(get_session),
+) -> HTMLResponse:
+    """Render the HTMX fragment for the event-driven policy delta panel.
+
+    Decay is applied here, at request time, rather than read from a stored
+    column — how much of a shock survives depends on when you ask.
+    """
+    filters = resolve_feed_filters(
+        days, include_unscored=include_unscored, country_code=country
+    )
+    feed = await build_event_innovation_feed(session, filters)
+    return templates.TemplateResponse(
+        request,
+        "_event_innovation.html",
+        {"request": request, "feed": feed},
     )
 
 

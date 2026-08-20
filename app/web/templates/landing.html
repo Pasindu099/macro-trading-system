@@ -181,6 +181,28 @@
       </div>
     </section>
 
+    {#
+      Event-driven policy delta. Collapsed by default and deliberately not
+      beside the Currency Bias Board: it re-sorts on every release and would
+      pull attention off the strength ranking, which is the slower read this
+      column exists to support. Loads on first expand, then refreshes every
+      two minutes only while it is actually open.
+    #}
+    <details class="tpanel tpanel--collapsible" id="eid-panel">
+      <summary class="tpanel__hd">
+        <strong>Event-Driven Policy Delta</strong>
+        <span class="tbadge">DECAYED</span>
+        <span class="tpanel__meta">last 14d</span>
+        <span class="tpanel__chev" aria-hidden="true">&rsaquo;</span>
+      </summary>
+      <div class="tpanel__bd tpanel__bd--scroll"
+           hx-get="/panels/event-innovation?days=14"
+           hx-trigger="toggle once from:closest details, every 120s [this.closest('details').open]"
+           hx-swap="innerHTML">
+        <div class="tskeleton"><i></i><i></i><i></i><i></i></div>
+      </div>
+    </details>
+
     <section class="tpanel">
       <header class="tpanel__hd">
         <strong>Research Alerts</strong>

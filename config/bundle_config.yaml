@@ -209,13 +209,16 @@ bundles:
     members:
       - {indicator: core_cpi_yoy, weight: 1.00}
       - {indicator: cpi_headline_yoy, weight: 0.80}
+      - {indicator: cpi_headline_mom, weight: 0.50}
 
   - bundle_key: UK_CPI_DAY
     country: UK
     description: ONS consumer price inflation release.
     members:
       - {indicator: core_cpi_yoy, weight: 1.00}
+      - {indicator: core_cpi_mom, weight: 0.95}
       - {indicator: cpi_headline_yoy, weight: 0.90}
+      - {indicator: cpi_headline_mom, weight: 0.60}
       - {indicator: retail_price_index_yoy, weight: 0.30}
       - {indicator: ppi_output_yoy, weight: 0.20}
 
@@ -224,8 +227,9 @@ bundles:
     description: ONS labour market overview — earnings, claimant count, ILO rate.
     members:
       - {indicator: avg_earnings_excl_bonus, weight: 1.00}
-      - {indicator: avg_earnings_incl_bonus, weight: 0.60}
       - {indicator: unemployment_rate, weight: 0.70}
+      - {indicator: avg_earnings_incl_bonus, weight: 0.60}
+      - {indicator: employment_change, weight: 0.60}
       - {indicator: claimant_count_change, weight: 0.40}
       - {indicator: hmrc_payrolls_change, weight: 0.30}
 
@@ -245,8 +249,10 @@ bundles:
       - {indicator: cpi_trimmed_mean_yoy, weight: 1.00}
       - {indicator: cpi_median_yoy, weight: 0.90}
       - {indicator: cpi_headline_yoy, weight: 0.80}
+      - {indicator: cpi_headline_mom, weight: 0.60}
       - {indicator: cpi_common_yoy, weight: 0.50}
       - {indicator: core_cpi_yoy, weight: 0.50}
+      - {indicator: core_cpi_mom, weight: 0.45}
 
   - bundle_key: AU_LABOUR_DAY
     country: AU
@@ -266,6 +272,9 @@ bundles:
       - {indicator: rba_trimmed_mean_cpi_yoy, weight: 0.90}
       - {indicator: cpi_headline_qoq, weight: 0.70}
       - {indicator: cpi_headline_yoy, weight: 0.65}
+      # The ABS publishes the monthly CPI indicator alongside the quarterly
+      # print in quarter-end months, so it belongs to this event when it lands.
+      - {indicator: monthly_cpi_indicator, weight: 0.50}
       - {indicator: rba_weighted_median_cpi_qoq, weight: 0.40}
       - {indicator: rba_weighted_median_cpi_yoy, weight: 0.35}
 
@@ -277,6 +286,7 @@ bundles:
       - {indicator: unemployment_rate, weight: 0.90}
       - {indicator: participation_rate, weight: 0.40}
       - {indicator: labour_cost_index_qoq, weight: 0.40}
+      - {indicator: labour_cost_index_yoy, weight: 0.35}
 
   - bundle_key: NZ_CPI_DAY
     country: NZ
@@ -292,6 +302,7 @@ bundles:
       - {indicator: core_cpi_yoy, weight: 1.00}
       - {indicator: cpi_headline_yoy, weight: 0.70}
       - {indicator: cpi_ex_food_energy_yoy, weight: 0.60}
+      - {indicator: cpi_headline_mom, weight: 0.40}
 
   # ── expansion stubs ────────────────────────────────────────────────────────
   # Uncomment and fill in as the mapping coverage is confirmed. Left here so

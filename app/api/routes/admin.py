@@ -30,7 +30,13 @@ from app.api.schemas import (
     UnmappedEventGroup,
     UnmappedEventsPayload,
 )
-from app.db.models import Country, Indicator, IndicatorRelease, IngestionRun
+from app.db.models import (
+    Country,
+    GovernmentYieldIngestionStatus,
+    Indicator,
+    IndicatorRelease,
+    IngestionRun,
+)
 from app.db.session import get_session
 from app.settings import get_settings
 
@@ -266,6 +272,39 @@ async def admin_ingestion_runs(
         runs=runs,
     )
     return Envelope(data=payload, meta=_meta())
+
+
+@router.get("/government-yields/status")
+async def admin_government_yield_status(
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, object]:
+    """Operational status for durable EODHD government-yield ingestion."""
+    rows = (
+        await session.execute(
+            select(GovernmentYieldIngestionStatus).order_by(
+                GovernmentYieldIngestionStatus.job_name,
+            )
+        )
+    ).scalars().all()
+    return {
+        "jobs": [
+            {
+                "job_name": row.job_name,
+                "status": row.status,
+                "last_attempted_at": row.last_attempted_at,
+                "last_successful_at": row.last_successful_at,
+                "next_scheduled_run": row.next_scheduled_run,
+                "observations_inserted": row.observations_inserted,
+                "observations_seen": row.observations_seen,
+                "symbols_missing": list(row.symbols_missing or []),
+                "stale_symbols": list(row.stale_symbols or []),
+                "errors": row.errors or {},
+                "updated_at": row.updated_at,
+            }
+            for row in rows
+        ],
+        "meta": {"generated_at": _now()},
+    }
 
 
 # ══════════════════════════════════════════════════════════════════════

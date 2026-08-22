@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ page_title }}</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f97316'/%3E%3Ctext x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-family='Arial'%3EM%3C/text%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -89,11 +90,13 @@
     ("/#cb", "CB Terminal", false), ("/rate-prob/FED", "Rate Probability", false),
     ("/rate-probability", "Rate Probs Live", false), ("/cb-news", "CB News", false),
     ("/fx-outlook", "FX Outlook", false), ("/rates", "Yields", false),
+    ("/fixed-income", "Fixed Income", false),
     ("/calendar", "Calendar", false),
   ]),
   ("Research", [
     ("/macro-monitor", "Macro Monitor", false), ("/cb-policy-tracker", "Policy Tracker", false),
     ("/countries", "Countries", false), ("/bank-research", "Bank Research", false),
+    ("/knowledge-bank", "Knowledge Bank", false),
     ("/brief-builder", "Brief Builder", false), ("/trade-planner", "Trade Planner", false),
     ("/research-lab", "Research Lab", false), ("/event-log", "Event Log", true),
   ]),
@@ -195,6 +198,10 @@
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
           <span class="label">Yields</span>
         </a>
+        <a href="/fixed-income" class="sb-item {% if request.url.path.startswith('/fixed-income') %}active{% endif %}">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h18"/><path d="M5 17V9"/><path d="M10 17V5"/><path d="M15 17v-7"/><path d="M20 17V3"/></svg>
+          <span class="label">Fixed Income</span>
+        </a>
         <a href="/calendar" class="sb-item {% if request.url.path.startswith('/calendar') %}active{% endif %}">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span class="label">Calendar</span>
@@ -217,6 +224,10 @@
         <a href="/bank-research" class="sb-item {% if request.url.path.startswith('/bank-research') %}active{% endif %}">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           <span class="label">Bank Research</span>
+        </a>
+        <a href="/knowledge-bank" class="sb-item {% if request.url.path.startswith('/knowledge-bank') %}active{% endif %}">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/><path d="M8 7h8"/><path d="M8 11h8"/></svg>
+          <span class="label">Knowledge Bank</span>
         </a>
         <a href="/brief-builder" class="sb-item {% if request.url.path.startswith('/brief-builder') %}active{% endif %}">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -279,6 +290,7 @@
           {% elif request.url.path.startswith('/country/') %}Country
           {% elif request.url.path.startswith('/countries') %}Countries
           {% elif request.url.path.startswith('/bank-research') %}Bank Research
+          {% elif request.url.path.startswith('/knowledge-bank') %}Knowledge Bank
           {% elif request.url.path.startswith('/analytics') %}Analytics
           {% elif request.url.path.startswith('/brief-builder') %}Brief Builder
           {% elif request.url.path.startswith('/trade-planner') %}Trade Planner

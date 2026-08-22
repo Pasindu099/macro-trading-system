@@ -554,6 +554,190 @@ class OISCache(Base):
         )
 
 
+class GovernmentYieldObservation(Base):
+    """Immutable provider observation for a government-yield curve point.
+
+    Rows are point-in-time provider facts. Re-ingesting the exact same EODHD
+    payload is idempotent, while a changed provider payload for the same
+    symbol/date is preserved as a new observation instead of overwriting history.
+    """
+
+    __tablename__ = "government_yield_observations"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    provider: Mapped[str] = mapped_column(String(30), nullable=False)
+    provider_symbol: Mapped[str] = mapped_column(String(40), nullable=False)
+    provider_country_prefix: Mapped[str] = mapped_column(String(4), nullable=False)
+    country_code: Mapped[str] = mapped_column(String(2), nullable=False)
+    currency_code: Mapped[str] = mapped_column(String(3), nullable=False)
+    maturity: Mapped[str] = mapped_column(String(4), nullable=False)
+    maturity_months: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    yield_value: Mapped[Decimal] = mapped_column(Numeric(12, 6), nullable=False)
+    market_observation_date: Mapped[date] = mapped_column(Date, nullable=False)
+    provider_timestamp: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    ingested_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+    original_timezone: Mapped[str | None] = mapped_column(Text, nullable=True)
+    market_timezone: Mapped[str | None] = mapped_column(Text, nullable=True)
+    data_frequency: Mapped[str] = mapped_column(String(20), nullable=False)
+    source_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    quality_status: Mapped[str] = mapped_column(String(30), nullable=False)
+    observation_kind: Mapped[str] = mapped_column(String(30), nullable=False)
+    payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    raw_payload: Mapped[dict[str, Any]] = mapped_column(
+        JSONB,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+    )
+    validation_errors: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "provider",
+            "provider_symbol",
+            "market_observation_date",
+            "payload_hash",
+            name="uq_gov_yield_provider_symbol_date_hash",
+        ),
+        Index(
+            "ix_gov_yield_country_maturity_date",
+            "country_code",
+            "maturity",
+            "market_observation_date",
+        ),
+        Index(
+            "ix_gov_yield_symbol_date",
+            "provider_symbol",
+            "market_observation_date",
+        ),
+        Index("ix_gov_yield_quality", "quality_status", "source_type"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<GovernmentYieldObservation symbol={self.provider_symbol!r} "
+            f"date={self.market_observation_date.isoformat()} "
+            f"maturity={self.maturity!r}>"
+        )
+
+
+class GovernmentYieldIngestionStatus(Base):
+    """Operational status for government-yield ingestion and stale checks."""
+
+    __tablename__ = "government_yield_ingestion_status"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    job_name: Mapped[str] = mapped_column(String(80), nullable=False, unique=True)
+    last_attempted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    last_successful_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    next_scheduled_run: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    observations_inserted: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+    )
+    observations_seen: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+    )
+    symbols_missing: Mapped[list[str]] = mapped_column(
+        ARRAY(Text),
+        nullable=False,
+        server_default="{}",
+    )
+    stale_symbols: Mapped[list[str]] = mapped_column(
+        ARRAY(Text),
+        nullable=False,
+        server_default="{}",
+    )
+    errors: Mapped[dict[str, Any]] = mapped_column(
+        JSONB,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+    )
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        server_default=text("'unknown'"),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<GovernmentYieldIngestionStatus job={self.job_name!r} status={self.status!r}>"
+
+
+class FxSpotObservation(Base):
+    """Immutable daily FX spot observation for rates-FX analytics."""
+
+    __tablename__ = "fx_spot_observations"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    provider: Mapped[str] = mapped_column(String(30), nullable=False)
+    provider_symbol: Mapped[str] = mapped_column(String(40), nullable=False)
+    pair: Mapped[str] = mapped_column(String(7), nullable=False)
+    base_currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    quote_currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    close_value: Mapped[Decimal] = mapped_column(Numeric(20, 8), nullable=False)
+    observation_date: Mapped[date] = mapped_column(Date, nullable=False)
+    provider_timestamp: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    ingested_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+    data_frequency: Mapped[str] = mapped_column(String(20), nullable=False)
+    source_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    quality_status: Mapped[str] = mapped_column(String(30), nullable=False)
+    payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    raw_payload: Mapped[dict[str, Any]] = mapped_column(
+        JSONB,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+    )
+    validation_errors: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "provider",
+            "provider_symbol",
+            "observation_date",
+            "payload_hash",
+            name="uq_fx_spot_provider_symbol_date_hash",
+        ),
+        Index("ix_fx_spot_pair_date", "pair", "observation_date"),
+        Index("ix_fx_spot_quality", "quality_status", "source_type"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<FxSpotObservation pair={self.pair!r} "
+            f"date={self.observation_date.isoformat()}>"
+        )
+
+
 class EventReactionNote(Base):
     """A manually-logged news event, for building the event-trading dataset.
 
@@ -942,3 +1126,532 @@ class SourceHealth(Base):
             f"<SourceHealth source={self.source_name!r} "
             f"healthy={self.is_healthy} checked={self.last_checked_at}>"
         )
+
+
+class KnowledgeSourceDocument(Base):
+    """Canonical source document, deduplicated by immutable file hash."""
+
+    __tablename__ = "knowledge_source_documents"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    file_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    original_filename: Mapped[str] = mapped_column(Text, nullable=False)
+    original_path: Mapped[str] = mapped_column(Text, nullable=False)
+    title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    author: Mapped[str | None] = mapped_column(Text, nullable=True)
+    publisher: Mapped[str | None] = mapped_column(Text, nullable=True)
+    publication_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    date_confidence: Mapped[str | None] = mapped_column(Text, nullable=True)
+    page_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    language: Mapped[str | None] = mapped_column(String(12), nullable=True)
+    document_type: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default=text("'market_research'")
+    )
+    extraction_status: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default=text("'pending'")
+    )
+    extraction_version: Mapped[str | None] = mapped_column(Text, nullable=True)
+    first_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    last_processed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    processing_warnings: Mapped[list[str] | None] = mapped_column(
+        JSONB, nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    files: Mapped[list[KnowledgeSourceFile]] = relationship(
+        "KnowledgeSourceFile",
+        back_populates="document",
+        foreign_keys="KnowledgeSourceFile.document_id",
+    )
+    pages: Mapped[list[KnowledgeDocumentPage]] = relationship(
+        "KnowledgeDocumentPage",
+        back_populates="document",
+        cascade="all, delete-orphan",
+    )
+    sections: Mapped[list[KnowledgeDocumentSection]] = relationship(
+        "KnowledgeDocumentSection",
+        back_populates="document",
+        cascade="all, delete-orphan",
+    )
+    knowledge_objects: Mapped[list[KnowledgeObject]] = relationship(
+        "KnowledgeObject",
+        back_populates="document",
+        cascade="all, delete-orphan",
+    )
+
+
+class KnowledgeSourceFile(Base):
+    """Every discovered file path, including duplicates of canonical documents."""
+
+    __tablename__ = "knowledge_source_files"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    original_filename: Mapped[str] = mapped_column(Text, nullable=False)
+    original_path: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    file_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    document_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("knowledge_source_documents.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    duplicate_of_document_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("knowledge_source_documents.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    is_duplicate: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
+    file_size_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    file_modified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    first_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    document: Mapped[KnowledgeSourceDocument] = relationship(
+        "KnowledgeSourceDocument",
+        back_populates="files",
+        foreign_keys=[document_id],
+    )
+    duplicate_of_document: Mapped[KnowledgeSourceDocument | None] = relationship(
+        "KnowledgeSourceDocument",
+        foreign_keys=[duplicate_of_document_id],
+    )
+
+    __table_args__ = (
+        Index("ix_knowledge_source_files_hash", "file_hash"),
+    )
+
+
+class KnowledgeDocumentPage(Base):
+    """Page-level raw and cleaned text with provenance."""
+
+    __tablename__ = "knowledge_document_pages"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    document_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("knowledge_source_documents.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    page_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    raw_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cleaned_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extraction_version: Mapped[str] = mapped_column(Text, nullable=False)
+    extraction_warnings: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    document: Mapped[KnowledgeSourceDocument] = relationship(
+        "KnowledgeSourceDocument",
+        back_populates="pages",
+    )
+
+    __table_args__ = (
+        UniqueConstraint("document_id", "page_number", name="uq_knowledge_doc_page"),
+    )
+
+
+class KnowledgeDocumentSection(Base):
+    """Cleaned section representation derived from page text."""
+
+    __tablename__ = "knowledge_document_sections"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    document_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("knowledge_source_documents.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    section_order: Mapped[int] = mapped_column(Integer, nullable=False)
+    section_title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    page_start: Mapped[int] = mapped_column(Integer, nullable=False)
+    page_end: Mapped[int] = mapped_column(Integer, nullable=False)
+    raw_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cleaned_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    document: Mapped[KnowledgeSourceDocument] = relationship(
+        "KnowledgeSourceDocument",
+        back_populates="sections",
+    )
+
+    __table_args__ = (
+        Index("ix_knowledge_sections_document_order", "document_id", "section_order"),
+    )
+
+
+class KnowledgeFigure(Base):
+    """Extracted figure/chart/image artifact linked to a source page."""
+
+    __tablename__ = "knowledge_figures"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    document_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("knowledge_source_documents.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    page_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    figure_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    image_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    artifact_path: Mapped[str] = mapped_column(Text, nullable=False)
+    image_format: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    width_px: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    height_px: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    bbox: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    nearby_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    caption: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extraction_method: Mapped[str] = mapped_column(Text, nullable=False)
+    interpretation_status: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default=text("'pending'")
+    )
+    interpretation: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    warnings: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    document: Mapped[KnowledgeSourceDocument] = relationship("KnowledgeSourceDocument")
+
+    __table_args__ = (
+        UniqueConstraint("document_id", "image_hash", name="uq_knowledge_figure_hash"),
+        Index("ix_knowledge_figures_document_page", "document_id", "page_number"),
+    )
+
+
+class KnowledgeTable(Base):
+    """Detected table-like content with source-page provenance."""
+
+    __tablename__ = "knowledge_tables"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    document_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("knowledge_source_documents.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    page_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    table_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    table_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    caption: Mapped[str | None] = mapped_column(Text, nullable=True)
+    raw_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cleaned_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    structured_rows: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    extraction_method: Mapped[str] = mapped_column(Text, nullable=False)
+    interpretation_status: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default=text("'pending'")
+    )
+    interpretation: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    warnings: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    document: Mapped[KnowledgeSourceDocument] = relationship("KnowledgeSourceDocument")
+
+    __table_args__ = (
+        UniqueConstraint("document_id", "table_hash", name="uq_knowledge_table_hash"),
+        Index("ix_knowledge_tables_document_page", "document_id", "page_number"),
+    )
+
+
+class KnowledgeObject(Base):
+    """Atomic durable research object extracted from source material."""
+
+    __tablename__ = "knowledge_objects"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    document_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("knowledge_source_documents.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    section_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("knowledge_document_sections.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    page_start: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    page_end: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    publication_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    analyst: Mapped[str | None] = mapped_column(Text, nullable=True)
+    institution: Mapped[str | None] = mapped_column(Text, nullable=True)
+    knowledge_type: Mapped[str] = mapped_column(Text, nullable=False)
+    concise_statement: Mapped[str] = mapped_column(Text, nullable=False)
+    detailed_explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    supporting_passage: Mapped[str | None] = mapped_column(Text, nullable=True)
+    assets: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), nullable=False, server_default="{}"
+    )
+    instruments: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), nullable=False, server_default="{}"
+    )
+    countries: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), nullable=False, server_default="{}"
+    )
+    central_banks: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), nullable=False, server_default="{}"
+    )
+    macro_themes: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), nullable=False, server_default="{}"
+    )
+    event_types: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), nullable=False, server_default="{}"
+    )
+    market_regime: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    direction: Mapped[str | None] = mapped_column(Text, nullable=True)
+    time_horizon: Mapped[str | None] = mapped_column(Text, nullable=True)
+    confidence_language: Mapped[str | None] = mapped_column(Text, nullable=True)
+    supporting_evidence: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
+    contradictory_evidence: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
+    catalysts: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
+    risks: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
+    invalidation_conditions: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
+    attribution_type: Mapped[str] = mapped_column(Text, nullable=False)
+    extraction_model: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extraction_version: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extraction_timestamp: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    review_status: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default=text("'pending'")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    document: Mapped[KnowledgeSourceDocument] = relationship(
+        "KnowledgeSourceDocument",
+        back_populates="knowledge_objects",
+    )
+    section: Mapped[KnowledgeDocumentSection | None] = relationship(
+        "KnowledgeDocumentSection"
+    )
+
+    __table_args__ = (
+        Index("ix_knowledge_objects_type_date", "knowledge_type", "publication_date"),
+        Index("ix_knowledge_objects_review", "review_status"),
+    )
+
+
+class KnowledgeRelationship(Base):
+    """Typed relationship between two knowledge objects."""
+
+    __tablename__ = "knowledge_relationships"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    source_object_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("knowledge_objects.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    target_object_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("knowledge_objects.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    relationship_type: Mapped[str] = mapped_column(Text, nullable=False)
+    confidence: Mapped[str | None] = mapped_column(Text, nullable=True)
+    evidence: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "source_object_id",
+            "target_object_id",
+            "relationship_type",
+            name="uq_knowledge_relationship",
+        ),
+    )
+
+
+class KnowledgeEmbedding(Base):
+    """Regenerable embedding artifact linked to a durable knowledge object."""
+
+    __tablename__ = "knowledge_embeddings"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    object_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("knowledge_objects.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    embedding_model: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding_version: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding: Mapped[list[float] | None] = mapped_column(JSONB, nullable=True)
+    embedding_text_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "object_id",
+            "embedding_model",
+            "embedding_version",
+            name="uq_knowledge_embedding_version",
+        ),
+    )
+
+
+class KnowledgeNewsEvent(Base):
+    """Provider-neutral normalized news event for future automated feeds."""
+
+    __tablename__ = "knowledge_news_events"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    provider: Mapped[str] = mapped_column(Text, nullable=False)
+    external_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    headline: Mapped[str] = mapped_column(Text, nullable=False)
+    body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source: Mapped[str | None] = mapped_column(Text, nullable=True)
+    published_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    affected_entities: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), nullable=False, server_default="{}"
+    )
+    affected_assets: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), nullable=False, server_default="{}"
+    )
+    event_category: Mapped[str | None] = mapped_column(Text, nullable=True)
+    novelty_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    impact_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    duplicate_cluster: Mapped[str | None] = mapped_column(Text, nullable=True)
+    processing_status: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default=text("'pending'")
+    )
+    raw_payload: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    __table_args__ = (
+        UniqueConstraint("provider", "external_id", name="uq_knowledge_news_provider_id"),
+    )
+
+
+class KnowledgeRecommendation(Base):
+    """Immutable timestamped recommendation record."""
+
+    __tablename__ = "knowledge_recommendations"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    recommendation_id: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    analysis_timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    headline_event_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("knowledge_news_events.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    information_available: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    prices_used: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    retrieved_research_objects: Mapped[list[int]] = mapped_column(
+        ARRAY(BigInteger), nullable=False, server_default="{}"
+    )
+    scenarios: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
+    probabilities: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    selected_instrument: Mapped[str | None] = mapped_column(Text, nullable=True)
+    direction: Mapped[str | None] = mapped_column(Text, nullable=True)
+    proposed_entry: Mapped[str | None] = mapped_column(Text, nullable=True)
+    stop: Mapped[str | None] = mapped_column(Text, nullable=True)
+    targets: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
+    horizon: Mapped[str | None] = mapped_column(Text, nullable=True)
+    confidence: Mapped[str | None] = mapped_column(Text, nullable=True)
+    invalidation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    recommendation_status: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default=text("'draft'")
+    )
+    model: Mapped[str | None] = mapped_column(Text, nullable=True)
+    prompt_version: Mapped[str | None] = mapped_column(Text, nullable=True)
+    supersedes_recommendation_id: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )
+    entry_triggered: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    entry_timestamp: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    exit_timestamp: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    exit_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    return_value: Mapped[Decimal | None] = mapped_column(Numeric(12, 6), nullable=True)
+    maximum_favourable_excursion: Mapped[Decimal | None] = mapped_column(
+        Numeric(12, 6), nullable=True
+    )
+    maximum_adverse_excursion: Mapped[Decimal | None] = mapped_column(
+        Numeric(12, 6), nullable=True
+    )
+    thesis_outcome: Mapped[str | None] = mapped_column(Text, nullable=True)
+    execution_outcome: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    __table_args__ = (
+        Index("ix_knowledge_recommendations_analysis_ts", "analysis_timestamp"),
+    )

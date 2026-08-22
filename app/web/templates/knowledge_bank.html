@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/knowledge_bank.css') }}?v=20260821a">
+{% endblock %}
+
+{% block body %}
+<main class="kb">
+    <header class="kb__header">
+        <div>
+            <span>Research Corpus</span>
+            <h1>Knowledge Bank</h1>
+        </div>
+        <code>python -m app.knowledge.ingestion scan</code>
+    </header>
+
+    <section class="kb__stats">
+        <article><span>Documents</span><strong>{{ overview.total_documents }}</strong><small>Unique source hashes</small></article>
+        <article><span>Source Files</span><strong>{{ overview.total_files }}</strong><small>Every discovered path</small></article>
+        <article><span>Processed</span><strong>{{ overview.processed }}</strong><small>Clean page text stored</small></article>
+        <article><span>Needs Review</span><strong>{{ overview.needs_review }}</strong><small>Missing or uncertain metadata</small></article>
+        <article><span>Failed</span><strong>{{ overview.failed }}</strong><small>Extraction errors</small></article>
+        <article><span>Duplicates</span><strong>{{ overview.duplicate_files }}</strong><small>Same SHA-256 hash</small></article>
+    </section>
+
+    <section class="kb__grid">
+        <article class="kb__panel">
+            <header><strong>Analysts and Institutions</strong></header>
+            <div class="kb__list">
+                {% for author, publisher, count in overview.analysts %}
+                    <div><span>{{ author or "Unknown analyst" }} / {{ publisher or "Unknown institution" }}</span><strong>{{ count }}</strong></div>
+                {% else %}
+                    <p>No documents ingested yet.</p>
+                {% endfor %}
+            </div>
+        </article>
+        <article class="kb__panel">
+            <header><strong>Documents by Year</strong></header>
+            <div class="kb__list">
+                {% for year, count in overview.years %}
+                    <div><span>{{ year|int }}</span><strong>{{ count }}</strong></div>
+                {% else %}
+                    <p>No dated documents yet.</p>
+                {% endfor %}
+            </div>
+        </article>
+        <article class="kb__panel">
+            <header><strong>Knowledge Objects</strong></header>
+            <div class="kb__list">
+                {% for knowledge_type, count in overview.object_types %}
+                    <div><span>{{ knowledge_type.replace("_", " ").title() }}</span><strong>{{ count }}</strong></div>
+                {% else %}
+                    <p>Structured extraction starts in Phase B.</p>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+
+    <section class="kb__panel">
+        <header class="kb__inventory-head">
+            <strong>Document Inventory</strong>
+            <form method="get" action="/knowledge-bank">
+                <input type="search" name="q" value="{{ query }}" placeholder="Search filename, title, analyst...">
+                <select name="status">
+                    <option value="" {% if not status %}selected{% endif %}>All statuses</option>
+                    {% for option in ["processed", "needs_review", "failed", "pending"] %}
+                        <option value="{{ option }}" {% if status == option %}selected{% endif %}>{{ option.replace("_", " ").title() }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Filter</button>
+            </form>
+        </header>
+        <div class="kb__table-wrap">
+            <table class="kb__table">
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Title</th>
+                        <th>Date</th>
+                        <th>Analyst</th>
+                        <th>Institution</th>
+                        <th>Pages</th>
+                        <th>Sections</th>
+                        <th>Frameworks</th>
+                        <th>Trades</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in inventory %}
+                        {% set doc = row.document %}
+                        <tr>
+                            <td><a href="/knowledge-bank/documents/{{ doc.id }}">{{ doc.original_filename }}</a></td>
+                            <td>{{ doc.title or "Unreviewed" }}</td>
+                            <td>{{ doc.publication_date.isoformat() if doc.publication_date else "Unknown" }}</td>
+                            <td>{{ doc.author or "Unknown" }}</td>
+                            <td>{{ doc.publisher or "Unknown" }}</td>
+                            <td>{{ row.stored_pages }}{% if doc.page_count %} / {{ doc.page_count }}{% endif %}</td>
+                            <td>{{ row.sections }}</td>
+                            <td>{{ row.frameworks }}</td>
+                            <td>{{ row.trades }}</td>
+                            <td><span class="kb-status kb-status--{{ doc.extraction_status }}">{{ doc.extraction_status.replace("_", " ").title() }}</span></td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="10">No documents are registered yet. Run the scan command after applying migrations.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+{% endblock %}

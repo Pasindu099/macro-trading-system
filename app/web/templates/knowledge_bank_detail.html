@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/knowledge_bank.css') }}?v=20260821a">
+{% endblock %}
+
+{% block body %}
+<main class="kb">
+    <header class="kb__header">
+        <div>
+            <a href="/knowledge-bank">Knowledge Bank</a>
+            <h1>{{ document.title or document.original_filename }}</h1>
+        </div>
+        <span class="kb-status kb-status--{{ document.extraction_status }}">{{ document.extraction_status.replace("_", " ").title() }}</span>
+    </header>
+
+    <section class="kb__grid kb__grid--two">
+        <article class="kb__panel">
+            <header><strong>Metadata</strong></header>
+            <dl class="kb__meta">
+                <div><dt>Filename</dt><dd>{{ document.original_filename }}</dd></div>
+                <div><dt>SHA-256</dt><dd><code>{{ document.file_hash }}</code></dd></div>
+                <div><dt>Publication Date</dt><dd>{{ document.publication_date.isoformat() if document.publication_date else "Unknown" }} · {{ document.date_confidence or "missing" }}</dd></div>
+                <div><dt>Analyst</dt><dd>{{ document.author or "Unknown" }}</dd></div>
+                <div><dt>Institution</dt><dd>{{ document.publisher or "Unknown" }}</dd></div>
+                <div><dt>Pages</dt><dd>{{ pages|length }} stored{% if document.page_count %} · {{ document.page_count }} reported{% endif %}</dd></div>
+                <div><dt>Figures</dt><dd>{{ figures|length }} extracted</dd></div>
+                <div><dt>Tables</dt><dd>{{ tables|length }} detected</dd></div>
+                <div><dt>Extraction</dt><dd>{{ document.extraction_version or "unversioned" }}</dd></div>
+            </dl>
+        </article>
+
+        <article class="kb__panel">
+            <header><strong>Warnings and Source Files</strong></header>
+            {% if document.processing_warnings %}
+                <div class="kb__warnings">
+                    {% for warning in document.processing_warnings %}
+                        <span>{{ warning }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div class="kb__list">
+                {% for file in files %}
+                    <div>
+                        <span>{{ file.original_filename }}{% if file.is_duplicate %} · duplicate{% endif %}</span>
+                        <strong>{{ (file.file_size_bytes or 0) // 1024 }} KB</strong>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+
+    <section class="kb__panel">
+        <header><strong>Structured Knowledge Objects</strong><span>{{ objects|length }} extracted</span></header>
+        <div class="kb__object-list">
+            {% for object in objects %}
+                <article>
+                    <span>{{ object.knowledge_type.replace("_", " ").title() }} · p{{ object.page_start or "?" }}</span>
+                    <strong>{{ object.concise_statement }}</strong>
+                    <p>{{ object.detailed_explanation or object.supporting_passage or "" }}</p>
+                </article>
+            {% else %}
+                <p>Phase B will populate claims, frameworks, causal chains, trades, risks, and invalidations here.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="kb__grid kb__grid--two">
+        <article class="kb__panel">
+            <header><strong>Figures and Charts</strong><span>{{ figures|length }}</span></header>
+            <div class="kb__object-list">
+                {% for figure in figures[:40] %}
+                    <article>
+                        <span>p{{ figure.page_number }} · figure {{ figure.figure_index }} · {{ figure.interpretation_status.replace("_", " ").title() }} · {{ figure.image_format or "image" }}</span>
+                        <strong>{{ figure.caption or "Visual artifact awaiting interpretation" }}</strong>
+                        <img class="kb__figure" src="/knowledge-bank/figures/{{ figure.id }}/image" alt="Extracted figure from page {{ figure.page_number }}" loading="lazy">
+                        <p>{{ figure.nearby_text[:360] if figure.nearby_text else "No nearby text captured." }}</p>
+                        <code>{{ figure.artifact_path }}</code>
+                    </article>
+                {% else %}
+                    <p>No figure artifacts have been extracted yet. Run <code>python -m app.knowledge.ingestion visuals</code>.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="kb__panel">
+            <header><strong>Detected Tables</strong><span>{{ tables|length }}</span></header>
+            <div class="kb__section-list">
+                {% for table in tables[:40] %}
+                    <details>
+                        <summary>p{{ table.page_number }} · table {{ table.table_index }}{% if table.caption %} · {{ table.caption[:80] }}{% endif %}</summary>
+                        <pre>{{ table.cleaned_text[:2400] }}</pre>
+                    </details>
+                {% else %}
+                    <p>No table candidates have been detected yet.</p>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+
+    <section class="kb__grid kb__grid--two">
+        <article class="kb__panel">
+            <header><strong>Cleaned Sections</strong><span>{{ sections|length }}</span></header>
+            <div class="kb__section-list">
+                {% for section in sections[:30] %}
+                    <details>
+                        <summary>p{{ section.page_start }} · {{ section.section_title or "Untitled section" }}</summary>
+                        <pre>{{ section.cleaned_text[:2400] }}</pre>
+                    </details>
+                {% else %}
+                    <p>No sections extracted.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="kb__panel">
+            <header><strong>Page-Level Text</strong><span>{{ pages|length }}</span></header>
+            <div class="kb__section-list">
+                {% for page in pages[:30] %}
+                    <details>
+                        <summary>Page {{ page.page_number }}</summary>
+                        <pre>{{ page.cleaned_text[:2400] or page.raw_text[:2400] }}</pre>
+                    </details>
+                {% else %}
+                    <p>No page text extracted.</p>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+</main>
+{% endblock %}

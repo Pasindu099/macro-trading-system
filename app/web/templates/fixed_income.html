@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/fixed_income.css') }}?v=20260821fi">
+<script src="{{ url_for('static', path='js/fixed_income.js') }}?v=20260821fi" defer></script>
+{% endblock %}
+
+{% block body %}
+<div class="fi-page" data-fi-root>
+  <header class="fi-head">
+    <div>
+      <p class="fi-kicker">Durable EODHD GBOND + FX history</p>
+      <h1>Fixed Income Intelligence</h1>
+      <p>Relative-rate signals use base-minus-quote yield differentials. Regression outputs are rates-implied estimates, not objective fair value.</p>
+    </div>
+    <button class="btn primary" type="button" data-fi-refresh>Refresh</button>
+  </header>
+
+  <section class="fi-state" data-fi-state>Loading fixed-income workspace...</section>
+
+  <section class="fi-grid fi-grid-4" aria-label="Global rates command centre">
+    <article class="fi-panel">
+      <h2>2Y Repricing</h2>
+      <div data-fi-two-year class="fi-list"></div>
+    </article>
+    <article class="fi-panel">
+      <h2>Curve Shape + Move</h2>
+      <div data-fi-regime class="fi-list"></div>
+    </article>
+    <article class="fi-panel">
+      <h2>Data Freshness</h2>
+      <div data-fi-quality class="fi-list"></div>
+    </article>
+    <article class="fi-panel">
+      <h2>Shock Monitor</h2>
+      <div data-fi-shock class="fi-stack"></div>
+    </article>
+  </section>
+
+  <section class="fi-panel">
+    <div class="fi-panel-head">
+      <h2>FX Relative-Rates Matrix</h2>
+      <select data-fi-sort title="Sort matrix">
+        <option value="reliable">Reliable opportunities</option>
+        <option value="mispricing">Raw residual z-score</option>
+        <option value="relationship">Relationship strength</option>
+        <option value="momentum">Differential momentum</option>
+        <option value="confirmation">Confirmation</option>
+      </select>
+    </div>
+    <div class="fi-table-wrap">
+      <table class="fi-table">
+        <thead>
+          <tr>
+            <th>Pair</th>
+            <th>5D 2Y Diff Δ</th>
+            <th>Residual Z</th>
+            <th>R2</th>
+            <th>5D Confirmation</th>
+            <th>Model State</th>
+            <th>Adj Opp</th>
+            <th>Quality</th>
+          </tr>
+        </thead>
+        <tbody data-fi-pairs>
+          <tr><td colspan="8">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="fi-grid fi-grid-2">
+    <article class="fi-panel">
+      <div class="fi-panel-head">
+        <h2>Country Detail</h2>
+        <select data-fi-country></select>
+      </div>
+      <div data-fi-country-detail class="fi-stack"></div>
+      <div class="fi-chart" data-fi-curve-chart></div>
+      <div data-fi-country-changes class="fi-mini-grid"></div>
+    </article>
+    <article class="fi-panel">
+      <div class="fi-panel-head">
+        <h2>Pair Detail</h2>
+        <select data-fi-pair></select>
+      </div>
+      <div data-fi-pair-detail class="fi-stack"></div>
+      <div data-fi-pair-narrative class="fi-narrative"></div>
+      <div class="fi-chart fi-chart-tall" data-fi-pair-chart></div>
+    </article>
+  </section>
+
+  <details class="fi-panel fi-details">
+    <summary>Rate-Probability Source Quality</summary>
+    <div class="fi-badges">
+      <span title="Original market or official data provenance">Provenance</span>
+      <span title="Vendor or delivery channel">Delivery source</span>
+      <span title="OIS, futures proxy, yield proxy or scraped summary">Method</span>
+      <span title="Fresh, watch, stale or unavailable">Freshness</span>
+    </div>
+    <div data-fi-source-quality class="fi-source-list"></div>
+  </details>
+</div>
+{% endblock %}

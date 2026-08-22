@@ -47,10 +47,15 @@ from app.ingestion.canonicalizer import Canonicalizer
 from app.ingestion.eodhd_client import ALLOWED_COUNTRIES, EODHDClient, EODHDError
 from app.ingestion.ingest_service import IngestService
 from app.ingestion.run_logger import run_logger
+from app.services.government_yields import (
+    check_government_yield_staleness,
+    ingest_eodhd_government_yields,
+)
 from app.services.meeting_calendar import SUPPORTED_BANKS
 from app.services.news_monitor import run_news_monitor
 from app.services.rate_fetchers import fetch_all, should_fetch_on_startup
 from app.services.rate_probability import save_snapshot
+from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +94,8 @@ class Scheduler:
     async def start(self) -> None:
         """Load config, register jobs, and start the scheduler."""
         logger.info("Initializing scheduler…")
+
+        settings = get_settings()
 
         # Build canonicalizer + service once, reuse across jobs
         self._canonicalizer = Canonicalizer.from_default_config()
@@ -133,6 +140,47 @@ class Scheduler:
             misfire_grace_time=60 * 60,
         )
         logger.info("  Registered rateprobability.com scraper at 00:30, 08:30, 16:30 UTC")
+
+        if settings.government_yields_incremental_enabled:
+            self._scheduler.add_job(
+                self._run_government_yield_incremental,
+                trigger=CronTrigger(
+                    hour=settings.government_yields_incremental_hour_utc,
+                    minute=settings.government_yields_incremental_minute_utc,
+                    timezone="UTC",
+                ),
+                id="government_yields_incremental",
+                name="Daily EODHD government-yield update",
+                replace_existing=True,
+                misfire_grace_time=60 * 60,
+                max_instances=1,
+                coalesce=True,
+            )
+            logger.info(
+                "  Registered government-yield update at %02d:%02d UTC",
+                settings.government_yields_incremental_hour_utc,
+                settings.government_yields_incremental_minute_utc,
+            )
+
+        self._scheduler.add_job(
+            self._run_government_yield_stale_check,
+            trigger=CronTrigger(
+                hour=settings.government_yields_stale_check_hour_utc,
+                minute=settings.government_yields_stale_check_minute_utc,
+                timezone="UTC",
+            ),
+            id="government_yields_stale_check",
+            name="Government-yield stale-data check",
+            replace_existing=True,
+            misfire_grace_time=60 * 60,
+            max_instances=1,
+            coalesce=True,
+        )
+        logger.info(
+            "  Registered government-yield stale check at %02d:%02d UTC",
+            settings.government_yields_stale_check_hour_utc,
+            settings.government_yields_stale_check_minute_utc,
+        )
 
         self._scheduler.add_job(
             _poll_cb_feeds,
@@ -272,6 +320,48 @@ class Scheduler:
         logger.info("Rate probability fetch statuses: %s", statuses)
 
     # ── Config loading ──────────────────────────────────────────────
+
+    async def _run_government_yield_incremental(self) -> None:
+        """Daily EODHD GBOND update after expected end-of-day availability."""
+        settings = get_settings()
+        today = date.today()
+        from_date = today - timedelta(
+            days=settings.government_yields_incremental_lookback_days,
+        )
+        async with EODHDClient() as client, session_scope() as session:
+            stats = await ingest_eodhd_government_yields(
+                session,
+                client,
+                from_date=from_date,
+                to_date=today,
+                job_name="government_yields_incremental",
+                stale_after_days=settings.government_yields_stale_after_days,
+            )
+        logger.info(
+            "Government-yield update %s: inserted=%d seen=%d missing=%d stale=%d errors=%d",
+            stats.status,
+            stats.observations_inserted,
+            stats.observations_seen,
+            len(stats.symbols_missing),
+            len(stats.stale_symbols),
+            len(stats.errors),
+        )
+
+    async def _run_government_yield_stale_check(self) -> None:
+        """Update operational status for stale/missing government-yield symbols."""
+        settings = get_settings()
+        async with session_scope() as session:
+            stats = await check_government_yield_staleness(
+                session,
+                stale_after_days=settings.government_yields_stale_after_days,
+                job_name="government_yields_stale_check",
+            )
+        logger.info(
+            "Government-yield stale check %s: missing=%d stale=%d",
+            stats.status,
+            len(stats.symbols_missing),
+            len(stats.stale_symbols),
+        )
 
     def _register_post_release_triggers(self) -> int:
         """Parse release_schedule.yaml and add APScheduler jobs."""

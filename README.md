@@ -1,5 +1,14 @@
 # Macro Dashboard
 
-A macro economic dashboard for FX trading — Phase 1.
+A macro economic dashboard for FX trading.
 
-See `macro_dashboard_phase1_spec.md` for full specification.
+## Knowledge Bank
+
+The durable market-research corpus foundation lives under `app/knowledge`.
+
+```powershell
+alembic upgrade head
+python -m app.knowledge.ingestion scan
+```
+
+Then open `/knowledge-bank` in the dashboard. More detail is in `docs/knowledge_bank.md`.

@@ -627,6 +627,30 @@ a.tpanel__meta:hover { color: var(--accent); }
 .trow--fx { grid-template-columns: 16px 30px minmax(0, 1fr) 40px; }
 .trow--fx .bar-track { height: 5px; }
 .trow--yield { grid-template-columns: 34px minmax(0, 1fr) auto; }
+/* Rate Repricing: pair · Δ spread · fx move · residual. The last three are all
+   numeric comparisons down the column, so they get fixed tabular widths. */
+.trow--repricing { grid-template-columns: 58px minmax(0, 1fr) 46px 40px; }
+.trow--repricing em,
+.trow--repricing > b { text-align: right; }
+.trow--repricing .is-warning { color: var(--accent, #d9822b); }
+.trow--rphead {
+  grid-template-columns: 58px minmax(0, 1fr) 46px 40px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.trow--rphead em,
+.trow--rphead b { color: var(--text-faint); font-weight: 500; text-align: right; }
+.trow--regime {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  padding: 2px 0 6px;
+}
+.trow--regime b { font-size: 10px; letter-spacing: 0.08em; }
+.trow--regime small { color: var(--text-faint); font-size: 9px; }
 .trow--surprise { grid-template-columns: 30px minmax(0, 1fr) auto; }
 .trow--signal { grid-template-columns: 26px minmax(0, 1fr) auto; }
 .trow--signal em { color: var(--text-muted); }

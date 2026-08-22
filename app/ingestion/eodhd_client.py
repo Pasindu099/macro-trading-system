@@ -45,6 +45,39 @@ ALLOWED_COUNTRIES: frozenset[str] = frozenset({
     "CH",  # Switzerland — CHF
 })
 
+GBOND_COUNTRY_PREFIXES: dict[str, dict[str, str]] = {
+    "US": {"country_code": "US", "currency_code": "USD", "market_timezone": "America/New_York"},
+    "DE": {"country_code": "DE", "currency_code": "EUR", "market_timezone": "Europe/Berlin"},
+    "UK": {"country_code": "UK", "currency_code": "GBP", "market_timezone": "Europe/London"},
+    "JP": {"country_code": "JP", "currency_code": "JPY", "market_timezone": "Asia/Tokyo"},
+    "AU": {"country_code": "AU", "currency_code": "AUD", "market_timezone": "Australia/Sydney"},
+    "NZ": {"country_code": "NZ", "currency_code": "NZD", "market_timezone": "Pacific/Auckland"},
+    "CA": {"country_code": "CA", "currency_code": "CAD", "market_timezone": "America/Toronto"},
+    "SW": {"country_code": "CH", "currency_code": "CHF", "market_timezone": "Europe/Zurich"},
+}
+
+GBOND_MATURITIES: tuple[str, ...] = (
+    "1M",
+    "3M",
+    "6M",
+    "1Y",
+    "2Y",
+    "3Y",
+    "5Y",
+    "10Y",
+)
+
+GBOND_MATURITY_MONTHS: dict[str, int] = {
+    "1M": 1,
+    "3M": 3,
+    "6M": 6,
+    "1Y": 12,
+    "2Y": 24,
+    "3Y": 36,
+    "5Y": 60,
+    "10Y": 120,
+}
+
 # Exponential backoff delays in seconds. First retry waits 1s, second 5s,
 # third 30s. After that we give up and raise.
 RETRY_DELAYS_SECONDS: tuple[float, ...] = (1.0, 5.0, 30.0)
@@ -276,6 +309,28 @@ class EODHDClient:
         logger.info("Fetched %d EOD rows for symbol=%s", len(data), symbol)
         return data
 
+    async def fetch_government_yield_history(
+        self,
+        country_prefix: str,
+        maturity: str,
+        *,
+        from_date: date | None = None,
+        to_date: date | None = None,
+    ) -> list[dict[str, Any]]:
+        """Fetch one EODHD GBOND government-yield series.
+
+        The supported maturity set includes actual EODHD 2Y symbols. Callers
+        must not synthesize 2Y values when this helper can fetch the provider
+        observation directly.
+        """
+        symbol = build_gbond_symbol(country_prefix, maturity)
+        return await self.fetch_eod_history(
+            symbol,
+            from_date=from_date,
+            to_date=to_date,
+            period="d",
+        )
+
     async def fetch_exchange_symbols(
         self,
         exchange: str,
@@ -329,7 +384,7 @@ class EODHDClient:
 
                 if response.status_code == 429:
                     # Rate limited. Retry if we have attempts left.
-                    msg = f"EODHD rate limit hit (HTTP 429)"
+                    msg = "EODHD rate limit hit (HTTP 429)"
                     if attempt < self._max_retries:
                         logger.warning("%s, will retry", msg)
                         last_exception = EODHDRateLimitError(msg)
@@ -422,3 +477,14 @@ def _looks_like_entitlement_error(message: str) -> bool:
         "subscription" in normalized
         and any(term in normalized for term in ("doesn't cover", "does not cover", "not include"))
     ) or "no access" in normalized
+
+
+def build_gbond_symbol(country_prefix: str, maturity: str) -> str:
+    """Return the configured EODHD GBOND symbol for one country/maturity."""
+    prefix = country_prefix.upper()
+    mat = maturity.upper()
+    if prefix not in GBOND_COUNTRY_PREFIXES:
+        raise ValueError(f"Unsupported GBOND country prefix: {country_prefix!r}")
+    if mat not in GBOND_MATURITIES:
+        raise ValueError(f"Unsupported GBOND maturity: {maturity!r}")
+    return f"{prefix}{mat}.GBOND"

@@ -15,7 +15,7 @@ from typing import Any
 from urllib.parse import parse_qs
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import desc, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,6 +31,8 @@ from app.api.routes.public import (
 from app.db.models import (
     Country, CbPolicyDocument, CbEconomicProjection,
     Indicator, IndicatorRelease, IngestionRun,
+    KnowledgeDocumentPage, KnowledgeDocumentSection, KnowledgeObject,
+    KnowledgeFigure, KnowledgeSourceDocument, KnowledgeSourceFile, KnowledgeTable,
 )
 from app.services.event_innovation_feed import (
     DEFAULT_WINDOW_DAYS,
@@ -122,6 +124,7 @@ YIELD_MATURITIES = (
     {"key": "3m", "label": "3M", "name": "3 months"},
     {"key": "6m", "label": "6M", "name": "6 months"},
     {"key": "1y", "label": "1Y", "name": "1 year"},
+    {"key": "2y", "label": "2Y", "name": "2 years"},
     {"key": "3y", "label": "3Y", "name": "3 years"},
     {"key": "5y", "label": "5Y", "name": "5 years"},
     {"key": "10y", "label": "10Y", "name": "10 years"},
@@ -132,10 +135,29 @@ YIELD_MATURITY_SUFFIXES = {
     "3m": "3M",
     "6m": "6M",
     "1y": "1Y",
+    "2y": "2Y",
     "3y": "3Y",
     "5y": "5Y",
     "10y": "10Y",
 }
+
+# ── Rate repricing panel ───────────────────────────────────────────────────
+# The landing panel trades on the *change in expected policy*, not the level of
+# any single yield. 2Y is the policy-sensitive tenor and every G10 market on
+# GBOND publishes it (CHF and NZD publish 2Y but no 1Y/3Y, so a synthetic
+# 0.5*1Y + 0.5*3Y interpolation would silently drop exactly those two).
+REPRICING_FRONT_TENOR = "2Y"
+REPRICING_LONG_TENOR = "10Y"
+REPRICING_HISTORY_DAYS = 400
+# Change windows are anchored on calendar dates, never on row offsets: several
+# of these markets skip days, so "5 rows back" spans a different window per
+# currency and makes the cross-pair sort compare unlike numbers.
+REPRICING_LOOKBACK_DAYS = 7
+# A leg older than this is reported with its own as-of date rather than being
+# passed off as current.
+REPRICING_STALE_DAYS = 3
+REPRICING_MIN_REGRESSION_POINTS = 30
+REPRICING_DIVERGENCE_SIGMA = 1.0
 BANK_RESEARCH_ADMIN_STATE_PATH = BANK_RESEARCH_DIR / "admin_state.json"
 COUNTRY_FLAGS = {
     "US": "\U0001F1FA\U0001F1F8",
@@ -2255,6 +2277,254 @@ async def _build_yield_differentials(
     }
 
 
+def _repricing_curve(history: list[dict[str, Any]]) -> dict[date, float]:
+    """Collapse an EODHD EOD payload to {date: close}."""
+    curve: dict[date, float] = {}
+    for row in history:
+        if not isinstance(row, dict):
+            continue
+        parsed_date, value = _yield_history_point([row], 0)
+        if parsed_date is not None and value is not None:
+            curve[parsed_date] = value
+    return curve
+
+
+def _repricing_anchors(
+    dates: list[date],
+    lookback_days: int = REPRICING_LOOKBACK_DAYS,
+) -> tuple[date, date] | None:
+    """Pick (latest, prior) from dates both legs share.
+
+    `prior` is the newest shared date at least `lookback_days` calendar days
+    before `latest`, so every pair measures the same window even when one
+    market was closed.
+    """
+    if len(dates) < 2:
+        return None
+    latest = dates[-1]
+    target = latest - timedelta(days=lookback_days)
+    earlier = [value for value in dates if value <= target]
+    return (latest, earlier[-1]) if earlier else (latest, dates[0])
+
+
+def _repricing_beta(
+    spread_curve: dict[date, float],
+    fx_curve: dict[date, float],
+) -> tuple[float, float] | None:
+    """OLS of daily FX % change on daily spread change, over shared dates.
+
+    Returns (beta, residual_sigma). Univariate by design: this is the landing
+    panel's sanity check on whether spot has followed rates, not the full
+    fair-value model.
+    """
+    shared = sorted(set(spread_curve) & set(fx_curve))
+    samples: list[tuple[float, float]] = []
+    for previous, current in zip(shared, shared[1:], strict=False):
+        if (current - previous).days > 5:
+            continue  # Don't let a gap across a long holiday become one "day".
+        fx_previous = fx_curve[previous]
+        if not fx_previous:
+            continue
+        samples.append((
+            spread_curve[current] - spread_curve[previous],
+            (fx_curve[current] - fx_previous) / fx_previous * 100,
+        ))
+
+    if len(samples) < REPRICING_MIN_REGRESSION_POINTS:
+        return None
+
+    count = len(samples)
+    mean_x = sum(x for x, _ in samples) / count
+    mean_y = sum(y for _, y in samples) / count
+    covariance = sum((x - mean_x) * (y - mean_y) for x, y in samples)
+    variance = sum((x - mean_x) ** 2 for x, _ in samples)
+    if variance <= 0:
+        return None
+
+    beta = covariance / variance
+    intercept = mean_y - beta * mean_x
+    residuals = [y - (intercept + beta * x) for x, y in samples]
+    sigma = (sum(value**2 for value in residuals) / (count - 2)) ** 0.5
+    if sigma <= 0:
+        return None
+    return beta, sigma
+
+
+def _repricing_regime(
+    front: dict[date, float],
+    long: dict[date, float],
+) -> dict[str, Any]:
+    """Classify the base-currency curve move as bull/bear × steepening/flattening.
+
+    Direction alone can't tell a policy shock from a growth shock; the slope
+    change is what separates them, so the panel labels the regime rather than
+    leaving the reader to infer it from a bp number.
+    """
+    shared = sorted(set(front) & set(long))
+    anchors = _repricing_anchors(shared)
+    if anchors is None:
+        return {"label": "", "detail": "", "class": "is-neutral"}
+
+    latest, prior = anchors
+    front_change = (front[latest] - front[prior]) * 100
+    long_change = (long[latest] - long[prior]) * 100
+    slope_change = long_change - front_change
+
+    if abs(front_change) < 2 and abs(long_change) < 2:
+        return {
+            "label": "RANGEBOUND",
+            "detail": f"{YIELD_BASE_CURRENCY} curve unchanged",
+            "class": "is-neutral",
+        }
+
+    direction = "BEAR" if long_change > 0 else "BULL"
+    shape = "STEEPENING" if slope_change > 0 else "FLATTENING"
+    meaning = {
+        ("BEAR", "FLATTENING"): "hawkish repricing",
+        ("BEAR", "STEEPENING"): "growth / term premium",
+        ("BULL", "FLATTENING"): "long-end demand",
+        ("BULL", "STEEPENING"): "easing priced",
+    }[(direction, shape)]
+    return {
+        "label": f"{direction} {shape}",
+        "detail": f"{YIELD_BASE_CURRENCY} 2s10s {slope_change:+.0f}bp · {meaning}",
+        "class": "is-negative" if direction == "BEAR" else "is-positive",
+    }
+
+
+async def _build_rate_repricing() -> dict[str, Any]:
+    """Rank G10 pairs by how much their expected policy differential moved.
+
+    Levels are near-constant and carry no decision value; what trades is the
+    *change* in the differential and whether spot has confirmed it. Each row
+    pairs the 2Y spread move with the pair's actual move and flags the gap.
+    """
+    currencies = [str(benchmark["currency"]) for benchmark in YIELD_BENCHMARKS]
+    prefixes = {
+        str(benchmark["currency"]): _yield_symbol_prefix(benchmark)
+        for benchmark in YIELD_BENCHMARKS
+    }
+    today = _now().date()
+    from_date = today - timedelta(days=REPRICING_HISTORY_DAYS)
+
+    front_symbols = [f"{prefixes[code]}{REPRICING_FRONT_TENOR}.GBOND" for code in currencies]
+    long_symbols = [f"{prefixes[code]}{REPRICING_LONG_TENOR}.GBOND" for code in currencies]
+    fx_symbols = [str(pair["symbol"]) for pair in FX_PAIR_DEFS]
+
+    try:
+        async with EODHDClient() as client:
+            payloads = await asyncio.gather(
+                *(
+                    client.fetch_eod_history(symbol, from_date=from_date, to_date=today)
+                    for symbol in front_symbols + long_symbols + fx_symbols
+                ),
+                return_exceptions=True,
+            )
+    except (EODHDError, ValueError):
+        return {"rows": [], "regime": {}, "message": "Rate data is unavailable from EODHD right now."}
+
+    curves = [
+        _repricing_curve(payload) if not isinstance(payload, Exception) else {}
+        for payload in payloads
+    ]
+    split = len(currencies)
+    front_by_currency = dict(zip(currencies, curves[:split], strict=True))
+    long_by_currency = dict(zip(currencies, curves[split : split * 2], strict=True))
+    fx_by_pair = {
+        str(pair["label"]): curve
+        for pair, curve in zip(FX_PAIR_DEFS, curves[split * 2 :], strict=True)
+    }
+
+    rows: list[dict[str, Any]] = []
+    for pair in FX_PAIR_DEFS:
+        label = str(pair["label"])
+        left = str(pair["left_currency"])
+        right = str(pair["right_currency"])
+        left_curve = front_by_currency.get(left, {})
+        right_curve = front_by_currency.get(right, {})
+
+        # Spread only within a date both legs actually printed. Taking each
+        # leg's own latest close would cross-date the spread whenever one
+        # market is closed or lags.
+        shared = sorted(set(left_curve) & set(right_curve))
+        anchors = _repricing_anchors(shared)
+        if anchors is None:
+            continue
+        latest, prior = anchors
+
+        spread_curve = {
+            value: (left_curve[value] - right_curve[value]) * 100 for value in shared
+        }
+        spread_now = spread_curve[latest]
+        spread_change = spread_now - spread_curve[prior]
+
+        fx_curve = fx_by_pair.get(label, {})
+        fx_dates = sorted(fx_curve)
+        fx_now = next((fx_curve[d] for d in reversed(fx_dates) if d <= latest), None)
+        fx_then = next((fx_curve[d] for d in reversed(fx_dates) if d <= prior), None)
+        fx_change_pct = (
+            (fx_now - fx_then) / fx_then * 100
+            if fx_now is not None and fx_then not in (None, 0)
+            else None
+        )
+
+        residual_sigma: float | None = None
+        divergence = ""
+        fit = _repricing_beta(spread_curve, fx_curve)
+        if fit is not None and fx_change_pct is not None:
+            beta, sigma = fit
+            residual_sigma = (fx_change_pct - beta * spread_change) / sigma
+            if abs(residual_sigma) >= REPRICING_DIVERGENCE_SIGMA:
+                divergence = (
+                    f"{label.split('/')[0]} rich vs rates"
+                    if residual_sigma > 0
+                    else f"{label.split('/')[0]} cheap vs rates"
+                )
+
+        staleness = (today - latest).days
+        rows.append({
+            "label": label,
+            "left_currency": left,
+            "right_currency": right,
+            "spread_bp": spread_now,
+            "spread_display": _format_bp(spread_now),
+            "change_bp": spread_change,
+            "change_display": _format_bp(spread_change),
+            "change_class": _spread_color_class(spread_change),
+            "change_abs": abs(spread_change),
+            "fx_change_pct": fx_change_pct,
+            "fx_change_display": (
+                f"{fx_change_pct:+.2f}%" if fx_change_pct is not None else "N/A"
+            ),
+            "fx_change_class": _spread_color_class(fx_change_pct),
+            "residual_sigma": residual_sigma,
+            "residual_display": (
+                f"{residual_sigma:+.1f}σ" if residual_sigma is not None else "--"
+            ),
+            "residual_class": "is-warning" if divergence else "is-neutral",
+            "divergence": divergence,
+            "as_of": latest,
+            "window_from": prior,
+            "window_days": (latest - prior).days,
+            "is_stale": staleness > REPRICING_STALE_DAYS,
+            "stale_display": latest.strftime("%b %d") if staleness > REPRICING_STALE_DAYS else "",
+        })
+
+    # Biggest repricing first: the panel should re-rank to whatever actually
+    # moved, not hold a fixed pair order that never changes.
+    rows.sort(key=lambda row: float(row["change_abs"]), reverse=True)
+
+    return {
+        "rows": rows,
+        "regime": _repricing_regime(
+            front_by_currency.get(YIELD_BASE_CURRENCY, {}),
+            long_by_currency.get(YIELD_BASE_CURRENCY, {}),
+        ),
+        "tenor": REPRICING_FRONT_TENOR,
+        "message": "" if rows else "No overlapping yield dates across pairs.",
+    }
+
+
 async def _build_country_rows(
     session: AsyncSession,
     country_code: str,
@@ -2707,6 +2977,7 @@ async def landing_page(
         session, countries, currency_meter,
     )
     yield_differentials = await _build_yield_differentials()
+    rate_repricing = await _build_rate_repricing()
     news_items: list[dict[str, Any]] = []
 
     try:
@@ -2740,6 +3011,7 @@ async def landing_page(
             "currency_meter": currency_meter,
             "world_map_countries": world_map_countries,
             "yield_differentials": yield_differentials,
+            "rate_repricing": rate_repricing,
             "landing_kpis": landing_kpis,
             "dashboard_insights": dashboard_insights,
             "landing_payload": landing_payload,
@@ -2761,6 +3033,19 @@ async def rates_page(request: Request) -> HTMLResponse:
             "request": request,
             "page_title": "Yields | Macro Dashboard",
             **context,
+        },
+    )
+
+
+@router.get("/fixed-income", response_class=HTMLResponse)
+async def fixed_income_page(request: Request) -> HTMLResponse:
+    """Render the durable fixed-income intelligence workspace."""
+    return templates.TemplateResponse(
+        request,
+        "fixed_income.html",
+        {
+            "request": request,
+            "page_title": "Fixed Income Intelligence | Macro Dashboard",
         },
     )
 
@@ -2926,6 +3211,335 @@ async def bank_research_page(request: Request) -> HTMLResponse:
             "refresh_message": request.query_params.get("msg", ""),
         },
     )
+
+
+async def _build_knowledge_bank_context(
+    session: AsyncSession,
+    query: str = "",
+    status: str = "",
+) -> dict[str, Any]:
+    total_docs = (await session.execute(select(func.count(KnowledgeSourceDocument.id)))).scalar_one() or 0
+    total_files = (await session.execute(select(func.count(KnowledgeSourceFile.id)))).scalar_one() or 0
+    duplicate_files = (
+        await session.execute(
+            select(func.count(KnowledgeSourceFile.id)).where(
+                KnowledgeSourceFile.is_duplicate.is_(True)
+            )
+        )
+    ).scalar_one() or 0
+    processed = (
+        await session.execute(
+            select(func.count(KnowledgeSourceDocument.id)).where(
+                KnowledgeSourceDocument.extraction_status == "processed"
+            )
+        )
+    ).scalar_one() or 0
+    needs_review = (
+        await session.execute(
+            select(func.count(KnowledgeSourceDocument.id)).where(
+                KnowledgeSourceDocument.extraction_status == "needs_review"
+            )
+        )
+    ).scalar_one() or 0
+    failed = (
+        await session.execute(
+            select(func.count(KnowledgeSourceDocument.id)).where(
+                KnowledgeSourceDocument.extraction_status == "failed"
+            )
+        )
+    ).scalar_one() or 0
+
+    analyst_rows = (
+        await session.execute(
+            select(
+                KnowledgeSourceDocument.author,
+                KnowledgeSourceDocument.publisher,
+                func.count(KnowledgeSourceDocument.id),
+            )
+            .group_by(KnowledgeSourceDocument.author, KnowledgeSourceDocument.publisher)
+            .order_by(func.count(KnowledgeSourceDocument.id).desc())
+        )
+    ).all()
+    year_rows = (
+        await session.execute(
+            select(
+                func.extract("year", KnowledgeSourceDocument.publication_date).label("year"),
+                func.count(KnowledgeSourceDocument.id),
+            )
+            .where(KnowledgeSourceDocument.publication_date.is_not(None))
+            .group_by("year")
+            .order_by("year")
+        )
+    ).all()
+    object_rows = (
+        await session.execute(
+            select(KnowledgeObject.knowledge_type, func.count(KnowledgeObject.id))
+            .group_by(KnowledgeObject.knowledge_type)
+            .order_by(func.count(KnowledgeObject.id).desc())
+        )
+    ).all()
+
+    document_query = select(KnowledgeSourceDocument).order_by(
+        KnowledgeSourceDocument.publication_date.desc().nullslast(),
+        KnowledgeSourceDocument.original_filename.asc(),
+    )
+    if query:
+        pattern = f"%{query}%"
+        document_query = document_query.where(
+            or_(
+                KnowledgeSourceDocument.original_filename.ilike(pattern),
+                KnowledgeSourceDocument.title.ilike(pattern),
+                KnowledgeSourceDocument.author.ilike(pattern),
+                KnowledgeSourceDocument.publisher.ilike(pattern),
+            )
+        )
+    if status:
+        document_query = document_query.where(KnowledgeSourceDocument.extraction_status == status)
+    documents = list((await session.execute(document_query)).scalars().all())
+
+    doc_ids = [doc.id for doc in documents]
+    page_counts: dict[int, int] = {}
+    section_counts: dict[int, int] = {}
+    object_counts: dict[int, int] = {}
+    trade_counts: dict[int, int] = {}
+    framework_counts: dict[int, int] = {}
+    file_counts: dict[int, int] = {}
+    if doc_ids:
+        page_counts = {
+            row.document_id: row.count
+            for row in (
+                await session.execute(
+                    select(KnowledgeDocumentPage.document_id, func.count(KnowledgeDocumentPage.id).label("count"))
+                    .where(KnowledgeDocumentPage.document_id.in_(doc_ids))
+                    .group_by(KnowledgeDocumentPage.document_id)
+                )
+            ).all()
+        }
+        section_counts = {
+            row.document_id: row.count
+            for row in (
+                await session.execute(
+                    select(KnowledgeDocumentSection.document_id, func.count(KnowledgeDocumentSection.id).label("count"))
+                    .where(KnowledgeDocumentSection.document_id.in_(doc_ids))
+                    .group_by(KnowledgeDocumentSection.document_id)
+                )
+            ).all()
+        }
+        object_counts = {
+            row.document_id: row.count
+            for row in (
+                await session.execute(
+                    select(KnowledgeObject.document_id, func.count(KnowledgeObject.id).label("count"))
+                    .where(KnowledgeObject.document_id.in_(doc_ids))
+                    .group_by(KnowledgeObject.document_id)
+                )
+            ).all()
+        }
+        trade_counts = {
+            row.document_id: row.count
+            for row in (
+                await session.execute(
+                    select(KnowledgeObject.document_id, func.count(KnowledgeObject.id).label("count"))
+                    .where(
+                        KnowledgeObject.document_id.in_(doc_ids),
+                        KnowledgeObject.knowledge_type == "explicit_trade_idea",
+                    )
+                    .group_by(KnowledgeObject.document_id)
+                )
+            ).all()
+        }
+        framework_counts = {
+            row.document_id: row.count
+            for row in (
+                await session.execute(
+                    select(KnowledgeObject.document_id, func.count(KnowledgeObject.id).label("count"))
+                    .where(
+                        KnowledgeObject.document_id.in_(doc_ids),
+                        KnowledgeObject.knowledge_type.in_(
+                            ["timeless_principle", "conditional_heuristic"]
+                        ),
+                    )
+                    .group_by(KnowledgeObject.document_id)
+                )
+            ).all()
+        }
+        file_counts = {
+            row.document_id: row.count
+            for row in (
+                await session.execute(
+                    select(KnowledgeSourceFile.document_id, func.count(KnowledgeSourceFile.id).label("count"))
+                    .where(KnowledgeSourceFile.document_id.in_(doc_ids))
+                    .group_by(KnowledgeSourceFile.document_id)
+                )
+            ).all()
+        }
+
+    inventory = [
+        {
+            "document": doc,
+            "stored_pages": page_counts.get(doc.id, 0),
+            "sections": section_counts.get(doc.id, 0),
+            "objects": object_counts.get(doc.id, 0),
+            "frameworks": framework_counts.get(doc.id, 0),
+            "trades": trade_counts.get(doc.id, 0),
+            "source_files": file_counts.get(doc.id, 0),
+        }
+        for doc in documents
+    ]
+    return {
+        "overview": {
+            "total_documents": total_docs,
+            "total_files": total_files,
+            "duplicate_files": duplicate_files,
+            "processed": processed,
+            "needs_review": needs_review,
+            "failed": failed,
+            "analysts": analyst_rows,
+            "years": year_rows,
+            "object_types": object_rows,
+        },
+        "inventory": inventory,
+        "query": query,
+        "status": status,
+    }
+
+
+@router.get("/knowledge-bank", response_class=HTMLResponse)
+async def knowledge_bank_page(
+    request: Request,
+    q: str = Query(default=""),
+    status: str = Query(default=""),
+    session: AsyncSession = Depends(get_session),
+) -> HTMLResponse:
+    """Render the durable market-research corpus inventory."""
+    context = await _build_knowledge_bank_context(session, q.strip(), status.strip())
+    return templates.TemplateResponse(
+        request,
+        "knowledge_bank.html",
+        {
+            "request": request,
+            "page_title": "Knowledge Bank | Macro Dashboard",
+            **context,
+        },
+    )
+
+
+@router.get("/knowledge-bank/documents/{document_id}", response_class=HTMLResponse)
+async def knowledge_bank_document_page(
+    document_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+) -> HTMLResponse:
+    """Inspect one canonical source document and its derived records."""
+    document = (
+        await session.execute(
+            select(KnowledgeSourceDocument).where(KnowledgeSourceDocument.id == document_id)
+        )
+    ).scalar_one_or_none()
+    if document is None:
+        raise HTTPException(status_code=404, detail="Knowledge document not found")
+    files = list(
+        (
+            await session.execute(
+                select(KnowledgeSourceFile)
+                .where(KnowledgeSourceFile.document_id == document_id)
+                .order_by(KnowledgeSourceFile.is_duplicate.asc(), KnowledgeSourceFile.original_filename.asc())
+            )
+        ).scalars().all()
+    )
+    pages = list(
+        (
+            await session.execute(
+                select(KnowledgeDocumentPage)
+                .where(KnowledgeDocumentPage.document_id == document_id)
+                .order_by(KnowledgeDocumentPage.page_number.asc())
+            )
+        ).scalars().all()
+    )
+    sections = list(
+        (
+            await session.execute(
+                select(KnowledgeDocumentSection)
+                .where(KnowledgeDocumentSection.document_id == document_id)
+                .order_by(KnowledgeDocumentSection.section_order.asc())
+            )
+        ).scalars().all()
+    )
+    objects = list(
+        (
+            await session.execute(
+                select(KnowledgeObject)
+                .where(KnowledgeObject.document_id == document_id)
+                .order_by(KnowledgeObject.page_start.asc().nullslast(), KnowledgeObject.id.asc())
+            )
+        ).scalars().all()
+    )
+    figures = list(
+        (
+            await session.execute(
+                select(KnowledgeFigure)
+                .where(
+                    KnowledgeFigure.document_id == document_id,
+                    KnowledgeFigure.interpretation_status.not_like("ignored%"),
+                )
+                .order_by(KnowledgeFigure.page_number.asc(), KnowledgeFigure.figure_index.asc())
+            )
+        ).scalars().all()
+    )
+    tables = list(
+        (
+            await session.execute(
+                select(KnowledgeTable)
+                .where(KnowledgeTable.document_id == document_id)
+                .order_by(KnowledgeTable.page_number.asc(), KnowledgeTable.table_index.asc())
+            )
+        ).scalars().all()
+    )
+    return templates.TemplateResponse(
+        request,
+        "knowledge_bank_detail.html",
+        {
+            "request": request,
+            "page_title": f"{document.title or document.original_filename} | Knowledge Bank",
+            "document": document,
+            "files": files,
+            "pages": pages,
+            "sections": sections,
+            "objects": objects,
+            "figures": figures,
+            "tables": tables,
+        },
+    )
+
+
+@router.get("/knowledge-bank/figures/{figure_id}/image")
+async def knowledge_bank_figure_image(
+    figure_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> FileResponse:
+    """Serve a derived visual artifact from the controlled artifact directory."""
+    figure = (
+        await session.execute(
+            select(KnowledgeFigure).where(KnowledgeFigure.id == figure_id)
+        )
+    ).scalar_one_or_none()
+    if figure is None or figure.interpretation_status.startswith("ignored"):
+        raise HTTPException(status_code=404, detail="Figure not found")
+    artifact_root = Path("data/knowledge_bank/visuals").resolve()
+    artifact_path = Path(figure.artifact_path).resolve()
+    try:
+        artifact_path.relative_to(artifact_root)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Figure artifact path is invalid") from None
+    if not artifact_path.exists() or not artifact_path.is_file():
+        raise HTTPException(status_code=404, detail="Figure artifact file not found")
+    media_type = {
+        "png": "image/png",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "webp": "image/webp",
+    }.get((figure.image_format or "").lower(), "application/octet-stream")
+    return FileResponse(artifact_path, media_type=media_type)
 
 
 _MM_WATCHLIST = [

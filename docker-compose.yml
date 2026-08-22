@@ -47,6 +47,7 @@ services:
       - MYFXBOOK_PASS=${MYFXBOOK_PASS:-}
       - RETAIL_SENTIMENT_CACHE_TTL=${RETAIL_SENTIMENT_CACHE_TTL:-300}
       - AUTH_ENABLED=true
+      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-local_dev_change_me_stable_auth_secret_for_macro_dashboard_sessions}
       - LOG_LEVEL=INFO
     depends_on:
       postgres:

@@ -408,44 +408,6 @@
 
   bootMap();
 
-  /* ══ Zone A side · Rate Path ════════════════════════════════════════════ */
-
-  var yields = DATA.yields || {};
-  var rateEl = document.querySelector("[data-rate-path]");
-  if (rateEl) {
-    var series = (yields.series || []).filter(function (s) { return (s.data || []).length; });
-    if (!series.length) {
-      rateEl.innerHTML = '<div class="tempty">' +
-        esc(yields.message || "Bond yields unavailable.") + "</div>";
-    } else {
-      var rateChart = ensureChart(rateEl);
-      if (rateChart) {
-        rateChart.setOption({
-          backgroundColor: "transparent",
-          grid: { left: 4, right: 4, top: 8, bottom: 4, containLabel: false },
-          xAxis: { type: "category", show: false },
-          yAxis: { type: "value", scale: true, show: false },
-          tooltip: {
-            trigger: "axis",
-            backgroundColor: C.panel,
-            borderColor: C.border,
-            textStyle: { color: C.body, fontFamily: C.mono, fontSize: 11 }
-          },
-          series: series.slice(0, 4).map(function (s, i) {
-            return {
-              name: s.currency,
-              type: "line",
-              smooth: true,
-              showSymbol: false,
-              lineStyle: { width: 1.4, color: [C.accent, C.bull, C.neutral, C.bear][i % 4] },
-              data: (s.data || []).map(function (p) { return [p[0], p[1]]; })
-            };
-          })
-        }, { notMerge: true });
-      }
-    }
-  }
-
   /* ══ Zone C · Inflation Path (real CPI prints) ══════════════════════════ */
 
   var cpiEl = document.querySelector("[data-inflation-chart]");

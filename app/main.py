@@ -21,7 +21,16 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import admin, auth, pages, public, rate_probability, rate_probability_scraped, research
+from app.api.routes import (
+    admin,
+    auth,
+    fixed_income,
+    pages,
+    public,
+    rate_probability,
+    rate_probability_scraped,
+    research,
+)
 from app.auth import AuthMiddleware, ensure_auth_schema
 from app.db.session import dispose_engine, session_scope
 from app.ingestion.scheduler import Scheduler
@@ -100,6 +109,7 @@ app.include_router(pages.router)
 app.include_router(admin.router)
 app.include_router(public.router)
 app.include_router(research.router)
+app.include_router(fixed_income.router)
 app.include_router(rate_probability.router)
 app.include_router(rate_probability_scraped.router)
 

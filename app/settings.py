@@ -63,6 +63,41 @@ class Settings(BaseSettings):
         alias="ENABLE_SCHEDULER",
         description="Run background ingestion jobs. Disable for tests/scripts.",
     )
+    government_yields_incremental_enabled: bool = Field(
+        default=True,
+        alias="GOVERNMENT_YIELDS_INCREMENTAL_ENABLED",
+        description="Run scheduled EODHD government-yield updates.",
+    )
+    government_yields_incremental_hour_utc: int = Field(
+        default=22,
+        alias="GOVERNMENT_YIELDS_INCREMENTAL_HOUR_UTC",
+        description="UTC hour for daily EODHD government-yield updates.",
+    )
+    government_yields_incremental_minute_utc: int = Field(
+        default=15,
+        alias="GOVERNMENT_YIELDS_INCREMENTAL_MINUTE_UTC",
+        description="UTC minute for daily EODHD government-yield updates.",
+    )
+    government_yields_incremental_lookback_days: int = Field(
+        default=7,
+        alias="GOVERNMENT_YIELDS_INCREMENTAL_LOOKBACK_DAYS",
+        description="Lookback window for incremental EODHD government-yield updates.",
+    )
+    government_yields_stale_after_days: int = Field(
+        default=3,
+        alias="GOVERNMENT_YIELDS_STALE_AFTER_DAYS",
+        description="Calendar days after which a government-yield symbol is stale.",
+    )
+    government_yields_stale_check_hour_utc: int = Field(
+        default=7,
+        alias="GOVERNMENT_YIELDS_STALE_CHECK_HOUR_UTC",
+        description="UTC hour for daily government-yield stale checks.",
+    )
+    government_yields_stale_check_minute_utc: int = Field(
+        default=45,
+        alias="GOVERNMENT_YIELDS_STALE_CHECK_MINUTE_UTC",
+        description="UTC minute for daily government-yield stale checks.",
+    )
 
     # Authentication
     auth_enabled: bool = Field(

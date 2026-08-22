@@ -141,22 +141,51 @@
   </div>
 
   <div class="term-col">
+    {#
+      Rate Repricing. Deliberately not a yield-level table: levels are a
+      structural ranking that barely moves, so they read as information without
+      being decision-relevant. The row is a pair, and the sort is the 5d change
+      in the 2Y policy differential, so the panel re-ranks to whatever repriced.
+      The residual column is the actual signal - it flags where spot has not
+      confirmed the rate move.
+    #}
     <section class="tpanel">
       <header class="tpanel__hd">
-        <strong>Fixed Income</strong>
-        <span class="tbadge">10Y</span>
+        <strong>Rate Repricing</strong>
+        <span class="tbadge">{{ rate_repricing.tenor or "2Y" }}</span>
         <a class="tpanel__meta" href="/rates">yields</a>
       </header>
       <div class="tpanel__bd">
-        <div class="tspark" data-rate-path></div>
-        {% for row in yield_differentials.rows %}
-          <a class="trow trow--yield" href="/rates">
-            <span class="trow__code">{{ row.currency }}</span>
-            <b>{{ row.yield_display }}</b>
-            <em class="{{ row.change_5d_class }}">{{ row.change_5d_display }}</em>
+        {% if rate_repricing.regime and rate_repricing.regime.label %}
+          <div class="trow trow--regime">
+            <b class="{{ rate_repricing.regime.class }}">{{ rate_repricing.regime.label }}</b>
+            <small>{{ rate_repricing.regime.detail }}</small>
+          </div>
+        {% endif %}
+        {% if rate_repricing.rows %}
+          <div class="trow trow--rphead">
+            <span class="trow__code">pair</span>
+            <span class="trow__title">&Delta; path / spread</span>
+            <em>fx</em>
+            <b>vs model</b>
+          </div>
+        {% endif %}
+        {% for row in rate_repricing.rows %}
+          <a class="trow trow--repricing" href="/rates"
+             title="{{ row.label }} {{ rate_repricing.tenor }} spread {{ row.spread_display }}, {{ row.window_days }}d change {{ row.change_display }}{% if row.divergence %} - {{ row.divergence }}{% endif %}">
+            <span class="trow__code">{{ row.label }}</span>
+            <span class="trow__title">
+              <b class="{{ row.change_class }}">{{ row.change_display }}</b>
+              <small>
+                {{ row.spread_display }} spread
+                {%- if row.is_stale %} · as of {{ row.stale_display }}{% endif %}
+              </small>
+            </span>
+            <em class="{{ row.fx_change_class }}">{{ row.fx_change_display }}</em>
+            <b class="{{ row.residual_class }}">{{ row.residual_display }}</b>
           </a>
         {% else %}
-          <div class="tempty">{{ yield_differentials.message or "Bond yields unavailable." }}</div>
+          <div class="tempty">{{ rate_repricing.message or "Rate repricing unavailable." }}</div>
         {% endfor %}
       </div>
     </section>

@@ -52,3 +52,7 @@ data/linkedin/drafts/
 
 # CB policy PDFs (manually downloaded, kept on VPS only)
 data/policy/
+
+# Knowledge Bank source PDFs and regenerable visual artifacts
+Brent Research/
+data/knowledge_bank/visuals/

@@ -17,3 +17,13 @@ Window 2026-08-03..21; stored `raw_payload` vs live EODHD now (`scripts/step5_ra
 - Re-ingest: yields 2026-08-01..10-03 (58 calls, 920 rows, 147 revised symbol-dates). 7 original crosses since 2023-08-21 (7 calls, 265 rows). The 7 USD majors were re-fetched from 2010 in Part C. `job:rates_derived`: 0 new flags, 60,982 spreads.
 - Regression test: `tests/unit/test_rates_revision_refetch.py` covers the 5-business-day window, the revised hash on the same date, and the job re-fetching FX and yields before the rebuild.
 - Full suite: 336 passed, 7 skipped, 1 deselected (known FED test).
+
+## Part A: COT current state
+
+- `app/processing/cot.py` reads the **Legacy** futures-only report (noncommercial/commercial/nonreportable), not TFF.
+- Source: `https://www.cftc.gov/files/dea/history/deacot{year}.zip` for the current and 2 prior years (`cot.py:161`). `CFTC_BASE_URL` (newcot) is unused.
+- Contracts are matched by name prefix: EUR, GBP, JPY, CAD, CHF, AUD, NZD, MXN, USD INDEX, GOLD and WTI. No contract codes are used.
+- Cache: in-process, 6-hour TTL (`COT_CACHE_TTL`) and not persisted. Download failures are swallowed per year, and payloads use the last 12 weeks.
+- TFF (`fut_fin_txt_{year}.zip`) **includes ICE US Dollar Index DX, code 098662, in every year 2010–2026** (39 weeks in 2026 to 2026-09-29). USD is therefore sourced directly (`derived: false`).
+- TFF market names drift (e.g. "BRITISH POUND STERLING" → "BRITISH POUND"), and the date header changes between years (`Report_Date_as_MM_DD_YYYY` → `Report_Date_as_YYYY-MM-DD`). Step 5 therefore keys on contract codes and `As_of_Date_In_Form_YYMMDD`.
+- The 2010 yearly file starts mid-year (24 weeks). Jan–Jun 2010 comes from `fin_fut_txt_2006_2016.zip`, filtered to ≥ 2010-01-01.

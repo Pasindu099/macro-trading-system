@@ -44,12 +44,15 @@ async def build_macro_indices(
     if export:
         output_path.mkdir(parents=True, exist_ok=True)
 
+    from app.processing._build_guard import require_rows
+
     async with session_scope(statement_timeout=statement_timeout) as session:
         await create_index_schema(session)
         await build_relationship_weights(session, config)
         await build_low_confidence_relationships(session, config)
         await build_theme_index_components(session)
         await build_theme_indices(session, config)
+        await require_rows(session, "processed.theme_indices")
         summary = await build_index_summary(session, config)
 
         if export:

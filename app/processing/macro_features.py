@@ -35,10 +35,13 @@ async def build_feature_layer(
     if export:
         output_path.mkdir(parents=True, exist_ok=True)
 
+    from app.processing._build_guard import require_rows
+
     async with session_scope(statement_timeout=statement_timeout) as session:
         await create_feature_schema(session)
         await build_indicator_feature_map(session)
         await build_indicator_features(session)
+        await require_rows(session, "processed.indicator_features")
         await build_headline_targets(session)
         await build_lag_analysis(session)
         await build_multicollinearity_flags(session)

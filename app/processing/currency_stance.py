@@ -41,9 +41,12 @@ async def build_currency_stance_layer(
     if export:
         output_path.mkdir(parents=True, exist_ok=True)
 
+    from app.processing._build_guard import require_rows
+
     async with session_scope(statement_timeout=statement_timeout) as session:
         await create_stance_schema(session)
         await build_currency_stance(session, config)
+        await require_rows(session, "processed.currency_stance")
         await build_currency_stance_rankings(session)
         summary = await build_stance_summary(session)
 

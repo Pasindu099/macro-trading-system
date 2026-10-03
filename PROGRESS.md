@@ -21,7 +21,7 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [ ] 1l. `scripts/build_event_innovation.py` takes the same advisory lock as the incremental job
 
 ## Step 2 — Daily Macro State rebuild
-- [x] 2a. `cb_preferred_score.py:310-317`: raise instead of returning inside `session_scope`; script still prints the error. Audit of the other 4 builders done: no early returns found
+- [x] 2a. `cb_preferred_score.py:310-317`: raise instead of returning inside `session_scope`; script still prints the error. The other four builders have no early returns; each now raises when its primary output table is empty.
 - [x] 2b. `export: bool = True` on the 5 builders (scheduled runs must pass `export=False`)
 - [x] 2c. `statement_timeout` passed through to each builder's `session_scope`
 - [ ] 2d. `pages.py` `_build_currency_stance_dashboard`: empty `cb_preferred_score` → legacy fallback (the meter function already handles empty)

@@ -70,11 +70,14 @@ async def build_processed_dataset(
     if export:
         output_path.mkdir(parents=True, exist_ok=True)
 
+    from app.processing._build_guard import require_rows
+
     async with session_scope(statement_timeout=statement_timeout) as session:
         await create_processed_schema(session)
         raw_profile = await inspect_raw_tables(session)
         await rebuild_indicator_metadata(session)
         await rebuild_macro_observations(session)
+        await require_rows(session, "processed.macro_observations")
         await rebuild_quality_issues(session)
         report = await build_quality_report(session, raw_profile)
         await write_dataset_profile(session, raw_profile, report)

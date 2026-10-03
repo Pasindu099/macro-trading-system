@@ -14,7 +14,8 @@ def test_config_contains_france_long_end_and_all_28_fx_pairs():
         assert "30Y" in GBOND_COUNTRY_MATURITIES[country]
     for country in ("FR", "NZ", "SW"):
         assert "30Y" not in GBOND_COUNTRY_MATURITIES[country]
-    assert len(FX_PAIR_SYMBOLS) == 28
+    # 28 G10 pairs plus USD/SEK, ingested only as a DXY component (Step 6).
+    assert len(FX_PAIR_SYMBOLS) == 29 and "USD/SEK" in FX_PAIR_SYMBOLS
 
 
 def test_synthetic_cross_multiplies_usd_legs_on_common_dates():

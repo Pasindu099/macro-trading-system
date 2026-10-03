@@ -43,6 +43,8 @@ FX_PAIR_SYMBOLS: dict[str, str] = {
     "NZD/JPY": "NZDJPY.FOREX",
     "CAD/CHF": "CADCHF.FOREX",
     "CHF/JPY": "CHFJPY.FOREX",
+    # DXY component only; not one of the 28 G10 pairs.
+    "USD/SEK": "USDSEK.FOREX",
 }
 
 

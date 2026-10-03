@@ -31,7 +31,7 @@ async def flag_rates_outliers(session: AsyncSession) -> dict[str, int]:
     counts = {}
     for table, date_column, value_column, source_filter in (
         ("government_yield_observations", "market_observation_date", "yield_value", ""),
-        ("fx_spot_observations", "observation_date", "close_value", "AND source_type <> 'synthetic'"),
+        ("fx_spot_observations", "observation_date", "close_value", "AND source_type NOT IN ('synthetic', 'computed_dxy')"),
     ):
         result = await session.execute(text(f"""
             SELECT DISTINCT ON (provider_symbol, {date_column})

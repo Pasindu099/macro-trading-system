@@ -86,14 +86,19 @@ def test_extreme_stats_use_report_date_spot_and_reversal() -> None:
     bands = pos.extreme_band_stats(weeks, spot)
     assert bands[">90"]["episodes"] >= 1
     assert bands[">90"]["avg_move_4w_pct"] < 0
-    assert bands[">90"]["pct_reversed_8w"] == 100.0
+    assert bands[">90"]["against_crowd_after_8w"] == 100.0
+    assert bands[">90"]["max_adverse_move_8w"] > 0
+    assert "pct_reversed_8w" not in bands[">90"]
 
 
-def test_usd_index_rises_when_majors_fall() -> None:
-    d1, d2 = date(2026, 9, 22), date(2026, 9, 29)
-    majors = {c: pos.SpotSeries([(d1, 1.0), (d2, 0.9)]) for c in ("EUR", "JPY")}
-    usd = pos.usd_index(majors, [d1, d2])
-    assert usd.on(d2) > usd.on(d1)
+def test_max_adverse_move_uses_daily_closes_within_window() -> None:
+    start, end = date(2026, 1, 6), date(2026, 3, 3)
+    # Long crowd: currency dips 3% intraperiod, ends up 1%.
+    spot = pos.SpotSeries([(start, 100.0), (date(2026, 1, 20), 97.0), (end, 101.0), (date(2026, 3, 10), 90.0)])
+    assert pos.max_adverse_move(spot, start, end, 1) == pytest.approx(3.0)
+    assert pos.max_adverse_move(spot, start, end, -1) == pytest.approx(1.0)
+    rising = pos.SpotSeries([(start, 100.0), (end, 105.0)])
+    assert pos.max_adverse_move(rising, start, end, 1) == 0.0
 
 
 def test_pair_normalization_market_convention() -> None:

@@ -7,7 +7,6 @@ Friday release date. Spot on a report_date is the newest valid close on or befor
 from __future__ import annotations
 
 import bisect
-import math
 from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
@@ -17,6 +16,7 @@ import yaml
 from sqlalchemy import text
 
 from app.db.session import get_sessionmaker
+from app.services.dxy import DXY_PAIR
 
 PAIRS_CONFIG = Path("config/pairs.yaml")
 CURRENCIES = ["EUR", "GBP", "AUD", "NZD", "USD", "CAD", "CHF", "JPY"]
@@ -153,16 +153,6 @@ class SpotSeries:
         return self.values[i]
 
 
-def usd_index(series: dict[str, SpotSeries], dates: list[date]) -> SpotSeries:
-    """Equal-weight geometric USD index vs the seven majors (no DXY spot is stored)."""
-    points = []
-    for d in dates:
-        values = [s.on(d) for s in series.values()]
-        if values and all(v for v in values):
-            points.append((d, math.exp(-sum(math.log(v) for v in values) / len(values))))
-    return SpotSeries(points)
-
-
 # ── Loaders ───────────────────────────────────────────────────────────
 
 async def load_positions(currencies: list[str] | None = None) -> dict[str, dict[str, list[Week]]]:
@@ -181,7 +171,7 @@ async def load_positions(currencies: list[str] | None = None) -> dict[str, dict[
     return output
 
 
-async def load_spot(report_dates: list[date]) -> dict[str, SpotSeries]:
+async def load_spot() -> dict[str, SpotSeries]:
     query = text("""
         SELECT DISTINCT ON (pair, observation_date) pair, observation_date, close_value::float AS close
         FROM fx_spot_observations
@@ -189,7 +179,7 @@ async def load_spot(report_dates: list[date]) -> dict[str, SpotSeries]:
         ORDER BY pair, observation_date, ingested_at DESC, id DESC
     """)
     async with get_sessionmaker()() as session:
-        rows = (await session.execute(query, {"pairs": [p for p, _ in USD_PAIRS.values()]})).all()
+        rows = (await session.execute(query, {"pairs": [p for p, _ in USD_PAIRS.values()] + [DXY_PAIR]})).all()
     by_pair: dict[str, list[tuple[date, float]]] = {}
     for r in rows:
         by_pair.setdefault(r.pair, []).append((r.observation_date, r.close))
@@ -197,7 +187,8 @@ async def load_spot(report_dates: list[date]) -> dict[str, SpotSeries]:
         ccy: SpotSeries([(d, v if sign > 0 else 1 / v) for d, v in by_pair.get(pair, [])])
         for ccy, (pair, sign) in USD_PAIRS.items()
     }
-    series["USD"] = usd_index(series, report_dates)
+    # USD = ICE Dollar Index computed from its six components (rising = USD strengthens).
+    series["USD"] = SpotSeries(by_pair.get(DXY_PAIR, []))
     return series
 
 
@@ -301,8 +292,7 @@ async def get_flows(window: str = "1W") -> dict[str, Any]:
 async def get_squeeze(lookback: str = "3y") -> dict[str, Any]:
     years = _years(lookback)
     positions = await load_positions()
-    report_dates = sorted({w.report_date for cats in positions.values() for ws in cats.values() for w in ws})
-    spot = await load_spot(report_dates)
+    spot = await load_spot()
     rows = []
     for ccy in CURRENCIES:
         entry: dict[str, Any] = {"currency": ccy}
@@ -321,7 +311,7 @@ async def get_squeeze(lookback: str = "3y") -> dict[str, Any]:
                 "net_last_3w": [w.net for w in weeks[-3:]],
             }
         rows.append(entry)
-    return {"lookback": lookback, "spot_basis": "currency vs USD; USD = equal-weight index of 7 majors",
+    return {"lookback": lookback, "spot_basis": "currency vs USD; USD = computed ICE Dollar Index (DXY)",
             "currencies": rows}
 
 
@@ -331,7 +321,7 @@ def extreme_band_stats(weeks: list[Week], spot: SpotSeries | None) -> dict[str, 
     bands = {}
     for band, (in_band, direction) in EXTREME_BANDS.items():
         episodes = find_episodes(pctl, in_band)
-        moves4, moves8, reversed_count = [], [], 0
+        moves4, moves8, adverse, against_count = [], [], [], 0
         for i in episodes:
             start = spot.on(dates[i]) if spot else None
             m4 = pct_move(start, spot.on(dates[i + 4])) if spot and i + 4 < len(dates) else None
@@ -340,16 +330,32 @@ def extreme_band_stats(weeks: list[Week], spot: SpotSeries | None) -> dict[str, 
                 moves4.append(m4)
             if m8 is not None:
                 moves8.append(m8)
-                reversed_count += direction * m8 < 0
+                against_count += direction * m8 < 0
+                adverse.append(max_adverse_move(spot, dates[i], dates[i + 8], direction))
         bands[band] = {
             "episodes": len(episodes),
             "episode_dates": [dates[i].isoformat() for i in episodes],
-            "avg_move_4w_pct": round(sum(moves4) / len(moves4), 3) if moves4 else None,
-            "avg_move_8w_pct": round(sum(moves8) / len(moves8), 3) if moves8 else None,
-            "pct_reversed_8w": round(reversed_count / len(moves8) * 100, 1) if moves8 else None,
+            "avg_move_4w_pct": _avg(moves4),
+            "avg_move_8w_pct": _avg(moves8),
+            "against_crowd_after_8w": round(against_count / len(moves8) * 100, 1) if moves8 else None,
+            "max_adverse_move_8w": _avg([a for a in adverse if a is not None]),
             "episodes_with_8w": len(moves8),
         }
     return bands
+
+
+def max_adverse_move(spot: SpotSeries, start: date, end: date, direction: int) -> float | None:
+    """Largest move against the crowd (positive %, 0 if never against) on daily closes in (start, end]."""
+    base = spot.on(start)
+    if base is None:
+        return None
+    lo, hi = bisect.bisect_right(spot.dates, start), bisect.bisect_right(spot.dates, end)
+    moves = [-direction * pct_move(base, v) for v in spot.values[lo:hi]]
+    return max([0.0, *moves])
+
+
+def _avg(values: list[float]) -> float | None:
+    return round(sum(values) / len(values), 3) if values else None
 
 
 async def get_extremes(currency: str) -> dict[str, Any]:
@@ -357,11 +363,12 @@ async def get_extremes(currency: str) -> dict[str, Any]:
     weeks = (await load_positions([ccy])).get(ccy, {}).get("leveraged_funds", [])
     if not weeks:
         return {"currency": ccy, "status": "unavailable", "reason": "no COT history"}
-    spot = (await load_spot([w.report_date for w in weeks])).get(ccy)
+    spot = (await load_spot()).get(ccy)
     return {
         "currency": ccy, "category": "leveraged_funds", "lookback": "3y",
         "horizon_weeks": EXTREME_HORIZON_WEEKS,
-        "reversal_rule": "8W currency move against the band's crowd direction",
+        "against_crowd_rule": "share of episodes whose 8W currency move is against the band's crowd",
+        "max_adverse_rule": "largest daily-close move against the crowd within 8W, averaged per band (%)",
         "bands": extreme_band_stats(weeks, spot),
     }
 

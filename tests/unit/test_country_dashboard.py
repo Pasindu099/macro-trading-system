@@ -31,11 +31,11 @@ class _Session:
 async def test_country_rows_keep_latest_actual_and_raw_values():
     indicator = SimpleNamespace(id=1, canonical_name="cpi_headline_yoy", display_name="Headline CPI",
                                 secondary_categories=[], unit="%")
-    old = SimpleNamespace(actual=3.4, previous=None, period=None, period_start_date=None,
+    old = SimpleNamespace(indicator_id=1, actual=3.4, previous=None, period=None, period_start_date=None,
                           released_at=datetime(2026, 1, 1, tzinfo=timezone.utc))
-    new = SimpleNamespace(actual=3.7, previous=None, period=None, period_start_date=None,
+    new = SimpleNamespace(indicator_id=1, actual=3.7, previous=None, period=None, period_start_date=None,
                           released_at=datetime(2026, 4, 1, tzinfo=timezone.utc))
-    upcoming = SimpleNamespace(actual=None, previous=3.7, period=None, period_start_date=None,
+    upcoming = SimpleNamespace(indicator_id=1, actual=None, previous=3.7, period=None, period_start_date=None,
                                released_at=datetime(2026, 12, 1, tzinfo=timezone.utc))
     session = _Session([indicator], [upcoming, new, old])
     rows = await get_country_rows(session, "US", "Inflation")
@@ -44,6 +44,19 @@ async def test_country_rows_keep_latest_actual_and_raw_values():
     assert rows[0]["previous_value"] == 3.4
     assert rows[0]["sparkline_values"] == [3.4, 3.7]
     assert "detail_href" not in rows[0]
+    assert session.calls == 2
+
+
+@pytest.mark.asyncio
+async def test_country_rows_batch_multiple_indicator_histories():
+    indicators = [SimpleNamespace(id=i, canonical_name=f"indicator_{i}", display_name=f"Indicator {i}",
+                                  secondary_categories=[], unit="%") for i in (1, 2)]
+    releases = [SimpleNamespace(indicator_id=i, actual=float(i), previous=None, period=None,
+                                period_start_date=None, released_at=datetime(2026, 4, 1, tzinfo=timezone.utc))
+                for i in (1, 2)]
+    session = _Session(indicators, releases)
+    rows = await get_country_rows(session, "US", "Inflation")
+    assert [row["latest_value"] for row in rows] == [1.0, 2.0]
     assert session.calls == 2
 
 

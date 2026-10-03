@@ -5,8 +5,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import desc, or_, select
+from sqlalchemy import desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from app.db.models import Indicator, IndicatorRelease
 
@@ -28,22 +29,34 @@ async def get_country_rows(session: AsyncSession, country_code: str, category: s
             or_(Indicator.primary_category == category, Indicator.secondary_categories.any(category)),
         ).order_by(Indicator.importance.asc(), Indicator.display_name.asc())
     )
+    indicators = result.scalars().all()
+    if not indicators:
+        return []
+    order = (
+        IndicatorRelease.period_start_date.desc().nullslast(),
+        desc(IndicatorRelease.released_at),
+        desc(IndicatorRelease.retrieved_at),
+        desc(IndicatorRelease.id),
+    )
+    ranked = select(
+        IndicatorRelease,
+        func.row_number().over(partition_by=IndicatorRelease.indicator_id, order_by=order).label("row_number"),
+    ).where(IndicatorRelease.indicator_id.in_([indicator.id for indicator in indicators])).subquery()
+    release = aliased(IndicatorRelease, ranked)
+    history_result = await session.execute(
+        select(release).where(ranked.c.row_number <= HISTORY_LIMIT)
+        .order_by(release.indicator_id, ranked.c.row_number)
+    )
+    histories: dict[int, list[IndicatorRelease]] = {}
+    for item in history_result.scalars().all():
+        histories.setdefault(item.indicator_id, []).append(item)
     rows = []
-    for indicator in result.scalars().all():
-        history_result = await session.execute(
-            select(IndicatorRelease).where(IndicatorRelease.indicator_id == indicator.id)
-            .order_by(
-                IndicatorRelease.period_start_date.desc().nullslast(),
-                desc(IndicatorRelease.released_at),
-                desc(IndicatorRelease.retrieved_at),
-                desc(IndicatorRelease.id),
-            ).limit(HISTORY_LIMIT)
-        )
+    for indicator in indicators:
         by_period = {}
-        for release in history_result.scalars().all():
-            key = (getattr(release, "period", None), getattr(release, "period_start_date", None),
-                   getattr(release, "released_at", None))
-            by_period.setdefault(key, release)
+        for item in histories.get(indicator.id, []):
+            key = (getattr(item, "period", None), getattr(item, "period_start_date", None),
+                   getattr(item, "released_at", None))
+            by_period.setdefault(key, item)
         history = list(reversed(list(by_period.values())[:12]))
         actuals = [release for release in history if release.actual is not None
                    and getattr(release, "released_at", now) <= now]

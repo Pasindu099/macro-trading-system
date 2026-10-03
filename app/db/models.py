@@ -207,6 +207,13 @@ class IngestionRun(Base):
 
     One row per scheduled run or manual backfill invocation. Powers the
     admin health endpoint (Step 3).
+
+    Analytics jobs (app/services/analytics_jobs.py) share this table:
+    ``run_type`` is ``job:<name>`` (e.g. ``job:event_innovation_incremental``,
+    ``job:macro_state:feature_layer``), ``countries_fetched`` is ``[]``, rows
+    written go in ``events_inserted``, and ``status`` can additionally be
+    ``skipped`` (lock held elsewhere) or ``timeout``. /api/admin/health excludes
+    ``job:%`` rows; they are reported by /api/admin/jobs/status instead.
     """
 
     __tablename__ = "ingestion_runs"

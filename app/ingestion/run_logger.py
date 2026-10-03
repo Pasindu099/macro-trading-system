@@ -40,6 +40,16 @@ class RunTracker:
         self.events_updated = 0
         self.api_calls_used = 0
         self.errors: list[str] = []
+        # Set by analytics jobs that finish without doing their work
+        # ("skipped" when another run holds the job's advisory lock).
+        self.status_override: str | None = None
+
+    def record_rows(self, n: int) -> None:
+        """Analytics jobs: rows written are stored in events_inserted."""
+        self.events_inserted += n
+
+    def mark_skipped(self) -> None:
+        self.status_override = "skipped"
 
     def record_stats(self, stats: IngestStats) -> None:
         """Accumulate stats from one ingest batch."""
@@ -62,8 +72,12 @@ async def run_logger(
 
     Args:
         run_type: scheduled_asia, scheduled_london, scheduled_ny,
-                  post_release, manual_backfill
+                  post_release, manual_backfill, or job:<name> for
+                  analytics jobs
         countries: list of country codes this run fetches (or None for all)
+
+    Final status: success / partial (item errors) / failed (exception) /
+    timeout (TimeoutError) / skipped (tracker.mark_skipped()).
     """
     countries_list = countries or []
 
@@ -89,12 +103,24 @@ async def run_logger(
     try:
         yield tracker
         # Success path
+        status = tracker.status_override or (
+            "success" if not tracker.errors else "partial"
+        )
         await _finalize_run(
             run_id=run_id,
             tracker=tracker,
-            status="success" if not tracker.errors else "partial",
+            status=status,
             error_detail=None,
         )
+    except TimeoutError as exc:
+        logger.error("Run %d (%s) timed out", run_id, run_type)
+        await _finalize_run(
+            run_id=run_id,
+            tracker=tracker,
+            status="timeout",
+            error_detail={"type": "TimeoutError", "message": str(exc) or "timed out"},
+        )
+        raise
     except Exception as exc:
         # Failure path
         logger.exception("Ingestion run %d failed: %s", run_id, exc)

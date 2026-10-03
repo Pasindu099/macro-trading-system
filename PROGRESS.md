@@ -100,7 +100,7 @@ Decisions: `DECISIONS_STEP7.md`. Commits: `step7: <sub-task>`.
 ## Step 8 — Fed projections, tracking, regime and gap
 Decisions: `DECISIONS_STEP8.md`. Commits: `step8: <sub-task>`. Scope: Fed only.
 - [x] 8-0. Log redaction (formatter + EODHD + run_logger + news_pipeline); checkpoints untracked; Fed rate from decision (4.00%); EI rebuild 25,341 rows; Macro State chain success; top-40 unmapped reported.
-- [ ] 8a. `config/central_banks.yaml` (8 banks; Fed full, others verify: true).
+- [x] 8a. `config/central_banks.yaml` for 8 banks (Fed verified; others verify: true).
 - [ ] 8b. Migration 0024 + deterministic SEP parser, validation, backfill 2020+.
 - [ ] 8c. FRED series + CB tracking, revisions, reaction-function flag.
 - [ ] 8d. Fed regime v1, transition checklists, gap v1.

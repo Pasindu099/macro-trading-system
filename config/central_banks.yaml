@@ -1,0 +1,136 @@
+# Per-central-bank reference config (Step 8 Part A).
+# Fed is filled from primary sources; others from public knowledge and marked
+# verify: true until checked against each bank's own documentation.
+#
+# rate_path_type: dots (participants' rate projections) | own_track (published policy-rate path) | none
+# conditioning:   own_views (each participant's appropriate policy) | market_path | market_curve
+#                 | board_median | constant_rate  — the rate assumption behind the projections
+
+banks:
+  FED:
+    name: Federal Reserve (FOMC)
+    currency: USD
+    mandate: dual                       # maximum employment and stable prices
+    inflation_target: {value: 2.0, measure: PCE price index, basis: yoy, form: point}
+    projections:
+      name: Summary of Economic Projections (SEP)
+      cadence: quarterly                # March, June, September, December meetings
+      months: [3, 6, 9, 12]
+      horizons: [current_year, next_year, year_after, longer_run]
+      variables: [real_gdp, unemployment_rate, pce_inflation, core_pce_inflation, federal_funds_rate]
+      source_html: "https://www.federalreserve.gov/monetarypolicy/fomcprojtabl{yyyymmdd}.htm"
+      source_pdf: "https://www.federalreserve.gov/monetarypolicy/files/fomcprojtabl{yyyymmdd}.pdf"
+    rate_path_type: dots
+    conditioning: own_views             # each participant's assessment of appropriate policy
+    voting:
+      body: Federal Open Market Committee
+      participants: 19                  # 7 Governors + 12 Reserve Bank presidents (when all seats filled)
+      voters: 12                        # 7 Governors + New York Fed president + 4 rotating presidents
+      decision: majority vote, dissents published
+    meetings:
+      per_year: 8
+      calendar: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+      statement: "https://www.federalreserve.gov/newsevents/pressreleases/monetary{yyyymmdd}a.htm"
+    minutes:
+      lag_days: 21
+      source: "https://www.federalreserve.gov/monetarypolicy/files/fomcminutes{yyyymmdd}.pdf"
+    policy_rate: {name: federal funds target range (upper bound), indicator: fed_interest_rate_decision}
+    verify: false
+
+  ECB:
+    name: European Central Bank
+    currency: EUR
+    mandate: single_price_stability
+    inflation_target: {value: 2.0, measure: HICP, basis: yoy, form: symmetric_medium_term}
+    projections: {name: Eurosystem/ECB staff macroeconomic projections, cadence: quarterly, months: [3, 6, 9, 12]}
+    rate_path_type: none
+    conditioning: market_curve          # technical assumption: market-implied rates
+    voting: {body: Governing Council, participants: 26, voters: 21, decision: consensus or majority, votes not published}
+    meetings: {per_year: 8, calendar: "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"}
+    minutes: {name: monetary policy accounts, lag_days: 28}
+    policy_rate: {name: deposit facility rate}
+    verify: true
+
+  BOE:
+    name: Bank of England (MPC)
+    currency: GBP
+    mandate: single_price_stability     # secondary objective: support government economic policy
+    inflation_target: {value: 2.0, measure: CPI, basis: yoy, form: point}
+    projections: {name: Monetary Policy Report, cadence: quarterly, months: [2, 5, 8, 11]}
+    rate_path_type: none
+    conditioning: market_curve          # market-implied Bank Rate path
+    voting: {body: Monetary Policy Committee, participants: 9, voters: 9, decision: majority, individual votes published}
+    meetings: {per_year: 8}
+    minutes: {name: Monetary Policy Summary and minutes, lag_days: 0}
+    policy_rate: {name: Bank Rate}
+    verify: true
+
+  BOJ:
+    name: Bank of Japan
+    currency: JPY
+    mandate: single_price_stability
+    inflation_target: {value: 2.0, measure: CPI, basis: yoy, form: point}
+    projections: {name: Outlook for Economic Activity and Prices, cadence: quarterly, months: [1, 4, 7, 10]}
+    rate_path_type: none
+    conditioning: board_median          # median of Policy Board members' forecasts
+    voting: {body: Policy Board, participants: 9, voters: 9, decision: majority, dissents published}
+    meetings: {per_year: 8}
+    minutes: {name: Summary of Opinions (minutes after the next meeting), lag_days: 8}
+    policy_rate: {name: uncollateralized overnight call rate target}
+    verify: true
+
+  RBA:
+    name: Reserve Bank of Australia
+    currency: AUD
+    mandate: dual                       # price stability and full employment
+    inflation_target: {value: 2.5, range: [2.0, 3.0], measure: CPI, basis: yoy, form: band_midpoint}
+    projections: {name: Statement on Monetary Policy, cadence: quarterly, months: [2, 5, 8, 11]}
+    rate_path_type: none
+    conditioning: market_path           # market-implied cash-rate path
+    voting: {body: Monetary Policy Board, participants: 9, voters: 9, decision: consensus or majority, unattributed votes published}
+    meetings: {per_year: 8}
+    minutes: {lag_days: 14}
+    policy_rate: {name: cash rate target}
+    verify: true
+
+  BOC:
+    name: Bank of Canada
+    currency: CAD
+    mandate: single_price_stability
+    inflation_target: {value: 2.0, range: [1.0, 3.0], measure: CPI, basis: yoy, form: band_midpoint}
+    projections: {name: Monetary Policy Report, cadence: quarterly, months: [1, 4, 7, 10]}
+    rate_path_type: none
+    conditioning: own_views             # internal policy-rate assumption, not published
+    voting: {body: Governing Council, participants: 6, voters: 6, decision: consensus}
+    meetings: {per_year: 8}
+    minutes: {name: summary of deliberations, lag_days: 14}
+    policy_rate: {name: target for the overnight rate}
+    verify: true
+
+  RBNZ:
+    name: Reserve Bank of New Zealand
+    currency: NZD
+    mandate: single_price_stability
+    inflation_target: {value: 2.0, range: [1.0, 3.0], measure: CPI, basis: yoy, form: band_midpoint}
+    projections: {name: Monetary Policy Statement, cadence: quarterly, months: [2, 5, 8, 11]}
+    rate_path_type: own_track           # published OCR track
+    conditioning: own_views
+    voting: {body: Monetary Policy Committee, participants: 7, voters: 7, decision: consensus}
+    meetings: {per_year: 7}
+    minutes: {name: record of meeting, lag_days: 0}
+    policy_rate: {name: Official Cash Rate}
+    verify: true
+
+  SNB:
+    name: Swiss National Bank
+    currency: CHF
+    mandate: single_price_stability
+    inflation_target: {value: null, range: [0.0, 2.0], measure: CPI, basis: yoy, form: ceiling}
+    projections: {name: conditional inflation forecast, cadence: quarterly, months: [3, 6, 9, 12]}
+    rate_path_type: none
+    conditioning: constant_rate         # policy rate held constant over the forecast horizon
+    voting: {body: Governing Board, participants: 3, voters: 3, decision: consensus}
+    meetings: {per_year: 4}
+    minutes: {name: summary of deliberations, lag_days: 14}
+    policy_rate: {name: SNB policy rate}
+    verify: true

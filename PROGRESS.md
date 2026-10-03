@@ -43,7 +43,7 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [ ] T1. Unit: only rows after the watermark are written; idempotent re-run
 - [ ] T2. Unit: revised release updates its score, no second row
 - [ ] T3. Unit: concurrent run → `skipped`
-- [ ] T4. Integration (compose DB): fixture release → score appears; `/api/admin/jobs/status` shows the run. Local Docker daemon is not running; command to be handed over
+- [~] T4. Integration (compose DB): `/api/admin/jobs/status` endpoint shape passes inside the container after applying migration 0021. Fixture release → score appears and job run reporting still needed.
 - [ ] T5. Full suite passes (except `test_rate_probability.py:182`)
 
 ## Delivery

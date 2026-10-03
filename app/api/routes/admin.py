@@ -14,7 +14,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,6 +43,12 @@ from app.db.session import get_session
 from app.settings import get_settings
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
+
+
+def _require_jobs_admin(request: Request) -> None:
+    # Local deployments can explicitly disable all authentication.
+    if get_settings().auth_enabled:
+        require_role("admin")(request)
 
 
 class IndicatorSeriesRefreshRequest(BaseModel):
@@ -212,7 +218,7 @@ async def admin_health(
     return Envelope(data=payload, meta=_meta())
 
 
-@router.get("/jobs/status", dependencies=[Depends(require_role("admin"))])
+@router.get("/jobs/status", dependencies=[Depends(_require_jobs_admin)])
 async def admin_jobs_status(
     session: AsyncSession = Depends(get_session),
 ) -> dict[str, object]:

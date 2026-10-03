@@ -1,0 +1,49 @@
+version: 1
+horizon: 1M
+weights:
+  macro: 0.35
+  cb_tracking: 0.20
+  gap: 0.15
+  curve: 0.15
+  positioning: 0.10
+  situations: 0.05
+normalization:
+  macro_z_clip: 2.0
+  fed_gap_bp_per_unit: 25.0
+  component_clip: 2.0
+bias_thresholds: {strongly_bearish: -1.0, bearish: -0.25, bullish: 0.25, strongly_bullish: 1.0}
+conviction:
+  high_agreement: 0.75
+  moderate_agreement: 0.55
+  high_min_components: 4
+  crowding_long_percentile: 80
+  crowding_short_percentile: 20
+curve_values:
+  bear_flattener: 0.7
+  bear_steepener: 0.4
+  bull_steepener: -0.7
+  bull_flattener: -0.4
+  twist_steepener: 0.1
+  twist_flattener: -0.1
+situation_effects:
+  risk_off: {USD: 0.8, EUR: -0.8}
+  energy_shock: {USD: -0.3, EUR: -0.8, CAD: 0.3}
+  fr_fiscal_stress: {EUR: -1.0}
+  labor_deterioration: {USD: -0.6, EUR: -0.6}
+  bear_steepening: {USD: 0.2, EUR: 0.2}
+  yields_up_currency_down: {USD: -0.5, EUR: -0.5}
+  correlation_break: {USD: 0.0, EUR: 0.0}
+  intervention_risk_jpy: {USD: -0.4}
+driver_labels: {cb: CB divergence, data: data, positioning: positioning}
+phrases:
+  macro: {positive: Macro data supports the currency, negative: Macro data weighs on the currency}
+  cb_tracking: {positive: Inflation tracking points to a firmer policy path, negative: Inflation tracking points to easier policy}
+  gap: {positive: The central bank path is firmer than market pricing, negative: The central bank path is softer than market pricing}
+  curve: {positive: The yield curve reflects rising rates, negative: The yield curve reflects falling rates}
+  positioning: {positive: Positioning leaves room for gains, negative: Crowded positioning limits upside}
+  situations: {positive: Active situations support the currency, negative: Active situations weigh on the currency}
+templates:
+  thesis: "{first} and {second} support a {bias} {currency} view."
+  risk: "The main risk is {risk}."
+  no_second: "the remaining available inputs are mixed"
+  no_opposition: "a reversal in the leading driver"

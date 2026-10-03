@@ -25,6 +25,7 @@ from app.services.dxy import DXY_PAIR
 from app.services.event_innovation_feed import FeedFilters, build_event_innovation_feed
 from app.services.macro_state import get_macro_state_board
 from app.services.rate_probability import get_rate_probability_view
+from app.settings import get_settings
 
 HOT, COOL, TEXT, MUTED = "#f6b65a", "#8fc3ff", "#e6e9ef", "#9aa3b2"
 RANGE_DAYS = {"1M": 22, "3M": 66, "6M": 130, "1Y": 252}
@@ -510,7 +511,7 @@ async def panel_news(desk: dict, params: dict) -> dict[str, Any]:
     items = [dict(r, type_label=str(r["implied_tier"] or "Other").replace("_", " ").title())
              for r in rows if selected == "All" or r["implied_tier"] == selected][:12]
     ctx = {"filters": [{"value": "All", "label": "All"}] + [{"value": t, "label": t.replace("_", " ").title()} for t in types],
-           "selected": selected}
+           "selected": selected, "ai_paused": not get_settings().news_ai_enabled}
     if not rows:
         return empty(f"No {desk['currency']} news items stored.", **ctx)
     return {"state": "ok", "news": items, **ctx}

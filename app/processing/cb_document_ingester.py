@@ -125,6 +125,8 @@ def _parse_date_and_type(bank: str, file_path: Path) -> tuple[date | None, str]:
     # ── Doc type ──────────────────────────────────────────────────────────────
     if "/statement/" in path_lower:
         doc_type = "statement"
+    elif "/minutes/" in path_lower:
+        doc_type = "minutes"
     elif (
         "/projection/" in path_lower
         or "/projections/" in path_lower

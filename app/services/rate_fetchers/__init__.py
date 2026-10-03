@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import importlib
 import logging
-from datetime import date
+from datetime import date, timedelta
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.rate_fetchers.cache import count_banks_fetched_on_date
@@ -25,10 +26,28 @@ FETCHER_MAP = {
 }
 
 STARTUP_REQUIRED_BANKS = ("FED", "ECB", "BOE", "BOC", "BOJ", "RBA", "RBNZ", "SNB")
+# A fetcher that falls back to a cached curve older than this reports "stale", not "ok".
+STALE_AFTER = timedelta(days=3)
+
+
+def apply_freshness(statuses: dict[str, str], latest: dict[str, date | None], today: date) -> dict[str, str]:
+    """Downgrade ok/cached to 'stale' when the newest stored curve is older than STALE_AFTER."""
+    out = dict(statuses)
+    for bank, status in statuses.items():
+        if status in {"ok", "cached"}:
+            newest = latest.get(bank)
+            if newest is None or today - newest > STALE_AFTER:
+                out[bank] = "stale"
+    return out
+
+
+async def latest_curve_dates(db_session: AsyncSession) -> dict[str, date | None]:
+    rows = await db_session.execute(text("SELECT bank, max(curve_date) AS d FROM ois_cache GROUP BY bank"))
+    return {row.bank: row.d for row in rows}
 
 
 async def fetch_all(db_session: AsyncSession) -> dict[str, str]:
-    """Run all fetchers. Returns {bank: 'ok'|'cached'|'failed'}."""
+    """Run all fetchers. Returns {bank: 'ok'|'cached'|'stale'|'failed'}."""
     statuses: dict[str, str] = {}
     for bank, (module_name, function_name) in FETCHER_MAP.items():
         try:
@@ -46,7 +65,7 @@ async def fetch_all(db_session: AsyncSession) -> dict[str, str]:
         except Exception as exc:  # noqa: BLE001 - scheduler must continue across providers.
             logger.warning("%s rate fetch failed: %s", bank, exc)
             statuses[bank] = "failed"
-    return statuses
+    return apply_freshness(statuses, await latest_curve_dates(db_session), date.today())
 
 
 async def should_fetch_on_startup(db_session: AsyncSession) -> bool:

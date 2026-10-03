@@ -86,7 +86,7 @@ async def score_headlines(headlines: list[dict]) -> list[dict]:
     try:
         client = AsyncOpenAI(api_key=settings.openai_api_key)
         response = await client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=settings.openai_model,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": _build_user_message([headline for _, headline in passed])},

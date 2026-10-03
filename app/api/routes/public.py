@@ -73,7 +73,6 @@ CALENDAR_CATEGORIES = (
     "Other",
 )
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
-NEWS_SENTIMENT_MODEL = "gpt-4.1"
 INVESTINGLIVE_RSS_URL = "https://investinglive.com/feed/"
 
 RETAIL_SENTIMENT_CATEGORIES = {"all", "forex", "indices", "commodities", "crypto"}
@@ -1449,7 +1448,7 @@ async def analyze_cb_feeds(bank: str | None = Query(default=None)) -> dict[str, 
                 OPENAI_RESPONSES_URL,
                 headers={"Authorization": f"Bearer {settings.openai_api_key}", "Content-Type": "application/json"},
                 json={
-                    "model": NEWS_SENTIMENT_MODEL,
+                    "model": get_settings().openai_model,
                     "instructions": (
                         f"You are a senior macro analyst specialising in central bank policy. "
                         f"Analyse these recent communications from {bank_label}. "
@@ -1512,7 +1511,7 @@ async def analyze_news_sentiment(
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": NEWS_SENTIMENT_MODEL,
+                    "model": get_settings().openai_model,
                     "instructions": (
                         "You are a financial market analyst. Analyse the news headline and body "
                         "provided. Return ONLY valid JSON, no markdown fences, no explanation, "

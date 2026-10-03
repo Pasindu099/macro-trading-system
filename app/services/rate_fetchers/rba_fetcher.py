@@ -17,14 +17,12 @@ logger = logging.getLogger(__name__)
 
 RBA_F17_URL = "https://www.rba.gov.au/statistics/tables/csv/f17-forward-rates.csv"
 TRADINGVIEW_IB_CONTRACTS_URL = (
-    "https://r.jina.ai/http://r.jina.ai/http://"
+    "https://r.jina.ai/"
     "https://www.tradingview.com/symbols/ASX24-IB1!/contracts/"
 )
 REQUEST_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-    ),
+    # Honest client UA: a browser-impersonating UA gets a Cloudflare challenge (403) from the proxy.
+    "User-Agent": "MacroDashboard/0.1 rate-fetcher",
     "Accept": "text/csv,*/*",
 }
 TENOR_ALIASES = {

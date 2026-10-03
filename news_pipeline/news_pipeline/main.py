@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
@@ -78,14 +79,22 @@ def register_jobs() -> None:
         max_instances=1,
         coalesce=True,
     )
-    scheduler.add_job(
-        poll_and_enrich,
-        "interval",
-        seconds=20,
-        id="poll_and_enrich",
-        max_instances=1,
-        coalesce=True,
-    )
+    # LLM enrichment is paused by default (Step 7 decision); raw collection above keeps running.
+    if news_ai_enabled():
+        scheduler.add_job(
+            poll_and_enrich,
+            "interval",
+            seconds=20,
+            id="poll_and_enrich",
+            max_instances=1,
+            coalesce=True,
+        )
+    else:
+        logger.info("LLM news enrichment paused (NEWS_AI_ENABLED is not true)")
+
+
+def news_ai_enabled() -> bool:
+    return os.getenv("NEWS_AI_ENABLED", "false").strip().lower() in {"1", "true", "yes"}
 
 
 @asynccontextmanager

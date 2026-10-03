@@ -4,6 +4,9 @@
     <h2>{{ desk.currency }} news</h2>
     <div class="headline-row">{% if ctx.filters %}{{ pills(ctx.filters, ctx.selected, url, 'type', 'News type') }}{% endif %}<a class="small" href="/news">All news →</a></div>
   </div>
+  {% if ctx.ai_paused %}
+    <div class="state state-pending" role="status"><span class="state-tag">AI notes paused</span><span>LLM headline scoring is switched off; items below were scored before the pause.</span></div>
+  {% endif %}
   {% if ctx.state == 'ok' %}
     {% for n in ctx.news %}
       <div class="news-row">

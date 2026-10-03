@@ -132,10 +132,20 @@ class Settings(BaseSettings):
         alias="OPENAI_API_KEY",
         description="OpenAI API key for bank research summarization",
     )
+    rateprobability_scraper_enabled: bool = Field(
+        default=False,
+        alias="RATEPROBABILITY_SCRAPER_ENABLED",
+        description="rateprobability.com scraper (disabled: 403 since 2026-08; own engine is primary)",
+    )
+    news_ai_enabled: bool = Field(
+        default=False,
+        alias="NEWS_AI_ENABLED",
+        description="LLM scoring of news_alerts (paused by default; tiered redesign in step 12)",
+    )
     openai_model: str = Field(
-        default="gpt-5.5-pro",
+        default="gpt-4o-mini",
         alias="OPENAI_MODEL",
-        description="Model used for bank research report analysis",
+        description="Single OpenAI model for every LLM call in the app (Step 7 decision: gpt-4o-mini)",
     )
     bank_research_drive_folder_url: str | None = Field(
         default=None,

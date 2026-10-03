@@ -231,8 +231,8 @@ async def _scrape_fed(client: httpx.AsyncClient, since: date) -> list[StatementR
         if len(text) < 150:
             continue
 
-        # FED publishes its statement as both .htm and .pdf at the same path
-        pdf_url = url.replace(".htm", ".pdf")
+        # The statement PDF lives under /monetarypolicy/files/ with an "a1" suffix.
+        pdf_url = f"{base}/monetarypolicy/files/monetary{year_s}{month_s}{day_s}a1.pdf"
         records.append(
             StatementRecord(
                 bank="FED",

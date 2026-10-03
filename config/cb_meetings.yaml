@@ -1,5 +1,7 @@
 FED:
   current_rate: 3.75
+  # FOMC minutes are published three weeks after each meeting (job:cb_documents).
+  minutes_offset_days: 21
   step_bps: 25
   rate_basis_adj: 0.08
   low_liquidity_curve: false
@@ -32,6 +34,8 @@ FED:
       official: true
 ECB:
   current_rate: 3.00
+  # ECB monetary policy accounts follow about four weeks after each meeting (job:cb_documents).
+  minutes_offset_days: 28
   step_bps: 25
   rate_basis_adj: 0.0
   low_liquidity_curve: false

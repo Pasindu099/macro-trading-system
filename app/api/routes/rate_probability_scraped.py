@@ -1,11 +1,12 @@
 """Scraped rate probability JSON endpoints."""
 
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_session
 from app.services.scraped_rate_probability import get_scraped_rate_probability_data
+from app.settings import get_settings
 
 router = APIRouter(tags=["rate-probability-scraped"])
 
@@ -21,6 +22,8 @@ async def get_rate_probability(session: AsyncSession = Depends(get_session)) -> 
 
 @router.post("/api/rate-probability/scrape")
 async def trigger_scrape(background_tasks: BackgroundTasks) -> dict[str, str]:
+    if not get_settings().rateprobability_scraper_enabled:
+        raise HTTPException(status_code=409, detail="rateprobability.com scraper is disabled")
     from scraper.rate_probability_scraper import run_scraper_async
 
     async def _run() -> None:

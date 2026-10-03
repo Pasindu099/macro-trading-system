@@ -234,7 +234,7 @@ async def get_cb_policy_data(session: AsyncSession) -> dict[str, Any]:
         select(CbPolicyDocument).where(
             CbPolicyDocument.doc_date >= cutoff,
             CbPolicyDocument.analyzed_at.is_not(None),
-            CbPolicyDocument.doc_type.in_(["statement", "report", "upload"]),
+            CbPolicyDocument.doc_type.in_(["statement", "minutes", "report", "upload"]),
         ).order_by(CbPolicyDocument.bank.asc(), CbPolicyDocument.doc_date.asc())
     )).scalars().all()
     by_bank: dict[str, list[CbPolicyDocument]] = {}

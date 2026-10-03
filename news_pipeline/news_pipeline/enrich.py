@@ -27,7 +27,7 @@ MARKET_CACHE_TTL_SECONDS = 5 * 60
 RECENT_ENRICHED_LOOKBACK = timedelta(hours=72)
 RECENT_ENRICHED_LIMIT = 5
 
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 REDIS_STREAM_NAME = "news:enriched"
 MARKET_CLOSE_TZ = ZoneInfo("America/New_York")
 

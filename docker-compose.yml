@@ -41,6 +41,7 @@ services:
       - GOOGLE_DRIVE_API_KEY=${GOOGLE_DRIVE_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - NEWS_AI_ENABLED=${NEWS_AI_ENABLED:-false}
       - BANK_RESEARCH_DRIVE_FOLDER_URL=${BANK_RESEARCH_DRIVE_FOLDER_URL:-}
       - BANK_RESEARCH_RETENTION_DAYS=${BANK_RESEARCH_RETENTION_DAYS:-7}
       - MYFXBOOK_USER=${MYFXBOOK_USER:-}
@@ -69,7 +70,8 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - FRED_API_KEY=${FRED_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - NEWS_AI_ENABLED=${NEWS_AI_ENABLED:-false}
       - LOG_LEVEL=INFO
     depends_on:
       postgres:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import text
@@ -16,6 +16,8 @@ BANK_FULL_NAMES = {"FED": "Federal Reserve", "ECB": "European Central Bank",
 RATE_LABELS = {"FED": "Fed Funds Rate", "ECB": "Deposit Facility Rate", "BOE": "Bank Rate",
                "BOJ": "Policy Rate", "RBA": "Cash Rate", "BOC": "Overnight Rate",
                "RBNZ": "OCR", "SNB": "SNB Policy Rate"}
+# Third-party display only: hide a bank's scraped numbers once they are this old (Step 7 decision).
+MAX_SCRAPED_AGE = timedelta(days=3)
 
 
 def _float(value: Any) -> float | None:
@@ -27,8 +29,9 @@ def _float(value: Any) -> float | None:
         return None
 
 
-async def get_scraped_rate_probability_data(session: AsyncSession) -> dict[str, Any]:
-    """Load both scraped tables and preserve the JSON response shape."""
+async def get_scraped_rate_probability_data(session: AsyncSession, *, now: datetime | None = None) -> dict[str, Any]:
+    """Load both scraped tables; banks whose scrape is older than 3 days are hidden."""
+    now = now or datetime.now(UTC)
     summary_rows = (await session.execute(text(
         "SELECT bank, current_rate, next_meeting_date, next_cut_prob, next_hold_prob, next_hike_prob, updated_at "
         "FROM rp_scraped_summary ORDER BY bank"
@@ -49,6 +52,16 @@ async def get_scraped_rate_probability_data(session: AsyncSession) -> dict[str, 
     banks = {}
     for bank in BANK_ORDER:
         row = summary.get(bank, {})
+        updated_at = row.get("updated_at")
+        if updated_at is None or now - updated_at >= MAX_SCRAPED_AGE:
+            banks[bank] = {
+                "full_name": BANK_FULL_NAMES.get(bank, bank),
+                "rate_label": RATE_LABELS.get(bank, "Policy Rate"),
+                "available": False,
+                "reason": "No rateprobability.com data newer than 3 days",
+                "meetings": [],
+            }
+            continue
         cut, hold, hike = (_float(row.get("next_cut_prob")), _float(row.get("next_hold_prob")),
                            _float(row.get("next_hike_prob")))
         outcomes = [("CUT", cut), ("HOLD", hold), ("HIKE", hike)]
@@ -61,8 +74,8 @@ async def get_scraped_rate_probability_data(session: AsyncSession) -> dict[str, 
             "next_meeting": row["next_meeting_date"].isoformat() if row.get("next_meeting_date") else None,
             "next_cut_prob": cut, "next_hold_prob": hold, "next_hike_prob": hike,
             "dominant": dominant, "dominant_prob": probability,
-            "meetings": meetings.get(bank, []),
+            "meetings": meetings.get(bank, []), "available": True,
         }
     updated = [row["updated_at"] for row in summary_rows if row["updated_at"]]
     return {"updated_at": max(updated).strftime("%Y-%m-%d %H:%M UTC") if updated else "Never",
-            "banks": banks}
+            "max_age_days": MAX_SCRAPED_AGE.days, "banks": banks}

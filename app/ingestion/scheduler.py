@@ -40,6 +40,7 @@ from typing import Any
 import yaml
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
 from app.db.session import session_scope
@@ -52,6 +53,7 @@ from app.services.government_yields import (
     ingest_eodhd_government_yields,
     revision_refetch_start,
 )
+from app.services.cb_documents_jobs import document_run_times, load_meetings_config, run_cb_documents
 from app.services.cot_positions import run_cot_weekly
 from app.services.fx_spot import ingest_eodhd_fx_spot
 from app.services.meeting_calendar import SUPPORTED_BANKS
@@ -149,15 +151,19 @@ class Scheduler:
         )
         logger.info("  Registered rate probability OIS/futures fetch at 06:00 UTC")
 
-        self._scheduler.add_job(
-            _run_rp_scrape,
-            trigger=CronTrigger(hour="0,8,16", minute=30, timezone="UTC"),
-            id="rate_probability_scrape",
-            name="Rate probability scraper (rateprobability.com)",
-            replace_existing=True,
-            misfire_grace_time=60 * 60,
-        )
-        logger.info("  Registered rateprobability.com scraper at 00:30, 08:30, 16:30 UTC")
+        # Disabled by default: rateprobability.com has returned 403 since 2026-08 (Step 7 decision).
+        if settings.rateprobability_scraper_enabled:
+            self._scheduler.add_job(
+                _run_rp_scrape,
+                trigger=CronTrigger(hour="0,8,16", minute=30, timezone="UTC"),
+                id="rate_probability_scrape",
+                name="Rate probability scraper (rateprobability.com)",
+                replace_existing=True,
+                misfire_grace_time=60 * 60,
+            )
+            logger.info("  Registered rateprobability.com scraper at 00:30, 08:30, 16:30 UTC")
+        else:
+            logger.info("  rateprobability.com scraper disabled (RATEPROBABILITY_SCRAPER_ENABLED=false)")
 
         if settings.government_yields_incremental_enabled:
             self._scheduler.add_job(
@@ -200,6 +206,20 @@ class Scheduler:
             settings.government_yields_stale_check_minute_utc,
         )
 
+        # CB policy documents on decision (+30 min) and minutes-release days, from cb_meetings.yaml.
+        doc_runs = document_run_times(load_meetings_config(), after=datetime.now(UTC))
+        for bank, kind, run_at in doc_runs:
+            self._scheduler.add_job(
+                run_cb_documents,
+                trigger=DateTrigger(run_date=run_at),
+                args=[bank, kind],
+                id=f"cb_documents_{bank}_{kind}_{run_at:%Y%m%d}",
+                name=f"CB documents {bank} {kind}",
+                replace_existing=True,
+                misfire_grace_time=6 * 60 * 60,
+            )
+        logger.info("  Registered %d CB document runs (FED/ECB statements and minutes)", len(doc_runs))
+
         # CFTC TFF positions: Friday release, Monday retry for holiday delays.
         for job_id, day, retry in (("cot_weekly", "fri", False), ("cot_weekly_retry", "mon", True)):
             self._scheduler.add_job(
@@ -223,38 +243,21 @@ class Scheduler:
         )
         logger.info("  Registered CB feed poller every 10 minutes")
 
-        self._scheduler.add_job(
-            run_news_monitor,
-            trigger=IntervalTrigger(minutes=5, timezone="UTC"),
-            args=[1],
-            id="news_monitor_tier1",
-            name="Tier 1 news monitor",
-            replace_existing=True,
-            misfire_grace_time=60 * 5,
-        )
-        logger.info("  Registered Tier 1 news monitor every 5 minutes")
-
-        self._scheduler.add_job(
-            run_news_monitor,
-            trigger=IntervalTrigger(minutes=15, timezone="UTC"),
-            args=[2],
-            id="news_monitor_tier2",
-            name="Tier 2 news monitor",
-            replace_existing=True,
-            misfire_grace_time=60 * 15,
-        )
-        logger.info("  Registered Tier 2 news monitor every 15 minutes")
-
-        self._scheduler.add_job(
-            run_news_monitor,
-            trigger=IntervalTrigger(minutes=30, timezone="UTC"),
-            args=[3],
-            id="news_monitor_tier3",
-            name="Tier 3 news monitor",
-            replace_existing=True,
-            misfire_grace_time=60 * 30,
-        )
-        logger.info("  Registered Tier 3 news monitor every 30 minutes")
+        # News monitor = LLM headline scoring into news_alerts; paused unless NEWS_AI_ENABLED.
+        if settings.news_ai_enabled:
+            for tier, minutes in ((1, 5), (2, 15), (3, 30)):
+                self._scheduler.add_job(
+                    run_news_monitor,
+                    trigger=IntervalTrigger(minutes=minutes, timezone="UTC"),
+                    args=[tier],
+                    id=f"news_monitor_tier{tier}",
+                    name=f"Tier {tier} news monitor",
+                    replace_existing=True,
+                    misfire_grace_time=60 * minutes,
+                )
+                logger.info("  Registered Tier %d news monitor every %d minutes", tier, minutes)
+        else:
+            logger.info("  News monitor (LLM scoring) paused: NEWS_AI_ENABLED=false")
 
         self._scheduler.start()
         await self._run_rate_probability_fetch_if_empty()
@@ -348,10 +351,15 @@ class Scheduler:
         await self._run_rate_probability_fetch()
 
     async def _run_rate_probability_fetch(self) -> None:
-        async with session_scope() as session:
-            statuses = await fetch_all(session)
-            for bank in SUPPORTED_BANKS:
-                await save_snapshot(bank, session)
+        async with run_logger("job:rate_probability_fetch") as run:
+            async with session_scope() as session:
+                statuses = await fetch_all(session)
+                for bank in SUPPORTED_BANKS:
+                    await save_snapshot(bank, session)
+            run.record_rows(sum(1 for s in statuses.values() if s == "ok"))
+            run.errors.extend(f"{bank}: {status}" for bank, status in statuses.items() if status != "ok")
+            if any(s == "stale" for s in statuses.values()):
+                run.status_override = "stale"  # cached curves older than 3 days are being served
         logger.info("Rate probability fetch statuses: %s", statuses)
 
     # ── Config loading ──────────────────────────────────────────────

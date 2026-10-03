@@ -14,15 +14,13 @@ from app.services.rate_fetchers.cache import load_cached_curve, upsert_ois_curve
 logger = logging.getLogger(__name__)
 
 RBNZ_WHOLESALE_RATES_URL = (
-    "https://r.jina.ai/http://r.jina.ai/http://"
+    "https://r.jina.ai/"
     "https://www.rbnz.govt.nz/statistics/series/exchange-and-interest-rates/"
     "wholesale-interest-rates"
 )
 REQUEST_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-    ),
+    # Honest client UA: a browser-impersonating UA gets a Cloudflare challenge (403) from the proxy.
+    "User-Agent": "MacroDashboard/0.1 rate-fetcher",
     "Accept": "text/markdown,text/plain,*/*",
 }
 

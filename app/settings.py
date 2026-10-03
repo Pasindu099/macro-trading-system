@@ -132,6 +132,11 @@ class Settings(BaseSettings):
         alias="OPENAI_API_KEY",
         description="OpenAI API key for bank research summarization",
     )
+    fred_api_key: str | None = Field(
+        default=None,
+        alias="FRED_API_KEY",
+        description="FRED API key for CB tracking series (PCE, unemployment, GDP, HY spread)",
+    )
     rateprobability_scraper_enabled: bool = Field(
         default=False,
         alias="RATEPROBABILITY_SCRAPER_ENABLED",

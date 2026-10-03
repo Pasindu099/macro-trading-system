@@ -19,3 +19,18 @@
 - Validation: median and central tendency within range; plausible bounds; dots per year = participants minus non-submitters declared for that meeting. The Fed's own notes cover June 2026 (one participant, no 2028) and September 2026 (one participant, no 2028/2029). Before the parser read those notes, both rounds were correctly rejected.
 - Verified: March 2026 2026 medians GDP 2.4, UR 4.4, PCE 2.7, core PCE 2.7, funds 3.4; December 2025 PCE 2026 = 2.4. Latest (September 2026) 2026 medians: GDP 2.3, UR 4.1, PCE 3.7, core 3.4, funds 4.1.
 - Tests: `test_fed_sep.py` (11) on the saved March 2026 fixture: values, dots, risk, errors, corrupted-round rejection, range parsing, scoped non-submitter notes, round discovery.
+
+## Part C: CB Tracking (Fed)
+
+- FRED: there was no FRED series store in the app (only news_pipeline's release calendar), so migration `0025_fred_observations` follows the yield/FX observation pattern: hash per payload, revisions as new rows, newest wins. `app/services/fred.py`; `job:fred_series` runs daily at 16:15 UTC and re-fetches 2 years. Stored: PCEPI/PCEPILFE/UNRATE 140 months, GDPC1 46 quarters, BAMLH0A0HYM2 786 days (FRED serves only 3 years of ICE data). A re-run inserts 0. `FRED_API_KEY` is now passed to the app container.
+- Tracking vs the September 2026 SEP (`app/services/cb_tracking.py`). Inflation required pace is solved so the Q4 average hits the Q4/Q4 projection (published Q4 months are used as they arrive); 70% band = median ± Table 2 RMSE (core PCE uses the total-prices row):
+
+| 2026 | Projection | Required | Actual | Status | 70% band |
+| --- | ---: | ---: | ---: | --- | --- |
+| PCE (Aug) | 3.7 | 3.88 | 1.03 (3m ann.) | running_cold | 2.7–4.7 |
+| Core PCE (Aug) | 3.4 | 4.07 | 2.05 | running_cold | 2.4–4.4 |
+| Unemployment (Sep) | 4.1 | — | 4.13 (3m avg) | on_track | 3.6–4.6 |
+| Real GDP (Q2) | 2.3 | 2.24 | 2.22 (q ann.) | on_track | 0.9–3.7 |
+
+- Revisions, June → September 2026 (2026 medians): funds +0.3, PCE +0.1, core +0.1, GDP +0.1, UR −0.2; ranges narrowed. Reaction-function flag: **none** (inflation revision 0.1 < 0.2).
+- Tests: `test_cb_tracking.py` (16): required pace (incl. published Q4 months), quarterly pace, 3-month annualised, status thresholds, unemployment direction, reaction flag, FRED missing values.

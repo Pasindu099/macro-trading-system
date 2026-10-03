@@ -55,6 +55,7 @@ from app.services.government_yields import (
 )
 from app.services.cb_documents_jobs import document_run_times, load_meetings_config, run_cb_documents
 from app.services.cot_positions import run_cot_weekly
+from app.services.fred import ingest_fred_series
 from app.services.fx_spot import ingest_eodhd_fx_spot
 from app.services.meeting_calendar import SUPPORTED_BANKS
 from app.services.macro_state_jobs import run_macro_state_chain
@@ -219,6 +220,18 @@ class Scheduler:
                 misfire_grace_time=6 * 60 * 60,
             )
         logger.info("  Registered %d CB document runs (FED/ECB statements and minutes)", len(doc_runs))
+
+        # FRED series for CB tracking and the regime model (two-year re-fetch picks up revisions).
+        if settings.fred_api_key:
+            self._scheduler.add_job(
+                ingest_fred_series,
+                trigger=CronTrigger(hour=16, minute=15, timezone="UTC"),
+                id="fred_series_daily",
+                name="FRED tracking series",
+                replace_existing=True,
+                misfire_grace_time=60 * 60,
+            )
+            logger.info("  Registered job:fred_series daily at 16:15 UTC")
 
         # CFTC TFF positions: Friday release, Monday retry for holiday delays.
         for job_id, day, retry in (("cot_weekly", "fri", False), ("cot_weekly_retry", "mon", True)):

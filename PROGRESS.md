@@ -102,7 +102,7 @@ Decisions: `DECISIONS_STEP8.md`. Commits: `step8: <sub-task>`. Scope: Fed only.
 - [x] 8-0. Log redaction (formatter + EODHD + run_logger + news_pipeline); checkpoints untracked; Fed rate from decision (4.00%); EI rebuild 25,341 rows; Macro State chain success; top-40 unmapped reported.
 - [x] 8a. `config/central_banks.yaml` for 8 banks (Fed verified; others verify: true).
 - [x] 8b. Migration 0024; deterministic SEP parser; 26 rounds 2020-06 → 2026-09 loaded, 0 rejected; March 2026 and December 2025 checks match.
-- [ ] 8c. FRED series + CB tracking, revisions, reaction-function flag.
+- [x] 8c. fred_observations (0025) + job:fred_series; tracking: PCE/core running_cold, UR/GDP on_track; revisions; reaction flag none.
 - [ ] 8d. Fed regime v1, transition checklists, gap v1.
 - [ ] 8e. `/api/cb/{bank}/*` endpoints; USD desk panels 2/3/4/6.
 - [ ] 8t. Tests, `REPORT_STEP8.md`, full suite with nothing deselected.

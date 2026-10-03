@@ -34,3 +34,11 @@
 
 - Revisions, June → September 2026 (2026 medians): funds +0.3, PCE +0.1, core +0.1, GDP +0.1, UR −0.2; ranges narrowed. Reaction-function flag: **none** (inflation revision 0.1 < 0.2).
 - Tests: `test_cb_tracking.py` (16): required pace (incl. published Q4 months), quarterly pace, 3-month annualised, status thresholds, unemployment direction, reaction flag, FRED missing values.
+
+## Part D: regime model v1 and gap
+
+- `app/services/fed_regime.py`. **Regime: hiking**: rate 4.00%, last move +25bp on 16 Sep 2026, within 6 months. QE is unavailable (needs balance-sheet data).
+- Hiking → Holding, **1 of 3 available met**: core PCE 3m annualised 2.05% < 3% (met); 8-week labour surprises mean +0.20σ (not met); HY OAS +49bp in 3 months (not met, threshold 50); restrictive-by-majority unavailable (needs the speaker pipeline).
+- Toward cutting/QE, **0 of 5 met**: Sahm 0.00; ISM manufacturing 55.6/54.6/54.5; HY 324bp; core PCE 2.05% (not < 2%); rate 4.00%.
+- **Gap v1** (method in the API output: SEP year-end median vs the de-averaged futures step path on 31 Dec of the same year, EFFR terms ≈ target midpoint): 2026: SEP 4.10 vs market 4.13 = **−3bp**. 2027–2029 are unavailable because the December 2027 meeting is beyond the fed funds futures strip; nothing is extrapolated. Tilt: **dovish_risk** (core PCE running cold).
+- Tests: `test_fed_regime.py` (8): regime classes and last move, Sahm rule, gap on identical dates, beyond-strip handling.

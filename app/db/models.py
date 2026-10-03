@@ -247,6 +247,24 @@ class IngestionRun(Base):
         )
 
 
+class JobWatermark(Base):
+    """High-water mark for an incremental job.
+
+    ``last_success_at`` is the START time of the last successful run, so rows
+    committed while that run was in flight are picked up by the next one.
+    """
+
+    __tablename__ = "job_watermarks"
+
+    job_name: Mapped[str] = mapped_column(Text, primary_key=True)
+    last_success_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+
 class User(Base):
     """Dashboard user account with role-based access."""
 

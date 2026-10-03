@@ -86,3 +86,12 @@ Decisions: `DECISIONS_STEP6.md`. Commits: `step6: <sub-task>`.
 - [x] 6b. 15 panels in mockup order: live = price, economy, direction, key data, priced, curve, positioning, catalysts, news, verdict regime; pending = situations/oil (10), fed path/gap/projections/speakers/SEP (8), scenarios/bias (10); Fed view source-unavailable (no analysed documents). 40 desk tests; full suite 402 passed.
 - [x] 6c. Loading/empty/unavailable/pending/error states, 60 s panel cache, 390 px verified (0 overflow); visual-check fixes: curve `value_bp`, impact 1 = high, ref line in range.
 - [x] 6t. `REPORT_STEP6.md`, screenshots in `data/screenshots/`; full suite 404 passed, 7 skipped, 1 deselected; integration 25 passed.
+
+## Step 7 — Pipeline health, missing indicators, rate-probability methodology
+Decisions: `DECISIONS_STEP7.md`. Commits: `step7: <sub-task>`.
+- [ ] 7a. Pipeline health report (CB docs, news_alerts, news_pipeline, CB feed poll, rateprobability scraper, OIS) + prod SQL.
+- [ ] 7b. US real GDP and ISM sub-index mappings; re-ingest; desk check.
+- [ ] 7c. Restart stale news_alerts and CB policy document pipelines; Fed statements/minutes (13 months) analysed.
+- [ ] 7d. ZQ de-averaging, piecewise-constant path, 14-day override staleness, FED test fixed; before/after probabilities.
+- [ ] 7e. Vendor HTMX + ECharts; no runtime CDN scripts.
+- [ ] 7t. Tests, `REPORT_STEP7.md`, full suite with nothing deselected.

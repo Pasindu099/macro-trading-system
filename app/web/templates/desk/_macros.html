@@ -1,0 +1,24 @@
+{# Panel states: loading (page placeholder), empty, unavailable, pending, error. #}
+{% macro state(ctx) -%}
+<div class="state state-{{ ctx.state }}" role="status">
+  {%- if ctx.state == 'pending' %}<span class="state-tag">Step {{ ctx.step }}</span>
+  {%- elif ctx.state == 'unavailable' %}<span class="state-tag">Unavailable</span>
+  {%- elif ctx.state == 'empty' %}<span class="state-tag">No data</span>
+  {%- elif ctx.state == 'error' %}<span class="state-tag">Error</span>{% endif %}
+  <span>{{ ctx.message }}</span>
+</div>
+{%- endmacro %}
+
+{% macro pills(options, selected, url, param, label) -%}
+<div class="pills" role="group" aria-label="{{ label }}">
+  {%- for opt in options %}
+  {%- set value = opt.value if opt is mapping else opt %}
+  <button type="button" class="pill" aria-pressed="{{ 'true' if value == selected else 'false' }}"
+          hx-get="{{ url }}?{{ param }}={{ value | urlencode }}" hx-target="closest section" hx-swap="outerHTML">{{ opt.label if opt is mapping else opt }}</button>
+  {%- endfor %}
+</div>
+{%- endmacro %}
+
+{% macro head(title, aside='') -%}
+<div class="panel-head"><h2>{{ title }}</h2>{% if aside %}<span class="muted small">{{ aside }}</span>{% endif %}</div>
+{%- endmacro %}

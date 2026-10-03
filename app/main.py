@@ -24,6 +24,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import (
     admin,
     auth,
+    desks,
     fixed_income,
     knowledge,
     positioning,
@@ -118,6 +119,7 @@ app.include_router(rate_probability.router)
 app.include_router(rate_probability_scraped.router)
 app.include_router(rates.router)
 app.include_router(positioning.router)
+app.include_router(desks.router)
 
 
 # ══════════════════════════════════════════════════════════════════════

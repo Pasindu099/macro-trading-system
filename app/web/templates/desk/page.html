@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/desk.css') }}">
+<script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js" defer></script>
+<script src="{{ url_for('static', path='js/desk.js') }}" defer></script>
+{% endblock %}
+{% block body %}
+<div class="desk">
+  <div class="desk-bar">
+    <nav class="desk-nav" aria-label="Currency desks">
+      {% for d in nav %}
+        {% if d.enabled %}<a href="/desks/{{ d.code }}" class="desk-link{% if d.active %} active{% endif %}"{% if d.active %} aria-current="page"{% endif %}>{{ d.code }}</a>
+        {% else %}<span class="desk-link disabled" aria-disabled="true" title="{{ d.code }} desk not yet available">{{ d.code }}</span>{% endif %}
+      {% endfor %}
+    </nav>
+    <span class="muted small">Live data · Page loaded {{ now.strftime('%d %b %Y %H:%M') }} UTC</span>
+  </div>
+
+  <main class="desk-main">
+    {% for p in panels if p.id in ['verdict', 'situations'] %}
+      {% include "desk/_placeholder.html" %}
+    {% endfor %}
+
+    <nav class="chain" aria-label="Question chain">
+      {% for q in chain %}<a href="{{ q.href }}"><span class="hot">{{ q.n }}</span>{{ q.label }}</a>{% endfor %}
+    </nav>
+
+    <div class="desk-grid">
+      {% for p in panels if p.id not in ['verdict', 'situations'] %}
+        {% include "desk/_placeholder.html" %}
+      {% endfor %}
+    </div>
+
+    <footer class="deep-dive">
+      <span class="eyebrow-sm">Deep dive</span>
+      <a href="/central-banks">Rate Probability</a>
+      <a href="/central-banks">CB Policy Tracker</a>
+      <a href="/event-log">Event Innovation</a>
+      <a href="/data">{{ desk.country }} Indicators</a>
+      <a href="/positioning">COT</a>
+      <a href="/central-banks">{{ desk.cb_short }} Speakers</a>
+    </footer>
+  </main>
+</div>
+{% endblock %}

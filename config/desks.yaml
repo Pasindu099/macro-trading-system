@@ -1,0 +1,79 @@
+# Currency desks. Only enabled desks are routed; others return 404.
+# Indicator series name canonical names in the `indicators` table. A name that is
+# not in the DB (or a `canonical: null` placeholder) renders as unavailable; never
+# substitute a different series.
+desks:
+  USD:
+    enabled: true
+    name: US Dollar Desk
+    currency: USD
+    country: US              # indicators.country_code
+    curve_country: US        # government_yield_observations.country_code
+    cb: FED                  # rate probability / CB policy bank code
+    cb_name: Federal Reserve
+    cb_short: Fed
+    policy_indicator: fed_interest_rate_decision
+    charts:
+      - id: infl
+        title: Inflation
+        sub: YoY % · monthly
+        unit: "%"
+        ref: 2
+        ref_label: Fed target 2%
+        series:
+          - {name: CPI, canonical: cpi_headline_yoy}
+          - {name: Core CPI, canonical: core_cpi_yoy}
+          - {name: Core PCE, canonical: core_pce_price_index_yoy}
+      - id: ur
+        title: Unemployment rate
+        sub: "% · monthly"
+        unit: "%"
+        series:
+          - {name: Unemployment, canonical: unemployment_rate}
+          - {name: U-6, canonical: u6_unemployment_rate}
+      - id: gdp
+        title: Real GDP
+        sub: QoQ annualised % · quarterly
+        unit: "%"
+        bars: true
+        series:
+          - {name: GDP QoQ ann., canonical: real_gdp_qoq_annualised}
+      - id: ism-m
+        title: ISM Manufacturing
+        sub: Diffusion index · monthly
+        unit: ""
+        ref: 50
+        ref_label: 50 = expansion
+        series:
+          - {name: Headline, canonical: ism_manufacturing_pmi}
+          - {name: Prices paid, canonical: ism_manufacturing_prices}
+          - {name: New orders, canonical: ism_manufacturing_new_orders}
+          - {name: Employment, canonical: ism_manufacturing_employment}
+          - {name: Production, canonical: ism_manufacturing_production}
+      - id: ism-s
+        title: ISM Services
+        sub: Diffusion index · monthly
+        unit: ""
+        ref: 50
+        ref_label: 50 = expansion
+        series:
+          - {name: Headline, canonical: ism_services_pmi}
+          - {name: Prices paid, canonical: ism_services_prices}
+          - {name: New orders, canonical: ism_services_new_orders}
+          - {name: Employment, canonical: ism_services_employment}
+          - {name: Business activity, canonical: ism_services_business_activity}
+      - id: nfp
+        title: Nonfarm Payrolls
+        sub: Monthly change, thousands
+        unit: k
+        bars: true
+        three_month_avg: true
+        series:
+          - {name: Payrolls, canonical: nfp}
+  EUR: {enabled: false}
+  GBP: {enabled: false}
+  JPY: {enabled: false}
+  AUD: {enabled: false}
+  NZD: {enabled: false}
+  CAD: {enabled: false}
+  CHF: {enabled: false}

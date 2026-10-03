@@ -1,0 +1,6 @@
+<section id="{{ p.anchor }}" class="panel{% if p.wide %} wide{% endif %} panel-{{ p.id }} is-loading"
+         aria-busy="true" aria-label="{{ p.label.format(cb=desk.cb_short) }}"
+         hx-get="/desks/{{ desk.currency }}/panels/{{ p.id }}" hx-trigger="revealed" hx-swap="outerHTML">
+  <div class="panel-head"><h2>{% if p.n and p.n != '·' %}{{ p.n }} · {% endif %}{{ p.label.format(cb=desk.cb_short) }}</h2></div>
+  <div class="state state-loading" role="status"><span class="spinner" aria-hidden="true"></span><span>Loading…</span></div>
+</section>

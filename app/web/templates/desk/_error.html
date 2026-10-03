@@ -1,0 +1,6 @@
+{% from "desk/_macros.html" import state %}
+<section id="{{ panel.anchor }}" class="panel{% if panel.wide %} wide{% endif %} panel-{{ panel.id }}" aria-label="{{ label }}">
+  <div class="panel-head"><h2>{% if panel.n and panel.n != '·' %}{{ panel.n }} · {% endif %}{{ label }}</h2>
+    <button type="button" class="pill" hx-get="{{ url }}" hx-target="closest section" hx-swap="outerHTML">Retry</button></div>
+  {{ state(ctx) }}
+</section>

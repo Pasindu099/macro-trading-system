@@ -36,3 +36,9 @@
 - `app/services/yield_spreads.py` builds base-minus-quote spreads from valid, non-outlier observations. It aligns print dates and carries a missing leg for at most two business days.
 - Local rebuild wrote 45,200 rows. Both 2Y and 10Y cover all 28 currency pairs; 30Y and FR−DE have no rows because their source yields are absent.
 - Focused tests: 2 passed. The full-suite run yielded before its final result was captured; prior Part D full-suite result is above.
+
+## Part F: country curves
+
+- `app/services/curve_metrics.py` exposes 2s10s, 10s30s, 2Y-minus-dated-policy, 1W/1M/3M regimes, inversion and most recent qualifying un-inversion. Regimes permanently use 2Y/10Y and include both tenor identifiers.
+- Local check: all eight benchmark countries have 2s10s; all have unavailable 10s30s with a reason; CH has unavailable policy spread because its dated actual is stale. Seven policy spreads are available.
+- Focused tests: 8 passed. Full suite: 304 passed, 7 skipped, 1 deselected, same 18 auth-related integration failures.

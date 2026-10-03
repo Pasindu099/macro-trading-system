@@ -63,7 +63,7 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] 4c. Captured fixed-window live outputs; rates research, yield differentials, and repricing now read stored observations. Comparison and above-threshold provider revisions are in `REPORT_STEP4.md`. Focused tests passed; full suite: 292 passed, 18 existing auth-related integration failures.
 - [x] 4d. Migration `0022` outlier columns and reversing-spike flagging job; raw rows retained. Local run flagged 13 yields, 0 FX. Focused tests passed; full suite 294 passed with the same 18 auth-related integration failures.
 - [x] 4e. Migration `0022` yield spreads, common-date/limited forward-fill alignment, and 2Y/10Y/available-30Y builds. Local rebuild: 45,200 rows; 28 names each for 2Y and 10Y. Focused tests passed.
-- [ ] 4f. Curve metrics, regimes, inversion, and un-inversion service functions.
+- [x] 4f. Curve metrics, 2Y/10Y regimes, inversion, and un-inversion service functions. Focused tests: 8 passed; full suite: 304 passed with the same 18 auth-related integration failures.
 - [ ] 4g. Daily-change driver correlations and status service.
 - [ ] 4h. Post-ingest `job:rates_derived` and four service-backed JSON endpoints.
 - [ ] 4i. After H passes: symbol availability report, source FR/long-end yields and missing FX pairs (synthetic only when unavailable), backfill, rebuild derived data, and verify unavailable-to-available transitions.

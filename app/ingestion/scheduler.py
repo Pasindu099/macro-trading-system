@@ -52,6 +52,7 @@ from app.services.government_yields import (
     ingest_eodhd_government_yields,
 )
 from app.services.meeting_calendar import SUPPORTED_BANKS
+from app.services.macro_state_jobs import run_macro_state_chain
 from app.services.news_monitor import run_news_monitor
 from app.services.rate_fetchers import fetch_all, should_fetch_on_startup
 from app.services.rate_probability import save_snapshot
@@ -120,6 +121,18 @@ class Scheduler:
         # 2. Register post-release triggers from YAML
         triggers_added = self._register_post_release_triggers()
         logger.info("  Registered %d post-release triggers", triggers_added)
+
+        self._scheduler.add_job(
+            run_macro_state_chain,
+            trigger=CronTrigger(hour=22, minute=30, timezone="UTC"),
+            id="macro_state_daily",
+            name="Daily Macro State rebuild",
+            replace_existing=True,
+            misfire_grace_time=60 * 60,
+            max_instances=1,
+            coalesce=True,
+        )
+        logger.info("  Registered Macro State rebuild at 22:30 UTC")
 
         self._scheduler.add_job(
             self._run_rate_probability_fetch,

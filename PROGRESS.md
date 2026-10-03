@@ -25,14 +25,14 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] 2b. `export: bool = True` on the 5 builders (scheduled runs must pass `export=False`)
 - [x] 2c. `statement_timeout` passed through to each builder's `session_scope`
 - [ ] 2d. `pages.py` `_build_currency_stance_dashboard`: empty `cb_preferred_score` → legacy fallback (the meter function already handles empty)
-- [ ] 2e. Pipeline runner: processed_dataset → feature_layer → {cb_preferred_score, macro_indices → currency_stance}; later dependent steps are skipped on failure; each step logged to `ingestion_runs` with rows and duration; warn if a step holds its lock > 10 s
-- [ ] 2f. Daily scheduler job at 22:30 UTC
+- [x] 2e. Pipeline runner: processed_dataset → feature_layer → cb_preferred_score → macro_indices → currency_stance; later steps stop on failure; each step logged to `ingestion_runs` with rows and duration; warn if a step holds its lock > 10 s
+- [x] 2f. Daily scheduler job at 22:30 UTC
 
 ## Step 3 — Safety
 - [x] 3a. `run_logger`: `skipped` / `timeout` statuses + `record_rows`; `IngestionRun` doc comment on job usage
 - [x] 3b. `session_scope(statement_timeout=...)` (transaction-local `set_config`, the parameterised `SET LOCAL`)
 - [x] 3c. Per-job PostgreSQL advisory lock helper (`pg_try_advisory_lock` on a dedicated connection)
-- [ ] 3d. `asyncio.wait_for` 16-min outer guard → status `timeout`
+- [~] 3d. `asyncio.wait_for` 16-min outer guard is active for Macro State steps; Event Innovation job still needs it
 - [x] 3e. `GET /api/admin/jobs/status` (last run, last success, rows written, last error, watermark; `require_role("admin")`)
 - [x] 3f. `/api/admin/health` excludes `run_type LIKE 'job:%'`
 

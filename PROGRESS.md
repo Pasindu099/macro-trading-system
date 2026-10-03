@@ -94,5 +94,5 @@ Decisions: `DECISIONS_STEP7.md`. Commits: `step7: <sub-task>`.
 - [x] 7c. OPENAI_MODEL=gpt-4o-mini everywhere; job:cb_documents (Fed 31 docs stored, 0 analysed: no credits) scheduled on decision/minutes days; news AI + rateprobability scraper off by flag; OIS all 8 fresh (prefix + spoofed-UA fix), stale status logged. Full suite 421 passed.
 - [x] 7d. FED ZQ de-averaging (late-month → next contract), step path, overrides >14 d not served (stale_source), FED test from config. Oct 28 hike 70.6% → 22.1%, Dec 9 68.5% → 81.7%. Full suite 428 passed, nothing deselected.
 - [x] 7e. ECharts 5.6.0 + HTMX 1.9.12 vendored (checksummed, -text); no runtime CDN scripts; full suite 431 passed.
-- [ ] 7f. EODHD calendar 1,000-event cap: confirm, dry-run smaller chunks, ingest missing events only.
-- [ ] 7t. Tests, `REPORT_STEP7.md`, full suite with nothing deselected.
+- [x] 7f. EODHD cap confirmed (latest 1,000 per request); monthly re-fetch found 19,619 missing events; ingested 6,475 + 1,253 newer revisions, 364 older skipped, 11,232 unmapped, 0 errors.
+- [x] 7t. `REPORT_STEP7.md`; full suite 434 passed, 7 skipped, nothing deselected; integration 25 passed.

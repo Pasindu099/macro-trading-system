@@ -31,6 +31,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from functools import lru_cache
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -87,12 +88,16 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @asynccontextmanager
-async def session_scope() -> AsyncGenerator[AsyncSession, None]:
+async def session_scope(
+    *, statement_timeout: str | None = None
+) -> AsyncGenerator[AsyncSession, None]:
     """Context manager for scripts and background tasks.
 
     - Commits on clean exit.
     - Rolls back on exception.
     - Always closes the session.
+    - ``statement_timeout`` (e.g. ``"15min"``) is applied with SET LOCAL, so it
+      lasts for this transaction only and never leaks back into the pool.
 
     Example:
         async with session_scope() as session:
@@ -102,6 +107,13 @@ async def session_scope() -> AsyncGenerator[AsyncSession, None]:
     maker = get_sessionmaker()
     session = maker()
     try:
+        if statement_timeout is not None:
+            # SET cannot take a bind parameter; set_config() is the
+            # parameterised equivalent of SET LOCAL.
+            await session.execute(
+                text("SELECT set_config('statement_timeout', :value, true)"),
+                {"value": statement_timeout},
+            )
         yield session
         await session.commit()
     except Exception:

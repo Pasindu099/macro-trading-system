@@ -28,3 +28,9 @@
 - Local current USD: bearish, score −0.4838, moderate conviction; macro −0.831, tracking −1, Fed gap −0.12, curve +0.4, situations −0.7.
 - Local current EUR: bullish, score +0.6600, low conviction; macro +2 (clipped), curve +0.4, situations −2 (clipped). ECB tracking/gap unavailable pending Step 9 Part C.
 - Focused verdict tests: 3 passed. Full suite: **498 passed, 7 skipped, nothing deselected**.
+
+## Part C — scenarios
+
+- `app/services/scenarios.py` + `config/scenarios.yaml`: base/hold, hawkish/hike, dovish/cut probabilities use only next-meeting market values and total 100% when live. Directions shift from verdict sign; triggers use next high-impact catalysts and tracking status.
+- Each active high-severity situation adds an unpriced tail. Local USD: 77.9% base, 22.1% hawkish, 0.0% dovish plus two tails. EUR: three branches with unavailable probabilities pending Step 9 Part D €STR method, plus two unpriced tails.
+- Focused scenario tests: 3 passed. Full suite: **501 passed, 7 skipped, nothing deselected**.

@@ -1,0 +1,20 @@
+version: 1
+labels: {base: Base, hawkish: Hawkish, dovish: Dovish}
+directions: {strongly_bearish: -1, bearish: -1, neutral: 0, bullish: 1, strongly_bullish: 1}
+outcome_shift: {base: 0, hawkish: 1, dovish: -1}
+direction_labels: {-1: down, 0: flat, 1: up}
+situation_labels:
+  energy_shock: Energy tail
+  fr_fiscal_stress: Fiscal tail
+  labor_deterioration: Labor tail
+  risk_off: Risk-off tail
+  bear_steepening: Curve tail
+  yields_up_currency_down: Yield/FX tail
+  correlation_break: Correlation tail
+  intervention_risk_jpy: Intervention tail
+templates:
+  meeting_trigger: "Next {bank} meeting: {meeting_date}."
+  catalyst_trigger: "High-impact catalyst: {catalyst}."
+  no_catalyst: "No high-impact catalyst is scheduled in the current calendar."
+  tracking_trigger: "Tracking: {tracking}."
+  situation_trigger: "Active {situation}: {evidence}."

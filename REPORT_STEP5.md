@@ -41,3 +41,10 @@ Window 2026-08-03..21; stored `raw_payload` vs live EODHD now (`scripts/step5_ra
 - `backfill_fx_spot` for EUR/USD, GBP/USD, USD/JPY, AUD/USD, NZD/USD, USD/CAD and USD/CHF, 2010-01-01 → 2026-10-03, used **8 EODHD calls**: 7 history calls (one per pair) and 1 FOREX listing call. 33,270 rows were seen and 31,354 inserted. All 7 pairs now start 2010-01-01.
 - `job:rates_derived` afterwards: 0 yield flags, 1 FX flag (historical reversing spike), 60,982 spreads.
 - Step 5 EODHD total so far: 5 diagnostic + 59 yield + 8 cross + 8 major = 80 calls (listing calls included).
+
+## Part D: derived metrics (`app/services/positioning.py`)
+
+- Net = long − short per category, in contracts and % of OI. Percentiles cover 1y/3y/5y calendar windows that include the current week, with ties at the midpoint. A percentile is withheld until the window holds 90% of its weeks. Changes are 1W and 4W. Crowding is ≥85 long and ≤15 short, for leveraged funds and asset managers separately.
+- Spot is aligned to the report_date (Tuesday): the newest valid close on or before it, at most 5 days stale. Currency direction is vs USD. USD itself uses an equal-weight geometric index of the 7 majors, because no DXY spot is stored.
+- Squeeze checks the last 3 weekly nets and the 2-week spot move between report dates. Extremes use leveraged funds and the 3y lookback. An episode is the first week in a band, and no new episode starts within 8 weeks of the previous one. A move counts as reversed when the 8W move goes against the band's crowd.
+- Latest (2026-09-29, 3y, LF): crowded short EUR 8.3, GBP 4.5, CHF 13.5; crowded long AUD 96.8 (squeeze `medium`).

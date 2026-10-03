@@ -1,5 +1,13 @@
 {% from "desk/_macros.html" import state, head %}
 <section id="q8" class="panel wide" aria-label="Scenarios">
   {{ head('9 · Scenarios', 'Next 4–8 weeks') }}
-  {{ state(ctx) }}
+  {% if ctx.state == 'ok' %}
+    {% if not ctx.market_probabilities_available %}<p class="muted small">Meeting probabilities unavailable: {{ ctx.market_probability_reason }}</p>{% endif %}
+    <div class="cards">{% for row in ctx.scenarios %}
+      <article class="card"><h3>{{ row.label }}</h3>
+        <p>{{ row.direction }} · {% if row.probability_pct is not none %}{{ row.probability_pct }}%{% else %}{{ row.pricing_status }}{% endif %}</p>
+        <p class="muted small">{{ row.trigger }}</p>
+      </article>
+    {% endfor %}</div>
+  {% else %}{{ state(ctx) }}{% endif %}
 </section>

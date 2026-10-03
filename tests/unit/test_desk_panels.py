@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import re
-
 from datetime import UTC, date, datetime, timedelta
 from types import SimpleNamespace
 
@@ -16,7 +14,6 @@ from tests.unit.test_desks import make_client
 
 TODAY = date.today()
 DAYS = [TODAY - timedelta(days=i) for i in range(400, -1, -1)]
-PENDING = {"situations", "scenarios"}
 
 
 def _stub(value):
@@ -26,6 +23,13 @@ def _stub(value):
 
 
 def _data_sources(monkeypatch):
+    from app.services import scenarios, situations, verdict
+    monkeypatch.setattr(verdict, "get_verdict", _stub({"status": "available", "bias": "bullish", "conviction": "moderate",
+        "horizon": "1M", "thesis": "Data supports USD. Policy is steady.", "dominant_driver": "data",
+        "main_risk": "curve", "active_situations": []}))
+    monkeypatch.setattr(situations, "get_situation_episodes", _stub([]))
+    monkeypatch.setattr(scenarios, "get_scenarios", _stub({"status": "available", "market_probabilities_available": True,
+        "scenarios": [{"label": "Base", "direction": "up", "probability_pct": 100, "trigger": "Next meeting"}]}))
     curves = {
         "2Y": {d: 3.5 + i * 0.001 for i, d in enumerate(DAYS)},
         "10Y": {d: 4.0 + i * 0.0005 for i, d in enumerate(DAYS)},
@@ -110,6 +114,10 @@ def _step8_sources(monkeypatch, *, with_data: bool):
 
 
 def _empty_sources(monkeypatch):
+    from app.services import scenarios, situations, verdict
+    monkeypatch.setattr(verdict, "get_verdict", _stub({"status": "unavailable", "reason": "No verdict"}))
+    monkeypatch.setattr(situations, "get_situation_episodes", _stub([]))
+    monkeypatch.setattr(scenarios, "get_scenarios", _stub({"status": "unavailable", "reason": "No scenarios"}))
     _step8_sources(monkeypatch, with_data=False)
     monkeypatch.setattr(dp, "get_curve", _stub({"country": "US", "status": "unavailable", "reason": "No yields"}))
     monkeypatch.setattr(dp, "fx_series", _stub({}))
@@ -139,9 +147,7 @@ def test_panel_200_with_data(monkeypatch, panel_id):
     resp = make_client().get(f"/desks/USD/panels/{panel_id}")
     assert resp.status_code == 200
     assert "state-error" not in resp.text
-    if panel_id in PENDING:
-        assert "Available after step" in resp.text
-    elif panel_id not in {"verdict"}:
+    if panel_id not in {"verdict"}:
         # Data panels render content, not a missing-data state (key data keeps GDP unavailable by design).
         assert "state-empty" not in resp.text
         if panel_id not in {"keydata", "fedview"}:
@@ -154,18 +160,7 @@ def test_panel_200_with_unavailable_state_when_service_returns_nothing(monkeypat
     resp = make_client().get(f"/desks/USD/panels/{panel_id}")
     assert resp.status_code == 200
     assert "state-error" not in resp.text
-    assert any(s in resp.text for s in ("state-empty", "state-unavailable", "state-pending")), panel_id
-
-
-def test_pending_panels_carry_no_numbers(monkeypatch):
-    _data_sources(monkeypatch)
-    client = make_client()
-    for panel_id in PENDING:
-        body = client.get(f"/desks/USD/panels/{panel_id}").text
-        # The pending state box (and anything after it) must hold no numbers.
-        visible = re.sub(r"<[^>]+>", " ", body.split('class="state state-pending"', 1)[-1])
-        visible = re.sub(r"(?i)step \d+", "", visible)
-        assert not re.search(r"\d", visible), (panel_id, visible)
+    assert panel_id == "situations" or any(s in resp.text for s in ("state-empty", "state-unavailable", "state-pending")), panel_id
 
 
 def test_keydata_marks_missing_series_unavailable_without_substitution(monkeypatch):
@@ -173,7 +168,7 @@ def test_keydata_marks_missing_series_unavailable_without_substitution(monkeypat
     body = make_client().get("/desks/USD/panels/keydata").text
     assert "Not in DB (real_gdp_qoq_annualised)" in body
     assert "Not in DB (ism_manufacturing_production)" in body
-    assert "Inflation driver (oil) · Available after step 10" in body
+    assert "Inflation driver (oil)" not in body
 
 
 def test_interactions_return_pressed_state(monkeypatch):

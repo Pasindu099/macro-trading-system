@@ -150,15 +150,31 @@ def value_on_or_before(points: list[tuple[date, float]], day: date) -> tuple[dat
 # ── Panels ────────────────────────────────────────────────────────────
 
 async def panel_verdict(desk: dict, params: dict) -> dict[str, Any]:
-    curve = await get_curve(desk["curve_country"], "1M")
-    regime = curve.get("regime", {}) if curve.get("status") == "available" else {}
-    label = REGIME_READ.get(regime.get("label"), (None,))[0] if regime.get("status") == "available" else None
-    return {"state": "ok", "regime_label": label, "regime_tenors": "2Y vs 10Y", "regime_window": "1M",
-            "bias": pending(10, "Bias, conviction and thesis")}
+    from app.services.verdict import get_verdict
+
+    result = await get_verdict(desk["currency"])
+    return {"state": "ok" if result["status"] == "available" else "unavailable",
+            "message": result.get("reason"), "verdict": result}
 
 
 async def panel_situations(desk: dict, params: dict) -> dict[str, Any]:
-    return pending(10, "Situation detection (energy shock and others)")
+    from app.services.situations import get_situation_episodes
+    from app.services.verdict import _applies
+
+    episodes = [row for row in await get_situation_episodes(active=True) if _applies(row, desk["currency"])]
+    panels = []
+    for row in episodes:
+        current = row["evidence"].get("current", {})
+        if row["situation_id"] == "energy_shock":
+            panels.append({"id": "inflation_driver", "name": "Inflation driver",
+                           "facts": [("Brent 3m change", current.get("brent_3m_pct"), "%"),
+                                     ("Headline minus core", current.get("headline_core_gap_pp"), "pp")]})
+        elif row["situation_id"] == "fr_fiscal_stress":
+            panels.append({"id": "french_fiscal", "name": "French fiscal stress",
+                           "facts": [("OAT–Bund 10Y", current.get("oat_bund_10y_bp"), "bp"),
+                                     ("20d change", current.get("oat_bund_20d_change_bp"), "bp")],
+                           "unavailable": "BTP spread unavailable"})
+    return {"state": "ok", "episodes": episodes, "evidence_panels": panels}
 
 
 def _heat(v: float | None) -> dict[str, str]:
@@ -315,7 +331,7 @@ async def panel_keydata(desk: dict, params: dict) -> dict[str, Any]:
                 "ref_label": chart.get("ref_label"),
                 "state": "ok" if series_out else "unavailable",
                 "missing": [l["name"] for l in legend if not l["available"]],
-                "driver": pending(10, "Inflation driver (oil)") if chart["id"] == "infl" else None}
+                "driver": None}
         if series_out:
             lookup = [dict(s["points"]) for s in series_out]
             card["headline"] = next(l["latest"] for l in legend if l["available"])
@@ -635,7 +651,11 @@ async def panel_news(desk: dict, params: dict) -> dict[str, Any]:
 
 
 async def panel_scenarios(desk: dict, params: dict) -> dict[str, Any]:
-    return pending(10, "Scenarios")
+    from app.services.scenarios import get_scenarios
+
+    result = await get_scenarios(desk["currency"])
+    return {"state": "ok" if result["status"] == "available" else "unavailable",
+            "message": result.get("reason"), **result}
 
 
 @dataclass(frozen=True)

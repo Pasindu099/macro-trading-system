@@ -235,6 +235,25 @@ async def backtest_all() -> list[dict[str, Any]]:
     return output
 
 
+async def get_situation_episodes(*, active: bool | None = None) -> list[dict[str, Any]]:
+    """Stored episodes for desk panels and JSON clients."""
+    query = """SELECT id, situation_id, scope, scope_key, started_at, ended_at, evidence
+               FROM situation_episodes"""
+    if active is True:
+        query += " WHERE ended_at IS NULL"
+    elif active is False:
+        query += " WHERE ended_at IS NOT NULL"
+    query += " ORDER BY started_at DESC, id DESC"
+    async with get_sessionmaker()() as session:
+        rows = await session.execute(text(query))
+        items = [dict(row._mapping) for row in rows]
+    specs = load_config()["situations"]
+    return [{**row, "name": specs[row["situation_id"]]["name"],
+             "severity": specs[row["situation_id"]]["severity"],
+             "evidence_panel_id": specs[row["situation_id"]]["evidence_panel_id"]}
+            for row in items]
+
+
 async def run_situations_job() -> int:
     async with job_lock("situations") as acquired:
         async with run_logger("job:situations_daily") as run:

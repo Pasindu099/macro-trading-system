@@ -118,4 +118,4 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] 10a. Eight deterministic situations; migration 0027; FRED Brent/VIX/SP500; 23:50 UTC job; full-history backtest 174 episodes with the June 2024 FR sanity gap recorded. Full suite: 495 passed, 7 skipped, nothing deselected.
 - [x] 10b. Weighted v1 verdict and two-sentence templated thesis for USD/EUR; missing ECB inputs explicit. Full suite: 498 passed, 7 skipped, nothing deselected.
 - [x] 10c. Meeting-priced USD scenarios, unavailable ECB pricing pending Step 9 Part D, and unpriced high-severity situation tails. Full suite: 501 passed, 7 skipped, nothing deselected.
-- [ ] 10d. APIs and USD/EUR desk panels; final report and current verdicts.
+- [x] 10d. Situation/history, verdict and scenario APIs; USD/EUR verdict, active-evidence and scenario panels. Focused tests: 38 passed. Full suite: 502 passed, 7 skipped, nothing deselected. `REPORT_STEP10.md` includes current verdicts.

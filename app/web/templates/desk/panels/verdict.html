@@ -3,16 +3,13 @@
   <div class="verdict-id">
     <div class="eyebrow-sm">{{ desk.currency }} · {{ desk.cb_name }}</div>
     <h1>{{ desk.name }}</h1>
-    <div class="chips">
-      {% if ctx.state == 'ok' and ctx.regime_label %}
-        <span class="chip">Curve regime: {{ ctx.regime_label }} <span class="muted">({{ ctx.regime_window }} · {{ ctx.regime_tenors }})</span></span>
-      {% elif ctx.state == 'ok' %}
-        <span class="chip muted">Curve regime unavailable</span>
-      {% endif %}
-    </div>
+    {% if ctx.state == 'ok' %}<div class="chips"><span class="chip">{{ ctx.verdict.bias | replace('_', ' ') | title }}</span><span class="chip">{{ ctx.verdict.conviction | title }} conviction</span><span class="chip">{{ ctx.verdict.horizon }}</span></div>{% endif %}
   </div>
   <div class="verdict-thesis">
     <div class="eyebrow-sm">Bias · conviction · thesis</div>
-    {% if ctx.state == 'ok' %}{{ state(ctx.bias) }}{% else %}{{ state(ctx) }}{% endif %}
+    {% if ctx.state == 'ok' %}
+      <p>{{ ctx.verdict.thesis }}</p>
+      <p class="muted small">Dominant driver: {{ ctx.verdict.dominant_driver }} · Main risk: {{ ctx.verdict.main_risk }}</p>
+    {% else %}{{ state(ctx) }}{% endif %}
   </div>
 </section>

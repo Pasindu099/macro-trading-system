@@ -1,5 +1,12 @@
-{% from "desk/_macros.html" import state %}
 <section id="situations" class="panel situations" aria-label="Active situations">
   <span class="eyebrow-sm">Active situations</span>
-  {{ state(ctx) }}
+  {% if ctx.episodes %}
+    <div class="chips">{% for row in ctx.episodes %}<span class="chip">{{ row.name }} · {{ row.severity }}</span>{% endfor %}</div>
+    {% for panel in ctx.evidence_panels %}
+      <article class="card" id="{{ panel.id }}"><h3>{{ panel.name }}</h3>
+        <p>Shown because… {% for label, value, unit in panel.facts %}{{ label }} {% if value is not none %}{{ '%.1f' | format(value) }}{{ unit }}{% else %}unavailable{% endif %}{% if not loop.last %}; {% endif %}{% endfor %}.</p>
+        {% if panel.unavailable %}<p class="muted small">{{ panel.unavailable }}</p>{% endif %}
+      </article>
+    {% endfor %}
+  {% else %}<span class="muted small">No active situations</span>{% endif %}
 </section>

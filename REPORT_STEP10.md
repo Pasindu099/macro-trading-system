@@ -34,3 +34,11 @@
 - `app/services/scenarios.py` + `config/scenarios.yaml`: base/hold, hawkish/hike, dovish/cut probabilities use only next-meeting market values and total 100% when live. Directions shift from verdict sign; triggers use next high-impact catalysts and tracking status.
 - Each active high-severity situation adds an unpriced tail. Local USD: 77.9% base, 22.1% hawkish, 0.0% dovish plus two tails. EUR: three branches with unavailable probabilities pending Step 9 Part D €STR method, plus two unpriced tails.
 - Focused scenario tests: 3 passed. Full suite: **501 passed, 7 skipped, nothing deselected**.
+
+## Part D — APIs and desks
+
+- `app/api/routes/desk_insights.py`: authenticated `GET /api/situations?active=true`, `/api/situations/history`, `/api/verdict/{currency}`, `/api/scenarios/{currency}`. Route handlers call services only.
+- `app/services/situations.py:get_situation_episodes` reads stored episodes with config metadata; local database has 9 active episodes.
+- USD/EUR desk verdict headers show bias, conviction, horizon, thesis, dominant driver and main risk. Situation strip and evidence cards render from active episodes only; each evidence card says “Shown because…”. Inflation card shows Brent 3m and headline–core gap; French fiscal card shows OAT–Bund 10Y and 20d change, with BTP unavailable.
+- Scenario cards show meeting probabilities when priced and explicit unavailable/not priced states otherwise. The old Step 10 key-data placeholder was removed.
+- Focused route/panel tests: 38 passed. Full suite: **502 passed, 7 skipped, nothing deselected**. Current verdicts and all backtest episode intervals are above.

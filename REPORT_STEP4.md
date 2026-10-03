@@ -30,3 +30,9 @@
 - Migration `0022_rates_quality_spreads` applied locally. It adds `is_outlier` to both observation tables and creates the Part E `yield_spreads` table.
 - The reversing-spike job flagged 13 government yields and 0 FX observations. Raw rows remain; service and fixed-income reads exclude flagged rows. Synthetic FX observations are excluded from the flagger.
 - Focused tests: quality and DB reads 3 passed; fixed-income API 7 passed. Full suite (before the final fixed-income filter edit): 294 passed, 7 skipped, 1 deselected, same 18 auth-related integration failures.
+
+## Part E: yield spreads
+
+- `app/services/yield_spreads.py` builds base-minus-quote spreads from valid, non-outlier observations. It aligns print dates and carries a missing leg for at most two business days.
+- Local rebuild wrote 45,200 rows. Both 2Y and 10Y cover all 28 currency pairs; 30Y and FR−DE have no rows because their source yields are absent.
+- Focused tests: 2 passed. The full-suite run yielded before its final result was captured; prior Part D full-suite result is above.

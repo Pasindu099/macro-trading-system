@@ -106,3 +106,9 @@ DO NOT
 - After review, move needed data logic to services with unit tests that pin outputs. Tag the last commit before removal (for example, `pre-redesign`). Remove old page routes, Jinja templates, static JS page modules, `main.css` page styles, the React/Babel brief builder, and Chart.js. Preserve auth, users, roles, admin and still-used JSON APIs, migrations, ingestion, processing, and all database tables and backend modules.
 - Add a new minimal shell with Overview, Desks, Pairs, Calendar, News, Positioning, Central Banks, and Data navigation; Syne and DM Mono dark design tokens; ECharts as the only chart library; placeholder routes; and restyled working login/setup.
 - This amendment supersedes the earlier `pages.py` empty-score fallback edit for Steps 1–3. The replacement service should handle empty primary scores when the new design consumes Macro State data.
+
+### Dedup key fallback decision (2026-10-03)
+
+- Use `COALESCE(period_start_date::text, period, released_at::date::text)` in release selection **and** superseded-score cleanup. The release-date fallback preserves prints when both period fields are null.
+- Re-run and report the read-only identity diff before changing the key. Investigate the 23 both-null indicators and write `REPORT_NULL_PERIODS.md`; report only, with no ingestion change.
+- Finish the incremental job, release-to-score integration checkpoint, and production one-off with `--dry-run`. The hard-coded FED date test failure is known and out of scope.

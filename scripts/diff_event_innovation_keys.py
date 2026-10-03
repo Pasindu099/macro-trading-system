@@ -18,7 +18,7 @@ _KEY_DIFF_SQL = text(
     WITH releases AS (
         SELECT indicator_id, period_start_date, period, released_at,
                COALESCE(period_start_date::text, released_at::date::text) AS old_key,
-               COALESCE(period_start_date::text, period) AS new_key
+               COALESCE(period_start_date::text, period, released_at::date::text) AS new_key
         FROM indicator_releases
         WHERE indicator_id IS NOT NULL AND actual IS NOT NULL
     ), changed AS (
@@ -35,7 +35,9 @@ _KEY_DIFF_SQL = text(
            (SELECT count(*) FROM changed WHERE period_start_date IS NOT NULL)
                AS changed_with_start_date,
            (SELECT count(*) FROM changed WHERE period IS NULL)
-               AS changed_with_null_period
+               AS changed_with_null_period,
+           (SELECT count(*) FROM changed WHERE period_start_date IS NULL AND period IS NOT NULL)
+               AS changed_with_period_fallback
     """
 )
 

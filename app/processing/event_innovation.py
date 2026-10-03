@@ -666,7 +666,7 @@ _RELEASES_SQL = text(
     """
     SELECT DISTINCT ON (
         r.indicator_id,
-        COALESCE(r.period_start_date::text, r.released_at::date::text)
+        COALESCE(r.period_start_date::text, r.period, r.released_at::date::text)
     )
         r.id                              AS release_id,
         r.indicator_id                    AS indicator_id,
@@ -687,7 +687,7 @@ _RELEASES_SQL = text(
       AND (CAST(:indicator_ids AS bigint[]) IS NULL OR r.indicator_id = ANY(:indicator_ids))
     ORDER BY
         r.indicator_id,
-        COALESCE(r.period_start_date::text, r.released_at::date::text),
+        COALESCE(r.period_start_date::text, r.period, r.released_at::date::text),
         r.retrieved_at DESC,
         r.id DESC
     """

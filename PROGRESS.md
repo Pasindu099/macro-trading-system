@@ -92,7 +92,7 @@ Decisions: `DECISIONS_STEP7.md`. Commits: `step7: <sub-task>`.
 - [x] 7a. Health: CB docs never run (unscheduled); news_alerts + enrichment failing since 09-24 (OpenAI no credits); rp scraper 403 since 08-21; 5 OIS proxies 403 (doubled jina URL) since 07-22; prod SQL `scripts/sql/pipeline_health.sql`.
 - [x] 7b. US GDP (`GDP Growth Rate` qoq) + ISM services new orders/prices mapped; ISM mfg production not published by EODHD; reclassify script; desk check 17/1 missing; full suite 414 passed.
 - [x] 7c. OPENAI_MODEL=gpt-4o-mini everywhere; job:cb_documents (Fed 31 docs stored, 0 analysed: no credits) scheduled on decision/minutes days; news AI + rateprobability scraper off by flag; OIS all 8 fresh (prefix + spoofed-UA fix), stale status logged. Full suite 421 passed.
-- [ ] 7d. ZQ de-averaging, piecewise-constant path, 14-day override staleness, FED test fixed; before/after probabilities.
+- [x] 7d. FED ZQ de-averaging (late-month → next contract), step path, overrides >14 d not served (stale_source), FED test from config. Oct 28 hike 70.6% → 22.1%, Dec 9 68.5% → 81.7%. Full suite 428 passed, nothing deselected.
 - [ ] 7e. Vendor HTMX + ECharts; no runtime CDN scripts.
 - [ ] 7f. EODHD calendar 1,000-event cap: confirm, dry-run smaller chunks, ingest missing events only.
 - [ ] 7t. Tests, `REPORT_STEP7.md`, full suite with nothing deselected.

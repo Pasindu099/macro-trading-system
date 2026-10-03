@@ -29,6 +29,128 @@ DATA_STATE_LIVE = "live"
 DATA_STATE_NO_CURVE = "no_curve"
 DATA_STATE_NO_CALENDAR = "no_calendar"
 DATA_STATE_UNAVAILABLE = "unavailable"
+DATA_STATE_STALE_SOURCE = "stale_source"
+
+# A static override older than this is never served (audit #8).
+OVERRIDE_MAX_AGE = timedelta(days=14)
+# ZQ: a meeting this close to month end leaves too few post-meeting days to
+# de-average reliably, so the next month's contract gives the post-meeting rate.
+ZQ_LATE_MONTH_DAYS = 7
+# Banks whose cached curve is a strip of monthly-average futures (ZQ = 30-day fed funds).
+MONTHLY_AVERAGE_FUTURES = {"FED"}
+
+
+def _month_start(day: date) -> date:
+    return day.replace(day=1)
+
+
+def _days_in_month(month: date) -> int:
+    nxt = (month.replace(day=28) + timedelta(days=4)).replace(day=1)
+    return (nxt - month).days
+
+
+def zq_monthly_averages(curve: dict[int, float], curve_date: date) -> dict[date, float]:
+    """Map a cached ZQ strip back to {contract month: average EFFR}.
+
+    The fetcher stores each contract at days-to-the-1st of its month; the current
+    month's contract sits at tenor <= 1.
+    """
+    out: dict[date, float] = {}
+    for tenor, rate in sorted(curve.items()):
+        if tenor <= 0:
+            month = _month_start(curve_date)
+        else:
+            month = _month_start(curve_date + timedelta(days=tenor))
+            if tenor == 1 and month != _month_start(curve_date) and _month_start(curve_date) not in out:
+                month = _month_start(curve_date)  # legacy current-month contract on the last day of a month
+        out.setdefault(month, float(rate))
+    return out
+
+
+def deaverage_meeting_rates(
+    month_averages: dict[date, float],
+    meeting_dates: list[date],
+    fallback_start_rate: float,
+) -> dict[date, tuple[float, float]]:
+    """{meeting_date: (pre_meeting_rate, post_meeting_rate)} from monthly-average futures.
+
+    Rates are piecewise constant: a decision takes effect the day after the meeting.
+    Months without a meeting pin the rate to their average; for a meeting month
+        r_post = (avg × days_in_month − r_pre × days_before) / days_after,
+    where days_before counts the meeting day itself. A meeting in the last
+    ZQ_LATE_MONTH_DAYS days takes r_post from the next month's contract, and r_pre
+    can be backed out of the meeting month when r_post is known.
+    """
+    months = sorted(month_averages)
+    by_month = {_month_start(d): d for d in meeting_dates}
+    start: dict[date, float] = {}
+    end: dict[date, float] = {}
+    for month in months:
+        if month not in by_month:
+            start[month] = end[month] = month_averages[month]
+
+    def nxt(month: date) -> date:
+        return month + timedelta(days=_days_in_month(month))
+
+    def solve(*, allow_fallbacks: bool) -> bool:
+        changed = False
+        for month in months:
+            if month in start and month in end:
+                continue
+            prev_month = _month_start(month - timedelta(days=1))
+            next_month = nxt(month)
+            if month not in start and prev_month in end:
+                start[month] = end[prev_month]
+                changed = True
+            meeting = by_month.get(month)
+            if meeting is None:
+                continue
+            total, before = _days_in_month(month), meeting.day
+            after = total - before
+            avg = month_averages[month]
+            late = before > total - ZQ_LATE_MONTH_DAYS
+            if month not in end:
+                if late and next_month in start:
+                    end[month] = start[next_month]
+                    changed = True
+                elif month in start and after > 0 and (not late or allow_fallbacks):
+                    end[month] = (avg * total - start[month] * before) / after
+                    changed = True
+            if month not in start and month in end and before > 0:
+                start[month] = (avg * total - end[month] * after) / before
+                changed = True
+            if month in end and next_month in month_averages and next_month not in start:
+                start[next_month] = end[month]
+                changed = True
+        return changed
+
+    for allow in (False, True):
+        while solve(allow_fallbacks=allow):
+            pass
+        if allow is False:
+            first = next((m for m in months if m in by_month and m not in start), None)
+            if first is not None and _month_start(months[0]) == first:
+                start[first] = fallback_start_rate  # current month has a meeting and nothing anchors it
+    return {
+        by_month[month]: (start[month], end[month])
+        for month in months if month in by_month and month in start and month in end
+    }
+
+
+def step_path_rate(meeting_rates: list[tuple[date, float]], start_rate: float, target: date) -> float:
+    """Piecewise-constant policy path: the post-meeting rate of the last meeting before `target`."""
+    rate = start_rate
+    for meeting_date, post in sorted(meeting_rates):
+        if meeting_date < target:
+            rate = post
+    return rate
+
+
+def override_is_fresh(bank_payload: dict[str, Any], now: datetime) -> bool:
+    as_of = bank_payload.get("as_of_date")
+    if not as_of:
+        return False
+    return now.date() - date.fromisoformat(str(as_of)) <= OVERRIDE_MAX_AGE
 
 
 async def get_market_data_status(bank: str, session: AsyncSession) -> dict[str, Any]:
@@ -157,7 +279,7 @@ async def get_ois_implied_rate(
     curve_date: date | None = None,
     db_session: AsyncSession | None = None,
 ) -> float:
-    """Interpolate cached OIS/futures curve to a target date."""
+    """Market-implied policy rate on a target date: a step path, constant between meetings."""
     bank = normalize_bank(bank)
     if db_session is None:
         async with session_scope() as session:
@@ -167,14 +289,16 @@ async def get_ois_implied_rate(
     if loaded is None:
         raise ValueError(f"No OIS cache available for {bank}")
 
-    resolved_curve_date, curve = loaded
-    current_rate = _bank_config(bank)["current_rate"]
-    return interpolate_ois_rate(
-        curve_date=resolved_curve_date,
-        curve=curve,
-        target_date=target_date,
-        current_rate=current_rate,
-    )
+    config = _bank_config(bank)
+    adj = float(config["rate_basis_adj"])
+    probabilities = [
+        p for p in await compute_meeting_probabilities(bank, curve_date=loaded[0], db_session=db_session)
+        if p.data_state == DATA_STATE_LIVE
+    ]
+    if not probabilities:
+        return float(config["current_rate"])
+    start = probabilities[0].current_rate - adj
+    return step_path_rate([(p.meeting_dt.date(), p.implied_rate - adj) for p in probabilities], start, target_date)
 
 
 async def compute_meeting_probabilities(
@@ -219,6 +343,20 @@ async def compute_meeting_probabilities(
             override_probabilities = _load_probability_overrides(bank, config, n_meetings)
             if override_probabilities:
                 return override_probabilities
+            override = _load_override_payload(bank)
+            if override:
+                # An override exists but is too old to serve: say so instead of showing it.
+                return [
+                    _unavailable_probability(
+                        bank=bank,
+                        meeting_dt=_parse_dt(meeting["meeting_dt"]),
+                        current_rate=today_rate,
+                        data_state=DATA_STATE_STALE_SOURCE,
+                        message=f"Stale source: {bank} override dated {override.get('as_of_date')} is older than 14 days.",
+                        config=config,
+                    )
+                    for meeting in meetings
+                ]
         return [
             _unavailable_probability(
                 bank=bank,
@@ -234,14 +372,23 @@ async def compute_meeting_probabilities(
     resolved_curve_date, curve = loaded
     baseline_rate = today_rate + float(config["rate_basis_adj"])
     meeting_dates = [_parse_dt(meeting["meeting_dt"]) for meeting in meetings]
-    implied_steps = compute_step_implied_rates(
-        meeting_dates,
-        curve,
-        today_rate,
-        step,
-        float(config["rate_basis_adj"]),
-        curve_date=resolved_curve_date,
-    )
+    if bank in MONTHLY_AVERAGE_FUTURES:
+        implied_steps = compute_deaveraged_implied_rates(
+            meeting_dates, curve, today_rate, float(config["rate_basis_adj"]), curve_date=resolved_curve_date,
+        )
+        if implied_steps:
+            # Cumulative moves are measured from the market's own pre-meeting rate, not the config rate.
+            first = implied_steps[0]
+            baseline_rate = first.implied_rate - first.delta_bps / 100.0
+    else:
+        implied_steps = compute_step_implied_rates(
+            meeting_dates,
+            curve,
+            today_rate,
+            step,
+            float(config["rate_basis_adj"]),
+            curve_date=resolved_curve_date,
+        )
     probabilities: list[MeetingProbability] = []
 
     for meeting_dt, implied in zip(meeting_dates, implied_steps, strict=False):
@@ -458,6 +605,35 @@ def compute_step_implied_rates(
     return results
 
 
+def compute_deaveraged_implied_rates(
+    meeting_dates: list[datetime],
+    curve: dict[int, float],
+    current_policy_rate: float,
+    rate_basis_adj: float,
+    *,
+    curve_date: date | None = None,
+) -> list[MeetingImplied]:
+    """Meeting implied rates from a monthly-average futures strip (ZQ), de-averaged.
+
+    Stops at the first meeting the strip cannot cover, so later meetings are not
+    paired with the wrong rates by the caller's zip().
+    """
+    anchor = curve_date or date.today()
+    days = [dt.date() for dt in meeting_dates]
+    path = deaverage_meeting_rates(zq_monthly_averages(curve, anchor), days, current_policy_rate)
+    results: list[MeetingImplied] = []
+    for day in days:
+        if day not in path:
+            break
+        pre, post = path[day]
+        results.append(MeetingImplied(
+            meeting_date=day,
+            implied_rate=round(post + float(rate_basis_adj), 6),
+            delta_bps=round((post - pre) * 100.0, 6),
+        ))
+    return results
+
+
 def interpolate_ois_rate_by_tenor(
     *,
     curve: dict[int, float],
@@ -636,20 +812,30 @@ def _bank_config(bank: str) -> dict[str, Any]:
     }
 
 
+def _load_override_payload(bank: str) -> dict[str, Any]:
+    if not RATE_PROBABILITY_OVERRIDES_PATH.exists():
+        return {}
+    with RATE_PROBABILITY_OVERRIDES_PATH.open("r", encoding="utf-8") as handle:
+        payload = yaml.safe_load(handle) or {}
+    return payload.get(bank) or {}
+
+
 def _load_probability_overrides(
     bank: str,
     config: dict[str, Any],
     n_meetings: int,
+    *,
+    now: datetime | None = None,
 ) -> list[MeetingProbability]:
-    if not RATE_PROBABILITY_OVERRIDES_PATH.exists():
+    """Static override rows, or [] when there are none or they are older than OVERRIDE_MAX_AGE."""
+    now = now or datetime.now(UTC)
+    bank_payload = _load_override_payload(bank)
+    if not bank_payload or not override_is_fresh(bank_payload, now):
         return []
-    with RATE_PROBABILITY_OVERRIDES_PATH.open("r", encoding="utf-8") as handle:
-        payload = yaml.safe_load(handle) or {}
-    rows = (payload.get(bank) or {}).get("current") or []
+    rows = bank_payload.get("current") or []
     baseline_rate = float(config["current_rate"]) + float(config.get("rate_basis_adj") or 0.0)
     probabilities: list[MeetingProbability] = []
     prior_implied = baseline_rate
-    now = datetime.now(UTC)
     future_rows = [r for r in rows if _parse_dt(r["meeting_dt"]).astimezone(UTC) >= now]
     for row in future_rows[:n_meetings]:
         meeting_dt = _parse_dt(row["meeting_dt"])

@@ -66,8 +66,10 @@ async def fetch_and_cache(db_session: AsyncSession) -> str:
         return status
 
     today = date.today()
+    # Tenor = days to the 1st of the contract month; the current month's contract is 0.
+    # Each point is a monthly AVERAGE of EFFR (de-averaged in rate_probability).
     curve = {
-        max(1, (contract_date - today).days): rate
+        max(0, (contract_date - today).days): rate
         for contract_date, rate in values.items()
     }
     await upsert_ois_curve(

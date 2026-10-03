@@ -31,3 +31,19 @@
 - **rateprobability.com off** (`RATEPROBABILITY_SCRAPER_ENABLED=false`); the manual trigger returns 409. `/api/rate-probability` hides banks whose scrape is ≥ 3 days old (all 8 now hidden).
 - **OIS:** the doubled proxy prefix is fixed. The remaining 403 was the proxy's Cloudflare challenge triggered by the fetchers' spoofed Chrome UA; they now send `MacroDashboard/0.1 rate-fetcher`. Re-run: **all 8 banks fresh**: FED, BOC, BOJ, RBA and SNB at 2026-10-03; ECB, BOE and RBNZ at 2026-10-01. A cache fallback older than 3 days now returns `stale`; `job:rate_probability_fetch` logs to `ingestion_runs`, so it shows in `/api/admin/jobs/status`.
 - Tests: `test_step7_pipelines.py` (6). Full suite: 421 passed, 7 skipped, 1 deselected. pytest was reinstalled from the declared `dev` extras after the app container was recreated.
+
+## Part D: rate-probability methodology (audit #6–#9)
+
+- **#6 ZQ de-averaging (FED):** the strip is mapped back to monthly EFFR averages; meeting months use r_post = (avg×D − r_pre×d_before)/d_after; months without a meeting pin the rate; a meeting in the last 7 days takes r_post from the next contract and backs r_pre out of its own month. r_pre comes from the curve, not the stale config rate (`FED.current_rate` is still 3.75 after the 16 Sep move to 4.00). The fetcher now stores the current-month contract at tenor 0, which avoids the month-end collision.
+- **#7 step path:** `get_ois_implied_rate` returns a piecewise-constant path (each post-meeting rate takes effect the day after the meeting) instead of linear interpolation. Non-FED meeting reads are unchanged, because their sources (OIS term rates, 3-month CORRA/SARON/TONA futures, monthly RBA IB) each need their own de-averaging. Flagged for a later step.
+- **#8 overrides:** never served once older than 14 days; the view gets `data_state="stale_source"`. Every bank's override is dated 2026-06-26, so none is served now.
+- **#9:** the FED override test reads the next meeting from the override config, with an injected clock.
+
+| FED meeting (curve 2026-10-03, yfinance ZQ) | Before: hold / hike, implied | After: hold / hike, implied |
+| --- | --- | --- |
+| 28 Oct 2026 | 29.4% / 70.6%, 4.006 | 77.9% / 22.1%, 4.010 |
+| 9 Dec 2026 | 31.5% / 68.5%, 4.178 | 18.3% / 81.7%, 4.214 |
+| 27 Jan 2027 | 50.3% / 49.7%, 4.302 | 61.7% / 38.3%, 4.310 |
+
+- Hand check: 28 Oct is a late-month meeting, so r_post = Nov average 3.93 and r_pre = 3.875 (from the Oct average), giving +5.5 bp. 9 Dec: r_pre 3.93, r_post 4.134, giving +20.4 bp. The old method measured October against config 3.75, which overstated the October hike.
+- Tests: mid-month de-averaging, end-of-month next contract, curve-anchored r_pre, step path, 14-day override, stale_source state. The cumulative-delta test was rewritten on a valid ZQ strip. Full suite, **nothing deselected: 428 passed, 7 skipped.**

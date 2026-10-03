@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from app.api.routes.pages import (
+from app.services.rates import (
     _repricing_anchors,
     _repricing_beta,
     _repricing_curve,

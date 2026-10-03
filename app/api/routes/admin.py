@@ -14,7 +14,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,6 +32,7 @@ from app.api.schemas import (
     UnmappedEventsPayload,
 )
 from app.services.job_status import get_job_status
+from app.services import bank_research_admin
 from app.db.models import (
     Country,
     GovernmentYieldIngestionStatus,
@@ -45,10 +46,44 @@ from app.settings import get_settings
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
+class BankResearchSourceRequest(BaseModel):
+    folder_url: str = Field(min_length=1)
+
+
+class BankResearchRefreshRequest(BaseModel):
+    folder_url: str | None = None
+
+
 def _require_jobs_admin(request: Request) -> None:
     # Local deployments can explicitly disable all authentication.
     if get_settings().auth_enabled:
         require_role("admin")(request)
+
+
+@router.get("/bank-research", dependencies=[Depends(_require_jobs_admin)])
+async def get_bank_research_state() -> dict[str, object]:
+    return bank_research_admin.get_state()
+
+
+@router.put("/bank-research", dependencies=[Depends(_require_jobs_admin)])
+async def put_bank_research_state(body: BankResearchSourceRequest) -> dict[str, object]:
+    try:
+        return bank_research_admin.save_folder_url(body.folder_url)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/bank-research/refresh", dependencies=[Depends(_require_jobs_admin)])
+async def post_bank_research_refresh(
+    background_tasks: BackgroundTasks,
+    body: BankResearchRefreshRequest | None = None,
+) -> dict[str, object]:
+    try:
+        state = bank_research_admin.queue_refresh(body.folder_url if body else None)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    background_tasks.add_task(bank_research_admin.refresh, state["folder_url"])
+    return state
 
 
 class IndicatorSeriesRefreshRequest(BaseModel):

@@ -21,13 +21,13 @@ from sqlalchemy import desc, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.routes.public import (
-    fetch_investinglive_articles,
     get_country,
-    get_country_detail_payload,
     get_indicator_by_country_and_name,
-    list_biggest_surprises,
-    list_country_summaries,
 )
+from app.services.country_data import (
+    get_country_detail_payload, list_biggest_surprises, list_country_summaries,
+)
+from app.services.news import fetch_investinglive_articles
 from app.db.models import (
     Country, CbPolicyDocument, CbEconomicProjection,
     Indicator, IndicatorRelease, IngestionRun,

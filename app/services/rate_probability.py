@@ -31,6 +31,98 @@ DATA_STATE_NO_CALENDAR = "no_calendar"
 DATA_STATE_UNAVAILABLE = "unavailable"
 
 
+async def get_market_data_status(bank: str, session: AsyncSession) -> dict[str, Any]:
+    """Latest OIS source and curve date for a bank, without page formatting."""
+    result = await session.execute(text("""
+        SELECT source, MAX(curve_date) AS curve_date, COUNT(*) AS rows
+        FROM ois_cache
+        WHERE bank = :bank
+        GROUP BY source
+        ORDER BY curve_date DESC, rows DESC
+        LIMIT 1
+    """), {"bank": bank.upper()})
+    row = result.first()
+    if row is None:
+        return {"available": False, "source": None, "curve_date": None,
+                "rows": 0, "is_proxy": False}
+    source = str(row.source)
+    return {
+        "available": True, "source": source, "curve_date": row.curve_date,
+        "rows": int(row.rows), "is_proxy": source.endswith("_proxy"),
+    }
+
+
+async def get_rate_probability_view(bank: str, session: AsyncSession) -> dict[str, Any]:
+    """Combined raw rate-probability inputs for a new Central Banks view."""
+    normalized = normalize_bank(bank)
+    config = _bank_config(normalized)
+    current_rate = float(config["current_rate"])
+    step_bps = int(config.get("step_bps") or 25)
+    try:
+        summary = await get_next_meeting_summary(normalized, db_session=session)
+    except ValueError:
+        summary = {}
+    try:
+        outlook = await get_twelve_month_outlook(normalized, db_session=session)
+    except Exception:
+        outlook = {}
+    meetings = await get_upcoming_meetings(normalized, n=12, db_session=session)
+    try:
+        probabilities = await compute_meeting_probabilities(
+            normalized, step_bps=float(step_bps), n_meetings=12, db_session=session,
+        ) if summary else []
+    except Exception:
+        probabilities = []
+    try:
+        market_data = await get_market_data_status(normalized, session)
+    except Exception:
+        market_data = {"available": False, "source": None, "curve_date": None,
+                       "rows": 0, "is_proxy": False}
+    next_meeting_at = summary.get("meeting_dt")
+    if next_meeting_at is None and meetings:
+        next_meeting_at = datetime.fromisoformat(str(meetings[0]["meeting_dt"]))
+    combined_meetings = []
+    for index, meta in enumerate(meetings):
+        probability = probabilities[index] if index < len(probabilities) else None
+        live = probability is not None and probability.data_state == DATA_STATE_LIVE
+        outcomes = ({"HIKE": probability.hike_prob or 0.0,
+                     "HOLD": probability.hold_prob or 0.0,
+                     "CUT": probability.cut_prob or 0.0} if live else {})
+        dominant = max(outcomes, key=outcomes.get) if outcomes else None
+        combined_meetings.append({
+            "meeting_at": probability.meeting_dt if probability else datetime.fromisoformat(str(meta["meeting_dt"])),
+            "implied_rate": probability.implied_rate if probability else current_rate,
+            "cut_prob": probability.cut_prob if probability else None,
+            "hold_prob": probability.hold_prob if probability else None,
+            "hike_prob": probability.hike_prob if probability else None,
+            "dominant_outcome": dominant,
+            "dominant_prob": outcomes[dominant] if dominant else None,
+            "num_moves": probability.num_moves if probability else None,
+            "cumulative_num_moves": round(probability.cumulative_delta_bps / step_bps, 4) if live else None,
+            "delta_bps": probability.delta_bps if probability else None,
+            "cumulative_delta_bps": probability.cumulative_delta_bps if live else None,
+            "is_official": bool(meta.get("is_official", True)),
+            "market_data_available": live,
+            "data_state": probability.data_state if probability else DATA_STATE_NO_CURVE,
+        })
+    total_bps = float(outlook.get("total_bps") or 0.0)
+    return {
+        "bank": normalized, "current_rate": current_rate, "step_bps": step_bps,
+        "deposit_rate": current_rate - 0.5 if normalized == "ECB" else current_rate,
+        "main_rate": current_rate,
+        "lending_rate": current_rate + 0.5 if normalized == "ECB" else current_rate,
+        "next_meeting_at": next_meeting_at,
+        "last_ois_rate": float(summary.get("last_ois_rate") or current_rate),
+        "dominant_outcome": summary.get("dominant_outcome"),
+        "dominant_prob_pct": float(summary.get("dominant_prob_pct") or 0.0),
+        "implied_delta_bps": float(summary.get("implied_delta_bps") or 0.0),
+        "outlook_total_bps": total_bps,
+        "outlook_direction": "up" if total_bps > 3 else "down" if total_bps < -3 else "hold",
+        "meetings": combined_meetings,
+        "market_data": market_data,
+    }
+
+
 @dataclass
 class MeetingImplied:
     meeting_date: date

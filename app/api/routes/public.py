@@ -51,6 +51,8 @@ from app.services.retail_sentiment import (
     source_status,
 )
 from app.settings import get_settings
+from app.services import country_data
+from app.services import news as news_service
 
 router = APIRouter(prefix="/api", tags=["public"])
 DB_SESSION = Depends(get_session)
@@ -297,22 +299,11 @@ def _parse_rss_articles(xml_body: str, *, limit: int = 40) -> list[dict[str, Any
 async def fetch_investinglive_articles(*, limit: int = 40) -> list[dict[str, Any]]:
     """Fetch and normalize InvestingLive RSS headlines."""
     try:
-        async with httpx.AsyncClient(
-            timeout=get_settings().http_timeout_seconds,
-            follow_redirects=True,
-        ) as client:
-            response = await client.get(
-                INVESTINGLIVE_RSS_URL,
-                headers={"User-Agent": "MacroDashboard/0.1 RSS reader"},
-            )
-            response.raise_for_status()
+        return await news_service.fetch_investinglive_articles(limit=limit)
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=502, detail="InvestingLive feed returned an error.") from exc
     except httpx.HTTPError as exc:
         raise HTTPException(status_code=502, detail="InvestingLive feed is unavailable.") from exc
-
-    try:
-        return _parse_rss_articles(response.text, limit=limit)
     except ElementTree.ParseError as exc:
         raise HTTPException(status_code=502, detail="InvestingLive feed returned invalid RSS.") from exc
 
@@ -596,10 +587,8 @@ async def _country_summary(
 
 
 async def list_country_summaries(session: AsyncSession) -> list[CountrySummary]:
-    """Shared helper for country-card summaries."""
-    countries_q = await session.execute(select(Country).order_by(Country.code))
-    countries = countries_q.scalars().all()
-    return [await _country_summary(session, country) for country in countries]
+    """Compatibility wrapper around the shared country service."""
+    return await country_data.list_country_summaries(session)
 
 
 async def list_biggest_surprises(
@@ -608,46 +597,8 @@ async def list_biggest_surprises(
     days: int = 7,
     limit: int = 5,
 ) -> list[BiggestSurpriseItem]:
-    """Return the biggest recent mapped surprises for the landing strip."""
-    cutoff = _now() - timedelta(days=days)
-    surprises_q = await session.execute(
-        select(Indicator, IndicatorRelease, Country)
-        .join(
-            IndicatorRelease,
-            and_(
-                IndicatorRelease.indicator_id == Indicator.id,
-                IndicatorRelease.is_latest.is_(True),
-            ),
-        )
-        .join(Country, Country.code == Indicator.country_code)
-        .where(
-            IndicatorRelease.surprise.is_not(None),
-            IndicatorRelease.released_at >= cutoff,
-        )
-        .order_by(
-            func.abs(IndicatorRelease.surprise).desc(),
-            desc(IndicatorRelease.released_at),
-        )
-        .limit(limit)
-    )
-
-    items: list[BiggestSurpriseItem] = []
-    for indicator, release, country in surprises_q.all():
-        if release.surprise is None:
-            continue
-        items.append(BiggestSurpriseItem(
-            country_code=country.code,
-            country_name=country.name,
-            currency_code=country.currency_code,
-            indicator_id=indicator.id,
-            canonical_name=indicator.canonical_name,
-            display_name=indicator.display_name,
-            surprise=float(release.surprise),
-            actual=float(release.actual) if release.actual is not None else None,
-            estimate=float(release.estimate) if release.estimate is not None else None,
-            released_at=release.released_at,
-        ))
-    return items
+    """Compatibility wrapper around the shared surprise service."""
+    return await country_data.list_biggest_surprises(session, days=days, limit=limit)
 
 
 async def list_calendar_events(
@@ -1016,56 +967,8 @@ async def get_country_detail_payload(
     session: AsyncSession,
     country_code: str,
 ) -> CountryDetailPayload | None:
-    """Shared helper for country detail data."""
-    normalized_country_code = country_code.upper()
-    country = await get_country(session, normalized_country_code)
-    if country is None:
-        return None
-
-    release_count_q = await session.execute(
-        select(func.count(IndicatorRelease.id))
-        .select_from(IndicatorRelease)
-        .join(Indicator, Indicator.id == IndicatorRelease.indicator_id)
-        .where(Indicator.country_code == normalized_country_code)
-    )
-    release_count = release_count_q.scalar_one()
-
-    indicators_q = await session.execute(
-        select(Indicator)
-        .where(Indicator.country_code == normalized_country_code)
-        .order_by(
-            Indicator.importance.asc(),
-            Indicator.primary_category.asc(),
-            Indicator.display_name.asc(),
-        )
-    )
-
-    indicators = []
-    for indicator in indicators_q.scalars().all():
-        release = await get_latest_indicator_release(
-            session,
-            indicator.id,
-            actual_only=True,
-        )
-        indicators.append(IndicatorSnapshot(
-            id=indicator.id,
-            canonical_name=indicator.canonical_name,
-            display_name=indicator.display_name,
-            primary_category=indicator.primary_category,
-            secondary_categories=list(indicator.secondary_categories or []),
-            comparison=indicator.comparison,
-            frequency=indicator.frequency,
-            unit=indicator.unit,
-            importance=indicator.importance,
-            is_higher_better_for_currency=indicator.is_higher_better_for_currency,
-            latest_release=_release_to_schema(release),
-        ))
-
-    return CountryDetailPayload(
-        country=await _country_summary(session, country),
-        release_count=release_count,
-        indicators=indicators,
-    )
+    """Compatibility wrapper around the shared country service."""
+    return await country_data.get_country_detail_payload(session, country_code)
 
 
 @router.get("/countries", response_model=Envelope[CountriesPayload])

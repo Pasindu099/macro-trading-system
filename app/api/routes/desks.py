@@ -27,14 +27,19 @@ def _label(panel: desk_panels.Panel, desk: dict) -> str:
     return panel.label.format(cb=desk["cb_short"])
 
 
+def _panels(desk: dict) -> list[desk_panels.Panel]:
+    return [panel for panel in desk_panels.PANELS if panel.id != "country" or desk.get("members")]
+
+
 @router.get("/desks/{currency}", response_class=HTMLResponse)
 async def desk_page(request: Request, currency: str) -> HTMLResponse:
     desk = _desk_or_404(currency)
     ccy = desk["currency"]
-    chain = [{"n": p.n, "label": _label(p, desk), "href": f"#{p.anchor}"} for p in desk_panels.PANELS if p.n]
+    panels = _panels(desk)
+    chain = [{"n": p.n, "label": _label(p, desk), "href": f"#{p.anchor}"} for p in panels if p.n]
     return templates.TemplateResponse(request, "desk/page.html", {
         "page_title": f"{ccy} Desk | ForexCompass", "desk": desk, "nav": desks.desk_nav(ccy),
-        "chain": chain, "panels": desk_panels.PANELS, "now": datetime.now(UTC),
+        "chain": chain, "panels": panels, "now": datetime.now(UTC),
     })
 
 
@@ -42,7 +47,7 @@ async def desk_page(request: Request, currency: str) -> HTMLResponse:
 async def desk_panel(request: Request, currency: str, panel_id: str) -> HTMLResponse:
     desk = _desk_or_404(currency)
     panel = desk_panels.PANELS_BY_ID.get(panel_id)
-    if panel is None:
+    if panel is None or (panel_id == "country" and not desk.get("members")):
         raise HTTPException(status_code=404, detail="Unknown panel")
     params = {k: request.query_params[k] for k in PANEL_PARAMS if k in request.query_params}
     key = (desk["currency"], panel_id, tuple(sorted(params.items())))

@@ -42,11 +42,13 @@ def test_usd_and_eur_desks_render_and_disabled_desks_404():
     page = client.get("/desks/USD")
     assert page.status_code == 200
     # Every panel is a lazy HTMX partial in mockup order, with a loading state.
-    order = [page.text.index(f'hx-get="/desks/USD/panels/{p.id}"') for p in desk_panels.PANELS]
+    order = [page.text.index(f'hx-get="/desks/USD/panels/{p.id}"') for p in routes._panels(desks.get_desk("USD"))]
     assert order == sorted(order)
-    assert page.text.count("state-loading") == len(desk_panels.PANELS)
+    assert page.text.count("state-loading") == len(routes._panels(desks.get_desk("USD")))
     assert "htmx" in page.text and "desk.js" in page.text
     assert client.get("/desks/EUR").status_code == 200
+    assert 'hx-get="/desks/EUR/panels/country"' in client.get("/desks/EUR").text
+    assert client.get("/desks/USD/panels/country").status_code == 404
     assert client.get("/desks/GBP").status_code == 404
     assert client.get("/desks/USD/panels/nope").status_code == 404
 

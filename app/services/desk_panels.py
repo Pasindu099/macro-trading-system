@@ -327,6 +327,13 @@ async def panel_keydata(desk: dict, params: dict) -> dict[str, Any]:
     return {"state": "ok", "cards": cards}
 
 
+async def panel_country(desk: dict, params: dict) -> dict[str, Any]:
+    from app.services.country_monitor import get_country_monitor
+
+    result = await get_country_monitor(desk)
+    return {"state": "ok" if result["status"] == "available" else "unavailable", **result}
+
+
 VARIABLE_LABEL = {"federal_funds_rate": "Fed funds rate", "pce_inflation": "PCE inflation",
                   "core_pce_inflation": "Core PCE", "unemployment_rate": "Unemployment", "real_gdp": "Real GDP"}
 FLAG_TEXT = {"tolerance": "Tolerance: inflation revised up without a higher rate path",
@@ -649,6 +656,7 @@ PANELS: list[Panel] = [
     Panel("economy", "q1", "1", "Economy", False, panel_economy),
     Panel("direction", "q2", "2", "Direction", False, panel_direction),
     Panel("keydata", "data", "", "Key data", True, panel_keydata),
+    Panel("country", "country", "", "Country monitor", True, panel_country),
     Panel("fedview", "fedview", "3", "{cb} view", True, panel_fedview),
     Panel("fedpath", "q3", "4", "{cb} path", False, panel_fedpath),
     Panel("priced", "q4", "5", "Priced", False, panel_priced),

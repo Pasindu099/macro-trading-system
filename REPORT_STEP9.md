@@ -24,3 +24,10 @@
 - Existing USD checker gap remains ISM manufacturing production (unrelated).
 - `config/central_banks.yaml`: ECB `verify: false`; Governing Council corrected to 27 participants and 21 voting rights in 2026 ([ECB voting rotation](https://www.ecb.europa.eu/ecb-and-you/explainers/tell-me-more/html/voting-rotation.ff.html)). Symmetric 2% HICP target ([ECB strategy](https://www.ecb.europa.eu/mopo/strategy/strategy-review/ecb.strategyreview202506_strategy_statement.en.html)) and quarterly projection cadence ([ECB projections](https://www.ecb.europa.eu/press/projections/html/index.en.html)) confirmed.
 - Focused desk and central-bank tests: 8 passed. Full suite: **482 passed, 7 skipped, nothing deselected**.
+
+## Part B: country monitor
+
+- `app/services/country_monitor.py`: latest available mapped prints for EZ/DE/FR; comparison tones relative to EZ, inflation hotter/cooler, unemployment direction inverted. Unmapped data stays unavailable.
+- Migration `2026_10_03_0026_country_fiscal_observations.py` stores annual general-government balance as % GDP; `scripts/ingest_eurostat_deficit.py` reads [Eurostat `gov_10dd_edpt1`](https://ec.europa.eu/eurostat/databrowser/view/gov_10dd_edpt1/default/table), with dry-run. Loaded 18 rows (2020–2025): 2025 deficits EZ 2.9%, DE 2.7%, FR 5.1% of GDP.
+- FR–DE 10Y from existing `yield_spreads`: 139.07 bp as of 2026-10-02. `country` panel routes only for desks with `members`; USD returns 404 and its panel list is unchanged.
+- Focused country/desk tests: 46 passed; live EUR panel rendered HTTP 200 with deficit and spread. Full suite: **485 passed, 7 skipped, nothing deselected**.

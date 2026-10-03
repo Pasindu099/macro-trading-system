@@ -146,6 +146,30 @@ def step_path_rate(meeting_rates: list[tuple[date, float]], start_rate: float, t
     return rate
 
 
+# Latest policy decision in indicator_releases per bank (Step 8: Fed only; other banks use config).
+POLICY_DECISION_INDICATORS = {"FED": ("US", "fed_interest_rate_decision")}
+
+
+async def resolve_current_rate(bank: str, db_session: AsyncSession) -> dict[str, Any]:
+    """Current policy rate from the latest released decision; config is the fallback, with its as-of date."""
+    bank = normalize_bank(bank)
+    indicator = POLICY_DECISION_INDICATORS.get(bank)
+    if indicator:
+        row = (await db_session.execute(text("""
+            SELECT r.actual::float AS rate, r.released_at
+            FROM indicator_releases r JOIN indicators i ON i.id = r.indicator_id
+            WHERE i.country_code = :c AND i.canonical_name = :n AND r.actual IS NOT NULL AND r.released_at <= now()
+            ORDER BY r.released_at DESC, r.retrieved_at DESC, r.id DESC LIMIT 1
+        """), {"c": indicator[0], "n": indicator[1]})).first()
+        if row is not None:
+            return {"rate": float(row.rate), "source": "decision", "as_of": row.released_at.date()}
+    with CB_MEETINGS_PATH.open("r", encoding="utf-8") as handle:
+        raw = (yaml.safe_load(handle) or {}).get(bank, {})
+    as_of = raw.get("current_rate_as_of")
+    return {"rate": float(raw.get("current_rate", 0.0)), "source": "config",
+            "as_of": date.fromisoformat(str(as_of)) if as_of else None}
+
+
 def override_is_fresh(bank_payload: dict[str, Any], now: datetime) -> bool:
     as_of = bank_payload.get("as_of_date")
     if not as_of:
@@ -178,7 +202,8 @@ async def get_rate_probability_view(bank: str, session: AsyncSession) -> dict[st
     """Combined raw rate-probability inputs for a new Central Banks view."""
     normalized = normalize_bank(bank)
     config = _bank_config(normalized)
-    current_rate = float(config["current_rate"])
+    resolved_rate = await resolve_current_rate(normalized, session)
+    current_rate = resolved_rate["rate"]
     step_bps = int(config.get("step_bps") or 25)
     try:
         summary = await get_next_meeting_summary(normalized, db_session=session)
@@ -230,6 +255,7 @@ async def get_rate_probability_view(bank: str, session: AsyncSession) -> dict[st
     total_bps = float(outlook.get("total_bps") or 0.0)
     return {
         "bank": normalized, "current_rate": current_rate, "step_bps": step_bps,
+        "current_rate_source": resolved_rate["source"], "current_rate_as_of": resolved_rate["as_of"],
         "deposit_rate": current_rate - 0.5 if normalized == "ECB" else current_rate,
         "main_rate": current_rate,
         "lending_rate": current_rate + 0.5 if normalized == "ECB" else current_rate,

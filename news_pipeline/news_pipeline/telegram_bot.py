@@ -565,6 +565,10 @@ async def run_bot() -> None:
     from telegram.ext import Application, CommandHandler
 
     logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
+    from news_pipeline.log_redaction import RedactingFormatter
+
+    for handler in logging.getLogger().handlers:
+        handler.setFormatter(RedactingFormatter("%(levelname)s:%(name)s:%(message)s"))
     logging.getLogger("httpx").setLevel(logging.WARNING)
     token = _required_env("TELEGRAM_BOT_TOKEN")
 

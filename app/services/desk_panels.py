@@ -347,7 +347,8 @@ async def panel_priced(desk: dict, params: dict) -> dict[str, Any]:
     since = date.today() - timedelta(days=730)
     two = (await yield_series(desk["curve_country"], ["2Y"], since)).get("2Y", {})
     policy = await policy_history(desk["country"], desk["policy_indicator"], since)
-    ctx: dict[str, Any] = {"meetings": meetings, "market": view.get("market_data", {}), "current_rate": view.get("current_rate")}
+    ctx: dict[str, Any] = {"meetings": meetings, "market": view.get("market_data", {}), "current_rate": view.get("current_rate"),
+                           "current_rate_source": view.get("current_rate_source"), "current_rate_as_of": view.get("current_rate_as_of")}
     if not meetings:
         ctx.update(empty("No upcoming meetings in the calendar."))
     else:

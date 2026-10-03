@@ -1,6 +1,14 @@
 {% from "desk/_macros.html" import state, head %}
 <section id="q4" class="panel" aria-label="What does the market price">
   {{ head('5 · What does the market price?', 'Rate probability engine' ~ ((' · ' ~ ctx.market.source) if ctx.market and ctx.market.source else '')) }}
+  {% if ctx.current_rate is not none %}
+    <div class="row-between small">
+      <span class="muted">Policy rate now</span>
+      <span><span class="strong">{{ '%.2f' | format(ctx.current_rate) }}%</span>
+        {% if ctx.current_rate_source == 'decision' %}<span class="muted">· decision {{ ctx.current_rate_as_of.strftime('%d %b %Y') }}</span>
+        {% else %}<span class="state-tag">Config fallback{% if ctx.current_rate_as_of %} · as of {{ ctx.current_rate_as_of.strftime('%d %b %Y') }}{% endif %}</span>{% endif %}</span>
+    </div>
+  {% endif %}
   {% if ctx.state == 'ok' %}
     <div class="table-wrap">
       <table class="tbl rows">

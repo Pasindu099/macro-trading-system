@@ -26,6 +26,7 @@ from typing import Any, Self
 
 import httpx
 
+from app.log_redaction import redact
 from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -440,7 +441,7 @@ class EODHDClient:
 
             except httpx.HTTPError as exc:
                 # Network-level errors (connection refused, DNS failure, etc.)
-                msg = f"EODHD HTTP error: {exc}"
+                msg = f"EODHD HTTP error: {redact(str(exc))}"
                 if attempt < self._max_retries:
                     logger.warning("%s, will retry", msg)
                     last_exception = EODHDError(msg)

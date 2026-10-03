@@ -24,6 +24,7 @@ from typing import Any
 
 from sqlalchemy import update
 
+from app.log_redaction import redact
 from app.db.models import IngestionRun
 from app.db.session import session_scope
 from app.ingestion.ingest_service import IngestStats
@@ -128,7 +129,7 @@ async def run_logger(
             run_id=run_id,
             tracker=tracker,
             status="failed",
-            error_detail={"type": type(exc).__name__, "message": str(exc)},
+            error_detail={"type": type(exc).__name__, "message": redact(str(exc))},
         )
         raise
 
@@ -145,7 +146,7 @@ async def _finalize_run(
     if tracker.errors or error_detail:
         errors_payload = {}
         if tracker.errors:
-            errors_payload["item_errors"] = tracker.errors[:50]  # cap to avoid bloat
+            errors_payload["item_errors"] = [redact(str(e)) for e in tracker.errors[:50]]  # cap to avoid bloat
             errors_payload["item_errors_total"] = len(tracker.errors)
         if error_detail:
             errors_payload["fatal"] = error_detail

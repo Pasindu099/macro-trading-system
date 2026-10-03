@@ -18,6 +18,7 @@ from news_pipeline.collectors import (
     collect_investinglive,
     dispose_engine,
 )
+from news_pipeline.log_redaction import RedactingFormatter
 from news_pipeline.enrich import (
     poll_and_enrich,
     shutdown_price_snapshot_scheduler,
@@ -25,6 +26,8 @@ from news_pipeline.enrich import (
 )
 
 logging.basicConfig(level=logging.INFO)
+for _handler in logging.getLogger().handlers:
+    _handler.setFormatter(RedactingFormatter("%(levelname)s:%(name)s:%(message)s"))
 logger = logging.getLogger(__name__)
 
 scheduler = AsyncIOScheduler(timezone="UTC")

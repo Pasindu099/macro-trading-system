@@ -19,6 +19,7 @@ from __future__ import annotations
 import logging
 import sys
 
+from app.log_redaction import RedactingFormatter
 from app.settings import get_settings
 
 
@@ -40,7 +41,7 @@ def configure_logging() -> None:
         root.removeHandler(h)
 
     handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(logging.Formatter(
+    handler.setFormatter(RedactingFormatter(
         "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     ))

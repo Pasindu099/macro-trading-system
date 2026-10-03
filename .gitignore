@@ -56,3 +56,8 @@ data/policy/
 # Knowledge Bank source PDFs and regenerable visual artifacts
 Brent Research/
 data/knowledge_bank/visuals/
+
+# Run checkpoints and run reports (local state, not source)
+.backfill_progress.json
+data/*_checkpoint.json
+data/calendar_gap_report*.json

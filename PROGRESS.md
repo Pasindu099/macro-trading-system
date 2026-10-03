@@ -96,3 +96,13 @@ Decisions: `DECISIONS_STEP7.md`. Commits: `step7: <sub-task>`.
 - [x] 7e. ECharts 5.6.0 + HTMX 1.9.12 vendored (checksummed, -text); no runtime CDN scripts; full suite 431 passed.
 - [x] 7f. EODHD cap confirmed (latest 1,000 per request); monthly re-fetch found 19,619 missing events; ingested 6,475 + 1,253 newer revisions, 364 older skipped, 11,232 unmapped, 0 errors.
 - [x] 7t. `REPORT_STEP7.md`; full suite 434 passed, 7 skipped, nothing deselected; integration 25 passed.
+
+## Step 8 — Fed projections, tracking, regime and gap
+Decisions: `DECISIONS_STEP8.md`. Commits: `step8: <sub-task>`. Scope: Fed only.
+- [ ] 8-0. Log secret redaction; untrack checkpoints; Fed current rate from data; EI + Macro State rebuild; top 40 unmapped.
+- [ ] 8a. `config/central_banks.yaml` (8 banks; Fed full, others verify: true).
+- [ ] 8b. Migration 0024 + deterministic SEP parser, validation, backfill 2020+.
+- [ ] 8c. FRED series + CB tracking, revisions, reaction-function flag.
+- [ ] 8d. Fed regime v1, transition checklists, gap v1.
+- [ ] 8e. `/api/cb/{bank}/*` endpoints; USD desk panels 2/3/4/6.
+- [ ] 8t. Tests, `REPORT_STEP8.md`, full suite with nothing deselected.

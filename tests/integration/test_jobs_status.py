@@ -11,6 +11,9 @@ from sqlalchemy import delete
 os.environ["ENABLE_SCHEDULER"] = "false"
 os.environ["AUTH_ENABLED"] = "false"
 
+from app.settings import get_settings  # noqa: E402
+get_settings.cache_clear()
+
 from app.db.models import IngestionRun  # noqa: E402
 from app.db.session import dispose_engine, session_scope  # noqa: E402
 from app.ingestion.run_logger import run_logger  # noqa: E402

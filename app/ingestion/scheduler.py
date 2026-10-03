@@ -57,6 +57,7 @@ from app.services.event_innovation_jobs import run_incremental_event_innovation
 from app.services.news_monitor import run_news_monitor
 from app.services.rate_fetchers import fetch_all, should_fetch_on_startup
 from app.services.rate_probability import save_snapshot
+from app.services.rates_derived_jobs import run_rates_derived
 from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -364,6 +365,8 @@ class Scheduler:
             len(stats.stale_symbols),
             len(stats.errors),
         )
+        if stats.status in {"success", "partial"} and stats.observations_seen:
+            await run_rates_derived()
 
     async def _run_government_yield_stale_check(self) -> None:
         """Update operational status for stale/missing government-yield symbols."""

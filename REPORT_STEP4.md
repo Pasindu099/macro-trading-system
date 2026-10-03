@@ -48,3 +48,10 @@
 - `app/services/rates_drivers.py` correlates 60 and 15 aligned daily changes, returns current spread/spot levels and 20-observation changes, and labels weak link/diverging/aligned.
 - Local 2Y check: 8 weak links, 6 aligned, 14 unavailable because the spot pair is missing. Missing pairs include a reason and no synthetic correlation.
 - Focused tests: 3 passed. Full suite: 307 passed, 7 skipped, 1 deselected, same 18 auth-related integration failures.
+
+## Part H: derived job and JSON API
+
+- `job:rates_derived` runs after a successful or partially successful yield ingest with observations. It holds the advisory lock, applies a 15-minute statement timeout and 16-minute asyncio guard, flags outliers, then rebuilds spreads in one transaction. The existing admin jobs endpoint lists its run.
+- Local job run: 0 new yield flags, 0 FX flags, 45,200 spread rows.
+- Endpoints: `/api/rates/curve/{country}`, `/api/rates/spreads/{pair}`, `/api/rates/regimes`, `/api/rates/drivers/{pair}`; all require viewer access when auth is enabled.
+- Integration auth tests now clear cached settings after disabling auth. Focused route tests: 3 unit and 1 integration passed; affected integration modules: 21 passed. Full suite: 329 passed, 7 skipped, 1 deselected (known FED date test). `pytest tests/integration -k jobs -q`: 2 passed.

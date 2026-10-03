@@ -30,6 +30,7 @@ from app.api.routes import (
     public,
     rate_probability,
     rate_probability_scraped,
+    rates,
     research,
 )
 from app.auth import AuthMiddleware, ensure_auth_schema
@@ -114,6 +115,7 @@ app.include_router(fixed_income.router)
 app.include_router(knowledge.router)
 app.include_router(rate_probability.router)
 app.include_router(rate_probability_scraped.router)
+app.include_router(rates.router)
 
 
 # ══════════════════════════════════════════════════════════════════════

@@ -23,6 +23,9 @@ from fastapi.testclient import TestClient
 os.environ["ENABLE_SCHEDULER"] = "false"
 os.environ["AUTH_ENABLED"] = "false"
 
+from app.settings import get_settings  # noqa: E402
+get_settings.cache_clear()
+
 from app.main import app  # noqa: E402 — import after env var set
 
 

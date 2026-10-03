@@ -7,6 +7,8 @@ import yaml
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.session import get_sessionmaker
+
 
 PAIRS_CONFIG = Path("config/pairs.yaml")
 
@@ -82,3 +84,26 @@ async def build_yield_spreads(session: AsyncSession) -> int:
             VALUES (:spread_name, :tenor, :obs_date, :base_yield, :quote_yield, :spread_bp)
         """), rows)
     return len(rows)
+
+
+async def get_spread(pair: str, tenor: str = "2Y", days: int = 250) -> dict:
+    config = yaml.safe_load(PAIRS_CONFIG.read_text(encoding="utf-8"))
+    names = [item["pair"] for item in config["pairs"]] + [item["name"] for item in config["named_spreads"]]
+    name = next((value for value in names if value.replace("/", "").upper() == pair.replace("/", "").upper()), None)
+    if name is None:
+        return {"pair": pair, "tenor": tenor, "status": "unavailable", "reason": "Unknown spread"}
+    if tenor not in {"2Y", "10Y", "30Y"}:
+        return {"pair": name, "tenor": tenor, "status": "unavailable", "reason": "Unsupported tenor"}
+    async with get_sessionmaker()() as session:
+        result = await session.execute(text("""
+            SELECT obs_date, base_yield::float AS base_yield,
+                   quote_yield::float AS quote_yield, spread_bp::float AS spread_bp
+            FROM yield_spreads
+            WHERE spread_name = :name AND tenor = :tenor
+            ORDER BY obs_date DESC LIMIT :days
+        """), {"name": name, "tenor": tenor, "days": days})
+        rows = [dict(row._mapping) for row in result]
+    if not rows:
+        reason = "FR yield data is absent" if name == "FR-DE" else "30Y yield data is absent" if tenor == "30Y" else "No overlapping yields"
+        return {"pair": name, "tenor": tenor, "status": "unavailable", "reason": reason, "rows": []}
+    return {"pair": name, "tenor": tenor, "status": "available", "rows": list(reversed(rows))}

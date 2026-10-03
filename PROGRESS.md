@@ -65,6 +65,6 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] 4e. Migration `0022` yield spreads, common-date/limited forward-fill alignment, and 2Y/10Y/available-30Y builds. Local rebuild: 45,200 rows; 28 names each for 2Y and 10Y. Focused tests passed.
 - [x] 4f. Curve metrics, 2Y/10Y regimes, inversion, and un-inversion service functions. Focused tests: 8 passed; full suite: 304 passed with the same 18 auth-related integration failures.
 - [x] 4g. Daily-change driver correlations and status service. Local 2Y check: 14 pairs available, 14 unavailable with reason. Focused tests: 3 passed; full suite: 307 passed with the same 18 auth-related integration failures.
-- [ ] 4h. Post-ingest `job:rates_derived` and four service-backed JSON endpoints.
+- [x] 4h. Post-ingest `job:rates_derived` and four service-backed JSON endpoints. Full suite: 329 passed, 7 skipped, known FED date test deselected; jobs integration: 2 passed.
 - [ ] 4i. After H passes: symbol availability report, source FR/long-end yields and missing FX pairs (synthetic only when unavailable), backfill, rebuild derived data, and verify unavailable-to-available transitions.
 - [ ] 4t. Unit and integration checkpoints, `REPORT_STEP4.md`, and final verification.

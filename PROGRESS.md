@@ -68,3 +68,13 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] 4h. Post-ingest `job:rates_derived` and four service-backed JSON endpoints. Full suite: 329 passed, 7 skipped, known FED date test deselected; jobs integration: 2 passed.
 - [x] 4i. `REPORT_STEP4_SOURCING.md`: availability, 20 yield and 14 FX backfills, 54 Part I API calls, 60,476 derived spreads, six available 10s30s curves, FR−DE 2Y/10Y and all 14 new pairs' drivers verified.
 - [x] 4t. Focused unit and integration checkpoints, `REPORT_STEP4.md`, final full suite: 333 passed, 7 skipped, known FED date test deselected.
+
+## Step 5 — Rates integrity + COT positioning
+Decisions: `DECISIONS_STEP5.md`. Commits: `step5: <sub-task>`.
+- [ ] 5-0. Rates data integrity: classify Part C gaps (GBPUSD, NZDUSD, AUDUSD, USDCHF, JP10Y); apply revision re-fetch or date-shift fix with regression test.
+- [ ] 5a. COT current state report (processing/cot.py, report type, URL, contracts, cache, DX in TFF).
+- [ ] 5b. Migration 0023 `cot_positions`, `config/cot_contracts.yaml`, TFF backfill from 2010 (idempotent), `job:cot_weekly` (Fri 21:00 UTC, Mon retry).
+- [ ] 5c. FX spot backfill for 7 USD majors back to 2010-01-01; calls reported.
+- [ ] 5d. `app/services/positioning.py`: net, percentiles, changes, crowding, squeeze, after-extremes, pair-implied.
+- [ ] 5e. Positioning JSON APIs (viewer auth).
+- [ ] 5t. Tests + `REPORT_STEP5.md`.

@@ -859,3 +859,34 @@ def _now():
 
     return datetime.now(timezone.utc)
 
+
+# Public entry points retain the existing EODHD-backed calculations in Step 3.5.
+async def get_rates_research_context() -> dict[str, Any]:
+    return await _build_rates_research_context()
+
+
+async def get_yield_differentials(
+    benchmarks: list[dict[str, Any]] | None = None, maturity_label: str = "10Y",
+) -> dict[str, Any]:
+    return await _build_yield_differentials(benchmarks, maturity_label)
+
+
+async def get_rate_repricing() -> dict[str, Any]:
+    return await _build_rate_repricing()
+
+
+async def get_gbond_symbol_set() -> set[str]:
+    return await _fetch_gbond_symbol_set()
+
+
+def build_yield_chart_data(histories_by_currency: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
+    return _build_yield_chart_data(histories_by_currency)
+
+
+def build_maturity_benchmarks(maturity_key: str, available_symbols: set[str]) -> list[dict[str, Any]]:
+    return _build_maturity_benchmarks(maturity_key, available_symbols)
+
+
+def build_fx_chart_data(histories_by_pair: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    return _build_fx_chart_data(histories_by_pair)
+

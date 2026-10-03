@@ -5,6 +5,8 @@ Public entry points below expose raw data for the new design.
 from __future__ import annotations
 import json
 import calendar
+import csv
+from io import StringIO
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
 from sqlalchemy import desc, func, or_, select, text
@@ -122,10 +124,6 @@ def _score_color_class(value: float | None) -> str:
     return "is-neutral"
 
 
-def _format_bp(value: float | None, decimals: int = 0) -> str:
-    if value is None:
-        return "N/A"
-    return f"{value:+.{decimals}f} bp"
 
 
 def _format_map_metric(value: float | None, unit: str | None) -> str:
@@ -645,7 +643,7 @@ async def _build_world_map_snapshots(
             "raw_score": meter.get("raw_score"),
             "score_percent": meter.get("score_percent"),
             "stance_label": meter.get("label"),
-            "latest_release_at": latest_release_at,
+            "latest_release_at": country.latest_release_at,
             "metrics": metric_rows,
             "tooltip": "\n".join(tooltip_lines),
         })
@@ -680,83 +678,6 @@ def _json_number(value: Any, default: float | None = None) -> float | None:
         return default
 
 
-def _build_landing_kpis(
-    meter_rows: list[dict[str, Any]],
-    yield_differentials: dict[str, Any],
-    surprises: list[Any],
-    news_items: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
-    """Assemble the five headline tiles above the landing choropleth.
-
-    Pure assembly over data already fetched by :func:`landing_page` — no queries.
-    """
-    scored = [row for row in meter_rows if row.get("raw_score") is not None]
-    scored.sort(key=lambda row: float(row["raw_score"]), reverse=True)
-    strongest = scored[0] if scored else None
-    weakest = scored[-1] if len(scored) > 1 else None
-
-    yield_rows = [
-        row for row in (yield_differentials or {}).get("rows", [])
-        if row.get("currency") != YIELD_BASE_CURRENCY
-        and row.get("spread_vs_base_bp") is not None
-    ]
-    widest = max(
-        yield_rows,
-        key=lambda row: abs(float(row["spread_vs_base_bp"])),
-        default=None,
-    )
-
-    def _surprise_value(item: Any) -> float:
-        value = getattr(item, "surprise", None)
-        return abs(float(value)) if value is not None else 0.0
-
-    biggest = max(surprises, key=_surprise_value, default=None)
-    biggest_value = getattr(biggest, "surprise", None) if biggest else None
-
-    return [
-        {
-            "label": "Strongest G10",
-            "value": strongest["currency"] if strongest else "N/A",
-            "detail": strongest["label"] if strongest else "meter not built",
-            "tone": "bull" if strongest else "neutral",
-        },
-        {
-            "label": "Weakest G10",
-            "value": weakest["currency"] if weakest else "N/A",
-            "detail": weakest["label"] if weakest else "meter not built",
-            "tone": "bear" if weakest else "neutral",
-        },
-        {
-            "label": f"Widest 10Y vs {YIELD_BASE_CURRENCY}",
-            "value": widest["spread_display"] if widest else "N/A",
-            "detail": widest["currency"] if widest else "yields unavailable",
-            # _spread_color_class returns is-positive / is-negative / is-neutral.
-            "tone": {
-                "is-positive": "bull",
-                "is-negative": "bear",
-            }.get(widest.get("spread_class"), "neutral") if widest else "neutral",
-        },
-        {
-            "label": "Biggest Surprise",
-            "value": (
-                f"{float(biggest_value):+.2f}"
-                if biggest_value is not None else "N/A"
-            ),
-            "detail": (
-                getattr(biggest, "display_name", None) or "no recent prints"
-            ) if biggest else "no recent prints",
-            "tone": (
-                "bull" if biggest_value is not None and float(biggest_value) >= 0
-                else "bear" if biggest_value is not None else "neutral"
-            ),
-        },
-        {
-            "label": "Headlines · 24h",
-            "value": str(len(news_items)),
-            "detail": "InvestingLive tape" if news_items else "tape idle",
-            "tone": "neutral",
-        },
-    ]
 
 
 def _latest_metric_score(row: dict[str, Any], label: str) -> float | None:
@@ -785,43 +706,12 @@ def _metric_change(row: dict[str, Any], label: str) -> float | None:
     return None
 
 
-def _bias_label(score: float | None) -> str:
-    if score is None:
-        return "Insufficient data"
-    if score >= 0.35:
-        return "Bullish"
-    if score <= -0.35:
-        return "Bearish"
-    return "Neutral"
 
 
-def _bias_class(label: str) -> str:
-    normalized = label.lower()
-    if "bull" in normalized:
-        return "bull"
-    if "bear" in normalized:
-        return "bear"
-    return "neutral"
 
 
-def _change_label(delta: float | None) -> str:
-    if delta is None:
-        return "No history"
-    if delta >= 0.25:
-        return "Improving"
-    if delta <= -0.25:
-        return "Deteriorating"
-    return "Stable"
 
 
-def _driver_tone(score: float | None) -> str:
-    if score is None:
-        return "No data"
-    if score >= 0.25:
-        return "Bullish"
-    if score <= -0.25:
-        return "Bearish"
-    return "Neutral"
 
 
 def _confidence_label(score: float | None, driver_scores: list[float | None]) -> str:
@@ -835,159 +725,6 @@ def _confidence_label(score: float | None, driver_scores: list[float | None]) ->
     return "Low"
 
 
-def _build_actionable_dashboard_insights(
-    currency_meter: list[dict[str, Any]],
-    yield_differentials: dict[str, Any],
-    surprises: list[Any],
-) -> dict[str, Any]:
-    """Build transparent dashboard sections from real macro inputs.
-
-    This intentionally avoids opaque composite claims. Each row exposes the
-    current stance, the change versus one month ago, and the strongest visible
-    driver among the data-backed inflation/growth/labor/rates layers.
-    """
-    yield_by_currency = {
-        str(row.get("currency")): row
-        for row in (yield_differentials or {}).get("rows", [])
-    }
-
-    bias_rows: list[dict[str, Any]] = []
-    driver_matrix: list[dict[str, Any]] = []
-    change_rows: list[dict[str, Any]] = []
-    alert_rows: list[dict[str, Any]] = []
-
-    for row in currency_meter:
-        currency = str(row.get("currency") or "")
-        country_code = str(row.get("country_code") or "")
-        score = _json_number(row.get("raw_score"))
-        one_month_delta = _metric_change(row, "Overall")
-        inflation = _latest_metric_score(row, "Inflation")
-        growth = _latest_metric_score(row, "Growth")
-        labor = _latest_metric_score(row, "Labor")
-
-        yield_row = yield_by_currency.get(currency, {})
-        if currency == YIELD_BASE_CURRENCY:
-            rates_score = _json_number(yield_row.get("change_5d_bp"))
-            rates_tone = (
-                "Bullish" if rates_score is not None and rates_score >= 5
-                else "Bearish" if rates_score is not None and rates_score <= -5
-                else "Neutral" if rates_score is not None
-                else "No data"
-            )
-        else:
-            rates_score = _json_number(yield_row.get("spread_vs_base_bp"))
-            rates_tone = (
-                "Bullish" if rates_score is not None and rates_score >= 25
-                else "Bearish" if rates_score is not None and rates_score <= -25
-                else "Neutral" if rates_score is not None
-                else "No data"
-            )
-
-        drivers = [
-            ("Rates", rates_tone, rates_score),
-            ("Inflation", _driver_tone(inflation), inflation),
-            ("Growth", _driver_tone(growth), growth),
-            ("Labor", _driver_tone(labor), labor),
-        ]
-        scored_drivers = [item for item in drivers if item[2] is not None]
-        main_driver = max(
-            scored_drivers,
-            key=lambda item: abs(float(item[2])),
-            default=("No dominant driver", "No data", None),
-        )
-        bias = _bias_label(score)
-        change = _change_label(one_month_delta)
-        confidence = _confidence_label(score, [inflation, growth, labor])
-
-        bias_rows.append({
-            "currency": currency,
-            "country_code": country_code,
-            "href": f"/country/{country_code.lower()}" if country_code else "/countries",
-            "bias": bias,
-            "bias_class": _bias_class(bias),
-            "change": change,
-            "change_class": _bias_class("Bullish" if one_month_delta and one_month_delta > 0 else "Bearish" if one_month_delta and one_month_delta < 0 else "Neutral"),
-            "score": _format_score(score),
-            "delta": _format_score(one_month_delta),
-            "main_driver": main_driver[0],
-            "main_driver_tone": main_driver[1],
-            "confidence": confidence,
-            "updated": (
-                row["latest_date"].strftime("%b %d")
-                if row.get("latest_date") else "pending"
-            ),
-        })
-
-        driver_matrix.append({
-            "currency": currency,
-            "href": f"/country/{country_code.lower()}" if country_code else "/countries",
-            "drivers": [
-                {
-                    "label": label,
-                    "tone": tone,
-                    "class": _bias_class(tone),
-                    "value": (
-                        _format_bp(value) if label == "Rates" and value is not None
-                        else _format_score(value)
-                    ),
-                }
-                for label, tone, value in drivers
-            ],
-        })
-
-        if one_month_delta is not None:
-            change_rows.append({
-                "currency": currency,
-                "href": f"/country/{country_code.lower()}" if country_code else "/countries",
-                "change": change,
-                "delta": _format_score(one_month_delta),
-                "driver": main_driver[0],
-                "tone": bias,
-                "class": _bias_class("Bullish" if one_month_delta > 0 else "Bearish" if one_month_delta < 0 else "Neutral"),
-            })
-
-        if bias == "Neutral" and main_driver[0] != "No dominant driver" and main_driver[1] != "Neutral":
-            alert_rows.append({
-                "currency": currency,
-                "message": f"Neutral headline, but {main_driver[0].lower()} is {main_driver[1].lower()}.",
-                "class": _bias_class(main_driver[1]),
-                "href": f"/country/{country_code.lower()}" if country_code else "/countries",
-            })
-        elif confidence == "Low":
-            alert_rows.append({
-                "currency": currency,
-                "message": "Low confidence: check country page before using the signal.",
-                "class": "neutral",
-                "href": f"/country/{country_code.lower()}" if country_code else "/countries",
-            })
-
-    change_rows.sort(
-        key=lambda item: abs(float(item["delta"])) if item["delta"] not in {"N/A", ""} else 0,
-        reverse=True,
-    )
-
-    surprise_rows = []
-    for item in surprises[:6]:
-        value = _json_number(getattr(item, "surprise", None))
-        surprise_rows.append({
-            "currency": getattr(item, "currency_code", ""),
-            "country": getattr(item, "country_code", ""),
-            "name": getattr(item, "display_name", "Macro release"),
-            "value": f"{value:+.2f}" if value is not None else "N/A",
-            "class": "bull" if value is not None and value >= 0 else "bear" if value is not None else "neutral",
-            "date": (
-                item.released_at.strftime("%b %d")
-                if getattr(item, "released_at", None) else "recent"
-            ),
-        })
-
-    return {
-        "bias_rows": bias_rows,
-        "driver_matrix": driver_matrix,
-        "change_rows": change_rows[:6],
-        "surprise_rows": surprise_rows,
-        "alert_rows": alert_rows[:5],
-    }
 
 
 def _now():
@@ -1192,7 +929,8 @@ async def _build_knowledge_bank_context(
 _PAGE_KEYS = {
     "flag", "href", "detail_href", "pdf_url", "source_url", "display_label",
     "display_name", "date_display", "score_display", "trend_symbol",
-    "name", "label", "detail", "title", "class", "tone_class",
+    "name", "label", "detail", "title", "class", "tone_class", "tooltip",
+    "bar_percent", "score_percent",
 }
 
 
@@ -1208,13 +946,28 @@ def _raw_data(value: Any) -> Any:
             for key, item in value.items()
             if key not in _PAGE_KEYS
             and not key.endswith(("_class", "_href", "_display", "_label"))
-            and not (key == "value" and isinstance(item, str))
+            and not (key in {"value", "score", "delta", "updated"} and isinstance(item, str))
         }
     return value
 
 
 async def get_analytics_data(session: AsyncSession) -> dict[str, Any]:
     return _raw_data(await _build_analytics_snapshot(session))
+
+
+def export_analytics_csv(analytics: dict[str, Any]) -> str:
+    """Export raw analytics records without the retired PDF or page headings."""
+    stream = StringIO()
+    writer = csv.writer(stream)
+    for section in ("category_rows", "country_rows", "frequency_rows", "importance_rows", "recent_runs"):
+        rows = analytics.get(section) or []
+        if not rows:
+            continue
+        fields = list(rows[0])
+        writer.writerow([section, *fields])
+        for row in rows:
+            writer.writerow(["", *(row.get(field) for field in fields)])
+    return stream.getvalue()
 
 
 async def get_currency_meter_data(session: AsyncSession) -> list[dict[str, Any]]:
@@ -1226,13 +979,64 @@ async def get_world_map_data(session: AsyncSession, countries: list[Any]) -> lis
 
 
 def get_overview_kpis(meter_rows: list[dict[str, Any]], yields: dict[str, Any],
-                      surprises: list[Any], news: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return _raw_data(_build_landing_kpis(meter_rows, yields, surprises, news))
+                      surprises: list[Any], news: list[dict[str, Any]]) -> dict[str, Any]:
+    scored = sorted((row for row in meter_rows if row.get("raw_score") is not None),
+                    key=lambda row: float(row["raw_score"]))
+    spreads = [row for row in yields.get("rows", [])
+               if row.get("currency") != YIELD_BASE_CURRENCY and row.get("spread_vs_base_bp") is not None]
+    widest = max(spreads, key=lambda row: abs(float(row["spread_vs_base_bp"])), default=None)
+    biggest = max(surprises, key=lambda item: abs(float(getattr(item, "surprise", 0) or 0)), default=None)
+    return {
+        "strongest_currency": scored[-1].get("currency") if scored else None,
+        "strongest_score": float(scored[-1]["raw_score"]) if scored else None,
+        "weakest_currency": scored[0].get("currency") if scored else None,
+        "weakest_score": float(scored[0]["raw_score"]) if scored else None,
+        "widest_spread_currency": widest.get("currency") if widest else None,
+        "widest_spread_bp": float(widest["spread_vs_base_bp"]) if widest else None,
+        "largest_surprise_indicator_id": getattr(biggest, "indicator_id", None),
+        "largest_surprise": float(biggest.surprise) if biggest is not None else None,
+        "headline_count": len(news),
+    }
 
 
 def get_actionable_insights(meter_rows: list[dict[str, Any]], yields: dict[str, Any],
                             surprises: list[Any]) -> dict[str, Any]:
-    return _raw_data(_build_actionable_dashboard_insights(meter_rows, yields, surprises))
+    yield_by_currency = {row.get("currency"): row for row in yields.get("rows", [])}
+    rows = []
+    alerts = []
+    for item in meter_rows:
+        currency = item.get("currency")
+        score = _json_number(item.get("raw_score"))
+        delta = _metric_change(item, "Overall")
+        inflation = _latest_metric_score(item, "Inflation")
+        growth = _latest_metric_score(item, "Growth")
+        labor = _latest_metric_score(item, "Labor")
+        yield_row = yield_by_currency.get(currency, {})
+        rates = _json_number(yield_row.get(
+            "change_5d_bp" if currency == YIELD_BASE_CURRENCY else "spread_vs_base_bp"))
+        drivers = {"rates": rates, "inflation": inflation, "growth": growth, "labor": labor}
+        present = {key: value for key, value in drivers.items() if value is not None}
+        dominant = max(present, key=lambda key: abs(float(present[key]))) if present else None
+        row = {"currency": currency, "country_code": item.get("country_code"),
+               "score": score, "one_month_delta": delta, "driver_scores": drivers,
+               "dominant_driver": dominant, "dominant_score": present.get(dominant),
+               "latest_date": item.get("latest_date")}
+        rows.append(row)
+        if score is not None and abs(score) < .25 and dominant is not None and abs(present[dominant]) >= .25:
+            alerts.append({"currency": currency, "kind": "neutral_divergence", "driver": dominant})
+        elif _confidence_label(score, [inflation, growth, labor]) == "Low":
+            alerts.append({"currency": currency, "kind": "low_confidence"})
+    changed = sorted((row for row in rows if row["one_month_delta"] is not None),
+                     key=lambda row: abs(row["one_month_delta"]), reverse=True)[:6]
+    return {"bias_rows": rows, "driver_matrix": [
+        {"currency": row["currency"], "drivers": row["driver_scores"]} for row in rows],
+        "change_rows": changed,
+        "surprise_rows": [{"indicator_id": getattr(item, "indicator_id", None),
+                           "currency": getattr(item, "currency_code", None),
+                           "country_code": getattr(item, "country_code", None),
+                           "surprise": _json_number(getattr(item, "surprise", None)),
+                           "released_at": getattr(item, "released_at", None)} for item in surprises[:6]],
+        "alert_rows": alerts[:5]}
 
 
 async def get_knowledge_data(session: AsyncSession, query: str = "", status: str = "") -> dict[str, Any]:

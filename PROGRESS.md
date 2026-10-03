@@ -38,11 +38,11 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 
 ## Step 3.5 — UI replacement (Amendment 2)
 - [x] 3.5a. `INVENTORY_PAGES.md` classifies every top-level and nested helper, all 33 routes, and direct query families. **STOP for user review before moving code.**
-- [~] 3.5b. Services now cover Macro State, rates, country/public data, News, bank research admin, knowledge figures/documents, rate probability, analytics/overview data, and Central Banks monitor/policy/projections. Remaining: finish raw field cleanup and pin representative outputs before removing old routes.
+- [x] 3.5b. Services cover Macro State, rates, country/public data, News, bank research admin, knowledge figures/documents, rate probability, analytics/overview data, and Central Banks monitor/policy/projections. Public data functions return raw values and representative outputs are pinned by unit tests. Rates retains live EODHD calls as requested.
 - [x] 3.5b-query. Country histories, macro monitor, and projection actuals batched in separate commits with focused tests.
 - [x] 3.5c. Tagged the last commit before removal as `pre-redesign` (`cc8e4fc`).
 - [x] 3.5d. Removed old page routes, Jinja page templates, static page modules, old CSS, React/Babel brief builder, and Chart.js. Auth and JSON APIs remain.
-- [~] 3.5e. New shell routes, navigation (including Event Log), Syne + DM Mono tokens, dark palette, and ECharts are in place. Final auth styling and checkpoint report pending.
+- [x] 3.5e. New shell routes, navigation (including Event Log), Syne + DM Mono dark tokens, ECharts only, and working restyled login/setup/users pages.
 
 ## Tests / checkpoints
 - [x] T1. Unit planner writes the affected suffix and affected bundle partners; repeated plan is identical.
@@ -50,6 +50,9 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] T3. Unit confirms concurrent run marks `skipped`.
 - [x] T4. Integration (compose DB): fixture release → score and revision cleanup pass; `/api/admin/jobs/status` displays a logged job run and rows written.
 - [x] T5. Unit suite: 260 passed, 7 skipped, with only the known out-of-scope `test_rate_probability.py:182` failure.
+- [x] T6. Step 3.5 unit suite: 285 passed, 7 skipped, with only the same known FED date failure; 285 pass when that one test is deselected.
+- [x] T7. Step 3.5 integration suite: 22 passed; `-k jobs`: 2 passed.
 
 ## Delivery
 - [x] `REPORT_STEPS1_3.md`: files changed, migration, tests, >10 s lock durations, out-of-scope flags, and production commands.
+- [x] `REPORT_STEP3_5.md`: recovery tag, extracted services, new API endpoints, deleted files, transitional helper inventory, and test results.

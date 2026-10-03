@@ -52,7 +52,7 @@ async def login_page(request: Request) -> HTMLResponse:
         "login.html",
         {
             "request": request,
-            "page_title": "Sign in | Macro Dashboard",
+            "page_title": "Sign in | ForexCompass",
             "error": request.query_params.get("error", ""),
             "next_path": _next_path(request),
             "auth_enabled": get_settings().auth_enabled,
@@ -77,7 +77,7 @@ async def login_submit(
             "login.html",
             {
                 "request": request,
-                "page_title": "Sign in | Macro Dashboard",
+                "page_title": "Sign in | ForexCompass",
                 "error": "Invalid email or password.",
                 "next_path": next_path,
                 "auth_enabled": get_settings().auth_enabled,
@@ -111,7 +111,7 @@ async def setup_page(
         "setup.html",
         {
             "request": request,
-            "page_title": "Create admin | Macro Dashboard",
+            "page_title": "Create admin | ForexCompass",
             "error": "",
         },
     )
@@ -136,7 +136,7 @@ async def setup_submit(
             "setup.html",
             {
                 "request": request,
-                "page_title": "Create admin | Macro Dashboard",
+                "page_title": "Create admin | ForexCompass",
                 "error": "Use a valid email and a password with at least 10 characters.",
             },
             status_code=400,
@@ -171,7 +171,7 @@ async def users_page(
         "users.html",
         {
             "request": request,
-            "page_title": "Users | Macro Dashboard",
+            "page_title": "Users | ForexCompass",
             "users": result.scalars().all(),
             "roles": VALID_ROLES,
             "message": request.query_params.get("msg", ""),

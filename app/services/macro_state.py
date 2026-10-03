@@ -12,7 +12,7 @@ _PREFERRED = text("""
 WITH latest AS (SELECT max(date) AS date FROM processed.cb_preferred_score)
 SELECT s.date, s.country_code, s.currency, s.inflation_score, s.labor_score,
        s.growth_score, s.cb_strength_score AS overall_score,
-       s.strength_label, s.trend_label, s.confidence, r.rank_strongest
+       s.confidence, r.rank_strongest
 FROM processed.cb_preferred_score s
 JOIN processed.cb_preferred_rankings r
   ON r.date = s.date AND r.currency = s.currency
@@ -27,8 +27,8 @@ WITH latest AS (
 )
 SELECT s.date, s.country_code, s.currency, s.window_months,
        s.inflation_score, s.labor_score, s.growth_score,
-       s.overall_stance_score AS overall_score, s.overall_stance_label AS strength_label,
-       s.trend_label, s.confidence, r.rank_strongest
+       s.overall_stance_score AS overall_score,
+       s.confidence, r.rank_strongest
 FROM processed.currency_stance s
 JOIN processed.currency_stance_rankings r
   ON r.date = s.date AND r.currency = s.currency

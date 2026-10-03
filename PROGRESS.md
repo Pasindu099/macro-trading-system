@@ -8,9 +8,9 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 
 ## Step 1 — Incremental Event Innovation
 - [x] 1a. Migration `0021_job_watermarks` + `JobWatermark` ORM model
-- [~] 1b. Read-only dedup-key identity diff implemented in `scripts/diff_event_innovation_keys.py`. Execution blocked: local Docker is stopped and the configured PostgreSQL hostname does not resolve. The key has not changed.
+- [x] 1b. Read-only dedup-key identity diff implemented and run inside compose. 887 rows / 23 indicators change identity; approved key would reduce 17,734 prints to 17,281 because all changed rows have null period and start date. Detail in `RESUME_STATE.md`.
 - [ ] 1c. Align `_RELEASES_SQL` dedup key with ingestion (`period` fallback; note on the null-period edge case)
-- [ ] 1d. `load_release_records(indicator_ids=...)` filter + affected-indicator query (`retrieved_at > since`, earliest release date per indicator)
+- [x] 1d. `load_release_records(indicator_ids=...)` filter + affected-indicator query (`retrieved_at > since`, earliest release date per indicator)
 - [ ] 1e. Incremental planner: full history for affected indicators + bundle partners, score in memory, persist only rows on/after each indicator's earliest new or revised print, plus affected bundles
 - [ ] 1f. Revision cleanup: delete non-winner `event_innovation_scores` rows for affected indicators (same transaction)
 - [ ] 1g. Gap 2: delete affected bundles now below `min_bundle_members` (explicit delete; FK `bundle_id` is `ON DELETE SET NULL`)

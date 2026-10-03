@@ -24,4 +24,14 @@
 
 `pytest tests/unit -q` was unavailable on the system PATH. The equivalent command `.\venv\Scripts\python.exe -m pytest tests/unit -q` ran: **258 passed, 7 skipped, 1 failed**. The failure is the pre-existing hard-coded FED meeting date in `tests/unit/test_rate_probability.py:182` (expected `2026-06-17`, actual `2026-10-28`).
 
-Docker is not running locally, so the database-backed identity diff and container integration test cannot run here yet.
+At the initial assessment Docker was stopped; it was started later in this session.
+
+## Database identity diff (run after Docker started)
+
+`docker compose exec app python -m scripts.diff_event_innovation_keys` returned:
+
+- 887 rows with a changed key across 23 indicators.
+- 17,734 old deduplicated prints versus 17,281 with the approved expression: **453 fewer prints**.
+- All 887 changed rows have `period_start_date IS NULL` and `period IS NULL`; none has a start date.
+
+The approved two-part `COALESCE` would collapse all such rows of each indicator into one null-key group. The key edit is paused pending the user's choice of a fallback for this edge case.

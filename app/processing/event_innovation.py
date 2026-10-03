@@ -37,7 +37,7 @@ import logging
 import math
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
@@ -684,6 +684,7 @@ _RELEASES_SQL = text(
       AND r.actual IS NOT NULL
       AND (CAST(:country_code AS text) IS NULL OR i.country_code = :country_code)
       AND (CAST(:date_from AS date) IS NULL OR r.released_at::date >= :date_from)
+      AND (CAST(:indicator_ids AS bigint[]) IS NULL OR r.indicator_id = ANY(:indicator_ids))
     ORDER BY
         r.indicator_id,
         COALESCE(r.period_start_date::text, r.released_at::date::text),
@@ -698,11 +699,13 @@ async def load_release_records(
     *,
     country_code: str | None = None,
     date_from: date | None = None,
+    indicator_ids: list[int] | None = None,
 ) -> list[ReleaseRecord]:
     """Load deduplicated releases ready for scoring."""
     result = await session.execute(
         _RELEASES_SQL,
-        {"country_code": country_code, "date_from": date_from},
+        {"country_code": country_code, "date_from": date_from,
+         "indicator_ids": indicator_ids},
     )
     records: list[ReleaseRecord] = []
     for row in result.mappings():
@@ -721,6 +724,25 @@ async def load_release_records(
             )
         )
     return records
+
+
+async def load_changed_indicator_dates(
+    session: AsyncSession, since: datetime,
+) -> dict[int, date]:
+    """Earliest changed print date for each indicator since a watermark."""
+    result = await session.execute(
+        text(
+            """
+            SELECT indicator_id, min(released_at::date) AS first_date
+            FROM indicator_releases
+            WHERE indicator_id IS NOT NULL AND actual IS NOT NULL
+              AND retrieved_at > :since
+            GROUP BY indicator_id
+            """
+        ),
+        {"since": since},
+    )
+    return {row.indicator_id: row.first_date for row in result}
 
 
 async def persist(

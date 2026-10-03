@@ -16,6 +16,9 @@ class _Result:
     def scalars(self):
         return self
 
+    def scalar_one_or_none(self):
+        return self.rows[0] if self.rows else None
+
 
 class _Session:
     def __init__(self, *results):
@@ -34,8 +37,8 @@ async def test_macro_monitor_keeps_current_previous_and_history(monkeypatch):
         "inflation_target": 2.0, "rate_indicator": "policy_rate",
         "metrics": [{"key": "cpi", "canonical": "cpi_headline_yoy"}],
     }])
-    ids = [SimpleNamespace(id=1, canonical_name="cpi_headline_yoy"),
-           SimpleNamespace(id=2, canonical_name="policy_rate")]
+    ids = [SimpleNamespace(id=1, country_code="US", canonical_name="cpi_headline_yoy"),
+           SimpleNamespace(id=2, country_code="US", canonical_name="policy_rate")]
     releases = [
         SimpleNamespace(indicator_id=1, actual=3.0, released_at=datetime(2026, 1, 1, tzinfo=timezone.utc)),
         SimpleNamespace(indicator_id=1, actual=2.8, released_at=datetime(2026, 4, 1, tzinfo=timezone.utc)),
@@ -66,3 +69,20 @@ async def test_policy_data_returns_raw_tone_and_date():
 async def test_projections_empty_result():
     data = await central_banks.get_projections_data(_Session([]))
     assert data == {"latest_path_by_bank": {}, "projection_comparison": [], "has_projections": False}
+
+
+@pytest.mark.asyncio
+async def test_projection_annual_path_and_actual_comparison():
+    projection = SimpleNamespace(bank="FED", projection_date=date(2026, 9, 1),
+                                 horizon_label="2026", horizon_year=2026,
+                                 inflation_forecast=2.0, gdp_forecast=None,
+                                 unemployment_forecast=None)
+    indicator = SimpleNamespace(id=42, country_code="US", canonical_name="cpi_headline_yoy")
+    release = SimpleNamespace(indicator_id=42, actual=2.5)
+    data = await central_banks.get_projections_data(_Session([projection], [indicator], [release]))
+    assert data["latest_path_by_bank"]["FED"]["path"][0]["inflation"] == 2.0
+    assert data["projection_comparison"] == [{
+        "bank": "FED", "metric": "inflation", "projection_date": date(2026, 9, 1),
+        "horizon": 2026, "projected_value": 2.0, "actual_value": 2.5,
+        "deviation": 0.5, "deviation_pct": 25.0,
+    }]

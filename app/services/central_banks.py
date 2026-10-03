@@ -114,80 +114,6 @@ _MM_WATCHLIST = [
 ]
 
 
-async def _build_macro_monitor_data(session: AsyncSession) -> list[dict[str, Any]]:
-    """Query live indicator data for each CB's key metrics."""
-    from datetime import date as _date, timedelta as _td
-    cutoff = _date.today() - _td(days=548)  # ~18 months
-
-    result = []
-    for cb in _MM_WATCHLIST:
-        cc = cb["country_code"]
-        canonical_names = [m["canonical"] for m in cb["metrics"]] + [cb["rate_indicator"]]
-
-        # Fetch indicator IDs for this country
-        id_rows = (await session.execute(
-            select(Indicator.id, Indicator.canonical_name)
-            .where(Indicator.country_code == cc, Indicator.canonical_name.in_(canonical_names))
-        )).all()
-        id_map = {row.canonical_name: row.id for row in id_rows}
-
-        # Fetch last 18 months of releases for all relevant indicators
-        if not id_map:
-            result.append({"bank": cb["bank"], "country_code": cc, "currency": cb["currency"],
-                           "inflation_target": cb["inflation_target"], "rate": None,
-                           "metrics_data": {}})
-            continue
-
-        releases = (await session.execute(
-            select(
-                IndicatorRelease.indicator_id,
-                IndicatorRelease.actual,
-                IndicatorRelease.released_at,
-            )
-            .where(
-                IndicatorRelease.indicator_id.in_(list(id_map.values())),
-                IndicatorRelease.actual.is_not(None),
-                IndicatorRelease.released_at >= datetime.combine(cutoff, datetime.min.time()),
-            )
-            .order_by(IndicatorRelease.indicator_id, IndicatorRelease.released_at.asc())
-        )).all()
-
-        # Group by indicator_id → dedupe by date (keep latest actual per calendar date)
-        from collections import defaultdict
-        by_indicator: dict[int, dict[str, float]] = defaultdict(dict)
-        for r in releases:
-            date_key = r.released_at.date().isoformat()
-            by_indicator[r.indicator_id][date_key] = float(r.actual)
-
-        # Build per-metric data
-        metrics_data: dict[str, Any] = {}
-        for m in cb["metrics"]:
-            canonical = m["canonical"]
-            ind_id = id_map.get(canonical)
-            if ind_id is None or ind_id not in by_indicator:
-                metrics_data[m["key"]] = {"current": None, "previous": None, "history": []}
-                continue
-            dated = sorted(by_indicator[ind_id].items())  # [(date_str, value), ...]
-            history = [[d, v] for d, v in dated]
-            current = dated[-1][1] if dated else None
-            previous = dated[-2][1] if len(dated) >= 2 else None
-            metrics_data[m["key"]] = {"current": current, "previous": previous, "history": history}
-
-        # Rate
-        rate_id = id_map.get(cb["rate_indicator"])
-        rate_val = None
-        if rate_id and rate_id in by_indicator:
-            rate_val = sorted(by_indicator[rate_id].items())[-1][1]
-
-        result.append({
-            "bank": cb["bank"], "country_code": cc, "currency": cb["currency"],
-            "inflation_target": cb["inflation_target"],
-            "rate": rate_val,
-            "metric_indicators": {m["key"]: m["canonical"] for m in cb["metrics"]},
-            "metrics_data": metrics_data,
-        })
-
-    return result
 
 
 
@@ -250,155 +176,55 @@ BANK_INDICATOR_MAP: dict[str, dict[str, tuple[str, str] | None]] = {
 }
 
 
-async def _build_projections_context(session: AsyncSession) -> dict[str, Any]:
-    """Build template context for the Economic Projections tab."""
-    from datetime import date as _date
-
-    current_year = _date.today().year
-
-    # Fetch all projections (all years) so we can build full paths
-    all_proj_q = await session.execute(
-        select(CbEconomicProjection)
-        .order_by(
-            CbEconomicProjection.bank.asc(),
-            CbEconomicProjection.projection_date.desc(),  # newest first
-            CbEconomicProjection.horizon_year.asc(),
-        )
-    )
-    all_proj_rows = list(all_proj_q.scalars().all())
-
-    def _is_annual_label(label: str | None) -> bool:
-        """True only for plain 4-digit year labels like '2025', '2026'."""
-        return bool(label and len(label) == 4 and label.isdigit())
-
-    # ── Latest forecast path per bank ────────────────────────────────────────
-    # For each bank: take the most-recent projection date, merge annual-horizon
-    # rows into one "path" object keyed by horizon_year.
-    latest_path_by_bank: dict[str, Any] = {}
-    seen_latest_date: dict[str, str] = {}
-
-    for row in all_proj_rows:
-        bank = row.bank
-        date_str = row.projection_date
-
-        # Determine the most-recent projection date for this bank
-        if bank not in seen_latest_date:
-            seen_latest_date[bank] = date_str
-        latest_date = seen_latest_date[bank]
-        if date_str != latest_date:
-            continue  # only process rows for the most-recent date
-
-        if not _is_annual_label(row.horizon_label):
-            continue  # skip quarterly / longer_run rows
-
-        yr = row.horizon_year
-        if yr is None:
-            continue
-
-        if bank not in latest_path_by_bank:
-            latest_path_by_bank[bank] = {"as_of": date_str, "path": {}}
-
-        entry = latest_path_by_bank[bank]["path"].setdefault(yr, {
-            "year": yr, "inflation": None, "gdp": None, "unemployment": None,
-        })
-        if entry["inflation"] is None and row.inflation_forecast is not None:
-            entry["inflation"] = float(row.inflation_forecast)
-        if entry["gdp"] is None and row.gdp_forecast is not None:
-            entry["gdp"] = float(row.gdp_forecast)
-        if entry["unemployment"] is None and row.unemployment_forecast is not None:
-            entry["unemployment"] = float(row.unemployment_forecast)
-
-    # Serialise path dict → sorted list
-    for bank, payload in latest_path_by_bank.items():
-        payload["path"] = sorted(payload["path"].values(), key=lambda x: x["year"])
-
-    # ── Comparison table: latest annual projection vs actual ─────────────────
-    indicator_cache: dict[tuple[str, str], float | None] = {}
-
-    async def _get_actual(canonical_name: str, country_code: str) -> float | None:
-        key = (canonical_name, country_code)
-        if key in indicator_cache:
-            return indicator_cache[key]
-        ind_q = await session.execute(
-            select(Indicator).where(
-                Indicator.canonical_name == canonical_name,
-                Indicator.country_code == country_code,
-            )
-        )
-        ind = ind_q.scalar_one_or_none()
-        if ind is None:
-            indicator_cache[key] = None
-            return None
-        rel_q = await session.execute(
-            select(IndicatorRelease)
-            .where(
-                IndicatorRelease.indicator_id == ind.id,
-                IndicatorRelease.actual.is_not(None),
-            )
-            .order_by(
-                IndicatorRelease.period_start_date.desc().nullslast(),
-                desc(IndicatorRelease.released_at),
-            )
-            .limit(1)
-        )
-        rel = rel_q.scalar_one_or_none()
-        value = float(rel.actual) if rel and rel.actual is not None else None
-        indicator_cache[key] = value
-        return value
-
-    # Most-recent annual projection per (bank, horizon_year) for current & next year
-    best_proj: dict[tuple[str, int], CbEconomicProjection] = {}
-    for row in all_proj_rows:
-        if not _is_annual_label(row.horizon_label):
-            continue
-        if row.horizon_year is None or row.horizon_year < current_year:
-            continue
-        key = (row.bank, row.horizon_year)
-        if key not in best_proj:  # rows are newest-first, so first = most recent
-            best_proj[key] = row
-
-    projection_comparison: list[dict[str, Any]] = []
-    for (bank_code, horizon_year), proj in sorted(best_proj.items()):
-        bank_map = BANK_INDICATOR_MAP.get(bank_code, {})
-        for metric_key, label in [("inflation", "Inflation"), ("gdp", "GDP"), ("unemployment", "Unemployment")]:
-            forecast_val: float | None = None
-            if metric_key == "inflation" and proj.inflation_forecast is not None:
-                forecast_val = float(proj.inflation_forecast)
-            elif metric_key == "gdp" and proj.gdp_forecast is not None:
-                forecast_val = float(proj.gdp_forecast)
-            elif metric_key == "unemployment" and proj.unemployment_forecast is not None:
-                forecast_val = float(proj.unemployment_forecast)
-            if forecast_val is None:
-                continue
-            indicator_mapping = bank_map.get(metric_key)
-            if not indicator_mapping:
-                continue
-            canon, country = indicator_mapping
-            actual = await _get_actual(canon, country)
-            if actual is None:
-                continue
-            deviation = actual - forecast_val
-            deviation_pct = (deviation / forecast_val * 100) if forecast_val else None
-            projection_comparison.append({
-                "bank": bank_code,
-                "metric": metric_key,
-                "projection_date": proj.projection_date,
-                "horizon": horizon_year,
-                "projected_value": round(forecast_val, 2),
-                "actual_value": round(actual, 2),
-                "deviation": round(deviation, 2),
-                "deviation_pct": round(deviation_pct, 1) if deviation_pct is not None else None,
-            })
-
-    return {
-        "latest_path_by_bank": latest_path_by_bank,
-        "projection_comparison": projection_comparison,
-        "has_projections": len(all_proj_rows) > 0,
-    }
 
 
 async def get_macro_monitor_data(session: AsyncSession) -> list[dict[str, Any]]:
-    return await _build_macro_monitor_data(session)
+    """Fetch all monitored indicators and releases in two queries."""
+    from collections import defaultdict
+    from sqlalchemy import tuple_
+
+    wanted = {(cb["country_code"], name)
+              for cb in _MM_WATCHLIST
+              for name in [cb["rate_indicator"], *(metric["canonical"] for metric in cb["metrics"])]}
+    if not wanted:
+        return []
+    id_rows = (await session.execute(
+        select(Indicator.id, Indicator.country_code, Indicator.canonical_name)
+        .where(tuple_(Indicator.country_code, Indicator.canonical_name).in_(wanted))
+    )).all()
+    id_map = {(row.country_code, row.canonical_name): row.id for row in id_rows}
+    cutoff = datetime.combine(date.today() - timedelta(days=548), datetime.min.time())
+    releases = (await session.execute(
+        select(IndicatorRelease.indicator_id, IndicatorRelease.actual, IndicatorRelease.released_at)
+        .where(IndicatorRelease.indicator_id.in_(list(id_map.values())),
+               IndicatorRelease.actual.is_not(None), IndicatorRelease.released_at >= cutoff)
+        .order_by(IndicatorRelease.indicator_id, IndicatorRelease.released_at.asc())
+    )).all() if id_map else []
+    by_indicator: dict[int, dict[date, float]] = defaultdict(dict)
+    for row in releases:
+        by_indicator[row.indicator_id][row.released_at.date()] = float(row.actual)
+    result = []
+    for cb in _MM_WATCHLIST:
+        country_code = cb["country_code"]
+        metrics_data = {}
+        for metric in cb["metrics"]:
+            indicator_id = id_map.get((country_code, metric["canonical"]))
+            dated = sorted(by_indicator.get(indicator_id, {}).items())
+            metrics_data[metric["key"]] = {
+                "current": dated[-1][1] if dated else None,
+                "previous": dated[-2][1] if len(dated) >= 2 else None,
+                "history": [[day, value] for day, value in dated],
+            }
+        rate_id = id_map.get((country_code, cb["rate_indicator"]))
+        rates = sorted(by_indicator.get(rate_id, {}).items())
+        result.append({
+            "bank": cb["bank"], "country_code": country_code, "currency": cb["currency"],
+            "inflation_target": cb["inflation_target"],
+            "rate": rates[-1][1] if rates else None,
+            "metric_indicators": {m["key"]: m["canonical"] for m in cb["metrics"]},
+            "metrics_data": metrics_data,
+        })
+    return result
 
 
 async def get_cb_policy_data(session: AsyncSession) -> dict[str, Any]:
@@ -439,4 +265,88 @@ async def get_cb_policy_data(session: AsyncSession) -> dict[str, Any]:
 
 
 async def get_projections_data(session: AsyncSession) -> dict[str, Any]:
-    return await _build_projections_context(session)
+    """Build latest annual paths and comparisons with batched actual lookups."""
+    from sqlalchemy import tuple_
+    from sqlalchemy.orm import aliased
+
+    projections = list((await session.execute(
+        select(CbEconomicProjection).order_by(
+            CbEconomicProjection.bank.asc(), CbEconomicProjection.projection_date.desc(),
+            CbEconomicProjection.horizon_year.asc(),
+        )
+    )).scalars().all())
+    current_year = date.today().year
+    paths: dict[str, Any] = {}
+    latest_dates: dict[str, date] = {}
+    best: dict[tuple[str, int], CbEconomicProjection] = {}
+    for row in projections:
+        latest_dates.setdefault(row.bank, row.projection_date)
+        if not (row.horizon_label and len(row.horizon_label) == 4 and row.horizon_label.isdigit()) or row.horizon_year is None:
+            continue
+        if row.projection_date == latest_dates[row.bank]:
+            entry = paths.setdefault(row.bank, {"as_of": row.projection_date, "path": {}})["path"].setdefault(
+                row.horizon_year, {"year": row.horizon_year, "inflation": None, "gdp": None, "unemployment": None})
+            for metric, attribute in (("inflation", "inflation_forecast"), ("gdp", "gdp_forecast"),
+                                      ("unemployment", "unemployment_forecast")):
+                value = getattr(row, attribute)
+                if entry[metric] is None and value is not None:
+                    entry[metric] = float(value)
+        if row.horizon_year >= current_year:
+            best.setdefault((row.bank, row.horizon_year), row)
+    for payload in paths.values():
+        payload["path"] = sorted(payload["path"].values(), key=lambda item: item["year"])
+
+    comparisons = []
+    requested: set[tuple[str, str]] = set()
+    for (bank, _year), row in best.items():
+        for metric, attribute in (("inflation", "inflation_forecast"), ("gdp", "gdp_forecast"),
+                                  ("unemployment", "unemployment_forecast")):
+            if getattr(row, attribute) is not None:
+                mapping = BANK_INDICATOR_MAP.get(bank, {}).get(metric)
+                if mapping:
+                    requested.add((mapping[1], mapping[0]))
+    actuals: dict[tuple[str, str], float] = {}
+    if requested:
+        indicator_rows = (await session.execute(
+            select(Indicator).where(tuple_(Indicator.country_code, Indicator.canonical_name).in_(requested))
+        )).scalars().all()
+        indicator_by_id = {indicator.id: indicator for indicator in indicator_rows}
+        if indicator_by_id:
+            ranked = select(
+                IndicatorRelease,
+                func.row_number().over(
+                    partition_by=IndicatorRelease.indicator_id,
+                    order_by=(IndicatorRelease.period_start_date.desc().nullslast(),
+                              desc(IndicatorRelease.released_at)),
+                ).label("row_number"),
+            ).where(
+                IndicatorRelease.indicator_id.in_(list(indicator_by_id)),
+                IndicatorRelease.actual.is_not(None),
+            ).subquery()
+            release = aliased(IndicatorRelease, ranked)
+            release_rows = (await session.execute(
+                select(release).where(ranked.c.row_number == 1)
+            )).scalars().all()
+            for item in release_rows:
+                indicator = indicator_by_id[item.indicator_id]
+                actuals[(indicator.country_code, indicator.canonical_name)] = float(item.actual)
+    for (bank, year), row in sorted(best.items()):
+        for metric, attribute in (("inflation", "inflation_forecast"), ("gdp", "gdp_forecast"),
+                                  ("unemployment", "unemployment_forecast")):
+            forecast = getattr(row, attribute)
+            mapping = BANK_INDICATOR_MAP.get(bank, {}).get(metric)
+            if forecast is None or not mapping:
+                continue
+            actual = actuals.get((mapping[1], mapping[0]))
+            if actual is None:
+                continue
+            forecast = float(forecast)
+            deviation = actual - forecast
+            comparisons.append({
+                "bank": bank, "metric": metric, "projection_date": row.projection_date,
+                "horizon": year, "projected_value": round(forecast, 2),
+                "actual_value": round(actual, 2), "deviation": round(deviation, 2),
+                "deviation_pct": round(deviation / forecast * 100, 1) if forecast else None,
+            })
+    return {"latest_path_by_bank": paths, "projection_comparison": comparisons,
+            "has_projections": bool(projections)}

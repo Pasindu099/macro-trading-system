@@ -24,7 +24,7 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] 2a. `cb_preferred_score.py:310-317`: raise instead of returning inside `session_scope`; script still prints the error. The other four builders have no early returns; each now raises when its primary output table is empty.
 - [x] 2b. `export: bool = True` on the 5 builders (scheduled runs must pass `export=False`)
 - [x] 2c. `statement_timeout` passed through to each builder's `session_scope`
-- [ ] 2d. `pages.py` `_build_currency_stance_dashboard`: empty `cb_preferred_score` → legacy fallback (the meter function already handles empty)
+- [x] 2d. Superseded by Amendment 2: no `pages.py` changes in Steps 1–3. The new data service must handle empty primary scores when Step 3.5 moves needed data logic.
 - [x] 2e. Pipeline runner: processed_dataset → feature_layer → cb_preferred_score → macro_indices → currency_stance; later steps stop on failure; each step logged to `ingestion_runs` with rows and duration; warn if a step holds its lock > 10 s
 - [x] 2f. Daily scheduler job at 22:30 UTC
 
@@ -36,8 +36,12 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] 3e. `GET /api/admin/jobs/status` (last run, last success, rows written, last error, watermark; `require_role("admin")`)
 - [x] 3f. `/api/admin/health` excludes `run_type LIKE 'job:%'`
 
-## Step 3.5
-- [ ] Not started. Scope is not defined in the conversation so far
+## Step 3.5 — UI replacement (Amendment 2)
+- [ ] 3.5a. **After Steps 1–3 pass**, inventory every `pages.py` helper and query as needed data logic / presentation only / unused in `INVENTORY_PAGES.md`; STOP for user review before moving code.
+- [ ] 3.5b. Move needed data logic into `app/services/` with unit tests pinning current outputs.
+- [ ] 3.5c. Tag the last commit before removal (`pre-redesign`).
+- [ ] 3.5d. Remove old page routes, Jinja templates, static page modules, `main.css` page styles, React/Babel brief builder, and Chart.js. Preserve database tables, migrations, and backend modules.
+- [ ] 3.5e. New shell: requested navigation, Syne + DM Mono dark tokens, ECharts only, placeholder routes, working restyled login/setup.
 
 ## Tests / checkpoints
 - [ ] T1. Unit: only rows after the watermark are written; idempotent re-run

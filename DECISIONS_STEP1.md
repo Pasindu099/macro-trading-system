@@ -99,4 +99,10 @@ DO NOT
 
 ## Amendments
 
-_Not yet provided. Paste here._
+### Amendment 2 — UI replacement (2026-10-03)
+
+- Steps 1–3 are backend only. Do not modify `pages.py`, templates, or static JS/CSS. Expose data needed by the replacement design through `app/services/` functions; route handlers must not contain raw SQL.
+- Step 3.5 begins only after Steps 1–3 pass. First inventory every helper and query in `pages.py`, classifying it as needed data logic, presentation only, or unused. Write `INVENTORY_PAGES.md` and **stop for user review before moving code**.
+- After review, move needed data logic to services with unit tests that pin outputs. Tag the last commit before removal (for example, `pre-redesign`). Remove old page routes, Jinja templates, static JS page modules, `main.css` page styles, the React/Babel brief builder, and Chart.js. Preserve auth, users, roles, admin and still-used JSON APIs, migrations, ingestion, processing, and all database tables and backend modules.
+- Add a new minimal shell with Overview, Desks, Pairs, Calendar, News, Positioning, Central Banks, and Data navigation; Syne and DM Mono dark design tokens; ECharts as the only chart library; placeholder routes; and restyled working login/setup.
+- This amendment supersedes the earlier `pages.py` empty-score fallback edit for Steps 1–3. The replacement service should handle empty primary scores when the new design consumes Macro State data.

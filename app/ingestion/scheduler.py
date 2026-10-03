@@ -53,6 +53,7 @@ from app.services.government_yields import (
 )
 from app.services.meeting_calendar import SUPPORTED_BANKS
 from app.services.macro_state_jobs import run_macro_state_chain
+from app.services.event_innovation_jobs import run_incremental_event_innovation
 from app.services.news_monitor import run_news_monitor
 from app.services.rate_fetchers import fetch_all, should_fetch_on_startup
 from app.services.rate_probability import save_snapshot
@@ -286,6 +287,8 @@ class Scheduler:
                         stats.unmapped,
                     )
 
+            await run_incremental_event_innovation()
+
     async def _run_post_release(self, trigger_config: dict[str, Any]) -> None:
         """A single post-release trigger — one country, short lookback."""
         country = trigger_config["country"]
@@ -318,6 +321,8 @@ class Scheduler:
                     "Post-release %s: fetched=%d inserted=%d updated=%d",
                     trigger_name, len(events), stats.inserted, stats.updated,
                 )
+
+            await run_incremental_event_innovation()
 
     async def _run_rate_probability_fetch_if_empty(self) -> None:
         async with session_scope() as session:

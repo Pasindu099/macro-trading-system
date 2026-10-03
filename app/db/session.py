@@ -116,7 +116,7 @@ async def session_scope(
             )
         yield session
         await session.commit()
-    except Exception:
+    except BaseException:
         await session.rollback()
         raise
     finally:

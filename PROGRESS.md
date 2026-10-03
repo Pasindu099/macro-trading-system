@@ -11,12 +11,12 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] 1b. Three-level key diff run inside compose: 0 changed identities; 17,734 prints both ways; 0 collapses. Null-period ingestion findings in `REPORT_NULL_PERIODS.md`.
 - [x] 1c. `_RELEASES_SQL` now uses the approved three-level key, preserving release-date identity when both period fields are null.
 - [x] 1d. `load_release_records(indicator_ids=...)` filter + affected-indicator query (`retrieved_at > since`, earliest release date per indicator)
-- [ ] 1e. Incremental planner: full history for affected indicators + bundle partners, score in memory, persist only rows on/after each indicator's earliest new or revised print, plus affected bundles
-- [ ] 1f. Revision cleanup: delete non-winner `event_innovation_scores` rows for affected indicators (same transaction)
-- [ ] 1g. Gap 2: delete affected bundles now below `min_bundle_members` (explicit delete; FK `bundle_id` is `ON DELETE SET NULL`)
-- [ ] 1h. `score_new_releases(session, since) -> int`
-- [ ] 1i. Watermark: `since = last_success_at − 10 min`; new watermark = job START time, written in the same transaction as the scores
-- [ ] 1j. Scheduler hooks: after each EODHD session ingest and after each post-release trigger (no fixed timer)
+- [x] 1e. Incremental planner loads full history for affected indicators and bundle partners, then writes the affected suffix and partners on affected bundle dates.
+- [x] 1f. Revision cleanup deletes non-winner scores for affected indicators in the same transaction, using the three-level key.
+- [x] 1g. Affected bundles below `min_bundle_members` are explicitly deleted; the FK sets stale score `bundle_id` null.
+- [x] 1h. `score_new_releases(session, since) -> int` implemented.
+- [x] 1i. Watermark uses a 10-minute overlap and advances to job START time in the same transaction as scores.
+- [x] 1j. Scheduler hooks run after each EODHD session and post-release ingestion commit (no fixed timer).
 - [ ] 1k. Prod one-off script: full rebuild without `--truncate` + orphan cleanup over all indicators; `--dry-run` prints rows to insert / update, orphans to delete, bundles to delete; `--key-diff` for 1b
 - [ ] 1l. `scripts/build_event_innovation.py` takes the same advisory lock as the incremental job
 
@@ -32,7 +32,7 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] 3a. `run_logger`: `skipped` / `timeout` statuses + `record_rows`; `IngestionRun` doc comment on job usage
 - [x] 3b. `session_scope(statement_timeout=...)` (transaction-local `set_config`, the parameterised `SET LOCAL`)
 - [x] 3c. Per-job PostgreSQL advisory lock helper (`pg_try_advisory_lock` on a dedicated connection)
-- [~] 3d. `asyncio.wait_for` 16-min outer guard is active for Macro State steps; Event Innovation job still needs it
+- [x] 3d. `asyncio.wait_for` 16-min outer guard is active for Macro State and Event Innovation; `session_scope` rolls back on cancellation.
 - [x] 3e. `GET /api/admin/jobs/status` (last run, last success, rows written, last error, watermark; `require_role("admin")`)
 - [x] 3f. `/api/admin/health` excludes `run_type LIKE 'job:%'`
 
@@ -44,10 +44,10 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [ ] 3.5e. New shell: requested navigation, Syne + DM Mono dark tokens, ECharts only, placeholder routes, working restyled login/setup.
 
 ## Tests / checkpoints
-- [ ] T1. Unit: only rows after the watermark are written; idempotent re-run
-- [ ] T2. Unit: revised release updates its score, no second row
-- [ ] T3. Unit: concurrent run → `skipped`
-- [~] T4. Integration (compose DB): `/api/admin/jobs/status` endpoint shape passes inside the container after applying migration 0021. Fixture release → score appears and job run reporting still needed.
+- [x] T1. Unit planner writes the affected suffix and affected bundle partners; repeated plan is identical.
+- [x] T2. Integration confirms a revised release replaces its score, leaving one row.
+- [x] T3. Unit confirms concurrent run marks `skipped`.
+- [~] T4. Integration (compose DB): fixture release → score and revision cleanup pass; `/api/admin/jobs/status` shape passes. Job-run reporting still needs an end-to-end check.
 - [ ] T5. Full suite passes (except `test_rate_probability.py:182`)
 
 ## Delivery

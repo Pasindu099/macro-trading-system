@@ -180,11 +180,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.public_prefixes = ("/static",)
         self.public_paths = {"/", "/health", "/login", "/logout", "/setup", "/api/calendar"}
-        self.admin_prefixes = ("/api/admin", "/users", "/bank-research/admin", "/event-log")
+        self.admin_prefixes = ("/api/admin", "/users")
         self.analyst_write_prefixes = (
             "/api/cb/analysis",
             "/api/news/sentiment",
-            "/bank-research/refresh",
         )
 
     async def dispatch(self, request: Request, call_next) -> Response:

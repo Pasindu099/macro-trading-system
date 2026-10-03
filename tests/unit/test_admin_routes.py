@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from app.api.routes.admin import _build_unmapped_where, admin_unmapped_events
-from app.api.routes.pages import _build_country_rows
+from app.services.country_dashboard import get_country_rows as _build_country_rows
 from app.api.routes.public import (
     EconomicCalendarEvent,
     _dedupe_calendar_events,
@@ -144,7 +144,7 @@ async def test_build_country_rows_returns_one_row_per_indicator() -> None:
 
     assert len(rows) == 1
     assert rows[0]["canonical_name"] == "avg_hourly_earnings_yoy"
-    assert rows[0]["latest_value"] == "3.8 %"
+    assert rows[0]["latest_value"] == 3.8
     assert rows[0]["sparkline_values"] == [3.0, 3.5, 3.8]
 
 
@@ -182,7 +182,7 @@ async def test_build_country_rows_ignores_upcoming_na_release_for_latest_value()
 
     rows = await _build_country_rows(session, "AU", "Inflation")
 
-    assert rows[0]["latest_value"] == "3.7 %"
+    assert rows[0]["latest_value"] == 3.7
     assert rows[0]["sparkline_values"] == [3.4, 3.7]
 
 
@@ -217,7 +217,7 @@ async def test_build_country_rows_does_not_require_latest_flag() -> None:
 
     rows = await _build_country_rows(session, "AU", "Labor")
 
-    assert rows[0]["latest_value"] == "4.2 %"
+    assert rows[0]["latest_value"] == 4.2
     assert rows[0]["sparkline_values"] == [4.1, 4.2]
 
 
@@ -243,8 +243,8 @@ async def test_build_country_rows_uses_release_previous_from_database() -> None:
 
     rows = await _build_country_rows(session, "AU", "Inflation")
 
-    assert rows[0]["latest_value"] == "1.1 %"
-    assert rows[0]["previous_value"] == "0.2 %"
+    assert rows[0]["latest_value"] == 1.1
+    assert rows[0]["previous_value"] == 0.2
     assert rows[0]["sparkline_values"] == [0.2, 1.1]
 
 
@@ -282,8 +282,8 @@ async def test_build_country_rows_finds_prior_period_after_duplicate_releases() 
 
     rows = await _build_country_rows(session, "AU", "Inflation")
 
-    assert rows[0]["latest_value"] == "1.1 %"
-    assert rows[0]["previous_value"] == "0.2 %"
+    assert rows[0]["latest_value"] == 1.1
+    assert rows[0]["previous_value"] == 0.2
     assert rows[0]["sparkline_values"] == [0.2, 1.1]
 
 

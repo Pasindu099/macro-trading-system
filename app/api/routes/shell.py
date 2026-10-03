@@ -1,0 +1,39 @@
+"""Replacement navigation shell and empty section placeholders."""
+
+from pathlib import Path
+
+from fastapi import APIRouter, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+
+router = APIRouter(tags=["shell"])
+templates = Jinja2Templates(directory=str(Path("app/web/templates")))
+
+SECTIONS = {
+    "/": ("Overview", "A clear view of the macro backdrop across currencies."),
+    "/desks": ("Desks", "Country research and data for each currency desk."),
+    "/pairs": ("Pairs", "Cross-market context for currency pairs."),
+    "/calendar": ("Calendar", "Upcoming releases and central bank decisions."),
+    "/event-log": ("Event Log", "Research notes and event interpretations."),
+    "/news": ("News", "Live headlines and macro context."),
+    "/positioning": ("Positioning", "Market positioning and sentiment."),
+    "/central-banks": ("Central Banks", "Policy, projections, and rate expectations."),
+    "/data": ("Data", "Source health and research datasets."),
+}
+
+
+@router.get("/", response_class=HTMLResponse)
+@router.get("/desks", response_class=HTMLResponse)
+@router.get("/pairs", response_class=HTMLResponse)
+@router.get("/calendar", response_class=HTMLResponse)
+@router.get("/event-log", response_class=HTMLResponse)
+@router.get("/news", response_class=HTMLResponse)
+@router.get("/positioning", response_class=HTMLResponse)
+@router.get("/central-banks", response_class=HTMLResponse)
+@router.get("/data", response_class=HTMLResponse)
+async def section_page(request: Request) -> HTMLResponse:
+    title, description = SECTIONS[request.url.path]
+    return templates.TemplateResponse(request, "section.html", {
+        "page_title": f"{title} | ForexCompass", "section_title": title,
+        "description": description,
+    })

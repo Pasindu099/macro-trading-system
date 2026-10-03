@@ -3,19 +3,16 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_session
 
 router = APIRouter(tags=["rate-probability-scraped"])
-templates = Jinja2Templates(directory=str(Path("app/web/templates")))
 SessionDep = Depends(get_session)
 
 BANK_ORDER = ("FED", "ECB", "BOE", "BOJ", "RBA", "BOC", "RBNZ", "SNB")
@@ -172,89 +169,6 @@ async def get_rate_probability(session: AsyncSession = SessionDep) -> JSONRespon
 
 # ── Page ─────────────────────────────────────────────────────────────────────
 
-@router.get("/rate-probability", response_class=HTMLResponse)
-async def rate_probability_page(
-    request: Request,
-    session: AsyncSession = SessionDep,
-    background_tasks: BackgroundTasks = BackgroundTasks(),
-) -> HTMLResponse:
-    """Server-rendered rate probability dashboard from rateprobability.com data."""
-    no_data = False
-    try:
-        summary = await _load_summary(session)
-        meetings_by_bank = await _load_meetings(session)
-        no_data = not summary
-    except Exception:
-        summary = {}
-        meetings_by_bank = {}
-        no_data = True
-
-    # Build per-bank context blocks
-    bank_cards = []
-    for bank in BANK_ORDER:
-        s = summary.get(bank, {})
-        cut  = s.get("next_cut_prob")
-        hold = s.get("next_hold_prob")
-        hike = s.get("next_hike_prob")
-        dominant, dom_prob = _dominant(cut, hold, hike)
-
-        card_class = "rps-card"
-        if dom_prob is not None and dom_prob > 50:
-            if dominant == "CUT":
-                card_class += " rps-card--cut"
-            elif dominant == "HIKE":
-                card_class += " rps-card--hike"
-
-        next_dt = s.get("next_meeting_date")
-        bank_cards.append({
-            "bank":          bank,
-            "full_name":     BANK_FULL_NAMES.get(bank, bank),
-            "rate_label":    RATE_LABELS.get(bank, "Policy Rate"),
-            "current_rate":  s.get("current_rate"),
-            "next_meeting":  _fmt_date(next_dt),
-            "cut_prob":      cut,
-            "hold_prob":     hold,
-            "hike_prob":     hike,
-            "dominant":      dominant,
-            "dominant_prob": dom_prob,
-            "card_class":    card_class,
-            "has_data":      bool(s),
-        })
-
-    # Per-bank meeting tables
-    bank_tables: dict[str, list[dict[str, Any]]] = {}
-    for bank in BANK_ORDER:
-        rows = []
-        for m in meetings_by_bank.get(bank, []):
-            cut  = m.get("cut_prob")
-            hold = m.get("hold_prob")
-            hike = m.get("hike_prob")
-            dominant, dom_prob = _dominant(cut, hold, hike)
-            rows.append({
-                **m,
-                "date_fmt":       _fmt_date(date.fromisoformat(m["date"])) if m.get("date") else "—",
-                "dominant":       dominant,
-                "dominant_prob":  dom_prob,
-                "dominant_class": "rps-cut" if dominant == "CUT" else "rps-hike" if dominant == "HIKE" else "rps-hold",
-            })
-        bank_tables[bank] = rows
-
-    updated_at = _global_updated_at(summary)
-
-    return templates.TemplateResponse(
-        request,
-        "rate_probability_scraped.html",
-        {
-            "page_title":     "Rate Probabilities | Macro Dashboard",
-            "bank_cards":     bank_cards,
-            "bank_tables":    bank_tables,
-            "bank_order":     BANK_ORDER,
-            "bank_names":     BANK_FULL_NAMES,
-            "updated_at":     updated_at,
-            "no_data":        no_data,
-            "source_url":     "https://rateprobability.com",
-        },
-    )
 
 
 # ── Admin: trigger scrape on demand ─────────────────────────────────────────

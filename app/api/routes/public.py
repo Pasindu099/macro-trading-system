@@ -14,7 +14,7 @@ from xml.etree import ElementTree
 
 import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, asc, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -1051,74 +1051,8 @@ async def retail_sentiment_symbol(symbol: str) -> dict[str, Any]:
     return payload
 
 
-@router.get("/intelligence/alerts/latest", response_class=HTMLResponse)
-async def latest_intelligence_alerts(
-    session: AsyncSession = DB_SESSION,
-) -> HTMLResponse:
-    """Return the latest surfaced news alert banner fragment for HTMX polling."""
-    result = await session.execute(
-        text(
-            """
-            SELECT
-                alert_text,
-                severity,
-                affected_currencies,
-                detected_at
-            FROM intelligence.news_alerts
-            WHERE was_surfaced = true
-              AND detected_at >= NOW() - interval '30 minutes'
-            ORDER BY detected_at DESC
-            LIMIT 3
-            """
-        )
-    )
-    alerts = [dict(row) for row in result.mappings().all()]
-    return HTMLResponse(content=_render_news_alert_banner(alerts), media_type="text/html")
 
 
-def _render_news_alert_banner(alerts: list[dict[str, Any]]) -> str:
-    if not alerts:
-        return '<div id="news-alert-banner"></div>'
-
-    bars = []
-    has_critical = False
-    now = datetime.now(UTC)
-    for alert in alerts:
-        severity = str(alert.get("severity") or "").upper()
-        has_critical = has_critical or severity == "CRITICAL"
-        detected_at = _as_utc_datetime(alert.get("detected_at")) or now
-        minutes_ago = max(0, int((now - detected_at).total_seconds() // 60))
-        currencies = " ".join(str(code) for code in alert.get("affected_currencies") or [])
-        bars.append(
-            "\n".join(
-                [
-                    f'<div class="news-alert-bar news-alert-{html.escape(severity.lower())}">',
-                    f'  <span class="news-alert-label">{html.escape(severity)}</span>',
-                    "  <span class=\"news-alert-text\">"
-                    f"{html.escape(str(alert.get('alert_text') or ''))}</span>",
-                    "  <span class=\"news-alert-currencies\">"
-                    f"{html.escape(currencies)}</span>",
-                    f'  <span class="news-alert-time">{minutes_ago}m ago</span>',
-                    '  <button class="news-alert-dismiss" '
-                    'onclick="this.parentElement.parentElement.remove()">✕</button>',
-                    "</div>",
-                ]
-            )
-        )
-
-    sound_trigger = (
-        '<div id="news-alert-sound-trigger" data-critical="true"></div>'
-        if has_critical
-        else ""
-    )
-    return "\n".join(
-        [
-            '<div id="news-alert-banner">',
-            *bars,
-            sound_trigger,
-            "</div>",
-        ]
-    )
 
 
 def _as_utc_datetime(value: Any) -> datetime | None:

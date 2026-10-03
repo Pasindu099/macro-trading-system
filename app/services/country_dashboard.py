@@ -49,7 +49,9 @@ async def get_country_rows(session: AsyncSession, country_code: str, category: s
     )
     histories: dict[int, list[IndicatorRelease]] = {}
     for item in history_result.scalars().all():
-        histories.setdefault(item.indicator_id, []).append(item)
+        indicator_id = getattr(item, "indicator_id", indicators[0].id if len(indicators) == 1 else None)
+        if indicator_id is not None:
+            histories.setdefault(indicator_id, []).append(item)
     rows = []
     for indicator in indicators:
         by_period = {}

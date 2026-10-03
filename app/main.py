@@ -26,7 +26,7 @@ from app.api.routes import (
     auth,
     fixed_income,
     knowledge,
-    pages,
+    shell,
     public,
     rate_probability,
     rate_probability_scraped,
@@ -106,7 +106,7 @@ app.add_middleware(AuthMiddleware)
 # Mount routers and static assets
 app.mount("/static", StaticFiles(directory="app/web/static"), name="static")
 app.include_router(auth.router)
-app.include_router(pages.router)
+app.include_router(shell.router)
 app.include_router(admin.router)
 app.include_router(public.router)
 app.include_router(research.router)

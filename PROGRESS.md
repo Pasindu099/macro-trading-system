@@ -40,9 +40,9 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] 3.5a. `INVENTORY_PAGES.md` classifies every top-level and nested helper, all 33 routes, and direct query families. **STOP for user review before moving code.**
 - [~] 3.5b. Services now cover Macro State, rates, country/public data, News, bank research admin, knowledge figures/documents, rate probability, analytics/overview data, and Central Banks monitor/policy/projections. Remaining: finish raw field cleanup and pin representative outputs before removing old routes.
 - [x] 3.5b-query. Country histories, macro monitor, and projection actuals batched in separate commits with focused tests.
-- [ ] 3.5c. Tag the last commit before removal (`pre-redesign`).
-- [ ] 3.5d. Remove old page routes, Jinja templates, static page modules, `main.css` page styles, React/Babel brief builder, and Chart.js. Preserve database tables, migrations, and backend modules.
-- [ ] 3.5e. New shell: requested navigation, Syne + DM Mono dark tokens, ECharts only, placeholder routes, working restyled login/setup.
+- [x] 3.5c. Tagged the last commit before removal as `pre-redesign` (`cc8e4fc`).
+- [x] 3.5d. Removed old page routes, Jinja page templates, static page modules, old CSS, React/Babel brief builder, and Chart.js. Auth and JSON APIs remain.
+- [~] 3.5e. New shell routes, navigation (including Event Log), Syne + DM Mono tokens, dark palette, and ECharts are in place. Final auth styling and checkpoint report pending.
 
 ## Tests / checkpoints
 - [x] T1. Unit planner writes the affected suffix and affected bundle partners; repeated plan is identical.

@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import and_, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth import require_role
 from app.services import event_reaction_log
 from app.api.schemas import (
     AdminHealthPayload,
@@ -36,6 +37,7 @@ from app.db.models import (
     Indicator,
     IndicatorRelease,
     IngestionRun,
+    JobWatermark,
 )
 from app.db.session import get_session
 from app.settings import get_settings
@@ -121,7 +123,8 @@ async def admin_health(
     # Ingestion run counts (last 24h)
     runs_24h_q = await session.execute(
         select(func.count(IngestionRun.id)).where(
-            IngestionRun.started_at >= cutoff_24h
+            IngestionRun.started_at >= cutoff_24h,
+            ~IngestionRun.run_type.like("job:%"),
         )
     )
     total_runs_24h = runs_24h_q.scalar_one()
@@ -131,6 +134,7 @@ async def admin_health(
             and_(
                 IngestionRun.started_at >= cutoff_24h,
                 IngestionRun.status == "failed",
+                ~IngestionRun.run_type.like("job:%"),
             )
         )
     )
@@ -206,6 +210,50 @@ async def admin_health(
         countries=per_country,
     )
     return Envelope(data=payload, meta=_meta())
+
+
+@router.get("/jobs/status", dependencies=[Depends(require_role("admin"))])
+async def admin_jobs_status(
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, object]:
+    """Last result, last success and watermark for each analytics job."""
+    rows = (await session.execute(
+        select(IngestionRun)
+        .where(IngestionRun.run_type.like("job:%"))
+        .order_by(IngestionRun.run_type, desc(IngestionRun.started_at))
+    )).scalars().all()
+    watermarks = (await session.execute(select(JobWatermark))).scalars().all()
+    by_name: dict[str, dict[str, object]] = {
+        f"job:{w.job_name}": {
+            "run_type": f"job:{w.job_name}",
+            "last_run": None,
+            "last_success": None,
+            "rows_written": None,
+            "last_error": None,
+            "watermark": w.last_success_at,
+        }
+        for w in watermarks
+    }
+    for row in rows:
+        job = by_name.setdefault(row.run_type, {
+            "run_type": row.run_type,
+            "last_run": None,
+            "last_success": None,
+            "rows_written": None,
+            "last_error": None,
+            "watermark": None,
+        })
+        if job["last_run"] is None:
+            job["last_run"] = {
+                "started_at": row.started_at,
+                "finished_at": row.finished_at,
+                "status": row.status,
+            }
+            job["rows_written"] = row.events_inserted
+            job["last_error"] = row.errors
+        if row.status == "success" and job["last_success"] is None:
+            job["last_success"] = row.finished_at
+    return {"jobs": list(by_name.values())}
 
 
 # ══════════════════════════════════════════════════════════════════════

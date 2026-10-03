@@ -37,12 +37,14 @@ class IndexBuildConfig:
 async def build_macro_indices(
     output_dir: Path | str = Path("data/indices"),
     config: IndexBuildConfig = IndexBuildConfig(),
+    *, export: bool = True, statement_timeout: str | None = None,
 ) -> dict[str, Any]:
     """Build relationship weights and country-level macro pressure indices."""
     output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+    if export:
+        output_path.mkdir(parents=True, exist_ok=True)
 
-    async with session_scope() as session:
+    async with session_scope(statement_timeout=statement_timeout) as session:
         await create_index_schema(session)
         await build_relationship_weights(session, config)
         await build_low_confidence_relationships(session, config)
@@ -50,14 +52,15 @@ async def build_macro_indices(
         await build_theme_indices(session, config)
         summary = await build_index_summary(session, config)
 
-        for table_name in INDEX_TABLES:
-            await export_table_csv(
-                session,
-                table_name,
-                output_path / f"{table_name.split('.')[-1]}.csv",
-            )
-        write_json(output_path / "macro_indices_report.json", summary)
-        write_readme(output_path)
+        if export:
+            for table_name in INDEX_TABLES:
+                await export_table_csv(
+                    session,
+                    table_name,
+                    output_path / f"{table_name.split('.')[-1]}.csv",
+                )
+            write_json(output_path / "macro_indices_report.json", summary)
+            write_readme(output_path)
 
     return {
         "output_dir": str(output_path),

@@ -61,12 +61,16 @@ def history_threshold_for_frequency(frequency: str | None) -> int:
     return 8
 
 
-async def build_processed_dataset(output_dir: Path | str = Path("data/processed")) -> dict[str, Any]:
+async def build_processed_dataset(
+    output_dir: Path | str = Path("data/processed"),
+    *, export: bool = True, statement_timeout: str | None = None,
+) -> dict[str, Any]:
     """Create processed DB tables plus file-based quality and metadata outputs."""
     output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+    if export:
+        output_path.mkdir(parents=True, exist_ok=True)
 
-    async with session_scope() as session:
+    async with session_scope(statement_timeout=statement_timeout) as session:
         await create_processed_schema(session)
         raw_profile = await inspect_raw_tables(session)
         await rebuild_indicator_metadata(session)
@@ -75,12 +79,13 @@ async def build_processed_dataset(output_dir: Path | str = Path("data/processed"
         report = await build_quality_report(session, raw_profile)
         await write_dataset_profile(session, raw_profile, report)
 
-        await export_table_csv(session, "processed.indicator_metadata", output_path / "indicator_metadata.csv")
-        await export_table_csv(session, "processed.macro_observations", output_path / "macro_observations.csv")
-        await export_table_csv(session, "processed.data_quality_issues", output_path / "data_quality_issues.csv")
-        write_json(output_path / "raw_structure_report.json", raw_profile)
-        write_json(output_path / "data_quality_report.json", report)
-        write_readme(output_path)
+        if export:
+            await export_table_csv(session, "processed.indicator_metadata", output_path / "indicator_metadata.csv")
+            await export_table_csv(session, "processed.macro_observations", output_path / "macro_observations.csv")
+            await export_table_csv(session, "processed.data_quality_issues", output_path / "data_quality_issues.csv")
+            write_json(output_path / "raw_structure_report.json", raw_profile)
+            write_json(output_path / "data_quality_report.json", report)
+            write_readme(output_path)
 
     return {
         "output_dir": str(output_path),

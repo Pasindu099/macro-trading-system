@@ -26,12 +26,16 @@ FEATURE_TABLES = (
 )
 
 
-async def build_feature_layer(output_dir: Path | str = Path("data/features")) -> dict[str, Any]:
+async def build_feature_layer(
+    output_dir: Path | str = Path("data/features"),
+    *, export: bool = True, statement_timeout: str | None = None,
+) -> dict[str, Any]:
     """Build feature engineering tables and file exports from processed observations."""
     output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+    if export:
+        output_path.mkdir(parents=True, exist_ok=True)
 
-    async with session_scope() as session:
+    async with session_scope(statement_timeout=statement_timeout) as session:
         await create_feature_schema(session)
         await build_indicator_feature_map(session)
         await build_indicator_features(session)
@@ -41,14 +45,15 @@ async def build_feature_layer(output_dir: Path | str = Path("data/features")) ->
         await build_modeling_feature_base(session)
         summary = await build_feature_summary(session)
 
-        for table_name in FEATURE_TABLES:
-            await export_table_csv(
-                session,
-                table_name,
-                output_path / f"{table_name.split('.')[-1]}.csv",
-            )
-        write_json(output_path / "feature_engineering_report.json", summary)
-        write_readme(output_path)
+        if export:
+            for table_name in FEATURE_TABLES:
+                await export_table_csv(
+                    session,
+                    table_name,
+                    output_path / f"{table_name.split('.')[-1]}.csv",
+                )
+            write_json(output_path / "feature_engineering_report.json", summary)
+            write_readme(output_path)
 
     return {
         "output_dir": str(output_path),
@@ -944,4 +949,3 @@ async def fetch_one(
     result = await session.execute(text(statement), params or {})
     row = result.mappings().one_or_none()
     return dict(row) if row else {}
-

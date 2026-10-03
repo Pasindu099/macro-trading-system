@@ -300,11 +300,13 @@ class CBPreferredConfig:
 async def build_cb_preferred_score(
     output_dir: Path | str = Path("data/cb_preferred"),
     config: CBPreferredConfig = CBPreferredConfig(),
+    *, export: bool = True, statement_timeout: str | None = None,
 ) -> dict[str, Any]:
     output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+    if export:
+        output_path.mkdir(parents=True, exist_ok=True)
 
-    async with session_scope() as session:
+    async with session_scope(statement_timeout=statement_timeout) as session:
         await _create_schema(session)
 
         print("  Loading indicator features…")
@@ -324,13 +326,14 @@ async def build_cb_preferred_score(
 
         summary = await _build_summary(session)
 
-        for table in CB_PREFERRED_TABLES:
-            await _export_csv(
-                session,
-                table,
-                output_path / f"{table.split('.')[-1]}.csv",
-            )
-        _write_json(output_path / "cb_preferred_report.json", summary)
+        if export:
+            for table in CB_PREFERRED_TABLES:
+                await _export_csv(
+                    session,
+                    table,
+                    output_path / f"{table.split('.')[-1]}.csv",
+                )
+            _write_json(output_path / "cb_preferred_report.json", summary)
 
     return {
         "output_dir": str(output_path),

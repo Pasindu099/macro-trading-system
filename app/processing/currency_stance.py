@@ -35,24 +35,27 @@ class CurrencyStanceConfig:
 async def build_currency_stance_layer(
     output_dir: Path | str = Path("data/currency_stance"),
     config: CurrencyStanceConfig = CurrencyStanceConfig(),
+    *, export: bool = True, statement_timeout: str | None = None,
 ) -> dict[str, Any]:
     output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+    if export:
+        output_path.mkdir(parents=True, exist_ok=True)
 
-    async with session_scope() as session:
+    async with session_scope(statement_timeout=statement_timeout) as session:
         await create_stance_schema(session)
         await build_currency_stance(session, config)
         await build_currency_stance_rankings(session)
         summary = await build_stance_summary(session)
 
-        for table_name in STANCE_TABLES:
-            await export_table_csv(
-                session,
-                table_name,
-                output_path / f"{table_name.split('.')[-1]}.csv",
-            )
-        write_json(output_path / "currency_stance_report.json", summary)
-        write_readme(output_path)
+        if export:
+            for table_name in STANCE_TABLES:
+                await export_table_csv(
+                    session,
+                    table_name,
+                    output_path / f"{table_name.split('.')[-1]}.csv",
+                )
+            write_json(output_path / "currency_stance_report.json", summary)
+            write_readme(output_path)
 
     return {
         "output_dir": str(output_path),

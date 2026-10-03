@@ -58,12 +58,13 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] `REPORT_STEP3_5.md`: recovery tag, extracted services, new API endpoints, deleted files, transitional helper inventory, and test results.
 
 ## Step 4 — Rates data layer
-- [x] 4a. `REPORT_STEP4_COVERAGE.md`: 50 yield country/tenor series, 14 FX pairs, backfill/status gaps, and policy-rate source. FR is entirely absent and 30Y is absent everywhere, so the Step 4 coverage gate requires review before Part B.
-- [ ] 4b. `config/pairs.yaml`: 28 market-convention pairs, pip sizes, benchmarks, FR−DE spread, and 30Y fallbacks.
+- [x] 4a. `REPORT_STEP4_COVERAGE.md`: 50 yield country/tenor series, 14 FX pairs, backfill/status gaps, and policy-rate source. The user approved proceeding with unavailable outputs for missing FR/30Y/spot data and a permanent 2Y-vs-10Y regime.
+- [x] 4b. `config/pairs.yaml`: 28 market-convention pairs, pip sizes, benchmarks, FR−DE spread, and explicit unavailable 30Y fallbacks. Focused tests: 2 passed. Full suite: 291 passed, 7 skipped, 1 deselected, 18 integration failures from unauthenticated test clients.
 - [ ] 4c. Capture fixed-window live outputs, switch rates service to DB reads, and compare overlapping dates.
 - [ ] 4d. Migration `0022` outlier columns and reversing-spike flagging job; keep raw rows.
 - [ ] 4e. Migration `0022` yield spreads, common-date/limited forward-fill alignment, and 2Y/10Y/available-30Y builds.
 - [ ] 4f. Curve metrics, regimes, inversion, and un-inversion service functions.
 - [ ] 4g. Daily-change driver correlations and status service.
 - [ ] 4h. Post-ingest `job:rates_derived` and four service-backed JSON endpoints.
+- [ ] 4i. After H passes: symbol availability report, source FR/long-end yields and missing FX pairs (synthetic only when unavailable), backfill, rebuild derived data, and verify unavailable-to-available transitions.
 - [ ] 4t. Unit and integration checkpoints, `REPORT_STEP4.md`, and final verification.

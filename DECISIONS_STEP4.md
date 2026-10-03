@@ -102,3 +102,41 @@ DO NOT
 
 DELIVER: REPORT_STEP4.md (files, migration, endpoints, Part A/C findings,
 test results) and the resume-safe PROGRESS.md.
+
+STEP 4 — DECISION ON COVERAGE GAPS
+
+1. APPROVED: proceed with Parts B–H now using available data.
+   - Curve regime uses 2Y vs 10Y (d2 vs d10) as the standard definition,
+     tenor recorded explicitly in every output. This is permanent, not
+     a fallback.
+   - 10s30s, 30Y-based checks and FR−DE: return "unavailable" with a
+     reason field until data exists. No errors, no fake values.
+   - Correlations/drivers for pairs without spot history: "unavailable".
+
+2. ADD PART I — SOURCE MISSING DATA (after Part H passes). This
+   explicitly lifts the "do not change ingestion" rule for this part only.
+   a) Availability check first (write REPORT_STEP4_SOURCING.md):
+      - Use the existing GBOND symbol discovery (_fetch_gbond_symbol_set
+        in app/services/rates.py) to list available tenors for US, DE,
+        FR, GB, JP, AU, NZ, CA, CH. Report 2Y/10Y/20Y/30Y availability.
+      - Check EODHD FOREX symbols for the 14 missing pairs.
+   b) Extend the existing gov-yield ingestion config to include:
+      - FR 2Y and 10Y
+      - 30Y for every country where available (20Y where 30Y is not)
+      Backfill to the same start date as existing yield history, using the
+      existing backfill/checkpoint mechanism. Respect the 50K calls/day
+      limit; report calls used.
+   c) Missing FX pairs: ingest directly from EODHD where available
+      (same pipeline as existing pairs, same backfill depth). Only if a
+      pair is NOT available, derive it synthetically from the two USD
+      legs on common dates, store it with source = "synthetic", and
+      exclude synthetic pairs from the outlier flagging rule.
+   d) After backfill: run job:rates_derived, then confirm 10s30s, FR−DE
+      and the new pairs' drivers now return values. Update pairs.yaml
+      tenor fallbacks to match what actually exists.
+
+3. TESTS for Part I: config includes new symbols; synthetic cross
+   equals leg product within rounding; unavailable → available
+   transition works without code changes.
+
+Continue now with Part B. Update PROGRESS.md and commit per part.

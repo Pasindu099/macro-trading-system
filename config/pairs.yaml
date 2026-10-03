@@ -1,0 +1,62 @@
+# Market convention: higher-priority currency is the base.
+currency_priority: [EUR, GBP, AUD, NZD, USD, CAD, CHF, JPY]
+currency_benchmarks:
+  EUR: DE
+  GBP: UK
+  AUD: AU
+  NZD: NZ
+  USD: US
+  CAD: CA
+  CHF: CH
+  JPY: JP
+
+regime_tenors: [2Y, 10Y]
+
+# No 20Y or 30Y government yield is currently stored for any country.
+# A null fallback means 30Y metrics stay unavailable until Part I sources data.
+tenor_fallbacks:
+  US: {30Y: null}
+  DE: {30Y: null}
+  FR: {30Y: null}
+  UK: {30Y: null}
+  JP: {30Y: null}
+  AU: {30Y: null}
+  NZ: {30Y: null}
+  CA: {30Y: null}
+  CH: {30Y: null}
+
+named_spreads:
+  - name: FR-DE
+    base_country: FR
+    quote_country: DE
+    tenors: [2Y, 10Y, 30Y]
+
+pairs:
+  - {pair: EUR/GBP, base: EUR, quote: GBP, pip_size: 0.0001}
+  - {pair: EUR/AUD, base: EUR, quote: AUD, pip_size: 0.0001}
+  - {pair: EUR/NZD, base: EUR, quote: NZD, pip_size: 0.0001}
+  - {pair: EUR/USD, base: EUR, quote: USD, pip_size: 0.0001}
+  - {pair: EUR/CAD, base: EUR, quote: CAD, pip_size: 0.0001}
+  - {pair: EUR/CHF, base: EUR, quote: CHF, pip_size: 0.0001}
+  - {pair: EUR/JPY, base: EUR, quote: JPY, pip_size: 0.01}
+  - {pair: GBP/AUD, base: GBP, quote: AUD, pip_size: 0.0001}
+  - {pair: GBP/NZD, base: GBP, quote: NZD, pip_size: 0.0001}
+  - {pair: GBP/USD, base: GBP, quote: USD, pip_size: 0.0001}
+  - {pair: GBP/CAD, base: GBP, quote: CAD, pip_size: 0.0001}
+  - {pair: GBP/CHF, base: GBP, quote: CHF, pip_size: 0.0001}
+  - {pair: GBP/JPY, base: GBP, quote: JPY, pip_size: 0.01}
+  - {pair: AUD/NZD, base: AUD, quote: NZD, pip_size: 0.0001}
+  - {pair: AUD/USD, base: AUD, quote: USD, pip_size: 0.0001}
+  - {pair: AUD/CAD, base: AUD, quote: CAD, pip_size: 0.0001}
+  - {pair: AUD/CHF, base: AUD, quote: CHF, pip_size: 0.0001}
+  - {pair: AUD/JPY, base: AUD, quote: JPY, pip_size: 0.01}
+  - {pair: NZD/USD, base: NZD, quote: USD, pip_size: 0.0001}
+  - {pair: NZD/CAD, base: NZD, quote: CAD, pip_size: 0.0001}
+  - {pair: NZD/CHF, base: NZD, quote: CHF, pip_size: 0.0001}
+  - {pair: NZD/JPY, base: NZD, quote: JPY, pip_size: 0.01}
+  - {pair: USD/CAD, base: USD, quote: CAD, pip_size: 0.0001}
+  - {pair: USD/CHF, base: USD, quote: CHF, pip_size: 0.0001}
+  - {pair: USD/JPY, base: USD, quote: JPY, pip_size: 0.01}
+  - {pair: CAD/CHF, base: CAD, quote: CHF, pip_size: 0.0001}
+  - {pair: CAD/JPY, base: CAD, quote: JPY, pip_size: 0.01}
+  - {pair: CHF/JPY, base: CHF, quote: JPY, pip_size: 0.01}

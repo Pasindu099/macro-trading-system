@@ -40,6 +40,13 @@
     }
     var first = opt.series[opt.series.length - 1];
     if (spec.ref !== null && spec.ref !== undefined) {
+      // Keep the reference line inside the y-range (scale:true ignores mark lines).
+      var values = [].concat.apply([], spec.series.map(function (s) { return s.data; }))
+        .filter(function (v) { return v !== null && v !== undefined; }).concat([spec.ref]);
+      var lo = Math.min.apply(null, values), hi = Math.max.apply(null, values);
+      var step = Math.pow(10, Math.floor(Math.log10((hi - lo) || 1))) / 2;
+      opt.yAxis.min = +(Math.floor(lo / step) * step).toFixed(4);
+      opt.yAxis.max = +(Math.ceil(hi / step) * step).toFixed(4);
       first.markLine = refLine(spec.ref, spec.kind === "curve" ? "#7c8698" : null);
     }
     if (spec.shade_below) {

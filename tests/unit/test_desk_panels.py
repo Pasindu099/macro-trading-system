@@ -62,7 +62,7 @@ def _data_sources(monkeypatch):
     monkeypatch.setattr(dp.positioning_service, "get_squeeze", _stub({"currencies": [
         {"currency": "USD", "leveraged_funds": {"status": "medium"}, "asset_manager": {"status": "none"}}]}))
     monkeypatch.setattr(dp, "upcoming_events", _stub([SimpleNamespace(
-        released_at=datetime.now(UTC) + timedelta(days=3), display_name="CPI", period="Sep", importance=3)]))
+        released_at=datetime.now(UTC) + timedelta(days=3), display_name="CPI", period="Sep", importance=1)]))
     monkeypatch.setattr(dp, "news_alerts", _stub([
         {"headline": "Fed speaker says X", "url": "https://example.com", "source": "s", "detected_at": datetime.now(UTC),
          "implied_tier": "CB_POLICY_DIVERGENCE", "severity": "HIGH", "alert_text": "context"}]))
@@ -149,3 +149,18 @@ def test_usd_change_sign_convention():
     assert dp.usd_change(pts_up, 7, -1) == pytest.approx((1.10 / 1.21 - 1) * 100)
     pts_jpy = [(date(2026, 9, 1), 100.0), (date(2026, 9, 29), 110.0)]  # USD/JPY up → USD stronger
     assert dp.usd_change(pts_jpy, 7, 1) == pytest.approx(10.0)
+
+
+def test_curve_stats_show_values_from_curve_metrics(monkeypatch):
+    _data_sources(monkeypatch)
+    body = make_client().get("/desks/USD/panels/curve").text
+    tiles = body.split('class="stat-grid"', 1)[1].split("</div>\n    </div>", 1)[0]
+    # 2s10s, 10s30s and 2Y − policy come from curve_metrics' value_bp; only real 10Y is unsourced.
+    assert tiles.count("bp</span>") == 3
+    assert "Market expects further hikes" in tiles
+
+
+def test_catalyst_impact_uses_importance_one_as_high(monkeypatch):
+    _data_sources(monkeypatch)
+    body = make_client().get("/desks/USD/panels/catalysts").text
+    assert 'impact-high">High' in body

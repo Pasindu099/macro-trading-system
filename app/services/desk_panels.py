@@ -388,15 +388,15 @@ async def panel_curve(desk: dict, params: dict) -> dict[str, Any]:
                        "chg_color": tone_color(chg), "says": says[tenor]})
     regime = curve["regime"]
     label, tone, read = REGIME_READ.get(regime.get("label"), (None, "flat", "")) if regime.get("status") == "available" else (None, "flat", "")
-    stat = lambda item, note: {"value": signed(item.get("value"), 0, "bp") if item.get("status") == "available" else "—",
+    stat = lambda item, note: {"value": signed(item.get("value_bp"), 0, "bp") if item.get("status") == "available" else "—",
                                "note": note if item.get("status") == "available" else item.get("reason", "Unavailable"),
-                               "color": tone_color(item.get("value")) if item.get("status") == "available" else MUTED}
+                               "color": tone_color(item.get("value_bp")) if item.get("status") == "available" else MUTED}
     two_ten = curve["two_ten"]
     curve_stats = [
         {"label": "2s10s", **stat(two_ten, "Inverted" if curve["is_inverted"] else "Positive")},
         {"label": "10s30s", **stat(curve["ten_thirty"], "Long-end premium")},
         {"label": f"2Y − {desk['cb_short']} funds", **stat(curve["two_policy"],
-            "Market expects further hikes" if (curve["two_policy"].get("value") or 0) > 0 else "Market expects cuts")},
+            "Market expects further hikes" if (curve["two_policy"].get("value_bp") or 0) > 0 else "Market expects cuts")},
         {"label": "Real 10Y (10Y − breakeven)", "value": "—", "note": "Breakeven data not sourced", "color": MUTED},
     ]
     two = ys.get("2Y", {})
@@ -471,7 +471,8 @@ async def panel_positioning(desk: dict, params: dict) -> dict[str, Any]:
     return {"state": "ok", "rows": rows}
 
 
-IMPACT = {3: "High", 2: "Medium", 1: "Low"}
+# indicators.importance: 1 = high, 2 = medium, 3 = low (config/bundle_config.yaml).
+IMPACT = {1: "High", 2: "Medium", 3: "Low"}
 
 
 async def upcoming_events(country: str) -> list[Any]:
@@ -488,7 +489,7 @@ async def panel_catalysts(desk: dict, params: dict) -> dict[str, Any]:
     if not upcoming:
         return empty(f"No upcoming {desk['currency']} events in the calendar.")
     return {"state": "ok", "events": [{"date": e.released_at, "event": e.display_name + (f" ({e.period})" if e.period else ""),
-                                       "impact": IMPACT.get(e.importance or 0, "Low")} for e in upcoming]}
+                                       "impact": IMPACT.get(e.importance, "Low")} for e in upcoming]}
 
 
 async def news_alerts(currency: str) -> list[dict[str, Any]]:

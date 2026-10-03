@@ -1,0 +1,3075 @@
+[
+  {
+    "situation_id": "energy_shock",
+    "scope": "currency",
+    "scope_key": "USD",
+    "name": "Energy shock",
+    "severity": "high",
+    "evidence_panel_id": "inflation_driver",
+    "data_available": true,
+    "status": "active",
+    "episodes": [
+      {
+        "started_at": "2021-03-10",
+        "ended_at": "2021-05-15",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 38.6522695460908,
+            "headline_core_gap_pp": 0.3999999999999999
+          },
+          "current": {
+            "brent_3m_pct": 10.837201856891298,
+            "headline_core_gap_pp": 1.2000000000000002
+          }
+        }
+      },
+      {
+        "started_at": "2021-06-30",
+        "ended_at": "2021-08-02",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 20.109631949882534,
+            "headline_core_gap_pp": 1.2000000000000002
+          },
+          "current": {
+            "brent_3m_pct": 14.749741621142753,
+            "headline_core_gap_pp": 0.9000000000000004
+          }
+        }
+      },
+      {
+        "started_at": "2021-10-19",
+        "ended_at": "2021-11-26",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 22.461802084820803,
+            "headline_core_gap_pp": 1.4000000000000004
+          },
+          "current": {
+            "brent_3m_pct": 13.768718801996659,
+            "headline_core_gap_pp": 1.6000000000000005
+          }
+        }
+      },
+      {
+        "started_at": "2022-02-14",
+        "ended_at": "2022-06-02",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 20.124481327800847,
+            "headline_core_gap_pp": 1.5
+          },
+          "current": {
+            "brent_3m_pct": 10.15956008293517,
+            "headline_core_gap_pp": 2.1000000000000005
+          }
+        }
+      },
+      {
+        "started_at": "2026-05-12",
+        "ended_at": "2026-06-05",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 57.63293310463122,
+            "headline_core_gap_pp": 1.0
+          },
+          "current": {
+            "brent_3m_pct": 21.358509073075037,
+            "headline_core_gap_pp": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-09-10",
+        "ended_at": null,
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 27.16501507970701,
+            "headline_core_gap_pp": 1.0
+          },
+          "current": {
+            "brent_3m_pct": 65.92894583576,
+            "headline_core_gap_pp": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "brent_3m_pct": 65.92894583576,
+      "headline_core_gap_pp": 1.0
+    }
+  },
+  {
+    "situation_id": "energy_shock",
+    "scope": "currency",
+    "scope_key": "EUR",
+    "name": "Energy shock",
+    "severity": "high",
+    "evidence_panel_id": "inflation_driver",
+    "data_available": true,
+    "status": "active",
+    "episodes": [
+      {
+        "started_at": "2021-03-31",
+        "ended_at": "2021-05-15",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 24.65833658727061,
+            "headline_core_gap_pp": 0.4
+          },
+          "current": {
+            "brent_3m_pct": 10.837201856891298,
+            "headline_core_gap_pp": 0.8
+          }
+        }
+      },
+      {
+        "started_at": "2021-06-30",
+        "ended_at": "2021-08-02",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 20.109631949882534,
+            "headline_core_gap_pp": 0.9999999999999999
+          },
+          "current": {
+            "brent_3m_pct": 14.749741621142753,
+            "headline_core_gap_pp": 1.5000000000000002
+          }
+        }
+      },
+      {
+        "started_at": "2021-10-19",
+        "ended_at": "2021-11-26",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 22.461802084820803,
+            "headline_core_gap_pp": 1.5
+          },
+          "current": {
+            "brent_3m_pct": 13.768718801996659,
+            "headline_core_gap_pp": 2.0999999999999996
+          }
+        }
+      },
+      {
+        "started_at": "2022-02-14",
+        "ended_at": "2022-06-02",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 20.124481327800847,
+            "headline_core_gap_pp": 2.8
+          },
+          "current": {
+            "brent_3m_pct": 10.15956008293517,
+            "headline_core_gap_pp": 4.3
+          }
+        }
+      },
+      {
+        "started_at": "2026-04-16",
+        "ended_at": "2026-06-05",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 47.274899208600864,
+            "headline_core_gap_pp": 0.30000000000000027
+          },
+          "current": {
+            "brent_3m_pct": 21.358509073075037,
+            "headline_core_gap_pp": 0.7999999999999998
+          }
+        }
+      },
+      {
+        "started_at": "2026-09-10",
+        "ended_at": null,
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 27.16501507970701,
+            "headline_core_gap_pp": 0.3999999999999999
+          },
+          "current": {
+            "brent_3m_pct": 65.92894583576,
+            "headline_core_gap_pp": 1.2999999999999998
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "brent_3m_pct": 65.92894583576,
+      "headline_core_gap_pp": 1.2999999999999998
+    }
+  },
+  {
+    "situation_id": "energy_shock",
+    "scope": "currency",
+    "scope_key": "CAD",
+    "name": "Energy shock",
+    "severity": "high",
+    "evidence_panel_id": "inflation_driver",
+    "data_available": true,
+    "status": "active",
+    "episodes": [
+      {
+        "started_at": "2021-04-27",
+        "ended_at": "2021-05-15",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 22.25259704756697,
+            "headline_core_gap_pp": 0.8000000000000003
+          },
+          "current": {
+            "brent_3m_pct": 10.837201856891298,
+            "headline_core_gap_pp": 0.8000000000000003
+          }
+        }
+      },
+      {
+        "started_at": "2021-06-30",
+        "ended_at": "2021-08-02",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 20.109631949882534,
+            "headline_core_gap_pp": 0.8000000000000003
+          },
+          "current": {
+            "brent_3m_pct": 14.749741621142753,
+            "headline_core_gap_pp": 0.3999999999999999
+          }
+        }
+      },
+      {
+        "started_at": "2021-10-19",
+        "ended_at": "2021-11-26",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 22.461802084820803,
+            "headline_core_gap_pp": 0.7000000000000002
+          },
+          "current": {
+            "brent_3m_pct": 13.768718801996659,
+            "headline_core_gap_pp": 0.9000000000000004
+          }
+        }
+      },
+      {
+        "started_at": "2022-02-14",
+        "ended_at": "2022-06-02",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 20.124481327800847,
+            "headline_core_gap_pp": 0.7999999999999998
+          },
+          "current": {
+            "brent_3m_pct": 10.15956008293517,
+            "headline_core_gap_pp": 1.0999999999999996
+          }
+        }
+      },
+      {
+        "started_at": "2023-09-19",
+        "ended_at": "2023-10-24",
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 24.765800237498347,
+            "headline_core_gap_pp": 0.7000000000000002
+          },
+          "current": {
+            "brent_3m_pct": 13.348137182334074,
+            "headline_core_gap_pp": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-09-10",
+        "ended_at": null,
+        "evidence": {
+          "trigger": {
+            "brent_3m_pct": 27.16501507970701,
+            "headline_core_gap_pp": 0.7000000000000002
+          },
+          "current": {
+            "brent_3m_pct": 65.92894583576,
+            "headline_core_gap_pp": 0.6000000000000001
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "brent_3m_pct": 65.92894583576,
+      "headline_core_gap_pp": 0.6000000000000001
+    }
+  },
+  {
+    "situation_id": "fr_fiscal_stress",
+    "scope": "currency",
+    "scope_key": "EUR",
+    "name": "French fiscal stress",
+    "severity": "high",
+    "evidence_panel_id": "french_fiscal",
+    "data_available": true,
+    "status": "active",
+    "episodes": [
+      {
+        "started_at": "2024-12-02",
+        "ended_at": "2025-02-13",
+        "evidence": {
+          "trigger": {
+            "oat_bund_10y_bp": 83.61,
+            "oat_bund_20d_change_bp": 10.620000000000005
+          },
+          "current": {
+            "oat_bund_10y_bp": 71.53,
+            "oat_bund_20d_change_bp": -9.379999999999995
+          }
+        }
+      },
+      {
+        "started_at": "2025-09-09",
+        "ended_at": "2026-01-09",
+        "evidence": {
+          "trigger": {
+            "oat_bund_10y_bp": 80.31,
+            "oat_bund_20d_change_bp": 14.939999999999998
+          },
+          "current": {
+            "oat_bund_10y_bp": 70.72,
+            "oat_bund_20d_change_bp": -0.3200000000000074
+          }
+        }
+      },
+      {
+        "started_at": "2026-09-10",
+        "ended_at": null,
+        "evidence": {
+          "trigger": {
+            "oat_bund_10y_bp": 93.09,
+            "oat_bund_20d_change_bp": 10.060000000000002
+          },
+          "current": {
+            "oat_bund_10y_bp": 139.07,
+            "oat_bund_20d_change_bp": 53.77999999999999
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "oat_bund_10y_bp": 139.07,
+      "oat_bund_20d_change_bp": 53.77999999999999
+    }
+  },
+  {
+    "situation_id": "labor_deterioration",
+    "scope": "currency",
+    "scope_key": "USD:US",
+    "name": "Labor deterioration",
+    "severity": "medium",
+    "evidence_panel_id": "keydata",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2020-12-04",
+        "ended_at": "2021-04-02",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 3.666666666666667
+          },
+          "current": {
+            "unemployment_gap_pp": 1.9999999999999991
+          }
+        }
+      },
+      {
+        "started_at": "2024-07-05",
+        "ended_at": "2025-03-07",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.5
+          },
+          "current": {
+            "unemployment_gap_pp": 0.3000000000000007
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "unemployment_gap_pp": 0.033333333333333215
+    }
+  },
+  {
+    "situation_id": "labor_deterioration",
+    "scope": "currency",
+    "scope_key": "EUR:EU",
+    "name": "Labor deterioration",
+    "severity": "medium",
+    "evidence_panel_id": "keydata",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2020-12-02",
+        "ended_at": "2021-07-01",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.9666666666666659
+          },
+          "current": {
+            "unemployment_gap_pp": 0.7333333333333325
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "unemployment_gap_pp": 0.2666666666666675
+    }
+  },
+  {
+    "situation_id": "labor_deterioration",
+    "scope": "currency",
+    "scope_key": "EUR:DE",
+    "name": "Labor deterioration",
+    "severity": "medium",
+    "evidence_panel_id": "keydata",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2020-12-01",
+        "ended_at": "2021-03-31",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 1.2000000000000002
+          },
+          "current": {
+            "unemployment_gap_pp": 1.033333333333334
+          }
+        }
+      },
+      {
+        "started_at": "2022-11-02",
+        "ended_at": "2023-05-31",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.5
+          },
+          "current": {
+            "unemployment_gap_pp": 0.5666666666666664
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "unemployment_gap_pp": 0.10000000000000142
+    }
+  },
+  {
+    "situation_id": "labor_deterioration",
+    "scope": "currency",
+    "scope_key": "EUR:FR",
+    "name": "Labor deterioration",
+    "severity": "medium",
+    "evidence_panel_id": "keydata",
+    "data_available": true,
+    "status": "active",
+    "episodes": [
+      {
+        "started_at": "2026-02-10",
+        "ended_at": null,
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.6000000000000005
+          },
+          "current": {
+            "unemployment_gap_pp": 0.7666666666666675
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "unemployment_gap_pp": 0.7666666666666675
+    }
+  },
+  {
+    "situation_id": "labor_deterioration",
+    "scope": "currency",
+    "scope_key": "GBP:UK",
+    "name": "Labor deterioration",
+    "severity": "medium",
+    "evidence_panel_id": "keydata",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2020-12-15",
+        "ended_at": "2021-09-14",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.9333333333333336
+          },
+          "current": {
+            "unemployment_gap_pp": 0.6333333333333337
+          }
+        }
+      },
+      {
+        "started_at": "2023-08-15",
+        "ended_at": "2024-03-12",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.5
+          },
+          "current": {
+            "unemployment_gap_pp": 0.36666666666666625
+          }
+        }
+      },
+      {
+        "started_at": "2024-06-11",
+        "ended_at": "2026-07-21",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.5
+          },
+          "current": {
+            "unemployment_gap_pp": 0.40000000000000124
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "unemployment_gap_pp": 0.20000000000000018
+    }
+  },
+  {
+    "situation_id": "labor_deterioration",
+    "scope": "currency",
+    "scope_key": "JPY:JP",
+    "name": "Labor deterioration",
+    "severity": "medium",
+    "evidence_panel_id": "keydata",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2020-12-24",
+        "ended_at": "2021-04-29",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.7999999999999998
+          },
+          "current": {
+            "unemployment_gap_pp": 0.3999999999999999
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "unemployment_gap_pp": 0.06666666666666687
+    }
+  },
+  {
+    "situation_id": "labor_deterioration",
+    "scope": "currency",
+    "scope_key": "AUD:AU",
+    "name": "Labor deterioration",
+    "severity": "medium",
+    "evidence_panel_id": "keydata",
+    "data_available": true,
+    "status": "watch",
+    "episodes": [
+      {
+        "started_at": "2020-12-17",
+        "ended_at": "2021-05-20",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 1.7999999999999998
+          },
+          "current": {
+            "unemployment_gap_pp": 0.33333333333333304
+          }
+        }
+      },
+      {
+        "started_at": "2024-08-15",
+        "ended_at": "2025-01-16",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.5000000000000004
+          },
+          "current": {
+            "unemployment_gap_pp": 0.33333333333333304
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "unemployment_gap_pp": 0.40000000000000036
+    }
+  },
+  {
+    "situation_id": "labor_deterioration",
+    "scope": "currency",
+    "scope_key": "NZD:NZ",
+    "name": "Labor deterioration",
+    "severity": "medium",
+    "evidence_panel_id": "keydata",
+    "data_available": true,
+    "status": "active",
+    "episodes": [
+      {
+        "started_at": "2024-02-06",
+        "ended_at": null,
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.6333333333333333
+          },
+          "current": {
+            "unemployment_gap_pp": 1.5333333333333328
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "unemployment_gap_pp": 1.5333333333333328
+    }
+  },
+  {
+    "situation_id": "labor_deterioration",
+    "scope": "currency",
+    "scope_key": "CAD:CA",
+    "name": "Labor deterioration",
+    "severity": "medium",
+    "evidence_panel_id": "keydata",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2020-12-04",
+        "ended_at": "2021-10-08",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 3.299999999999999
+          },
+          "current": {
+            "unemployment_gap_pp": 0.36666666666666625
+          }
+        }
+      },
+      {
+        "started_at": "2021-12-03",
+        "ended_at": "2022-01-07",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.5333333333333341
+          },
+          "current": {
+            "unemployment_gap_pp": 0.5333333333333341
+          }
+        }
+      },
+      {
+        "started_at": "2023-10-06",
+        "ended_at": "2026-01-09",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.5
+          },
+          "current": {
+            "unemployment_gap_pp": 0.33333333333333304
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "unemployment_gap_pp": 0.033333333333333215
+    }
+  },
+  {
+    "situation_id": "labor_deterioration",
+    "scope": "currency",
+    "scope_key": "CHF:CH",
+    "name": "Labor deterioration",
+    "severity": "medium",
+    "evidence_panel_id": "keydata",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2020-12-08",
+        "ended_at": "2021-05-07",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.733333333333333
+          },
+          "current": {
+            "unemployment_gap_pp": 0.3666666666666667
+          }
+        }
+      },
+      {
+        "started_at": "2024-03-07",
+        "ended_at": "2024-08-06",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.5
+          },
+          "current": {
+            "unemployment_gap_pp": 0.3999999999999999
+          }
+        }
+      },
+      {
+        "started_at": "2025-02-06",
+        "ended_at": "2025-09-04",
+        "evidence": {
+          "trigger": {
+            "unemployment_gap_pp": 0.5000000000000004
+          },
+          "current": {
+            "unemployment_gap_pp": 0.33333333333333304
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "unemployment_gap_pp": 0.16666666666666696
+    }
+  },
+  {
+    "situation_id": "risk_off",
+    "scope": "currency",
+    "scope_key": "GLOBAL",
+    "name": "Risk off",
+    "severity": "high",
+    "evidence_panel_id": "situations",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2020-02-25",
+        "ended_at": "2021-03-30",
+        "evidence": {
+          "trigger": {
+            "vix": 27.56,
+            "vix_5d_change_pts": 13.179999999999998,
+            "sp500_10d_pct": -7.188146824510467
+          },
+          "current": {
+            "vix": 20.74,
+            "vix_5d_change_pts": 1.8599999999999994,
+            "sp500_10d_pct": 0.05417063498063257
+          }
+        }
+      },
+      {
+        "started_at": "2022-01-21",
+        "ended_at": "2022-08-12",
+        "evidence": {
+          "trigger": {
+            "vix": 28.85,
+            "vix_5d_change_pts": 8.540000000000003,
+            "sp500_10d_pct": -6.348101063659895
+          },
+          "current": {
+            "vix": 20.2,
+            "vix_5d_change_pts": -1.240000000000002,
+            "sp500_10d_pct": 3.311045248168809
+          }
+        }
+      },
+      {
+        "started_at": "2022-08-26",
+        "ended_at": "2023-01-12",
+        "evidence": {
+          "trigger": {
+            "vix": 25.56,
+            "vix_5d_change_pts": 4.959999999999997,
+            "sp500_10d_pct": -5.198182306694854
+          },
+          "current": {
+            "vix": 21.09,
+            "vix_5d_change_pts": -0.9200000000000017,
+            "sp500_10d_pct": 3.665469739505123
+          }
+        }
+      },
+      {
+        "started_at": "2024-08-05",
+        "ended_at": "2024-08-13",
+        "evidence": {
+          "trigger": {
+            "vix": 27.71,
+            "vix_5d_change_pts": 10.02,
+            "sp500_10d_pct": -5.68259133796758
+          },
+          "current": {
+            "vix": 20.71,
+            "vix_5d_change_pts": -17.86,
+            "sp500_10d_pct": -2.1808204936725972
+          }
+        }
+      },
+      {
+        "started_at": "2025-03-10",
+        "ended_at": "2025-03-19",
+        "evidence": {
+          "trigger": {
+            "vix": 26.92,
+            "vix_5d_change_pts": 3.41,
+            "sp500_10d_pct": -6.434322656479585
+          },
+          "current": {
+            "vix": 21.7,
+            "vix_5d_change_pts": -5.220000000000002,
+            "sp500_10d_pct": -2.8294523333592947
+          }
+        }
+      },
+      {
+        "started_at": "2025-04-04",
+        "ended_at": "2025-05-12",
+        "evidence": {
+          "trigger": {
+            "vix": 45.31,
+            "vix_5d_change_pts": 23.660000000000004,
+            "sp500_10d_pct": -10.4715256653657
+          },
+          "current": {
+            "vix": 21.9,
+            "vix_5d_change_pts": -0.7800000000000011,
+            "sp500_10d_pct": 2.4379163868884612
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "vix": 16.39,
+      "vix_5d_change_pts": 0.7200000000000006,
+      "sp500_10d_pct": 0.9439905888503963
+    }
+  },
+  {
+    "situation_id": "bear_steepening",
+    "scope": "currency",
+    "scope_key": "USD:US",
+    "name": "Bear steepening",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2023-11-29",
+        "ended_at": "2023-12-13",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 29.80000000000009,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 11.76000000000004,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-01-10",
+        "ended_at": "2024-02-01",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 37.09999999999995,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 11.98999999999999,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-07-10",
+        "ended_at": "2024-08-14",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 20.970000000000066,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 10.51000000000002,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-04-17",
+        "ended_at": "2025-05-01",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 15.500000000000025,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 17.39999999999995,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "ten_s_thirty_s_1m_change_bp": -14.700000000000117,
+      "two_y_change_less_than_curve": 0.0
+    }
+  },
+  {
+    "situation_id": "bear_steepening",
+    "scope": "currency",
+    "scope_key": "EUR:DE",
+    "name": "Bear steepening",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [],
+    "latest_evidence": {
+      "ten_s_thirty_s_1m_change_bp": -11.329999999999973,
+      "two_y_change_less_than_curve": 0.0
+    }
+  },
+  {
+    "situation_id": "bear_steepening",
+    "scope": "currency",
+    "scope_key": "GBP:UK",
+    "name": "Bear steepening",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2023-09-18",
+        "ended_at": "2023-10-16",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 38.17000000000004,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 11.880000000000024,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2023-11-02",
+        "ended_at": "2023-11-06",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 19.039999999999946,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 27.890000000000015,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2023-12-03",
+        "ended_at": "2024-01-19",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 20.869999999999944,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 12.05999999999996,
+            "two_y_change_less_than_curve": 0.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-04-10",
+        "ended_at": "2024-04-16",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 27.02,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 15.000000000000124,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-01-15",
+        "ended_at": "2025-01-17",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 15.93,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 15.93,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-04-11",
+        "ended_at": "2025-05-08",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 15.550000000000086,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 12.96999999999997,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-04-17",
+        "ended_at": "2026-04-21",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 17.739999999999956,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 12.950000000000106,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-05-20",
+        "ended_at": "2026-05-22",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 23.329999999999984,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 23.329999999999984,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "ten_s_thirty_s_1m_change_bp": -19.259999999999966,
+      "two_y_change_less_than_curve": 0.0
+    }
+  },
+  {
+    "situation_id": "bear_steepening",
+    "scope": "currency",
+    "scope_key": "JPY:JP",
+    "name": "Bear steepening",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2025-04-04",
+        "ended_at": "2025-05-26",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 15.100000000000001,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 20.499999999999982,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-07-13",
+        "ended_at": "2025-07-23",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 21.599999999999973,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 13.700000000000024,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-03-30",
+        "ended_at": "2026-04-08",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 15.35999999999995,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 10.670000000000005,
+            "two_y_change_less_than_curve": 0.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-05-18",
+        "ended_at": "2026-05-21",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 17.899999999999977,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 13.299999999999955,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "ten_s_thirty_s_1m_change_bp": 3.9800000000000075,
+      "two_y_change_less_than_curve": 0.0
+    }
+  },
+  {
+    "situation_id": "bear_steepening",
+    "scope": "currency",
+    "scope_key": "AUD:AU",
+    "name": "Bear steepening",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2023-11-28",
+        "ended_at": "2024-01-21",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 38.22999999999998,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 15.169999999999998,
+            "two_y_change_less_than_curve": 0.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-02-22",
+        "ended_at": "2024-02-27",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 22.56999999999998,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 13.129999999999953,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-03-27",
+        "ended_at": "2024-04-05",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 16.739999999999977,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 10.679999999999978,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-06-30",
+        "ended_at": "2024-09-03",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 18.770000000000042,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 13.010000000000055,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-01-20",
+        "ended_at": "2025-01-22",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 18.75,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 18.75,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-04-11",
+        "ended_at": "2025-05-06",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 19.63999999999997,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 15.89999999999998,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "ten_s_thirty_s_1m_change_bp": -3.9799999999998725,
+      "two_y_change_less_than_curve": 0.0
+    }
+  },
+  {
+    "situation_id": "bear_steepening",
+    "scope": "currency",
+    "scope_key": "NZD:NZ",
+    "name": "Bear steepening",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": false,
+    "status": "unavailable",
+    "episodes": [],
+    "latest_evidence": {
+      "ten_s_thirty_s_1m_change_bp": null,
+      "two_y_change_less_than_curve": null
+    }
+  },
+  {
+    "situation_id": "bear_steepening",
+    "scope": "currency",
+    "scope_key": "CAD:CA",
+    "name": "Bear steepening",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2023-11-14",
+        "ended_at": "2023-11-23",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 16.26999999999996,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 15.990000000000038,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-01-08",
+        "ended_at": "2024-01-26",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 18.730000000000004,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 11.779999999999994,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-07-25",
+        "ended_at": "2024-08-19",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 16.09999999999996,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 10.409999999999986,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-07-04",
+        "ended_at": "2025-07-07",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 16.92999999999998,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 16.92999999999998,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-08-08",
+        "ended_at": "2025-09-08",
+        "evidence": {
+          "trigger": {
+            "ten_s_thirty_s_1m_change_bp": 15.399999999999991,
+            "two_y_change_less_than_curve": 1.0
+          },
+          "current": {
+            "ten_s_thirty_s_1m_change_bp": 12.020000000000008,
+            "two_y_change_less_than_curve": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "ten_s_thirty_s_1m_change_bp": -3.0000000000000693,
+      "two_y_change_less_than_curve": 0.0
+    }
+  },
+  {
+    "situation_id": "bear_steepening",
+    "scope": "currency",
+    "scope_key": "CHF:CH",
+    "name": "Bear steepening",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": false,
+    "status": "unavailable",
+    "episodes": [],
+    "latest_evidence": {
+      "ten_s_thirty_s_1m_change_bp": null,
+      "two_y_change_less_than_curve": null
+    }
+  },
+  {
+    "situation_id": "yields_up_currency_down",
+    "scope": "currency",
+    "scope_key": "USD",
+    "name": "Yields up, currency down",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [],
+    "latest_evidence": {
+      "two_y_10d_change_bp": 8.700000000000063,
+      "currency_index_10d_pct": 1.6698592567909731
+    }
+  },
+  {
+    "situation_id": "yields_up_currency_down",
+    "scope": "currency",
+    "scope_key": "EUR",
+    "name": "Yields up, currency down",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [],
+    "latest_evidence": {
+      "two_y_10d_change_bp": -21.730000000000025,
+      "currency_index_10d_pct": null
+    }
+  },
+  {
+    "situation_id": "yields_up_currency_down",
+    "scope": "currency",
+    "scope_key": "GBP",
+    "name": "Yields up, currency down",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2025-01-10",
+        "ended_at": "2025-01-16",
+        "evidence": {
+          "trigger": {
+            "two_y_10d_change_bp": 15.200000000000014,
+            "currency_index_10d_pct": -2.075263683409513
+          },
+          "current": {
+            "two_y_10d_change_bp": 8.549999999999969,
+            "currency_index_10d_pct": -2.117510160619602
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "two_y_10d_change_bp": -4.720000000000013,
+      "currency_index_10d_pct": 0.3234681239858674
+    }
+  },
+  {
+    "situation_id": "yields_up_currency_down",
+    "scope": "currency",
+    "scope_key": "JPY",
+    "name": "Yields up, currency down",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2026-08-12",
+        "ended_at": "2026-08-26",
+        "evidence": {
+          "trigger": {
+            "two_y_10d_change_bp": 16.579999999999995,
+            "currency_index_10d_pct": -1.1408261181802588
+          },
+          "current": {
+            "two_y_10d_change_bp": 5.950000000000011,
+            "currency_index_10d_pct": -0.9496361749050933
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "two_y_10d_change_bp": 7.269999999999999,
+      "currency_index_10d_pct": 1.018780157461563
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "AUD/CAD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-01-03",
+        "ended_at": "2024-01-08",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-03-22",
+        "ended_at": "2024-03-28",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-07-04",
+        "ended_at": "2025-07-08",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "AUD/CHF",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2025-02-06",
+        "ended_at": "2025-02-13",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-03-05",
+        "ended_at": "2025-03-07",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-08-07",
+        "ended_at": "2025-08-12",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-07-08",
+        "ended_at": "2026-07-13",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "AUD/JPY",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-05-17",
+        "ended_at": "2024-05-22",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-03-05",
+        "ended_at": "2025-03-10",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "AUD/NZD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "active",
+    "episodes": [
+      {
+        "started_at": "2025-07-03",
+        "ended_at": "2025-07-08",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-06-30",
+        "ended_at": "2026-07-09",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-09-30",
+        "ended_at": null,
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 1.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "AUD/USD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-07-09",
+        "ended_at": "2024-07-15",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-02-25",
+        "ended_at": "2025-03-05",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-10-10",
+        "ended_at": "2025-10-23",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-07-02",
+        "ended_at": "2026-07-14",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "CAD/CHF",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-07-26",
+        "ended_at": "2024-08-02",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-01-08",
+        "ended_at": "2025-01-10",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-05-06",
+        "ended_at": "2025-05-26",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-11-28",
+        "ended_at": "2025-12-04",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-01-16",
+        "ended_at": "2026-02-12",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "CAD/JPY",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-03-20",
+        "ended_at": "2024-04-09",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-06-14",
+        "ended_at": "2024-06-17",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-01-06",
+        "ended_at": "2025-01-15",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-12-01",
+        "ended_at": "2025-12-05",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-06-18",
+        "ended_at": "2026-06-30",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "CHF/JPY",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2025-07-11",
+        "ended_at": "2025-07-14",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-10-27",
+        "ended_at": "2025-10-30",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "EUR/AUD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-06-05",
+        "ended_at": "2024-06-07",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-03-28",
+        "ended_at": "2025-03-31",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-07-06",
+        "ended_at": "2026-07-17",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "EUR/CAD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-05-31",
+        "ended_at": "2024-06-05",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-07-26",
+        "ended_at": "2024-08-01",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-01-31",
+        "ended_at": "2025-02-03",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-05-02",
+        "ended_at": "2025-06-02",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-12-30",
+        "ended_at": "2026-01-07",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-01-20",
+        "ended_at": "2026-02-10",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "EUR/CHF",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "EUR/GBP",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-02-09",
+        "ended_at": "2024-02-14",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-01-17",
+        "ended_at": "2025-01-21",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-09-23",
+        "ended_at": "2025-10-07",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "EUR/JPY",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2025-04-07",
+        "ended_at": "2025-04-11",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-06-26",
+        "ended_at": "2025-07-08",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-12-04",
+        "ended_at": "2025-12-08",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-05-27",
+        "ended_at": "2026-06-26",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "EUR/NZD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-03-22",
+        "ended_at": "2024-04-01",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-09-19",
+        "ended_at": "2024-09-23",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-12-23",
+        "ended_at": "2025-01-07",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-01-21",
+        "ended_at": "2025-01-24",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-10-29",
+        "ended_at": "2025-10-31",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "EUR/USD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-05-17",
+        "ended_at": "2024-05-24",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-05-29",
+        "ended_at": "2024-06-07",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-03-26",
+        "ended_at": "2025-04-02",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-10-08",
+        "ended_at": "2025-10-10",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-12-31",
+        "ended_at": "2026-01-13",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-01-19",
+        "ended_at": "2026-01-21",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "GBP/AUD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-03-06",
+        "ended_at": "2024-03-14",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-07-17",
+        "ended_at": "2024-07-19",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-03-03",
+        "ended_at": "2025-03-06",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "GBP/CAD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-11-19",
+        "ended_at": "2024-11-21",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-01-20",
+        "ended_at": "2025-01-23",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-02-04",
+        "ended_at": "2025-02-07",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-02-14",
+        "ended_at": "2025-02-17",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-02-28",
+        "ended_at": "2025-03-03",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-05-19",
+        "ended_at": "2025-05-21",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-02-13",
+        "ended_at": "2026-02-27",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "GBP/CHF",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-07-09",
+        "ended_at": "2024-07-22",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "GBP/JPY",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-11-19",
+        "ended_at": "2024-11-21",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-11-28",
+        "ended_at": "2025-12-03",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "GBP/NZD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-05-30",
+        "ended_at": "2024-06-12",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-09-12",
+        "ended_at": "2024-09-23",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "GBP/USD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-02-06",
+        "ended_at": "2024-02-19",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-05-29",
+        "ended_at": "2024-06-07",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "NZD/CAD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-03-22",
+        "ended_at": "2024-04-02",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-11-10",
+        "ended_at": "2025-11-25",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-01-29",
+        "ended_at": "2026-02-02",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "NZD/CHF",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2025-01-09",
+        "ended_at": "2025-01-15",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-10-09",
+        "ended_at": "2025-10-13",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-10-23",
+        "ended_at": "2025-10-29",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "NZD/JPY",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-03-20",
+        "ended_at": "2024-04-08",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-10-27",
+        "ended_at": "2025-10-31",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "NZD/USD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-09-16",
+        "ended_at": "2024-09-24",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-03-28",
+        "ended_at": "2025-03-31",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-10-17",
+        "ended_at": "2025-11-19",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "USD/CAD",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "active",
+    "episodes": [
+      {
+        "started_at": "2024-06-28",
+        "ended_at": "2024-07-05",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-01-09",
+        "ended_at": "2025-01-14",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-10-17",
+        "ended_at": "2025-10-20",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-12-26",
+        "ended_at": "2026-01-09",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-09-29",
+        "ended_at": null,
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "USD/CHF",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2025-03-10",
+        "ended_at": "2025-03-12",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-11-27",
+        "ended_at": "2025-12-04",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2026-01-01",
+        "ended_at": "2026-01-13",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "correlation_break",
+    "scope": "pair",
+    "scope_key": "USD/JPY",
+    "name": "Correlation break",
+    "severity": "medium",
+    "evidence_panel_id": "curve",
+    "data_available": true,
+    "status": "inactive",
+    "episodes": [
+      {
+        "started_at": "2024-03-28",
+        "ended_at": "2024-04-09",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2024-12-20",
+        "ended_at": "2024-12-30",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-06-02",
+        "ended_at": "2025-06-04",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      },
+      {
+        "started_at": "2025-12-31",
+        "ended_at": "2026-01-05",
+        "evidence": {
+          "trigger": {
+            "rates_drivers_diverging": 1.0
+          },
+          "current": {
+            "rates_drivers_diverging": 1.0
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "rates_drivers_diverging": 0.0
+    }
+  },
+  {
+    "situation_id": "intervention_risk_jpy",
+    "scope": "pair",
+    "scope_key": "USD/JPY",
+    "name": "JPY intervention risk",
+    "severity": "high",
+    "evidence_panel_id": "price",
+    "data_available": true,
+    "status": "active",
+    "episodes": [
+      {
+        "started_at": "2024-04-11",
+        "ended_at": "2024-07-31",
+        "evidence": {
+          "trigger": {
+            "intervention_zone_distance_pct": 2.9778481012658307,
+            "usd_jpy": 153.295
+          },
+          "current": {
+            "intervention_zone_distance_pct": 3.313291139240515,
+            "usd_jpy": 152.765
+          }
+        }
+      },
+      {
+        "started_at": "2024-10-27",
+        "ended_at": "2024-11-29",
+        "evidence": {
+          "trigger": {
+            "intervention_zone_distance_pct": 2.981012658227853,
+            "usd_jpy": 153.29
+          },
+          "current": {
+            "intervention_zone_distance_pct": 4.082278481012651,
+            "usd_jpy": 151.55
+          }
+        }
+      },
+      {
+        "started_at": "2024-12-13",
+        "ended_at": "2025-02-20",
+        "evidence": {
+          "trigger": {
+            "intervention_zone_distance_pct": 2.774873417721517,
+            "usd_jpy": 153.6157
+          },
+          "current": {
+            "intervention_zone_distance_pct": 4.129746835443041,
+            "usd_jpy": 151.475
+          }
+        }
+      },
+      {
+        "started_at": "2025-10-30",
+        "ended_at": null,
+        "evidence": {
+          "trigger": {
+            "intervention_zone_distance_pct": 2.5284810126582307,
+            "usd_jpy": 154.005
+          },
+          "current": {
+            "intervention_zone_distance_pct": 0.10759493670885285,
+            "usd_jpy": 157.83
+          }
+        }
+      }
+    ],
+    "latest_evidence": {
+      "intervention_zone_distance_pct": 0.10759493670885285,
+      "usd_jpy": 157.83
+    }
+  }
+]

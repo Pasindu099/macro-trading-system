@@ -113,3 +113,9 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] 9a. EUR desk config (EZ/DE/FR, DE yield benchmark), canonical indicators, ECB source verification and gap report. Full suite: 482 passed, 7 skipped, nothing deselected.
 - [x] 9b. EZ/DE/FR country monitor, annual Eurostat deficit store (migration 0026, 18 rows through 2025), and FR−DE 10Y. Full suite: 485 passed, 7 skipped, nothing deselected.
 - [ ] 9c–f. ECB projections/tracking, €STR maths, EUR price data and desk (next session after the Part B stop).
+
+## Step 10 — situations, verdicts, scenarios
+- [x] 10a. Eight deterministic situations; migration 0027; FRED Brent/VIX/SP500; 23:50 UTC job; full-history backtest 174 episodes with the June 2024 FR sanity gap recorded. Full suite: 495 passed, 7 skipped, nothing deselected.
+- [ ] 10b. Weighted verdict and templated thesis for USD/EUR.
+- [ ] 10c. Meeting-priced scenarios and high-severity situation tails.
+- [ ] 10d. APIs and USD/EUR desk panels; final report and current verdicts.

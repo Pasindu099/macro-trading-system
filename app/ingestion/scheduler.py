@@ -64,6 +64,7 @@ from app.services.news_monitor import run_news_monitor
 from app.services.rate_fetchers import fetch_all, should_fetch_on_startup
 from app.services.rate_probability import save_snapshot
 from app.services.rates_derived_jobs import run_rates_derived
+from app.services.situations import run_situations_job
 from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -141,6 +142,18 @@ class Scheduler:
             coalesce=True,
         )
         logger.info("  Registered Macro State rebuild at 22:30 UTC")
+
+        self._scheduler.add_job(
+            run_situations_job,
+            trigger=CronTrigger(hour=23, minute=50, timezone="UTC"),
+            id="situations_daily",
+            name="Daily situation evaluation",
+            replace_existing=True,
+            misfire_grace_time=60 * 60,
+            max_instances=1,
+            coalesce=True,
+        )
+        logger.info("  Registered situations evaluation at 23:50 UTC")
 
         self._scheduler.add_job(
             self._run_rate_probability_fetch,

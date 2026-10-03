@@ -1,0 +1,92 @@
+version: 1
+intervention_zone_jpy: [158.0, 160.5]
+situations:
+  energy_shock:
+    id: energy_shock
+    name: Energy shock
+    scope: currency
+    currencies: [USD, EUR, CAD]
+    min_persistence_days: 2
+    exit_persistence_days: 5
+    severity: high
+    evidence_panel_id: inflation_driver
+    trigger: {all: [{field: brent_3m_pct, op: gt, value: 20}, {field: headline_core_gap_pp, op: gt, value: 0.2}]}
+    exit: {field: brent_3m_pct, op: lt, value: 10}
+  fr_fiscal_stress:
+    id: fr_fiscal_stress
+    name: French fiscal stress
+    scope: currency
+    currencies: [EUR]
+    min_persistence_days: 2
+    exit_persistence_days: 5
+    severity: high
+    evidence_panel_id: french_fiscal
+    trigger: {all: [{field: oat_bund_10y_bp, op: gt, value: 80}, {field: oat_bund_20d_change_bp, op: gt, value: 10}]}
+    exit: {field: oat_bund_10y_bp, op: lt, value: 70}
+  labor_deterioration:
+    id: labor_deterioration
+    name: Labor deterioration
+    scope: currency
+    countries: {US: USD, EU: EUR, DE: EUR, FR: EUR, UK: GBP, JP: JPY, AU: AUD, NZ: NZD, CA: CAD, CH: CHF}
+    min_persistence_days: 2
+    exit_persistence_days: 5
+    severity: medium
+    evidence_panel_id: keydata
+    trigger: {field: unemployment_gap_pp, op: gte, value: 0.5}
+    watch: {field: unemployment_gap_pp, op: gte, value: 0.3}
+    exit: {field: unemployment_gap_pp, op: lt, value: 0.3}
+  risk_off:
+    id: risk_off
+    name: Risk off
+    scope: currency
+    currencies: [GLOBAL]
+    min_persistence_days: 2
+    exit_persistence_days: 5
+    severity: high
+    evidence_panel_id: situations
+    trigger: {all: [{any: [{field: vix, op: gt, value: 25}, {field: vix_5d_change_pts, op: gt, value: 8}]}, {field: sp500_10d_pct, op: lt, value: -5}]}
+    exit: {field: vix, op: lt, value: 20}
+  bear_steepening:
+    id: bear_steepening
+    name: Bear steepening
+    scope: currency
+    countries: {US: USD, DE: EUR, UK: GBP, JP: JPY, AU: AUD, NZ: NZD, CA: CAD, CH: CHF}
+    min_persistence_days: 2
+    exit_persistence_days: 10
+    severity: medium
+    evidence_panel_id: curve
+    trigger: {all: [{field: ten_s_thirty_s_1m_change_bp, op: gt, value: 15}, {field: two_y_change_less_than_curve, op: eq, value: 1}]}
+    exit: {field: ten_s_thirty_s_1m_change_bp, op: lte, value: 10}
+  yields_up_currency_down:
+    id: yields_up_currency_down
+    name: Yields up, currency down
+    scope: currency
+    currencies: [USD, EUR, GBP, JPY]
+    min_persistence_days: 2
+    exit_persistence_days: 5
+    severity: medium
+    evidence_panel_id: curve
+    trigger: {all: [{field: two_y_10d_change_bp, op: gt, value: 15}, {field: currency_index_10d_pct, op: lt, value: -1}]}
+    exit: {any: [{field: two_y_10d_change_bp, op: lt, value: 5}, {field: currency_index_10d_pct, op: gt, value: -0.3}]}
+  correlation_break:
+    id: correlation_break
+    name: Correlation break
+    scope: pair
+    pairs: all
+    min_persistence_days: 2
+    exit_persistence_days: 5
+    severity: medium
+    evidence_panel_id: curve
+    trigger: {field: rates_drivers_diverging, op: eq, value: 1}
+    exit: {field: rates_drivers_diverging, op: eq, value: 0}
+  intervention_risk_jpy:
+    id: intervention_risk_jpy
+    name: JPY intervention risk
+    scope: pair
+    pairs: [USD/JPY]
+    min_persistence_days: 2
+    exit_persistence_days: 5
+    severity: high
+    evidence_panel_id: price
+    trigger: {field: intervention_zone_distance_pct, op: lte, value: 3}
+    exit: {field: intervention_zone_distance_pct, op: gt, value: 5}

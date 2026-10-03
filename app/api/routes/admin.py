@@ -31,13 +31,13 @@ from app.api.schemas import (
     UnmappedEventGroup,
     UnmappedEventsPayload,
 )
+from app.services.job_status import get_job_status
 from app.db.models import (
     Country,
     GovernmentYieldIngestionStatus,
     Indicator,
     IndicatorRelease,
     IngestionRun,
-    JobWatermark,
 )
 from app.db.session import get_session
 from app.settings import get_settings
@@ -223,43 +223,7 @@ async def admin_jobs_status(
     session: AsyncSession = Depends(get_session),
 ) -> dict[str, object]:
     """Last result, last success and watermark for each analytics job."""
-    rows = (await session.execute(
-        select(IngestionRun)
-        .where(IngestionRun.run_type.like("job:%"))
-        .order_by(IngestionRun.run_type, desc(IngestionRun.started_at))
-    )).scalars().all()
-    watermarks = (await session.execute(select(JobWatermark))).scalars().all()
-    by_name: dict[str, dict[str, object]] = {
-        f"job:{w.job_name}": {
-            "run_type": f"job:{w.job_name}",
-            "last_run": None,
-            "last_success": None,
-            "rows_written": None,
-            "last_error": None,
-            "watermark": w.last_success_at,
-        }
-        for w in watermarks
-    }
-    for row in rows:
-        job = by_name.setdefault(row.run_type, {
-            "run_type": row.run_type,
-            "last_run": None,
-            "last_success": None,
-            "rows_written": None,
-            "last_error": None,
-            "watermark": None,
-        })
-        if job["last_run"] is None:
-            job["last_run"] = {
-                "started_at": row.started_at,
-                "finished_at": row.finished_at,
-                "status": row.status,
-            }
-            job["rows_written"] = row.events_inserted
-            job["last_error"] = row.errors
-        if row.status == "success" and job["last_success"] is None:
-            job["last_success"] = row.finished_at
-    return {"jobs": list(by_name.values())}
+    return {"jobs": await get_job_status(session)}
 
 
 # ══════════════════════════════════════════════════════════════════════

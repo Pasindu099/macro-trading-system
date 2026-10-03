@@ -25,16 +25,19 @@ def _clear_cache():
     desks.cache_clear()
 
 
-def test_only_usd_desk_enabled():
+def test_usd_and_eur_desks_enabled():
     assert desks.get_desk("usd")["cb"] == "FED"
-    assert desks.get_desk("EUR") is None
+    eur = desks.get_desk("EUR")
+    assert eur["cb"] == "ECB" and eur["curve_country"] == "DE"
+    assert [member["code"] for member in eur["members"]] == ["EZ", "DE", "FR"]
+    assert next(item for item in eur["key_data"] if item["id"] == "gdp")["label"] == "Real GDP QoQ (not annualised)"
     assert desks.get_desk("XXX") is None
     nav = desks.desk_nav("USD")
     assert [d["code"] for d in nav] == desks.DESK_ORDER
-    assert [d["code"] for d in nav if d["enabled"]] == ["USD"]
+    assert [d["code"] for d in nav if d["enabled"]] == ["USD", "EUR"]
 
 
-def test_usd_desk_renders_and_other_desks_404():
+def test_usd_and_eur_desks_render_and_disabled_desks_404():
     client = make_client()
     page = client.get("/desks/USD")
     assert page.status_code == 200
@@ -43,8 +46,8 @@ def test_usd_desk_renders_and_other_desks_404():
     assert order == sorted(order)
     assert page.text.count("state-loading") == len(desk_panels.PANELS)
     assert "htmx" in page.text and "desk.js" in page.text
-    assert client.get("/desks/EUR").status_code == 404
-    assert client.get("/desks/EUR/panels/price").status_code == 404
+    assert client.get("/desks/EUR").status_code == 200
+    assert client.get("/desks/GBP").status_code == 404
     assert client.get("/desks/USD/panels/nope").status_code == 404
 
 

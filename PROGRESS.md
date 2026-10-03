@@ -110,6 +110,6 @@ Decisions: `DECISIONS_STEP8.md`. Commits: `step8: <sub-task>`. Scope: Fed only.
 ## Step 9 — EUR desk groundwork
 Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] 9-0. Null-period identity uses release date; 23-indicator repair changed 544 flags, rescored 911 Event Innovation rows, repeat dry-run 0; curve policy query restored `is_latest`. Full suite: 482 passed, 7 skipped, nothing deselected.
-- [ ] 9a. EUR desk config, canonical indicators, ECB source verification and gap report.
+- [x] 9a. EUR desk config (EZ/DE/FR, DE yield benchmark), canonical indicators, ECB source verification and gap report. Full suite: 482 passed, 7 skipped, nothing deselected.
 - [ ] 9b. EZ/DE/FR country monitor, annual Eurostat deficit store and FR−DE 10Y.
 - [ ] 9c–f. ECB projections/tracking, €STR maths, EUR price data and desk (next session after the Part B stop).

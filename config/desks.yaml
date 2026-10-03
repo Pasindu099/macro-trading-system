@@ -70,7 +70,52 @@ desks:
         three_month_avg: true
         series:
           - {name: Payrolls, canonical: nfp}
-  EUR: {enabled: false}
+  EUR:
+    enabled: true
+    name: Euro Desk
+    currency: EUR
+    country: EU
+    curve_country: DE
+    cb: ECB
+    cb_name: European Central Bank
+    cb_short: ECB
+    policy_indicator: ecb_deposit_rate
+    members:
+      - {code: EZ, country: EU}
+      - {code: DE, country: DE}
+      - {code: FR, country: FR}
+    key_data:
+      - {id: hicp, label: HICP YoY, series: {EZ: cpi_headline_yoy, DE: hicp_yoy, FR: hicp_yoy}}
+      - {id: core_hicp, label: Core HICP YoY, series: {EZ: core_cpi_yoy, DE: null, FR: null}}
+      - {id: unemployment, label: Unemployment, series: {EZ: unemployment_rate, DE: unemployment_rate, FR: unemployment_rate}}
+      - {id: gdp, label: Real GDP QoQ (not annualised), series: {EZ: gdp_qoq, DE: gdp_qoq, FR: gdp_qoq}}
+      - {id: manufacturing_pmi, label: HCOB Manufacturing PMI, series: {EZ: manufacturing_pmi, DE: manufacturing_pmi, FR: manufacturing_pmi}}
+      - {id: services_pmi, label: HCOB Services PMI, series: {EZ: services_pmi, DE: services_pmi, FR: services_pmi}}
+      - {id: business_sentiment, label: Business sentiment, series: {EZ: economic_sentiment, DE: ifo_business_climate, FR: business_confidence}}
+      - {id: wage_growth, label: Wage growth, series: {EZ: null, DE: null, FR: null}}
+    charts:
+      - id: infl
+        title: Inflation
+        sub: YoY %
+        unit: "%"
+        ref: 2
+        ref_label: ECB target 2%
+        series:
+          - {name: HICP, canonical: cpi_headline_yoy}
+          - {name: Core HICP, canonical: core_cpi_yoy}
+      - id: ur
+        title: Unemployment rate
+        sub: "%"
+        unit: "%"
+        series:
+          - {name: Unemployment, canonical: unemployment_rate}
+      - id: gdp
+        title: Real GDP
+        sub: QoQ % (not annualised)
+        unit: "%"
+        bars: true
+        series:
+          - {name: GDP QoQ, canonical: gdp_qoq}
   GBP: {enabled: false}
   JPY: {enabled: false}
   AUD: {enabled: false}

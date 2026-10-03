@@ -45,11 +45,11 @@ banks:
     projections: {name: Eurosystem/ECB staff macroeconomic projections, cadence: quarterly, months: [3, 6, 9, 12]}
     rate_path_type: none
     conditioning: market_curve          # technical assumption: market-implied rates
-    voting: {body: Governing Council, participants: 26, voters: 21, decision: consensus or majority, votes not published}
+    voting: {body: Governing Council, participants: 27, voters: 21, decision: consensus or majority, votes not published}
     meetings: {per_year: 8, calendar: "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"}
     minutes: {name: monetary policy accounts, lag_days: 28}
     policy_rate: {name: deposit facility rate}
-    verify: true
+    verify: false
 
   BOE:
     name: Bank of England (MPC)

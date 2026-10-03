@@ -16,3 +16,11 @@
 - Six additional null-period indicators appeared since the prior report; this repair was scoped to the specified 23. The ingestion fix applies to future prints for all indicators.
 - `app/services/curve_metrics.py:126` again filters `is_latest`. Focused tests: 11 passed, including the PostgreSQL different-date/same-day correction test.
 - Full suite: **482 passed, 7 skipped, nothing deselected**. The new integration test closes its database pool before subsequent TestClient loops.
+
+## Part A: EUR config
+
+- `config/desks.yaml`: EUR enabled with ECB, DE yield benchmark and EZ/DE/FR members (`EZ` maps to database `EU`). GDP labels explicitly say QoQ, not annualised.
+- `scripts/check_desk_indicators.py`: EUR charts 4/4 mapped. Country key-data gaps: EZ wage growth; DE and FR core HICP and wage growth. These are null/unavailable, with no substitute.
+- Existing USD checker gap remains ISM manufacturing production (unrelated).
+- `config/central_banks.yaml`: ECB `verify: false`; Governing Council corrected to 27 participants and 21 voting rights in 2026 ([ECB voting rotation](https://www.ecb.europa.eu/ecb-and-you/explainers/tell-me-more/html/voting-rotation.ff.html)). Symmetric 2% HICP target ([ECB strategy](https://www.ecb.europa.eu/mopo/strategy/strategy-review/ecb.strategyreview202506_strategy_statement.en.html)) and quarterly projection cadence ([ECB projections](https://www.ecb.europa.eu/press/projections/html/index.en.html)) confirmed.
+- Focused desk and central-bank tests: 8 passed. Full suite: **482 passed, 7 skipped, nothing deselected**.

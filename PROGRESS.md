@@ -37,7 +37,7 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] 3f. `/api/admin/health` excludes `run_type LIKE 'job:%'`
 
 ## Step 3.5 — UI replacement (Amendment 2)
-- [ ] 3.5a. **After Steps 1–3 pass**, inventory every `pages.py` helper and query as needed data logic / presentation only / unused in `INVENTORY_PAGES.md`; STOP for user review before moving code.
+- [x] 3.5a. `INVENTORY_PAGES.md` classifies every top-level and nested helper, all 33 routes, and direct query families. **STOP for user review before moving code.**
 - [ ] 3.5b. Move needed data logic into `app/services/` with unit tests pinning current outputs.
 - [ ] 3.5c. Tag the last commit before removal (`pre-redesign`).
 - [ ] 3.5d. Remove old page routes, Jinja templates, static page modules, `main.css` page styles, React/Babel brief builder, and Chart.js. Preserve database tables, migrations, and backend modules.
@@ -51,4 +51,4 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] T5. Unit suite: 260 passed, 7 skipped, with only the known out-of-scope `test_rate_probability.py:182` failure.
 
 ## Delivery
-- [ ] Final report: files changed, migration, test results, steps holding their lock > 10 s, out-of-scope flags (`--reload`/bind-mount, `retrieved_at` index), deploy + backfill + verify commands
+- [x] `REPORT_STEPS1_3.md`: files changed, migration, tests, >10 s lock durations, out-of-scope flags, and production commands.

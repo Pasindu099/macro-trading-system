@@ -26,3 +26,15 @@ Availability checked against EODHD GBOND and FOREX exchange symbol listings on 2
 - `job:rates_derived` after backfill: 0 new yield flags, 0 FX flags, 60,476 spread rows.
 - 10s30s is available for US, DE, UK, JP, AU, CA; unavailable with a reason for NZ and CH. FR−DE 2Y and 10Y are available; FR−DE 30Y remains unavailable. Drivers now return values for all 14 newly sourced FX pairs at both 2Y and 10Y.
 - Configured 30Y tenors now match the six sourced countries; FR, NZ and CH remain explicitly unavailable because neither 30Y nor 20Y is listed.
+
+## Production commands
+
+Run after `docker compose exec app alembic upgrade head`. The FX dry-run fetches history and consumes 14 calls; neither dry-run advances its checkpoint.
+
+```bash
+docker compose exec app python -m scripts.backfill_government_yields --countries FR US DE UK JP AU CA --maturities 2Y 10Y 30Y --start 2023-08-21 --end 2026-10-03 --max-requests 20 --dry-run --summary-only
+docker compose exec app python -m scripts.backfill_fx_spot --pairs EUR/AUD EUR/NZD EUR/CAD GBP/AUD GBP/NZD GBP/CAD GBP/CHF AUD/CAD AUD/CHF NZD/CAD NZD/CHF NZD/JPY CAD/CHF CHF/JPY --start 2023-08-21 --end 2026-10-03 --max-requests 14 --dry-run --summary-only
+docker compose exec app python -m scripts.backfill_government_yields --countries FR US DE UK JP AU CA --maturities 2Y 10Y 30Y --start 2023-08-21 --end 2026-10-03 --max-requests 20 --summary-only
+docker compose exec app python -m scripts.backfill_fx_spot --pairs EUR/AUD EUR/NZD EUR/CAD GBP/AUD GBP/NZD GBP/CAD GBP/CHF AUD/CAD AUD/CHF NZD/CAD NZD/CHF NZD/JPY CAD/CHF CHF/JPY --start 2023-08-21 --end 2026-10-03 --max-requests 14 --summary-only
+docker compose exec app python -m scripts.run_rates_derived
+```

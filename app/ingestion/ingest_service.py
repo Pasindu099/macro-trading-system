@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import select, update
+from sqlalchemy import Date, cast, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import session
@@ -208,7 +208,7 @@ class IngestService:
         indicator: Indicator,
         canonical: CanonicalEvent,
     ) -> str:
-        """Insert-or-revise the release for this (indicator, period).
+        """Insert-or-revise the release for this indicator and print identity.
 
         Returns one of: "inserted", "updated", "same"
         """
@@ -218,13 +218,22 @@ class IngestService:
             IndicatorRelease.period_start_date == canonical.period_start_date,
             IndicatorRelease.is_latest.is_(True),
         )
-        # If period_start_date is None (unparseable), match by raw period string
+        # If period_start_date is None, use the raw period or release date.
         if canonical.period_start_date is None:
-            query = select(IndicatorRelease).where(
-                IndicatorRelease.indicator_id == indicator.id,
-                IndicatorRelease.period == canonical.period_raw,
-                IndicatorRelease.is_latest.is_(True),
-            )
+            if canonical.period_raw is None:
+                query = select(IndicatorRelease).where(
+                    IndicatorRelease.indicator_id == indicator.id,
+                    IndicatorRelease.period_start_date.is_(None),
+                    IndicatorRelease.period.is_(None),
+                    cast(IndicatorRelease.released_at, Date) == canonical.released_at.date(),
+                    IndicatorRelease.is_latest.is_(True),
+                )
+            else:
+                query = select(IndicatorRelease).where(
+                    IndicatorRelease.indicator_id == indicator.id,
+                    IndicatorRelease.period == canonical.period_raw,
+                    IndicatorRelease.is_latest.is_(True),
+                )
 
         query = query.order_by(IndicatorRelease.id.desc()).limit(1)
         result = await session.execute(query)

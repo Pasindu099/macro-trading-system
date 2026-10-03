@@ -127,10 +127,8 @@ async def get_curve(country: str, window: str = "1M") -> dict[str, Any]:
             SELECT r.actual::float AS rate, r.released_at::date AS release_date
             FROM indicator_releases r JOIN indicators i ON i.id = r.indicator_id
             WHERE i.country_code = :country AND i.canonical_name = :indicator
-              AND r.actual IS NOT NULL
+              AND r.actual IS NOT NULL AND r.is_latest
               AND r.released_at::date <= :as_of
-              -- No is_latest filter: decisions have no period, so ingestion's null-period identity
-              -- (REPORT_NULL_PERIODS.md) can leave the newest decision flagged not-latest.
             ORDER BY r.released_at DESC, r.retrieved_at DESC, r.id DESC LIMIT 1
         """), {"country": policy_country, "indicator": indicator, "as_of": as_of})).first() if as_of else None
     return calculate_curve(

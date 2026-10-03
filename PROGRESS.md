@@ -106,3 +106,10 @@ Decisions: `DECISIONS_STEP8.md`. Commits: `step8: <sub-task>`. Scope: Fed only.
 - [x] 8d. Regime hiking (4.00%, +25bp 16 Sep); checklists 1/3 and 0/5; gap 2026 −3bp, later years beyond strip; tilt dovish_risk.
 - [x] 8e. /api/cb/{bank}/* (6 endpoints, Fed only); desk panels 2, 3, 4, 6 filled; curve policy lookup no longer depends on is_latest.
 - [x] 8t. `REPORT_STEP8.md`; full suite 481 passed, 7 skipped, nothing deselected; integration 25 passed.
+
+## Step 9 — EUR desk groundwork
+Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
+- [x] 9-0. Null-period identity uses release date; 23-indicator repair changed 544 flags, rescored 911 Event Innovation rows, repeat dry-run 0; curve policy query restored `is_latest`. Full suite: 482 passed, 7 skipped, nothing deselected.
+- [ ] 9a. EUR desk config, canonical indicators, ECB source verification and gap report.
+- [ ] 9b. EZ/DE/FR country monitor, annual Eurostat deficit store and FR−DE 10Y.
+- [ ] 9c–f. ECB projections/tracking, €STR maths, EUR price data and desk (next session after the Part B stop).

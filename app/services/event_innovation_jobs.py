@@ -139,9 +139,12 @@ async def delete_stale_bundles(
     return deleted
 
 
-async def score_new_releases(session: AsyncSession, since: datetime) -> int:
+async def score_new_releases(
+    session: AsyncSession, since: datetime, *, first_dates: dict[int, date] | None = None,
+) -> int:
     """Re-score changed indicators and their bundle partners in one transaction."""
-    first_dates = await load_changed_indicator_dates(session, since)
+    if first_dates is None:
+        first_dates = await load_changed_indicator_dates(session, since)
     if not first_dates:
         return 0
     config = load_config()

@@ -17,8 +17,8 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] 1h. `score_new_releases(session, since) -> int` implemented.
 - [x] 1i. Watermark uses a 10-minute overlap and advances to job START time in the same transaction as scores.
 - [x] 1j. Scheduler hooks run after each EODHD session and post-release ingestion commit (no fixed timer).
-- [ ] 1k. Prod one-off script: full rebuild without `--truncate` + orphan cleanup over all indicators; `--dry-run` prints rows to insert / update, orphans to delete, bundles to delete; `--key-diff` for 1b
-- [ ] 1l. `scripts/build_event_innovation.py` takes the same advisory lock as the incremental job
+- [x] 1k. `scripts/rebuild_event_innovation.py` fully reconciles without `--truncate`; `--dry-run --key-diff` prints score inserts/updates, orphan deletes, bundle inserts/updates/deletes. Compose preview: 483 score inserts, 17,251 score updates, 57 orphans, 1 stale bundle.
+- [x] 1l. `scripts/build_event_innovation.py` takes the same advisory lock as the incremental job.
 
 ## Step 2 — Daily Macro State rebuild
 - [x] 2a. `cb_preferred_score.py:310-317`: raise instead of returning inside `session_scope`; script still prints the error. The other four builders have no early returns; each now raises when its primary output table is empty.
@@ -47,8 +47,8 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] T1. Unit planner writes the affected suffix and affected bundle partners; repeated plan is identical.
 - [x] T2. Integration confirms a revised release replaces its score, leaving one row.
 - [x] T3. Unit confirms concurrent run marks `skipped`.
-- [~] T4. Integration (compose DB): fixture release → score and revision cleanup pass; `/api/admin/jobs/status` shape passes. Job-run reporting still needs an end-to-end check.
-- [ ] T5. Full suite passes (except `test_rate_probability.py:182`)
+- [x] T4. Integration (compose DB): fixture release → score and revision cleanup pass; `/api/admin/jobs/status` displays a logged job run and rows written.
+- [x] T5. Unit suite: 260 passed, 7 skipped, with only the known out-of-scope `test_rate_probability.py:182` failure.
 
 ## Delivery
 - [ ] Final report: files changed, migration, test results, steps holding their lock > 10 s, out-of-scope flags (`--reload`/bind-mount, `retrieved_at` index), deploy + backfill + verify commands

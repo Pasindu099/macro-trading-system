@@ -1,8 +1,6 @@
 """Backfill event_innovation_scores and release_bundles from release history.
 
-Full rebuild (what you want the first time, after the 0016 migration):
-
-    python -m scripts.build_event_innovation --truncate
+For a full reconciliation, use `scripts.rebuild_event_innovation`.
 
 Incremental re-score of one country, checking the numbers before writing:
 
@@ -23,6 +21,8 @@ from pathlib import Path
 
 from app.db.session import dispose_engine, session_scope
 from app.processing.event_innovation import build_event_innovation, load_config
+from app.services.event_innovation_jobs import JOB_NAME
+from app.services.job_lock import job_lock
 
 
 def parse_args() -> argparse.Namespace:
@@ -75,15 +75,18 @@ async def main() -> None:
         f"impact threshold <= {config.scored_importance_max}"
     )
 
-    async with session_scope() as session:
-        summary = await build_event_innovation(
-            session,
-            config=config,
-            country_code=args.country.upper() if args.country else None,
-            date_from=args.date_from,
-            truncate=args.truncate,
-            dry_run=args.dry_run,
-        )
+    async with job_lock(JOB_NAME) as acquired:
+        if not acquired:
+            raise RuntimeError("Event Innovation job is already running")
+        async with session_scope() as session:
+            summary = await build_event_innovation(
+                session,
+                config=config,
+                country_code=args.country.upper() if args.country else None,
+                date_from=args.date_from,
+                truncate=args.truncate,
+                dry_run=args.dry_run,
+            )
 
     print("Event innovation layer built." if not args.dry_run else "Dry run complete.")
     print(f"  releases loaded:      {summary['records_loaded']}")

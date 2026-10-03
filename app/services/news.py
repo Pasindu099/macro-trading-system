@@ -77,3 +77,29 @@ async def fetch_investinglive_articles(*, limit: int = 40) -> list[dict[str, Any
         )
         response.raise_for_status()
     return parse_rss_articles(response.text, limit=limit)
+
+
+def normalize_news_item(item: dict[str, Any]) -> dict[str, Any] | None:
+    """Normalize one EODHD news item for the News section."""
+    title = item.get("title") or item.get("headline") or item.get("name")
+    link = item.get("link") or item.get("url")
+    if not title or not link:
+        return None
+    published_at = item.get("date") or item.get("publishedAt") or item.get("published_at")
+    source = item.get("source") or item.get("site") or item.get("source_name") or "EODHD"
+    summary = item.get("content") or item.get("text") or item.get("description") or item.get("snippet") or ""
+    summary_text = str(summary).strip()
+    if len(summary_text) > 180:
+        summary_text = summary_text[:177].rstrip() + "..."
+    category = str(item.get("category") or "Macro").strip()
+    tags = item.get("tags") or item.get("symbols") or []
+    if isinstance(tags, str):
+        tags = [part.strip() for part in tags.split(",") if part.strip()]
+    if not tags and category:
+        tags = [category]
+    return {
+        "title": str(title).strip(), "link": str(link).strip(),
+        "source": str(source).strip(), "published_at": published_at,
+        "summary": summary_text, "category": category,
+        "tags": list(tags)[:3] if isinstance(tags, list) else [],
+    }

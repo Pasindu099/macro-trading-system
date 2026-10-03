@@ -574,7 +574,7 @@ async def _latest_yield_rows(session: AsyncSession) -> list[dict[str, Any]]:
                 quality_status,
                 observation_kind
             FROM government_yield_observations
-            WHERE quality_status IN ('valid', 'stale')
+            WHERE quality_status IN ('valid', 'stale') AND NOT is_outlier
             ORDER BY country_code, maturity, market_observation_date DESC, ingested_at DESC, id DESC
         """)
     )
@@ -597,7 +597,7 @@ async def _aligned_rates_fx_series(
                 FROM government_yield_observations
                 WHERE country_code = :base_country
                   AND maturity = :maturity
-                  AND quality_status = 'valid'
+                  AND quality_status = 'valid' AND NOT is_outlier
                 ORDER BY market_observation_date, ingested_at DESC, id DESC
             ),
             quote_y AS (
@@ -607,7 +607,7 @@ async def _aligned_rates_fx_series(
                 FROM government_yield_observations
                 WHERE country_code = :quote_country
                   AND maturity = :maturity
-                  AND quality_status = 'valid'
+                  AND quality_status = 'valid' AND NOT is_outlier
                 ORDER BY market_observation_date, ingested_at DESC, id DESC
             ),
             fx AS (
@@ -616,7 +616,7 @@ async def _aligned_rates_fx_series(
                     close_value::float AS fx_close
                 FROM fx_spot_observations
                 WHERE pair = :pair
-                  AND quality_status = 'valid'
+                  AND quality_status = 'valid' AND NOT is_outlier
                 ORDER BY observation_date, ingested_at DESC, id DESC
             )
             SELECT fx.obs_date AS date,
@@ -743,7 +743,7 @@ async def _yield_change_rows(session: AsyncSession, maturity: str, lookback_rows
                        ) AS rn
                 FROM government_yield_observations
                 WHERE maturity = :maturity
-                  AND quality_status = 'valid'
+                  AND quality_status = 'valid' AND NOT is_outlier
             )
             SELECT latest.country_code,
                    latest.market_observation_date AS latest_date,
@@ -828,7 +828,7 @@ async def _country_curve_history(
                        ) AS rn
                 FROM government_yield_observations
                 WHERE country_code = :country
-                  AND quality_status = 'valid'
+                  AND quality_status = 'valid' AND NOT is_outlier
             )
             SELECT maturity, maturity_months, market_observation_date, yield_value, rn
             FROM ranked

@@ -24,3 +24,9 @@
 
 - Above-threshold series: JP10Y, US10Y, AUDUSD, GBPUSD, NZDUSD, USDCHF. The stored raw payload for US10Y on 2026-08-21 has close 4.702, matching its stored value; the current live response is 4.736. This confirms that at least that gap reflects a changed provider value after ingestion, rather than a DB read conversion. The other gaps are recorded for the Part I backfill/refresh.
 - Focused tests: `test_rates_db_reads.py` 1 passed; `test_rate_repricing.py` 16 passed. Full suite: 292 passed, 7 skipped, 1 deselected (known FED date test), 18 integration failures where test clients receive sign-in/401 responses.
+
+## Part D: outlier flags
+
+- Migration `0022_rates_quality_spreads` applied locally. It adds `is_outlier` to both observation tables and creates the Part E `yield_spreads` table.
+- The reversing-spike job flagged 13 government yields and 0 FX observations. Raw rows remain; service and fixed-income reads exclude flagged rows. Synthetic FX observations are excluded from the flagger.
+- Focused tests: quality and DB reads 3 passed; fixed-income API 7 passed. Full suite (before the final fixed-income filter edit): 294 passed, 7 skipped, 1 deselected, same 18 auth-related integration failures.

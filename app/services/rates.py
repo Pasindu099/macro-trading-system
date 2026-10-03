@@ -243,7 +243,7 @@ async def _available_yield_symbols() -> set[str]:
     async with get_sessionmaker()() as session:
         result = await session.execute(text("""
             SELECT DISTINCT provider_symbol FROM government_yield_observations
-            WHERE quality_status = 'valid'
+            WHERE quality_status = 'valid' AND NOT is_outlier
         """))
     return {str(symbol).split(".")[0].upper() for symbol in result.scalars()}
 
@@ -261,7 +261,7 @@ async def _stored_histories(
         FROM {table}
         WHERE provider_symbol = ANY(:symbols)
           AND {date_column} BETWEEN :from_date AND :to_date
-          AND quality_status = 'valid'
+          AND quality_status = 'valid' AND NOT is_outlier
         ORDER BY provider_symbol, {date_column}, ingested_at DESC, id DESC
     """)
     async with get_sessionmaker()() as session:

@@ -23,6 +23,7 @@ class _Session:
     async def execute(self, query, parameters):
         assert "government_yield_observations" in str(query)
         assert "quality_status = 'valid'" in str(query)
+        assert "NOT is_outlier" in str(query)
         assert parameters["symbols"] == ["US10Y.GBOND", "DE10Y.GBOND"]
         return _Result()
 

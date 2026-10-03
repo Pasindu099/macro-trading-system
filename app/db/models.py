@@ -613,6 +613,7 @@ class GovernmentYieldObservation(Base):
     data_frequency: Mapped[str] = mapped_column(String(20), nullable=False)
     source_type: Mapped[str] = mapped_column(String(30), nullable=False)
     quality_status: Mapped[str] = mapped_column(String(30), nullable=False)
+    is_outlier: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
     observation_kind: Mapped[str] = mapped_column(String(30), nullable=False)
     payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     raw_payload: Mapped[dict[str, Any]] = mapped_column(
@@ -736,6 +737,7 @@ class FxSpotObservation(Base):
     data_frequency: Mapped[str] = mapped_column(String(20), nullable=False)
     source_type: Mapped[str] = mapped_column(String(30), nullable=False)
     quality_status: Mapped[str] = mapped_column(String(30), nullable=False)
+    is_outlier: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
     payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     raw_payload: Mapped[dict[str, Any]] = mapped_column(
         JSONB,

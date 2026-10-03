@@ -50,7 +50,9 @@ from app.ingestion.run_logger import run_logger
 from app.services.government_yields import (
     check_government_yield_staleness,
     ingest_eodhd_government_yields,
+    revision_refetch_start,
 )
+from app.services.fx_spot import ingest_eodhd_fx_spot
 from app.services.meeting_calendar import SUPPORTED_BANKS
 from app.services.macro_state_jobs import run_macro_state_chain
 from app.services.event_innovation_jobs import run_incremental_event_innovation
@@ -344,8 +346,9 @@ class Scheduler:
         """Daily EODHD GBOND update after expected end-of-day availability."""
         settings = get_settings()
         today = date.today()
-        from_date = today - timedelta(
-            days=settings.government_yields_incremental_lookback_days,
+        from_date = min(
+            today - timedelta(days=settings.government_yields_incremental_lookback_days),
+            revision_refetch_start(today),
         )
         async with EODHDClient() as client, session_scope() as session:
             stats = await ingest_eodhd_government_yields(
@@ -365,8 +368,25 @@ class Scheduler:
             len(stats.stale_symbols),
             len(stats.errors),
         )
-        if stats.status in {"success", "partial"} and stats.observations_seen:
+        fx_inserted = await self._run_fx_spot_incremental(from_date, today)
+        if (stats.status in {"success", "partial"} and stats.observations_seen) or fx_inserted:
             await run_rates_derived()
+
+    async def _run_fx_spot_incremental(self, from_date: date, to_date: date) -> int:
+        """Re-fetch recent FX closes; revised closes become the newest row per date."""
+        try:
+            async with EODHDClient() as client, session_scope() as session:
+                stats = await ingest_eodhd_fx_spot(
+                    session, client, from_date=from_date, to_date=to_date,
+                )
+        except Exception:
+            logger.exception("FX spot update failed")
+            return 0
+        logger.info(
+            "FX spot update %s: inserted=%d seen=%d errors=%d",
+            stats.status, stats.observations_inserted, stats.observations_seen, len(stats.errors),
+        )
+        return stats.observations_inserted
 
     async def _run_government_yield_stale_check(self) -> None:
         """Update operational status for stale/missing government-yield symbols."""

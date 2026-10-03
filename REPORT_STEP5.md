@@ -1,0 +1,19 @@
+# Step 5 — Rates integrity + COT positioning
+
+## Part 0: rates data integrity — verdict: provider revision, no date shift
+
+Window 2026-08-03..21; stored `raw_payload` vs live EODHD now (`scripts/step5_rates_integrity.py`, 5 history calls). The Step 4 snapshot equals live-now on every date, so nothing moved after Step 4 Part C.
+
+| Symbol | Stored rows ≠ live | Classification |
+| --- | ---: | --- |
+| GBPUSD | 18/18 | Revision: provider re-sourced history (4-dp, volume 0 → 6-dp bars). Old bar's close ≈ prior day's close while high/low match the same day, so it looks like a 1-day shift, but `raw_payload.date` equals our `observation_date`. Our mapping is correct. |
+| NZDUSD | 18/19 | Revision: same re-sourced feed; differences up to 0.48%. |
+| AUDUSD | 17/17 | Revision: 4-dp vs 6-dp precision on 16 dates; 2026-08-21 (0.08%) was captured intraday before the close. |
+| USDCHF | 1/17 | Revision: 2026-08-21 only, captured intraday on ingestion day. |
+| JP10Y | 1/16 | Revision: 2026-08-21 only (2.886 → 2.8747), captured intraday. |
+
+- Fix: the daily rates job re-fetches at least 5 business days (`revision_refetch_start`, `app/services/government_yields.py`). It now also re-fetches all 28 EODHD FX pairs, which previously had no incremental ingest (`app/ingestion/scheduler.py`, `_run_fx_spot_incremental`). It then runs `job:rates_derived` when FX rows change.
+- A revised payload has a new hash, so it is inserted as a new row. Every reader already takes the newest row per date, and the superseded raw payload is retained.
+- Re-ingest: yields 2026-08-01..10-03 (58 calls, 920 rows, 147 revised symbol-dates). 7 original crosses since 2023-08-21 (7 calls, 265 rows). The 7 USD majors were re-fetched from 2010 in Part C. `job:rates_derived`: 0 new flags, 60,982 spreads.
+- Regression test: `tests/unit/test_rates_revision_refetch.py` covers the 5-business-day window, the revised hash on the same date, and the job re-fetching FX and yields before the rebuild.
+- Full suite: 336 passed, 7 skipped, 1 deselected (known FED test).

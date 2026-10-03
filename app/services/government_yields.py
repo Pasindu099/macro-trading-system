@@ -356,6 +356,23 @@ def _parse_decimal(value: Any) -> Decimal | None:
         return None
 
 
+REVISION_REFETCH_BUSINESS_DAYS = 5
+
+
+def revision_refetch_start(today: date, business_days: int = REVISION_REFETCH_BUSINESS_DAYS) -> date:
+    """First date of the window re-fetched so provider revisions replace stored values.
+
+    A revised payload has a new hash, so it is inserted as a new row; readers take
+    the newest row per date, and the superseded raw payload is retained.
+    """
+    day, counted = today, 0
+    while counted < business_days:
+        day -= timedelta(days=1)
+        if day.weekday() < 5:
+            counted += 1
+    return day
+
+
 def _is_stale(
     latest_observation_date: date | None,
     as_of: date,

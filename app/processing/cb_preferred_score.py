@@ -310,12 +310,12 @@ async def build_cb_preferred_score(
         print("  Loading indicator features…")
         features_df = await _load_features(session)
         if features_df.empty:
-            return {"error": "No indicator features found."}
+            raise RuntimeError("No indicator features found.")
 
         print("  Computing CB-preferred scores…")
         scores_df, components_df = _compute_scores(features_df, config)
         if scores_df.empty:
-            return {"error": "No scores computed — check CB_WATCHLIST canonical names."}
+            raise RuntimeError("No scores computed — check CB_WATCHLIST canonical names.")
 
         print(f"  Writing {len(scores_df)} score rows to DB…")
         await _insert_scores(session, scores_df)

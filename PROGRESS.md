@@ -8,7 +8,7 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 
 ## Step 1 — Incremental Event Innovation
 - [x] 1a. Migration `0021_job_watermarks` + `JobWatermark` ORM model
-- [ ] 1b. Dedup-key identity diff: old `COALESCE(period_start_date, released_at::date)` vs new `COALESCE(period_start_date, period)`, reported **before** the key changes. Blocked: needs a DB; delivered as the `--key-diff` output of the one-off script (1k)
+- [~] 1b. Read-only dedup-key identity diff implemented in `scripts/diff_event_innovation_keys.py`. Execution blocked: local Docker is stopped and the configured PostgreSQL hostname does not resolve. The key has not changed.
 - [ ] 1c. Align `_RELEASES_SQL` dedup key with ingestion (`period` fallback; note on the null-period edge case)
 - [ ] 1d. `load_release_records(indicator_ids=...)` filter + affected-indicator query (`retrieved_at > since`, earliest release date per indicator)
 - [ ] 1e. Incremental planner: full history for affected indicators + bundle partners, score in memory, persist only rows on/after each indicator's earliest new or revised print, plus affected bundles
@@ -21,7 +21,7 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [ ] 1l. `scripts/build_event_innovation.py` takes the same advisory lock as the incremental job
 
 ## Step 2 — Daily Macro State rebuild
-- [ ] 2a. `cb_preferred_score.py:310-317`: raise instead of returning inside `session_scope`; script still prints the error. Audit of the other 4 builders done: no early returns found
+- [x] 2a. `cb_preferred_score.py:310-317`: raise instead of returning inside `session_scope`; script still prints the error. Audit of the other 4 builders done: no early returns found
 - [ ] 2b. `export: bool = True` on the 5 builders (scheduled runs pass `export=False`)
 - [ ] 2c. `statement_timeout` passed through to each builder's `session_scope`
 - [ ] 2d. `pages.py` `_build_currency_stance_dashboard`: empty `cb_preferred_score` → legacy fallback (the meter function already handles empty)

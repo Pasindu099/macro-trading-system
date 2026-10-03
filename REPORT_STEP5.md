@@ -27,3 +27,11 @@ Window 2026-08-03..21; stored `raw_payload` vs live EODHD now (`scripts/step5_ra
 - TFF (`fut_fin_txt_{year}.zip`) **includes ICE US Dollar Index DX, code 098662, in every year 2010–2026** (39 weeks in 2026 to 2026-09-29). USD is therefore sourced directly (`derived: false`).
 - TFF market names drift (e.g. "BRITISH POUND STERLING" → "BRITISH POUND"), and the date header changes between years (`Report_Date_as_MM_DD_YYYY` → `Report_Date_as_YYYY-MM-DD`). Step 5 therefore keys on contract codes and `As_of_Date_In_Form_YYMMDD`.
 - The 2010 yearly file starts mid-year (24 weeks). Jan–Jun 2010 comes from `fin_fut_txt_2006_2016.zip`, filtered to ≥ 2010-01-01.
+
+## Part B: persistence + backfill
+
+- Migration `2026_10_03_0023_cot_positions.py`: PK (report_date, contract_code, category), category check, (currency, report_date) index.
+- Contracts used (`config/cot_contracts.yaml`, TFF futures only): EUR 099741, GBP 096742, JPY 097741, AUD 232741, NZD 112741, CAD 090741, CHF 092741 (all CME), and USD = ICE DX 098662 (`derived: false`).
+- Backfill (`scripts/backfill_cot_tff.py`): 18 CFTC downloads (combined 2006–16 + yearly 2010–2026), 48,440 rows seen, **34,960 written** = 874 weeks × 8 contracts × 5 categories, 2010-01-05 → 2026-09-29. The 2010–2016 yearly files wrote 0 rows because they match the combined file. A re-run of 2025–26 wrote 0.
+- `job:cot_weekly` (`app/services/cot_positions.py`) runs Fri 21:00 UTC and retries Mon 21:00 UTC. The job uses an advisory lock, `run_logger`, a 10-minute guard and a 5-minute statement timeout. The Monday retry is skipped if the expected Tuesday is stored. If that Tuesday is still missing, the run is logged `partial`.
+- Tests: 4 unit (`test_cot_positions.py`), 1 integration idempotency (`test_cot_backfill.py`). Full suite: 341 passed, 7 skipped, 1 deselected.

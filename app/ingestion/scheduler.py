@@ -52,6 +52,7 @@ from app.services.government_yields import (
     ingest_eodhd_government_yields,
     revision_refetch_start,
 )
+from app.services.cot_positions import run_cot_weekly
 from app.services.fx_spot import ingest_eodhd_fx_spot
 from app.services.meeting_calendar import SUPPORTED_BANKS
 from app.services.macro_state_jobs import run_macro_state_chain
@@ -198,6 +199,19 @@ class Scheduler:
             settings.government_yields_stale_check_hour_utc,
             settings.government_yields_stale_check_minute_utc,
         )
+
+        # CFTC TFF positions: Friday release, Monday retry for holiday delays.
+        for job_id, day, retry in (("cot_weekly", "fri", False), ("cot_weekly_retry", "mon", True)):
+            self._scheduler.add_job(
+                run_cot_weekly,
+                trigger=CronTrigger(day_of_week=day, hour=21, minute=0, timezone="UTC"),
+                kwargs={"retry": retry},
+                id=job_id,
+                name=f"CFTC TFF positions ({day} 21:00 UTC)",
+                replace_existing=True,
+                misfire_grace_time=60 * 60,
+            )
+        logger.info("  Registered job:cot_weekly Fri 21:00 UTC, retry Mon 21:00 UTC")
 
         self._scheduler.add_job(
             _poll_cb_feeds,

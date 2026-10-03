@@ -73,7 +73,7 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 Decisions: `DECISIONS_STEP5.md`. Commits: `step5: <sub-task>`.
 - [x] 5-0. Rates integrity: all gaps are provider revisions (re-sourced FX history, intraday last-day captures), no date shift. Daily rates job now re-fetches ≥5 business days of yields and all 28 FX pairs, then rebuilds derived data. Regression test added; full suite 336 passed.
 - [x] 5a. COT state: Legacy report, deacot zip, name-matched contracts, 6h in-process cache. TFF includes DX (098662) 2010–2026 → USD direct.
-- [ ] 5b. Migration 0023 `cot_positions`, `config/cot_contracts.yaml`, TFF backfill from 2010 (idempotent), `job:cot_weekly` (Fri 21:00 UTC, Mon retry).
+- [x] 5b. Migration 0023 `cot_positions`, `config/cot_contracts.yaml` (USD = DX 098662), TFF backfill 34,960 rows 2010-01-05..2026-09-29 (idempotent), `job:cot_weekly` Fri 21:00 + Mon retry. Full suite 341 passed.
 - [ ] 5c. FX spot backfill for 7 USD majors back to 2010-01-01; calls reported.
 - [ ] 5d. `app/services/positioning.py`: net, percentiles, changes, crowding, squeeze, after-extremes, pair-implied.
 - [ ] 5e. Positioning JSON APIs (viewer auth).

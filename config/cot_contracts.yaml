@@ -1,0 +1,18 @@
+# CFTC Traders in Financial Futures (TFF), futures only.
+# Contracts are matched by CFTC contract code; market names drift between years.
+report: tff_futures_only
+yearly_url: https://www.cftc.gov/files/dea/history/fut_fin_txt_{year}.zip
+# The 2010 yearly file starts mid-year; Jan–Jun 2010 comes from the combined file.
+combined_url: https://www.cftc.gov/files/dea/history/fin_fut_txt_2006_2016.zip
+start_date: 2010-01-01
+
+contracts:
+  EUR: {code: "099741", market: EURO FX - CHICAGO MERCANTILE EXCHANGE, derived: false}
+  GBP: {code: "096742", market: BRITISH POUND - CHICAGO MERCANTILE EXCHANGE, derived: false}
+  JPY: {code: "097741", market: JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE, derived: false}
+  AUD: {code: "232741", market: AUSTRALIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE, derived: false}
+  NZD: {code: "112741", market: NZ DOLLAR - CHICAGO MERCANTILE EXCHANGE, derived: false}
+  CAD: {code: "090741", market: CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE, derived: false}
+  CHF: {code: "092741", market: SWISS FRANC - CHICAGO MERCANTILE EXCHANGE, derived: false}
+  # DX is present in TFF for every year since 2010, so USD is not derived.
+  USD: {code: "098662", market: U.S. DOLLAR INDEX - ICE FUTURES U.S., derived: false}

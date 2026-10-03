@@ -47,3 +47,8 @@
 
 - Hand check: 28 Oct is a late-month meeting, so r_post = Nov average 3.93 and r_pre = 3.875 (from the Oct average), giving +5.5 bp. 9 Dec: r_pre 3.93, r_post 4.134, giving +20.4 bp. The old method measured October against config 3.75, which overstated the October hike.
 - Tests: mid-month de-averaging, end-of-month next contract, curve-anchored r_pre, step path, 14-day override, stale_source state. The cumulative-delta test was rewritten on a valid ZQ strip. Full suite, **nothing deselected: 428 passed, 7 skipped.**
+
+## Part E: frontend assets
+
+- `app/web/static/vendor/`: ECharts 5.6.0 (what `echarts@5` resolved to; Apache-2.0) and HTMX 1.9.12 (0BSD), with SHA-256 values in `vendor/README.md`. `base.html` and `desk/page.html` load them from `/static/vendor/`; the only remaining external load is Google Fonts. `.gitattributes` marks the files `-text`, so line endings and checksums stay stable.
+- Tests: `test_vendored_assets.py` (3) covers checksums, no external `<script>` or non-font `<link>` in any template, and the pinned references. Full suite: 431 passed, 7 skipped, nothing deselected.

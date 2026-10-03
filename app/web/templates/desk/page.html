@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', path='css/desk.css') }}">
-<script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js" defer></script>
+<script src="{{ url_for('static', path='vendor/htmx-1.9.12.min.js') }}" defer></script>
 <script src="{{ url_for('static', path='js/desk.js') }}" defer></script>
 {% endblock %}
 {% block body %}

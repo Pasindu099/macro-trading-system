@@ -78,3 +78,11 @@ Decisions: `DECISIONS_STEP5.md`. Commits: `step5: <sub-task>`.
 - [x] 5d. `positioning.py`: net/%OI, 1y/3y/5y percentiles, 1W/4W changes, crowding, squeeze, after-extremes, pair-implied. 15 unit tests.
 - [x] 5e. Six `/api/positioning/*` endpoints, viewer auth; 3 unit + 1 integration test.
 - [x] 5t. `REPORT_STEP5.md`; full suite 360 passed, 7 skipped, 1 deselected; integration 25 passed.
+
+## Step 6 — USD desk
+Decisions: `DECISIONS_STEP6.md`. Commits: `step6: <sub-task>`.
+- [ ] 6-0. Computed DXY (USD/SEK ingested + backfilled, stored as `computed_dxy`); USD squeeze/extremes recomputed; `against_crowd_after_8w` + `max_adverse_move_8w`.
+- [ ] 6a. Desk framework: `/desks/{currency}` from `config/desks.yaml` (USD only), Jinja + HTMX lazy partials + ECharts; indicator mapping validated.
+- [ ] 6b. Panels 0–9, key data, news, verdict header wired to existing services; pending panels show "Available after step N".
+- [ ] 6c. Quality: per-panel loading/empty/unavailable/error states, 60 s cache, 390 px responsive.
+- [ ] 6t. Tests, screenshots, `REPORT_STEP6.md`.

@@ -16,7 +16,7 @@ Window 2026-08-03..21; stored `raw_payload` vs live EODHD now (`scripts/step5_ra
 - A revised payload has a new hash, so it is inserted as a new row. Every reader already takes the newest row per date, and the superseded raw payload is retained.
 - Re-ingest: yields 2026-08-01..10-03 (58 calls, 920 rows, 147 revised symbol-dates). 7 original crosses since 2023-08-21 (7 calls, 265 rows). The 7 USD majors were re-fetched from 2010 in Part C. `job:rates_derived`: 0 new flags, 60,982 spreads.
 - Regression test: `tests/unit/test_rates_revision_refetch.py` covers the 5-business-day window, the revised hash on the same date, and the job re-fetching FX and yields before the rebuild.
-- Full suite: 336 passed, 7 skipped, 1 deselected (known FED test).
+- Verification after Part C re-ingest: `scripts.step4_compare_rates` shows 0 difference against live on all 15 Step 4 series (max 0.0). Full suite: 336 passed, 7 skipped, 1 deselected (known FED test).
 
 ## Part A: COT current state
 
@@ -35,3 +35,9 @@ Window 2026-08-03..21; stored `raw_payload` vs live EODHD now (`scripts/step5_ra
 - Backfill (`scripts/backfill_cot_tff.py`): 18 CFTC downloads (combined 2006–16 + yearly 2010–2026), 48,440 rows seen, **34,960 written** = 874 weeks × 8 contracts × 5 categories, 2010-01-05 → 2026-09-29. The 2010–2016 yearly files wrote 0 rows because they match the combined file. A re-run of 2025–26 wrote 0.
 - `job:cot_weekly` (`app/services/cot_positions.py`) runs Fri 21:00 UTC and retries Mon 21:00 UTC. The job uses an advisory lock, `run_logger`, a 10-minute guard and a 5-minute statement timeout. The Monday retry is skipped if the expected Tuesday is stored. If that Tuesday is still missing, the run is logged `partial`.
 - Tests: 4 unit (`test_cot_positions.py`), 1 integration idempotency (`test_cot_backfill.py`). Full suite: 341 passed, 7 skipped, 1 deselected.
+
+## Part C: FX history for positioning
+
+- `backfill_fx_spot` for EUR/USD, GBP/USD, USD/JPY, AUD/USD, NZD/USD, USD/CAD and USD/CHF, 2010-01-01 → 2026-10-03, used **8 EODHD calls**: 7 history calls (one per pair) and 1 FOREX listing call. 33,270 rows were seen and 31,354 inserted. All 7 pairs now start 2010-01-01.
+- `job:rates_derived` afterwards: 0 yield flags, 1 FX flag (historical reversing spike), 60,982 spreads.
+- Step 5 EODHD total so far: 5 diagnostic + 59 yield + 8 cross + 8 major = 80 calls (listing calls included).

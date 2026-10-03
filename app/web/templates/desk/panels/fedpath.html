@@ -1,0 +1,8 @@
+{% from "desk/_macros.html" import state, head %}
+<section id="q3" class="panel" aria-label="What will the {{ desk.cb_short }} do">
+  {{ head('4 · What will the ' ~ desk.cb_short ~ ' do?', 'Policy regime model') }}
+  <div class="ladder" aria-hidden="true">
+    {% for r in ['QE', 'Near zero', 'Cutting', 'Holding', 'Hiking'] %}<div class="rung">{{ r }}</div>{% endfor %}
+  </div>
+  {{ state(ctx) }}
+</section>

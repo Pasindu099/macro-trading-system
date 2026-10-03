@@ -83,6 +83,6 @@ Decisions: `DECISIONS_STEP5.md`. Commits: `step5: <sub-task>`.
 Decisions: `DECISIONS_STEP6.md`. Commits: `step6: <sub-task>`.
 - [x] 6-0. USD/SEK backfilled (4,443 rows); computed DXY 4,428 rows in `job:rates_derived`; USD positioning uses DXY; `against_crowd_after_8w` + `max_adverse_move_8w`. Full suite 362 passed.
 - [x] 6a. `/desks/{currency}` (USD only; others 404) from `config/desks.yaml`; Jinja page + HTMX lazy partials (`hx-trigger=revealed`) + ECharts from `data-chart`; `scripts/check_desk_indicators.py` reports 4 unmapped series.
-- [ ] 6b. Panels 0–9, key data, news, verdict header wired to existing services; pending panels show "Available after step N".
+- [x] 6b. 15 panels in mockup order: live = price, economy, direction, key data, priced, curve, positioning, catalysts, news, verdict regime; pending = situations/oil (10), fed path/gap/projections/speakers/SEP (8), scenarios/bias (10); Fed view source-unavailable (no analysed documents). 40 desk tests; full suite 402 passed.
 - [ ] 6c. Quality: per-panel loading/empty/unavailable/error states, 60 s cache, 390 px responsive.
 - [ ] 6t. Tests, screenshots, `REPORT_STEP6.md`.

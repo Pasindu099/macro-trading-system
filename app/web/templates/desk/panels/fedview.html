@@ -1,0 +1,34 @@
+{% from "desk/_macros.html" import state, head %}
+<section id="fedview" class="panel wide" aria-label="What the {{ desk.cb_short }} thinks">
+  {{ head('3 · What does the ' ~ desk.cb_short ~ ' think?', 'CB policy documents · tone' ~ ((' · latest ' ~ ctx.latest_date) if ctx.latest_date else '')) }}
+  <div class="three-col">
+    <div class="stack">
+      <h3 class="eyebrow-h">How the {{ desk.cb_short }} sees the economy</h3>
+      {% if ctx.state == 'ok' %}
+        <div class="banner">
+          <span class="chip" style="color: {{ ctx.tone_color }}">Tone {{ ctx.tone }}</span>
+          {% if ctx.tone_change %}<span class="text-2">Change vs prior: {{ ctx.tone_change }}</span>{% endif %}
+        </div>
+        {% for a in ctx.assess %}
+          <div class="tile"><span class="strong">{{ a.theme }}</span><p class="text-2 small">{{ a.view }}</p></div>
+        {% endfor %}
+      {% else %}{{ state(ctx) }}{% endif %}
+    </div>
+    <div class="stack">
+      <h3 class="eyebrow-h">Latest policy documents</h3>
+      {% if ctx.state == 'ok' %}
+        {% for d in ctx.documents %}
+          <div class="tile row-between"><span>{{ d.date }} · {{ d.doc_type }}</span><span class="muted">tone {{ '%+.2f' | format(d.tone_score) if d.tone_score is not none else '—' }}</span></div>
+        {% endfor %}
+      {% else %}<p class="note">Documents appear here once {{ desk.cb_short }} statements are analysed.</p>{% endif %}
+    </div>
+    <div class="stack">
+      <h3 class="eyebrow-h">{{ desk.cb_short }} projections vs market</h3>
+      {% if ctx.projections %}{{ state(ctx.projections) }}{% endif %}
+    </div>
+  </div>
+  <div class="stack divider-top">
+    <h3 class="eyebrow-h">Committee balance · last 30 days</h3>
+    {% if ctx.speakers %}{{ state(ctx.speakers) }}{% endif %}
+  </div>
+</section>

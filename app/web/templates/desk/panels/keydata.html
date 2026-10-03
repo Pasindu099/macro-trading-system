@@ -1,0 +1,58 @@
+{% from "desk/_macros.html" import state, head %}
+<section id="data" class="panel wide" aria-label="Key data at a glance">
+  {{ head('Key data at a glance', 'Last 24 months · Expand a chart for detail') }}
+  {% if ctx.state == 'ok' %}
+  <div class="cards">
+    {% for c in ctx.cards %}
+    <article class="card" data-card="{{ c.id }}">
+      <div class="card-head">
+        <div class="card-title">
+          <h3>{{ c.title }}</h3>
+          <span class="muted small">{{ c.sub }}</span>
+        </div>
+        <div class="card-actions">
+          {% if c.state == 'ok' %}<span class="strong nowrap">{{ c.headline }}</span>{% endif %}
+          <button type="button" class="expand-btn" aria-expanded="false" aria-label="Expand {{ c.title }} chart" data-expand>Expand</button>
+        </div>
+      </div>
+      {% if c.state == 'ok' %}
+        <div class="chart chart-card" data-chart="{{ c.chart }}" role="img" aria-label="{{ c.title }} over the last 24 months"></div>
+        <div class="axis-row"><span>{{ c.x_start }}</span>{% if c.ref_label %}<span>— {{ c.ref_label }}</span>{% endif %}<span>{{ c.x_end }}</span></div>
+      {% else %}
+        {{ state({'state': 'unavailable', 'message': 'No series for this chart are in the indicators table.'}) }}
+      {% endif %}
+      <div class="legend">
+        {% for l in c.legend %}
+          <span{% if not l.available %} class="muted"{% endif %}><i class="sw" style="background: {{ l.color }}"></i>{{ l.name }}
+            {% if l.available %}<span class="text">{{ l.latest }}</span>{% else %}<span class="state-tag">Unavailable</span>{% endif %}</span>
+        {% endfor %}
+      </div>
+      <div class="card-detail" hidden>
+        <div class="table-wrap">
+          <table class="tbl rows">
+            <thead><tr><th>Series</th><th class="r">Latest</th><th class="r">Prior</th><th class="r">Change</th><th class="r">12m ago</th></tr></thead>
+            <tbody>
+            {% for l in c.legend %}
+              <tr>
+                <td><i class="sw" style="background: {{ l.color }}"></i>{{ l.name }}</td>
+                {% if l.available %}
+                  <td class="r">{{ l.latest }} <span class="muted small">{{ l.latest_period.strftime('%b %y') }}</span></td>
+                  <td class="r text-2">{{ l.prev }}</td>
+                  <td class="r" style="color: {{ l.chg_color }}">{{ l.chg }}</td>
+                  <td class="r text-2">{{ l.year_ago }}</td>
+                {% else %}
+                  <td class="r muted" colspan="4">Not in DB{% if l.canonical %} ({{ l.canonical }}){% endif %}</td>
+                {% endif %}
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if c.missing %}<p class="note">Unavailable: {{ c.missing | join(', ') }}. Not substituted with another series.</p>{% endif %}
+        {% if c.driver %}{{ state(c.driver) }}{% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}{{ state(ctx) }}{% endif %}
+</section>

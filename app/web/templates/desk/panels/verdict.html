@@ -1,0 +1,18 @@
+{% from "desk/_macros.html" import state %}
+<section id="verdict" class="panel verdict" aria-label="Verdict">
+  <div class="verdict-id">
+    <div class="eyebrow-sm">{{ desk.currency }} · {{ desk.cb_name }}</div>
+    <h1>{{ desk.name }}</h1>
+    <div class="chips">
+      {% if ctx.state == 'ok' and ctx.regime_label %}
+        <span class="chip">Curve regime: {{ ctx.regime_label }} <span class="muted">({{ ctx.regime_window }} · {{ ctx.regime_tenors }})</span></span>
+      {% elif ctx.state == 'ok' %}
+        <span class="chip muted">Curve regime unavailable</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="verdict-thesis">
+    <div class="eyebrow-sm">Bias · conviction · thesis</div>
+    {% if ctx.state == 'ok' %}{{ state(ctx.bias) }}{% else %}{{ state(ctx) }}{% endif %}
+  </div>
+</section>

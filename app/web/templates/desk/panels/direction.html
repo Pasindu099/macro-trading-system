@@ -1,0 +1,22 @@
+{% from "desk/_macros.html" import state, head %}
+<section id="q2" class="panel" aria-label="Where is it heading">
+  {{ head('2 · Where is it heading?', 'Event Innovation · last 30 days') }}
+  {% if ctx.state == 'ok' %}
+    <div class="table-wrap">
+      <table class="tbl rows">
+        <thead><tr><th>Theme</th><th>vs {{ desk.cb_short }} SEP</th><th>Surprise (avg, 30d)</th><th class="r">Live (decayed)</th></tr></thead>
+        <tbody>
+        {% for r in ctx.rows %}
+          <tr>
+            <td>{{ r.theme }} <span class="muted small">· {{ r.count }}</span></td>
+            {% if loop.first %}<td rowspan="{{ ctx.rows | length }}" class="pending-cell"><span class="state-tag">Step {{ ctx.sep.step }}</span> Available after step {{ ctx.sep.step }}</td>{% endif %}
+            <td style="color: {{ r.surprise_color }}">{{ r.surprise }}</td>
+            <td class="r" style="color: {{ r.live_color }}">{{ r.live }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Positive = hawkish surprise. Number after the theme = scored releases in the window. Live is what remains after each release's decay.</p>
+  {% else %}{{ state(ctx) }}{% endif %}
+</section>

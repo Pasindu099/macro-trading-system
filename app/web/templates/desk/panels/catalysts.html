@@ -1,0 +1,13 @@
+{% from "desk/_macros.html" import state, head %}
+<section id="q7" class="panel" aria-label="What could move it">
+  {{ head('8 · What could move it?', 'Next 10 ' ~ desk.currency ~ ' calendar events') }}
+  {% if ctx.state == 'ok' %}
+    {% for k in ctx.events %}
+      <div class="catalyst">
+        <span class="muted small">{{ k.date.strftime('%a %d %b · %H:%M') }}</span>
+        <span>{{ k.event }}</span>
+        <span class="impact impact-{{ k.impact | lower }}">{{ k.impact }}</span>
+      </div>
+    {% endfor %}
+  {% else %}{{ state(ctx) }}{% endif %}
+</section>

@@ -1,0 +1,14 @@
+{% from "desk/_macros.html" import state %}
+<section id="q6" class="panel" aria-label="Who is positioned">
+  <div class="panel-head"><h2>7 · Who is positioned?</h2><a class="small" href="/positioning">CFTC TFF · Positioning →</a></div>
+  {% if ctx.state == 'ok' %}
+    {% for p in ctx.rows %}
+      <div class="stack-sm">
+        <div class="row-between small"><span class="text-2">{{ p.label }}</span><span style="color: {{ p.color }}">{{ p.value }}</span></div>
+        <div class="pbar"><div style="{{ p.bar }}"></div></div>
+        {% if p.squeeze %}<span class="muted small">Squeeze watch: <span class="text">{{ p.squeeze | replace('_', ' ') }}</span>{% if p.report_date %} · report {{ p.report_date }}{% endif %}</span>{% endif %}
+      </div>
+    {% endfor %}
+    <p class="note">Percentile of net position over 3 years: 0 = most short, 100 = most long. Crowded at ≥85 or ≤15. Report date = Tuesday positions.</p>
+  {% else %}{{ state(ctx) }}{% endif %}
+</section>

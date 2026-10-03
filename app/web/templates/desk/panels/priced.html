@@ -1,0 +1,31 @@
+{% from "desk/_macros.html" import state, head %}
+<section id="q4" class="panel" aria-label="What does the market price">
+  {{ head('5 · What does the market price?', 'Rate probability engine' ~ ((' · ' ~ ctx.market.source) if ctx.market and ctx.market.source else '')) }}
+  {% if ctx.state == 'ok' %}
+    <div class="table-wrap">
+      <table class="tbl rows">
+        <thead><tr><th>Meeting</th><th>Cut</th><th>Hold</th><th>Hike</th><th class="r">Implied rate</th></tr></thead>
+        <tbody>
+        {% for m in ctx.meetings %}
+          <tr>
+            <td>{{ m.date.strftime('%d %b %Y') }}</td>
+            <td class="cool">{{ m.cut }}</td><td class="text-2">{{ m.hold }}</td><td class="hot">{{ m.hike }}</td>
+            <td class="r text-2">{{ m.rate }}{% if m.data_state != 'live' %} <span class="muted small">({{ m.data_state }})</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}{{ state(ctx) }}{% endif %}
+  <div class="stack divider-top">
+    <div class="row-between"><span class="strong small">2Y Treasury vs {{ desk.cb_short }} funds</span><span class="muted small">24 months</span></div>
+    {% if ctx.chart %}
+      <div class="chart chart-md" data-chart="{{ ctx.chart }}" role="img" aria-label="Two-year yield compared with the policy rate"></div>
+      <div class="legend">
+        <span><i class="sw" style="background:#5aa9ff"></i>2Y yield {{ ctx.two_last }}</span>
+        <span><i class="sw" style="background:#7c8698"></i>{{ desk.cb_short }} funds {{ ctx.policy_last }}</span>
+      </div>
+      <p class="note">2Y above the policy rate means the market expects further hikes; below it, cuts.</p>
+    {% else %}{{ state({'state': 'unavailable', 'message': 'No 2Y yield history stored.'}) }}{% endif %}
+  </div>
+</section>

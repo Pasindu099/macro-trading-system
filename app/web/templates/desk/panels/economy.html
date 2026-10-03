@@ -1,0 +1,17 @@
+{% from "desk/_macros.html" import state, head %}
+<section id="q1" class="panel" aria-label="Where is the economy">
+  {{ head('1 · Where is the economy?', 'Macro State · ' ~ (ctx.source or 'z-scores') ~ ((' · ' ~ ctx.as_of) if ctx.as_of else '')) }}
+  {% if ctx.state == 'ok' %}
+    {% for t in ctx.themes %}
+      <div class="zrow">
+        <span class="text-2">{{ t.name }}</span>
+        <div class="zbar"><div class="zmid"></div>{% if t.bar %}<div class="zfill" style="{{ t.bar }}"></div>{% endif %}</div>
+        <span class="r strong" style="color: {{ t.color }}">{{ t.z }}</span>
+      </div>
+    {% endfor %}
+    <div class="divider-row">
+      <span class="muted">Mandate-weighted composite</span>
+      <span class="strong" style="color: {{ ctx.composite_color }}">{{ ctx.composite }}{% if ctx.confidence %} <span class="muted small">· {{ ctx.confidence }} confidence</span>{% endif %}</span>
+    </div>
+  {% else %}{{ state(ctx) }}{% endif %}
+</section>

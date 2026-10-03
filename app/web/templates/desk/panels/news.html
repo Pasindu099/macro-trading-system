@@ -1,0 +1,24 @@
+{% from "desk/_macros.html" import state, pills %}
+<section id="usdnews" class="panel wide" aria-label="{{ desk.currency }} news">
+  <div class="panel-head">
+    <h2>{{ desk.currency }} news</h2>
+    <div class="headline-row">{% if ctx.filters %}{{ pills(ctx.filters, ctx.selected, url, 'type', 'News type') }}{% endif %}<a class="small" href="/news">All news →</a></div>
+  </div>
+  {% if ctx.state == 'ok' %}
+    {% for n in ctx.news %}
+      <div class="news-row">
+        <div class="stack-sm">
+          <span class="muted small">{{ n.detected_at.strftime('%d %b %H:%M') }}</span>
+          <span class="type-tag type-{{ (n.implied_tier or 'other') | lower }}">{{ n.type_label }}</span>
+        </div>
+        <div class="stack-sm min0">
+          {% if n.url %}<a class="headline" href="{{ n.url }}" target="_blank" rel="noopener">{{ n.headline }}</a>{% else %}<span class="headline">{{ n.headline }}</span>{% endif %}
+          {% if n.alert_text and n.alert_text != n.headline %}<span class="muted small">{{ n.alert_text | truncate(220) }}</span>{% endif %}
+        </div>
+        <span class="small nowrap severity-{{ (n.severity or '') | lower }}">{{ (n.severity or '') | title }}</span>
+      </div>
+    {% else %}
+      {{ state({'state': 'empty', 'message': 'No items of this type.'}) }}
+    {% endfor %}
+  {% else %}{{ state(ctx) }}{% endif %}
+</section>

@@ -1,0 +1,57 @@
+{% from "desk/_macros.html" import state, pills %}
+<section id="curve" class="panel wide" aria-label="Rates and curve">
+  <div class="panel-head">
+    <div class="headline-row">
+      <h2>Rates &amp; curve · {{ desk.curve_country }} government bonds</h2>
+      {% if ctx.regime_label %}<span class="chip tone-{{ ctx.regime_tone }}">{{ ctx.regime_label }} ({{ ctx.window }} · {{ ctx.regime_tenors }})</span>{% endif %}
+    </div>
+    <div class="headline-row"><span class="muted small">Change over</span>{{ pills(ctx.windows, ctx.window, url, 'window', 'Curve change window') }}</div>
+  </div>
+  {% if ctx.state == 'ok' %}
+    <p class="text">{{ ctx.regime_read }}</p>
+    <div class="split">
+      <div class="stack">
+        <div class="row-between small"><span>Yield curve</span><span class="muted">today vs {{ ctx.window }} ago</span></div>
+        <div class="chart chart-curve" data-chart="{{ ctx.curve_chart }}" role="img" aria-label="Yield curve today compared with earlier, and the policy rate"></div>
+        <div class="legend">
+          <span><i class="sw" style="background:#f2a33a"></i>Today</span>
+          <span><i class="sw dashed" style="border-color:#5aa9ff"></i>{{ ctx.window }} ago</span>
+          {% if ctx.policy_last %}<span><i class="sw dashed" style="border-color:#7c8698"></i>{{ desk.cb_short }} funds {{ ctx.policy_last }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="stack">
+        <div class="table-wrap">
+          <table class="tbl rows">
+            <thead><tr><th>Tenor</th><th class="r">Yield</th><th class="r">Change</th><th>What it says</th></tr></thead>
+            <tbody>
+            {% for t in ctx.tenors %}
+              <tr><td>{{ t.tenor }}</td><td class="r">{{ t.yld }}</td><td class="r" style="color: {{ t.chg_color }}">{{ t.chg }}</td><td class="muted">{{ t.says }}</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="stat-grid">
+          {% for s in ctx.curve_stats %}
+            <div class="tile"><span class="muted small">{{ s.label }}</span><span class="stat" style="color: {{ s.color }}">{{ s.value }}</span><span class="muted small">{{ s.note }}</span></div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="split">
+      <div class="stack">
+        <div class="row-between small"><span>2s10s spread · 24 months</span><span class="muted">bp</span></div>
+        <div class="chart chart-md" data-chart="{{ ctx.s210_chart }}" role="img" aria-label="Two-year to ten-year spread over 24 months"></div>
+        <p class="note">Shaded area = inverted.{% if ctx.uninversion %} Purple line = last un-inversion after ≥90 days inverted ({{ ctx.uninversion.strftime('%b %Y') }}).{% endif %}</p>
+      </div>
+      <div class="stack">
+        <span class="eyebrow-sm">Curve situation checks</span>
+        {% for c in ctx.checks %}
+          <div class="tile">
+            <div class="row-between"><span>{{ c.name }}</span><span class="status status-{{ c.status | lower | replace(' ', '-') }}">{{ c.status }}</span></div>
+            <span class="muted small">{{ c.detail }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% else %}{{ state(ctx) }}{% endif %}
+</section>

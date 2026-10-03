@@ -1,0 +1,40 @@
+{% from "desk/_macros.html" import state, pills %}
+<section id="q0" class="panel wide" aria-label="Where is {{ desk.currency }} trading">
+  <div class="panel-head">
+    <h2>0 · Where is {{ desk.currency }} trading?</h2>
+    {{ pills(ctx.ranges, ctx.range, url, 'range', 'Price range') }}
+  </div>
+  <div class="split">
+    <div class="stack">
+      {% if ctx.state == 'ok' %}
+        <div class="headline-row">
+          <span class="big">DXY {{ ctx.last }}</span>
+          <span style="color: {{ ctx.change_color }}">{{ ctx.change }}</span>
+          <span class="muted small">{% if ctx.trend %}Trend: {{ ctx.trend }} 200-day average{% else %}200-day average needs 200 observations{% endif %}</span>
+        </div>
+        <div class="chart chart-lg" data-chart="{{ ctx.chart }}" role="img" aria-label="Computed US dollar index with its 200-day average"></div>
+        <div class="legend">
+          <span><i class="sw" style="background:#e6e9ef"></i>DXY (computed from ICE components)</span>
+          <span><i class="sw" style="background:#7c8698"></i>200-day average</span>
+          <span class="muted">As of {{ ctx.as_of.strftime('%d %b %Y') }}</span>
+        </div>
+      {% else %}{{ state(ctx) }}{% endif %}
+    </div>
+    <div class="stack">
+      <span class="eyebrow-sm">{{ desk.currency }} vs G10 · % change</span>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>vs</th><th class="c">1W</th><th class="c">1M</th><th class="c">3M</th></tr></thead>
+          <tbody>
+          {% for r in ctx.perf %}
+            <tr><td>{{ r.ccy }}</td>
+              {% for k in ['w', 'm', 'q'] %}<td><span class="heat" style="{{ r[k].style }}">{{ r[k].label }}</span></td>{% endfor %}
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Positive = {{ desk.currency }} stronger. Broad-based strength confirms a {{ desk.currency }} story; strength against only one or two currencies points to their weakness instead.</p>
+    </div>
+  </div>
+</section>

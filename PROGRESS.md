@@ -104,5 +104,5 @@ Decisions: `DECISIONS_STEP8.md`. Commits: `step8: <sub-task>`. Scope: Fed only.
 - [x] 8b. Migration 0024; deterministic SEP parser; 26 rounds 2020-06 → 2026-09 loaded, 0 rejected; March 2026 and December 2025 checks match.
 - [x] 8c. fred_observations (0025) + job:fred_series; tracking: PCE/core running_cold, UR/GDP on_track; revisions; reaction flag none.
 - [x] 8d. Regime hiking (4.00%, +25bp 16 Sep); checklists 1/3 and 0/5; gap 2026 −3bp, later years beyond strip; tilt dovish_risk.
-- [ ] 8e. `/api/cb/{bank}/*` endpoints; USD desk panels 2/3/4/6.
-- [ ] 8t. Tests, `REPORT_STEP8.md`, full suite with nothing deselected.
+- [x] 8e. /api/cb/{bank}/* (6 endpoints, Fed only); desk panels 2, 3, 4, 6 filled; curve policy lookup no longer depends on is_latest.
+- [x] 8t. `REPORT_STEP8.md`; full suite 481 passed, 7 skipped, nothing deselected; integration 25 passed.

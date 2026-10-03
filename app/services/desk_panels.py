@@ -18,6 +18,7 @@ from typing import Any, Awaitable, Callable
 from sqlalchemy import text
 
 from app.db.session import get_sessionmaker
+from app.services import cb_tracking, fed_projections, fed_regime
 from app.services import positioning as positioning_service
 from app.services.central_banks import get_cb_policy_data
 from app.services.curve_metrics import get_curve
@@ -230,7 +231,20 @@ async def panel_economy(desk: dict, params: dict) -> dict[str, Any]:
             "as_of": row.get("date"), "source": board.get("source"), "confidence": row.get("confidence")}
 
 
+# CB Tracking status per theme (Step 8): inflation = core PCE, labor = unemployment, growth = real GDP.
+SEP_THEME_VARIABLE = {"Inflation": "core_pce_inflation", "Labor": "unemployment_rate", "Growth": "real_gdp"}
+STATUS_LABEL = {"running_hot": ("Running hot", HOT), "running_cold": ("Running cold", COOL), "on_track": ("On track", TEXT)}
+
+
+def _sep_status(theme: str, tracking: dict[str, Any]) -> dict[str, Any]:
+    entry = tracking.get("variables", {}).get(SEP_THEME_VARIABLE[theme], {})
+    label, color = STATUS_LABEL.get(entry.get("status"), ("Unavailable", MUTED))
+    return {"sep": label, "sep_color": color, "sep_detail": entry.get("reason") or (
+        f"{entry.get('series')} vs {entry.get('projection')}% projection" if entry.get("projection") is not None else "")}
+
+
 async def panel_direction(desk: dict, params: dict) -> dict[str, Any]:
+    tracking = await cb_tracking.get_tracking() if desk["cb"] == "FED" else {}
     async with get_sessionmaker()() as session:
         feed = await build_event_innovation_feed(
             session, FeedFilters(days=30, include_unscored=False, country_code=desk["country"], category=None))
@@ -245,8 +259,8 @@ async def panel_direction(desk: dict, params: dict) -> dict[str, Any]:
         avg = sum(r["initial"] for r in items) / len(items) if items else None
         live = sum(r["current"] for r in items) if items else None
         rows.append({"theme": theme, "count": len(items), "surprise": signed(avg, 2, "σ"), "surprise_color": tone_color(avg),
-                     "live": signed(live, 2, "σ"), "live_color": tone_color(live)})
-    return {"state": "ok", "rows": rows, "sep": pending(8, f"vs {desk['cb_short']} SEP")}
+                     "live": signed(live, 2, "σ"), "live_color": tone_color(live), **_sep_status(theme, tracking)})
+    return {"state": "ok", "rows": rows}
 
 
 def _shift_months(day: date, months: int) -> date:
@@ -313,12 +327,59 @@ async def panel_keydata(desk: dict, params: dict) -> dict[str, Any]:
     return {"state": "ok", "cards": cards}
 
 
+VARIABLE_LABEL = {"federal_funds_rate": "Fed funds rate", "pce_inflation": "PCE inflation",
+                  "core_pce_inflation": "Core PCE", "unemployment_rate": "Unemployment", "real_gdp": "Real GDP"}
+FLAG_TEXT = {"tolerance": "Tolerance: inflation revised up without a higher rate path",
+             "response": "Response: inflation and the rate path both revised up",
+             "none": "No reaction-function signal"}
+
+
+async def _projection_block(desk: dict) -> dict[str, Any]:
+    if desk["cb"] != "FED":
+        return pending(9, "Projections")
+    revisions = await cb_tracking.get_revisions()
+    if revisions.get("status") == "unavailable":
+        return unavailable(revisions["reason"])
+    rows_by_var: dict[str, dict[str, dict]] = defaultdict(dict)
+    for r in revisions["revisions"]:
+        rows_by_var[r["variable"]][r["horizon"]] = r
+    horizons = sorted({h for v in rows_by_var.values() for h in v}, key=lambda h: (h == "longer_run", h))[:2] + ["longer_run"]
+    rows = []
+    for variable in VARIABLE_LABEL:
+        cells = []
+        for h in horizons:
+            r = rows_by_var.get(variable, {}).get(h)
+            chg = r["median_change"] if r else None
+            cells.append({"now": f"{r['median']:.1f}" if r else "—", "prev": f"{r['previous_median']:.1f}" if r else "",
+                          "chg": signed(chg, 1) if chg else ("±0.0" if r else ""), "chg_color": tone_color(chg)})
+        rows.append({"name": VARIABLE_LABEL[variable], "cells": cells})
+    risk = await fed_projections.get_risk_balance()
+    risks = []
+    for variable, kinds in risk.get("variables", {}).items():
+        rk, unc = kinds.get("risk"), kinds.get("uncertainty")
+        if not rk:
+            continue
+        n = rk["participants"]
+        risks.append({"name": VARIABLE_LABEL.get(variable, variable), "down": rk["lower_or_downside"],
+                      "bal": rk["similar_or_balanced"], "up": rk["higher_or_upside"], "n": n,
+                      "w_down": rk["lower_or_downside"] / n * 100, "w_bal": rk["similar_or_balanced"] / n * 100,
+                      "w_up": rk["higher_or_upside"] / n * 100, "diffusion": signed(rk.get("diffusion"), 2),
+                      "diffusion_color": tone_color(rk.get("diffusion")),
+                      "uncertainty_higher": unc["higher_or_upside"] if unc else None})
+    flag = revisions["reaction_function"]
+    return {"state": "ok", "round": revisions["round"], "previous_round": revisions["previous_round"],
+            "horizons": ["Longer run" if h == "longer_run" else h for h in horizons], "rows": rows,
+            "flag": flag["flag"], "flag_text": FLAG_TEXT[flag["flag"]],
+            "flag_detail": f"PCE {flag['horizon']} {signed(flag['inflation_revision'], 1)}pp, funds {signed(flag['funds_rate_revision'], 1)}pp",
+            "risks": risks, "risk_state": None if risks else risk.get("reason", "No risk-balance data")}
+
+
 async def panel_fedview(desk: dict, params: dict) -> dict[str, Any]:
     async with get_sessionmaker()() as session:
         data = await get_cb_policy_data(session)
     bank = next((b for b in data.get("banks", []) if str(b["bank"]).upper() == desk["cb"]), None)
-    base = {"projections": pending(8, f"{desk['cb_short']} projections vs market"),
-            "speakers": pending(8, "Committee balance and speakers")}
+    base = {"projections": await _projection_block(desk),
+            "speakers": unavailable("Committee balance needs the speaker pipeline (not built yet).")}
     if bank is None or not bank.get("reports"):
         return unavailable(f"No analysed {desk['cb_name']} policy documents in the database.", **base)
     latest = bank["reports"][0]
@@ -330,8 +391,36 @@ async def panel_fedview(desk: dict, params: dict) -> dict[str, Any]:
             "assess": assess, "documents": bank["reports"][:5]}
 
 
+REGIME_LABEL = {"qe": "QE", "near_zero": "Near zero", "cutting": "Cutting", "holding": "Holding", "hiking": "Hiking"}
+
+
 async def panel_fedpath(desk: dict, params: dict) -> dict[str, Any]:
-    return pending(8, "Policy regime ladder and transition checklist")
+    if desk["cb"] != "FED":
+        return pending(9, "Policy regime model")
+    regime = await fed_regime.get_regime()
+    if regime.get("regime") == "unavailable":
+        return unavailable(regime.get("reason", "No policy-rate history"))
+    marks = {"met": ("●", TEXT), "not_met": ("○", MUTED), "unavailable": ("–", MUTED)}
+    transitions = []
+    for t in regime["transitions"]:
+        score = t["score"]
+        conds = [{"text": c["name"], "mark": marks[c["status"]][0], "color": marks[c["status"]][1],
+                  "detail": c.get("reason") or _cond_value(c)} for c in t["conditions"]]
+        transitions.append({"title": t["title"], "conds": conds,
+                            "score": f"{score['met']} of {score['available']} met" + (
+                                f" · {score['total'] - score['available']} unavailable" if score["total"] > score["available"] else ""),
+                            "color": HOT if score["met"] else MUTED})
+    return {"state": "ok", "regime": regime["regime"], "ladder": [
+        {"label": REGIME_LABEL[r], "active": r == regime["regime"], "unavailable": r == "qe"} for r in regime["ladder"]],
+        "rate": regime.get("rate"), "last_move_date": regime.get("last_move_date"), "last_move_bp": regime.get("last_move_bp"),
+        "transitions": transitions}
+
+
+def _cond_value(c: dict[str, Any]) -> str:
+    value = c.get("value")
+    if isinstance(value, list):
+        value = ", ".join(f"{v:g}" for v in value)
+    return f"{value} vs {c['threshold']}" if value is not None else c.get("threshold", "")
 
 
 async def panel_priced(desk: dict, params: dict) -> dict[str, Any]:
@@ -441,7 +530,27 @@ async def panel_curve(desk: dict, params: dict) -> dict[str, Any]:
 
 
 async def panel_gap(desk: dict, params: dict) -> dict[str, Any]:
-    return pending(8, "Data-implied vs market-priced path")
+    if desk["cb"] != "FED":
+        return pending(9, "Projections vs market gap")
+    gap = await fed_regime.get_gap()
+    if gap.get("status") == "unavailable":
+        return unavailable(gap["reason"])
+    dots = await fed_projections.get_dots()
+    horizons = sorted(dots.get("horizons", {}), key=lambda h: (h == "longer_run", h))
+    labels = ["Longer run" if h == "longer_run" else h for h in horizons]
+    market = {r["horizon"]: r["market"] for r in gap["gaps"]}
+    chart = chart_json({"kind": "dots", "categories": labels,
+                        "dots": [[i, d["rate"], d["participants"]] for i, h in enumerate(horizons) for d in dots["horizons"][h]],
+                        "median": [dots["medians"].get(h) for h in horizons],
+                        "market": [market.get(h) for h in horizons]})
+    lead = next((r for r in gap["gaps"] if r["gap_bp"] is not None), None)
+    tilt = gap["tilt"]["flag"]
+    return {"state": "ok", "round": gap["round"], "rows": gap["gaps"], "chart": chart, "method": gap["method"],
+            "participants": max(dots.get("participants", {}).values(), default=None),
+            "headline": (f"SEP {lead['horizon']} median {signed(lead['gap_bp'], 0, 'bp')} vs market" if lead else "Gap unavailable"),
+            "headline_color": tone_color(lead["gap_bp"]) if lead else MUTED,
+            "tilt": {"hawkish_risk": "Hawkish risk", "dovish_risk": "Dovish risk", "neutral": "Neutral"}[tilt],
+            "tilt_color": {"hawkish_risk": HOT, "dovish_risk": COOL}.get(tilt, TEXT), "tilt_basis": gap["tilt"]["basis"]}
 
 
 def _pbar(pct: float | None, color: str) -> str:

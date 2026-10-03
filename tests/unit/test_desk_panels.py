@@ -16,7 +16,7 @@ from tests.unit.test_desks import make_client
 
 TODAY = date.today()
 DAYS = [TODAY - timedelta(days=i) for i in range(400, -1, -1)]
-PENDING = {"situations", "fedpath", "gap", "scenarios"}
+PENDING = {"situations", "scenarios"}
 
 
 def _stub(value):
@@ -66,9 +66,51 @@ def _data_sources(monkeypatch):
     monkeypatch.setattr(dp, "news_alerts", _stub([
         {"headline": "Fed speaker says X", "url": "https://example.com", "source": "s", "detected_at": datetime.now(UTC),
          "implied_tier": "CB_POLICY_DIVERGENCE", "severity": "HIGH", "alert_text": "context"}]))
+    _step8_sources(monkeypatch, with_data=True)
+
+
+def _step8_sources(monkeypatch, *, with_data: bool):
+    if not with_data:
+        monkeypatch.setattr(dp.cb_tracking, "get_tracking", _stub({"status": "unavailable", "reason": "No SEP rounds stored"}))
+        monkeypatch.setattr(dp.cb_tracking, "get_revisions", _stub({"status": "unavailable", "reason": "Fewer than two SEP rounds stored"}))
+        monkeypatch.setattr(dp.fed_projections, "get_risk_balance", _stub({"status": "unavailable", "reason": "none"}))
+        monkeypatch.setattr(dp.fed_projections, "get_dots", _stub({"status": "unavailable", "reason": "none"}))
+        monkeypatch.setattr(dp.fed_regime, "get_regime", _stub({"regime": "unavailable", "reason": "No policy-rate decisions stored"}))
+        monkeypatch.setattr(dp.fed_regime, "get_gap", _stub({"status": "unavailable", "reason": "No SEP rounds stored"}))
+        return
+    rnd, prev = date(2026, 9, 16), date(2026, 6, 17)
+    monkeypatch.setattr(dp.cb_tracking, "get_tracking", _stub({"variables": {
+        "core_pce_inflation": {"status": "running_cold", "series": "PCEPILFE", "projection": 3.4},
+        "unemployment_rate": {"status": "on_track", "series": "UNRATE", "projection": 4.1},
+        "real_gdp": {"status": "running_hot", "series": "GDPC1", "projection": 2.3}}}))
+    monkeypatch.setattr(dp.cb_tracking, "get_revisions", _stub({
+        "round": rnd, "previous_round": prev,
+        "revisions": [{"variable": v, "horizon": h, "median": 3.0, "previous_median": 2.8, "median_change": 0.2}
+                      for v in ("federal_funds_rate", "pce_inflation") for h in ("2026", "2027", "longer_run")],
+        "reaction_function": {"flag": "tolerance", "inflation_revision": 0.2, "funds_rate_revision": 0.0, "horizon": "2026"}}))
+    monkeypatch.setattr(dp.fed_projections, "get_risk_balance", _stub({"variables": {"pce_inflation": {
+        "risk": {"lower_or_downside": 1, "similar_or_balanced": 2, "higher_or_upside": 15, "participants": 18, "diffusion": 0.78},
+        "uncertainty": {"lower_or_downside": 0, "similar_or_balanced": 1, "higher_or_upside": 17, "participants": 18}}}}))
+    monkeypatch.setattr(dp.fed_projections, "get_dots", _stub({
+        "horizons": {"2026": [{"rate": 4.125, "participants": 10}, {"rate": 3.875, "participants": 8}],
+                     "longer_run": [{"rate": 3.0, "participants": 18}]},
+        "medians": {"2026": 4.1, "longer_run": 3.0}, "participants": {"2026": 18, "longer_run": 18}}))
+    monkeypatch.setattr(dp.fed_regime, "get_regime", _stub({
+        "regime": "hiking", "rate": 4.0, "last_move_date": date(2026, 9, 16), "last_move_bp": 25,
+        "ladder": ["qe", "near_zero", "cutting", "holding", "hiking"], "transitions": [
+            {"title": "Hiking → Holding", "score": {"met": 1, "available": 3, "total": 4}, "conditions": [
+                {"name": "Core PCE 3m annualised below 3%", "status": "met", "value": 2.05, "threshold": "< 3.0%"},
+                {"name": "Policy judged restrictive by a majority", "status": "unavailable", "value": None,
+                 "threshold": "", "reason": "Needs the speaker pipeline"}]}]}))
+    monkeypatch.setattr(dp.fed_regime, "get_gap", _stub({
+        "round": rnd, "method": "Gap v1 test method", "tilt": {"flag": "dovish_risk", "basis": "core PCE tracking: running_cold"},
+        "gaps": [{"horizon": "2026", "date": date(2026, 12, 31), "sep_median": 4.1, "market": 4.13, "gap_bp": -3},
+                 {"horizon": "2027", "date": date(2027, 12, 31), "sep_median": 4.1, "market": None, "gap_bp": None,
+                  "reason": "Beyond the fed funds futures strip"}]}))
 
 
 def _empty_sources(monkeypatch):
+    _step8_sources(monkeypatch, with_data=False)
     monkeypatch.setattr(dp, "get_curve", _stub({"country": "US", "status": "unavailable", "reason": "No yields"}))
     monkeypatch.setattr(dp, "fx_series", _stub({}))
     monkeypatch.setattr(dp, "yield_series", _stub({}))
@@ -102,7 +144,7 @@ def test_panel_200_with_data(monkeypatch, panel_id):
     elif panel_id not in {"verdict"}:
         # Data panels render content, not a missing-data state (key data keeps GDP unavailable by design).
         assert "state-empty" not in resp.text
-        if panel_id != "keydata":
+        if panel_id not in {"keydata", "fedview"}:
             assert "state-unavailable" not in resp.text
 
 
@@ -164,3 +206,18 @@ def test_catalyst_impact_uses_importance_one_as_high(monkeypatch):
     _data_sources(monkeypatch)
     body = make_client().get("/desks/USD/panels/catalysts").text
     assert 'impact-high">High' in body
+
+
+def test_step8_panels_render_projections_regime_and_gap(monkeypatch):
+    _data_sources(monkeypatch)
+    client = make_client()
+    direction = client.get("/desks/USD/panels/direction").text
+    assert "Running cold" in direction and "On track" in direction and "Available after step" not in direction
+    fedview = client.get("/desks/USD/panels/fedview").text
+    assert "Reaction function: tolerance" in fedview and "Risk diffusion +0.78" in fedview
+    assert "Needs the speaker pipeline" not in fedview and "speaker pipeline" in fedview
+    fedpath = client.get("/desks/USD/panels/fedpath").text
+    assert 'class="rung active"' in fedpath and "1 of 3 met · 1 unavailable" in fedpath
+    gap = client.get("/desks/USD/panels/gap").text
+    assert "-3bp" in gap and "Beyond the fed funds futures strip" in gap and "Dovish risk" in gap
+    assert '"kind":"dots"' in gap.replace("&#34;", '"')

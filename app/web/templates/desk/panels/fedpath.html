@@ -1,8 +1,25 @@
 {% from "desk/_macros.html" import state, head %}
 <section id="q3" class="panel" aria-label="What will the {{ desk.cb_short }} do">
-  {{ head('4 · What will the ' ~ desk.cb_short ~ ' do?', 'Policy regime model') }}
-  <div class="ladder" aria-hidden="true">
-    {% for r in ['QE', 'Near zero', 'Cutting', 'Holding', 'Hiking'] %}<div class="rung">{{ r }}</div>{% endfor %}
-  </div>
-  {{ state(ctx) }}
+  {{ head('4 · What will the ' ~ desk.cb_short ~ ' do?', 'Policy regime model v1') }}
+  {% if ctx.state == 'ok' %}
+    <div class="ladder" role="list" aria-label="Policy regime ladder">
+      {% for r in ctx.ladder %}<div role="listitem" class="rung{% if r.active %} active{% endif %}{% if r.unavailable %} na{% endif %}"{% if r.active %} aria-current="true"{% endif %}{% if r.unavailable %} title="Needs balance-sheet data"{% endif %}>{{ r.label }}</div>{% endfor %}
+    </div>
+    <p class="muted small">Policy rate {{ '%.2f' | format(ctx.rate) }}%{% if ctx.last_move_date %} · last move {{ '%+d' | format(ctx.last_move_bp) }}bp on {{ ctx.last_move_date.strftime('%d %b %Y') }}{% endif %}. Regime: last move within 6 months; QE needs balance-sheet data.</p>
+    <div class="checklists">
+      {% for x in ctx.transitions %}
+        <div class="tile">
+          <div class="row-between"><span class="strong">{{ x.title }}</span><span class="small" style="color: {{ x.color }}">{{ x.score }}</span></div>
+          {% for c in x.conds %}
+            <div class="cond" style="color: {{ c.color }}"><span aria-hidden="true">{{ c.mark }}</span><span>{{ c.text }}{% if c.detail %}<br><span class="muted small">{{ c.detail }}</span>{% endif %}</span></div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="ladder" aria-hidden="true">
+      {% for r in ['QE', 'Near zero', 'Cutting', 'Holding', 'Hiking'] %}<div class="rung">{{ r }}</div>{% endfor %}
+    </div>
+    {{ state(ctx) }}
+  {% endif %}
 </section>

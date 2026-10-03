@@ -111,3 +111,12 @@
   .stat-grid{grid-template-columns:minmax(0,1fr)}
   .card-head{flex-wrap:wrap}
 }
+/* Step 8: projections, risk balance, regime */
+.proj-cell{display:flex;flex-direction:column;align-items:center;gap:1px}
+.riskbar{display:flex;height:12px;border-radius:4px;overflow:hidden;background:var(--chip)}
+.rb-down{background:var(--blue)}.rb-bal{background:#7c8698}.rb-up{background:var(--amber)}
+.rung.active{background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber);font-weight:500}
+.rung.na{opacity:.5;border-style:dashed}
+.checklists{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:12px}
+.cond{display:grid;grid-template-columns:14px minmax(0,1fr);gap:8px;font-size:12px}
+.chart-dots{height:280px}

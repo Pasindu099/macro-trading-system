@@ -1,7 +1,7 @@
 {% from "desk/_macros.html" import state, head %}
 <section id="fedview" class="panel wide" aria-label="What the {{ desk.cb_short }} thinks">
   {{ head('3 · What does the ' ~ desk.cb_short ~ ' think?', 'CB policy documents · tone' ~ ((' · latest ' ~ ctx.latest_date) if ctx.latest_date else '')) }}
-  <div class="three-col">
+  <div class="split">
     <div class="stack">
       <h3 class="eyebrow-h">How the {{ desk.cb_short }} sees the economy</h3>
       {% if ctx.state == 'ok' %}
@@ -22,10 +22,43 @@
         {% endfor %}
       {% else %}<p class="note">Documents appear here once {{ desk.cb_short }} statements are analysed.</p>{% endif %}
     </div>
-    <div class="stack">
-      <h3 class="eyebrow-h">{{ desk.cb_short }} projections vs market</h3>
-      {% if ctx.projections %}{{ state(ctx.projections) }}{% endif %}
-    </div>
+  </div>
+  <div class="stack divider-top">
+    {% set pj = ctx.projections %}
+    <div class="row-between"><h3 class="eyebrow-h">{{ desk.cb_short }} projections and revisions</h3>
+      {% if pj and pj.state == 'ok' %}<span class="muted small">SEP {{ pj.round.strftime('%d %b %Y') }} vs {{ pj.previous_round.strftime('%b %Y') }}</span>{% endif %}</div>
+    {% if pj and pj.state == 'ok' %}
+      <div class="banner"><span class="chip tone-{{ 'up' if pj.flag == 'response' else 'warn' if pj.flag == 'tolerance' else 'flat' }}">Reaction function: {{ pj.flag }}</span>
+        <span class="text-2 small">{{ pj.flag_text }} · {{ pj.flag_detail }}</span></div>
+      <div class="split">
+        <div class="table-wrap">
+          <table class="tbl rows">
+            <thead><tr><th>SEP median</th>{% for h in pj.horizons %}<th class="c">{{ h }}</th>{% endfor %}</tr></thead>
+            <tbody>
+            {% for r in pj.rows %}
+              <tr><td>{{ r.name }}</td>
+                {% for c in r.cells %}<td class="c"><span class="proj-cell"><span class="text">{{ c.now }}</span><span class="muted small">{{ c.prev }}</span><span class="small" style="color: {{ c.chg_color }}">{{ c.chg }}</span></span></td>{% endfor %}
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+          <p class="note">Q4/Q4 for GDP and inflation; Q4 average for unemployment; year-end midpoint for the funds rate. Grey = previous round.</p>
+        </div>
+        <div class="stack">
+          <span class="eyebrow-sm">Risk balance · participants</span>
+          {% for r in pj.risks %}
+            <div class="stack-sm">
+              <div class="row-between small"><span>{{ r.name }}</span><span style="color: {{ r.diffusion_color }}">Risk diffusion {{ r.diffusion }}</span></div>
+              <div class="riskbar"><div class="rb-down" style="width: {{ r.w_down }}%"></div><div class="rb-bal" style="width: {{ r.w_bal }}%"></div><div class="rb-up" style="width: {{ r.w_up }}%"></div></div>
+              <div class="row-between muted small"><span>Downside {{ r.down }}</span><span>Balanced {{ r.bal }}</span><span>Upside {{ r.up }}</span></div>
+              {% if r.uncertainty_higher is not none %}<span class="muted small">Uncertainty higher than usual: <span class="text">{{ r.uncertainty_higher }}</span> of {{ r.n }}</span>{% endif %}
+            </div>
+          {% else %}
+            {{ state({'state': 'unavailable', 'message': pj.risk_state}) }}
+          {% endfor %}
+        </div>
+      </div>
+    {% elif pj %}{{ state(pj) }}{% endif %}
   </div>
   <div class="stack divider-top">
     <h3 class="eyebrow-h">Committee balance · last 30 days</h3>

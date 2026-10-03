@@ -20,7 +20,32 @@
       lineStyle: { color: color || "#5a6475", type: "dashed" }, data: [{ yAxis: value }] };
   }
 
+  function dotsOption(spec) {
+    // FOMC dot plot: one bubble per (horizon, rate), sized by the number of participants.
+    return {
+      backgroundColor: BG, animation: false,
+      grid: { left: 44, right: 12, top: 10, bottom: 26 },
+      tooltip: { trigger: "item", backgroundColor: "#12161d", borderColor: "#2c3442",
+                 textStyle: { color: "#e6e9ef", fontFamily: "DM Mono", fontSize: 11 },
+                 formatter: function (p) {
+                   return p.seriesName === "Participants" ? spec.categories[p.value[0]] + ": " + p.value[2] + " at " + p.value[1].toFixed(3) + "%"
+                     : p.seriesName + " " + spec.categories[p.dataIndex] + ": " + (p.value == null ? "n/a" : p.value + "%");
+                 } },
+      xAxis: { type: "category", data: spec.categories, axisLabel: axisLabel(), axisLine: { lineStyle: { color: GRID } } },
+      yAxis: { type: "value", scale: true, axisLabel: axisLabel("{value}%"), splitLine: { lineStyle: { color: GRID } } },
+      series: [
+        { name: "Participants", type: "scatter", data: spec.dots, itemStyle: { color: "#c9d1dd", opacity: 0.85 },
+          symbolSize: function (v) { return 5 + v[2] * 2.2; } },
+        { name: "Median", type: "line", data: spec.median, connectNulls: true, symbol: "circle", symbolSize: 6,
+          itemStyle: { color: "#f2a33a" }, lineStyle: { color: "#f2a33a", width: 2 } },
+        { name: "Market", type: "line", data: spec.market, connectNulls: false, symbol: "circle", symbolSize: 6,
+          itemStyle: { color: "#5aa9ff" }, lineStyle: { color: "#5aa9ff", width: 2, type: "dashed" } }
+      ]
+    };
+  }
+
   function buildOption(spec) {
+    if (spec.kind === "dots") { return dotsOption(spec); }
     var opt = {
       backgroundColor: BG, animation: false,
       grid: { left: 44, right: 12, top: 10, bottom: 22 },

@@ -9,7 +9,7 @@
         {% for r in ctx.rows %}
           <tr>
             <td>{{ r.theme }} <span class="muted small">· {{ r.count }}</span></td>
-            {% if loop.first %}<td rowspan="{{ ctx.rows | length }}" class="pending-cell"><span class="state-tag">Step {{ ctx.sep.step }}</span> Available after step {{ ctx.sep.step }}</td>{% endif %}
+            <td style="color: {{ r.sep_color }}" title="{{ r.sep_detail }}">{{ r.sep }}</td>
             <td style="color: {{ r.surprise_color }}">{{ r.surprise }}</td>
             <td class="r" style="color: {{ r.live_color }}">{{ r.live }}</td>
           </tr>
@@ -17,6 +17,6 @@
         </tbody>
       </table>
     </div>
-    <p class="note">Positive = hawkish surprise. Number after the theme = scored releases in the window. Live is what remains after each release's decay.</p>
+    <p class="note">vs {{ desk.cb_short }} SEP = CB Tracking against the latest projections (inflation: core PCE; labor: unemployment; growth: real GDP). Surprise: positive = hawkish; the number after the theme = scored releases in the window; live = what remains after decay.</p>
   {% else %}{{ state(ctx) }}{% endif %}
 </section>

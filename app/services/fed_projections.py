@@ -11,7 +11,7 @@ import httpx
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import session_scope
+from app.db.session import get_sessionmaker, session_scope
 from app.ingestion.run_logger import run_logger
 from app.processing.fed_sep import SepRound, SepValidationError, decode_html, parse_sep, validate
 
@@ -94,3 +94,75 @@ async def load_sep_rounds(since: date = date(2020, 1, 1)) -> dict[str, Any]:
             if sep.skipped:
                 summary["skipped_parts"][release_date.isoformat()] = sep.skipped
     return summary
+
+
+# ── Reads for the API and desk ─────────────────────────────────────────
+
+async def _rounds(session: AsyncSession) -> list[date]:
+    rows = await session.execute(text(
+        "SELECT DISTINCT release_date FROM cb_projection_values WHERE bank = :b ORDER BY release_date"), {"b": BANK})
+    return [r.release_date for r in rows]
+
+
+async def get_projections(round_: str = "latest") -> dict[str, Any]:
+    """round_: 'latest' | 'all' | an ISO release date."""
+    async with get_sessionmaker()() as session:
+        rounds = await _rounds(session)
+        if not rounds:
+            return {"bank": BANK, "status": "unavailable", "reason": "No SEP rounds stored"}
+        wanted = rounds if round_ == "all" else [rounds[-1]] if round_ == "latest" else [date.fromisoformat(round_)]
+        rows = await session.execute(text("""
+            SELECT release_date, variable, horizon, stat, value::float AS value FROM cb_projection_values
+            WHERE bank = :b AND release_date = ANY(:d) ORDER BY release_date, variable, horizon
+        """), {"b": BANK, "d": wanted})
+        out: dict[str, dict] = {}
+        for r in rows:
+            out.setdefault(r.release_date.isoformat(), {}).setdefault(r.variable, {}).setdefault(r.horizon, {})[r.stat] = r.value
+    return {"bank": BANK, "rounds": [{"release_date": d, "variables": v} for d, v in out.items()]}
+
+
+async def _round_or_latest(session: AsyncSession, release_date: date | None) -> date | None:
+    rounds = await _rounds(session)
+    return release_date if release_date else (rounds[-1] if rounds else None)
+
+
+async def get_dots(release_date: date | None = None) -> dict[str, Any]:
+    async with get_sessionmaker()() as session:
+        d = await _round_or_latest(session, release_date)
+        if d is None:
+            return {"bank": BANK, "status": "unavailable", "reason": "No SEP rounds stored"}
+        rows = (await session.execute(text("""
+            SELECT horizon, rate::float AS rate, participants FROM cb_dots
+            WHERE bank = :b AND release_date = :d ORDER BY horizon, rate
+        """), {"b": BANK, "d": d})).all()
+        medians = {r.horizon: r.value for r in (await session.execute(text("""
+            SELECT horizon, value::float AS value FROM cb_projection_values
+            WHERE bank = :b AND release_date = :d AND variable = 'federal_funds_rate' AND stat = 'median'
+        """), {"b": BANK, "d": d})).all()}
+    horizons: dict[str, list] = {}
+    for r in rows:
+        horizons.setdefault(r.horizon, []).append({"rate": r.rate, "participants": r.participants})
+    return {"bank": BANK, "release_date": d, "horizons": horizons, "medians": medians,
+            "participants": {h: sum(x["participants"] for x in v) for h, v in horizons.items()}}
+
+
+async def get_risk_balance(release_date: date | None = None) -> dict[str, Any]:
+    async with get_sessionmaker()() as session:
+        d = await _round_or_latest(session, release_date)
+        if d is None:
+            return {"bank": BANK, "status": "unavailable", "reason": "No SEP rounds stored"}
+        rows = (await session.execute(text("""
+            SELECT variable, kind, lower_or_downside AS lo, similar_or_balanced AS mid, higher_or_upside AS hi
+            FROM cb_risk_balance WHERE bank = :b AND release_date = :d
+        """), {"b": BANK, "d": d})).all()
+    if not rows:
+        return {"bank": BANK, "release_date": d, "status": "unavailable",
+                "reason": "Uncertainty and risk figures are only in the PDF for this round"}
+    variables: dict[str, dict] = {}
+    for r in rows:
+        n = r.lo + r.mid + r.hi
+        entry = {"lower_or_downside": r.lo, "similar_or_balanced": r.mid, "higher_or_upside": r.hi, "participants": n}
+        if r.kind == "risk":
+            entry["diffusion"] = round((r.hi - r.lo) / n, 2) if n else None  # upside minus downside share
+        variables.setdefault(r.variable, {})[r.kind] = entry
+    return {"bank": BANK, "release_date": d, "variables": variables}

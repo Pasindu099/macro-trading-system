@@ -42,3 +42,13 @@
 - Toward cutting/QE, **0 of 5 met**: Sahm 0.00; ISM manufacturing 55.6/54.6/54.5; HY 324bp; core PCE 2.05% (not < 2%); rate 4.00%.
 - **Gap v1** (method in the API output: SEP year-end median vs the de-averaged futures step path on 31 Dec of the same year, EFFR terms ≈ target midpoint): 2026: SEP 4.10 vs market 4.13 = **−3bp**. 2027–2029 are unavailable because the December 2027 meeting is beyond the fed funds futures strip; nothing is extrapolated. Tilt: **dovish_risk** (core PCE running cold).
 - Tests: `test_fed_regime.py` (8): regime classes and last move, Sahm rule, gap on identical dates, beyond-strip handling.
+
+## Part E: APIs and desk panels
+
+- `GET /api/cb/{bank}/projections?round=latest|all|YYYY-MM-DD`, `/dots`, `/risk-balance`, `/tracking` (incl. revisions), `/regime`, `/gap`: viewer auth, Fed only (other banks 404 with a reason), all 200 on live data.
+- USD desk: **2 Direction** "vs Fed SEP" = CB Tracking status per theme (inflation: core PCE running cold; labor: on track; growth: on track). **3 Fed view**: revisions table (2026 / 2027 / longer run, previous round in grey), reaction-function banner, risk balance bars (PCE diffusion +0.94, uncertainty higher 17 of 18). Committee balance is unavailable (needs the speaker pipeline). **4 Fed path**: regime ladder (Hiking active, QE greyed) and both checklists with reasons. **6 Gap**: dots vs market chart (bubble = participants, median and futures path) and the year-end gap table with method and tilt. Screenshot: `data/screenshots/usd_desk_step8.png`.
+- Fix found while checking the page: Fed decisions have no period, so ingestion's null-period identity (documented in `REPORT_NULL_PERIODS.md`, Step 1) leaves the newest decision flagged not-latest. `curve_metrics` filtered on `is_latest` and showed 3.75% (March) instead of 4.00%. It now takes the latest released decision with an actual. **Follow-up:** fix the null-period identity in `IngestService._upsert_release` (affects every period-less indicator).
+
+## Tests
+
+- New: redaction 4, current rate 2, CB config 2, SEP parser 11, tracking 16, regime/gap 8, CB API 3, desk panels +1 (37 in file). **Full suite: 481 passed, 7 skipped, nothing deselected**; integration 25 passed.

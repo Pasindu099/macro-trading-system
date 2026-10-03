@@ -48,3 +48,13 @@ Window 2026-08-03..21; stored `raw_payload` vs live EODHD now (`scripts/step5_ra
 - Spot is aligned to the report_date (Tuesday): the newest valid close on or before it, at most 5 days stale. Currency direction is vs USD. USD itself uses an equal-weight geometric index of the 7 majors, because no DXY spot is stored.
 - Squeeze checks the last 3 weekly nets and the 2-week spot move between report dates. Extremes use leveraged funds and the 3y lookback. An episode is the first week in a band, and no new episode starts within 8 weeks of the previous one. A move counts as reversed when the 8W move goes against the band's crowd.
 - Latest (2026-09-29, 3y, LF): crowded short EUR 8.3, GBP 4.5, CHF 13.5; crowded long AUD 96.8 (squeeze `medium`).
+
+## Part E: APIs (viewer auth when enabled; `app/api/routes/positioning.py`)
+
+`GET /api/positioning/crowding?lookback=1y|3y|5y` · `/{currency}?weeks=52` · `/flows?window=1W|4W` · `/squeeze` · `/extremes/{currency}` · `/pair/{pair}`. Unknown currency or pair returns 404, and invalid query values return 422.
+
+## Tests and production commands
+
+- New tests: positioning 15, positioning API 3, COT 4, revision refetch 3; integration: COT idempotency 1, positioning endpoints 1.
+- Final full suite: **360 passed, 7 skipped, 1 deselected** (known FED test). Integration suite: 25 passed.
+- Production: `alembic upgrade head` → `python -m scripts.backfill_cot_tff` (CFTC, no EODHD calls) → `python -m scripts.backfill_fx_spot --pairs EUR/USD GBP/USD USD/JPY AUD/USD NZD/USD USD/CAD USD/CHF --start 2010-01-01 --end <today> --max-requests 7 --summary-only` → `python -m scripts.run_rates_derived`.

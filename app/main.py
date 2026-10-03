@@ -26,6 +26,7 @@ from app.api.routes import (
     auth,
     fixed_income,
     knowledge,
+    positioning,
     shell,
     public,
     rate_probability,
@@ -116,6 +117,7 @@ app.include_router(knowledge.router)
 app.include_router(rate_probability.router)
 app.include_router(rate_probability_scraped.router)
 app.include_router(rates.router)
+app.include_router(positioning.router)
 
 
 # ══════════════════════════════════════════════════════════════════════

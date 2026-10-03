@@ -60,7 +60,7 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 ## Step 4 — Rates data layer
 - [x] 4a. `REPORT_STEP4_COVERAGE.md`: 50 yield country/tenor series, 14 FX pairs, backfill/status gaps, and policy-rate source. The user approved proceeding with unavailable outputs for missing FR/30Y/spot data and a permanent 2Y-vs-10Y regime.
 - [x] 4b. `config/pairs.yaml`: 28 market-convention pairs, pip sizes, benchmarks, FR−DE spread, and explicit unavailable 30Y fallbacks. Focused tests: 2 passed. Full suite: 291 passed, 7 skipped, 1 deselected, 18 integration failures from unauthenticated test clients.
-- [ ] 4c. Capture fixed-window live outputs, switch rates service to DB reads, and compare overlapping dates.
+- [x] 4c. Captured fixed-window live outputs; rates research, yield differentials, and repricing now read stored observations. Comparison and above-threshold provider revisions are in `REPORT_STEP4.md`. Focused tests passed; full suite: 292 passed, 18 existing auth-related integration failures.
 - [ ] 4d. Migration `0022` outlier columns and reversing-spike flagging job; keep raw rows.
 - [ ] 4e. Migration `0022` yield spreads, common-date/limited forward-fill alignment, and 2Y/10Y/available-30Y builds.
 - [ ] 4f. Curve metrics, regimes, inversion, and un-inversion service functions.

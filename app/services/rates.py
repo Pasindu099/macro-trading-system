@@ -1,13 +1,13 @@
-"""Live EODHD rates and FX research data.
-
-TODO (Step 4): switch to DB reads from government_yield_observations / fx_spot_observations.
-"""
+"""Rates and FX research data from stored observations."""
 
 from __future__ import annotations
 
-import asyncio
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
+
+from sqlalchemy import text
+
+from app.db.session import get_sessionmaker
 
 from app.ingestion.eodhd_client import EODHDAuthError, EODHDClient, EODHDError
 
@@ -238,6 +238,41 @@ async def _fetch_gbond_symbol_set() -> set[str]:
         if (code := _gbond_symbol_code(row))
     }
 
+
+async def _available_yield_symbols() -> set[str]:
+    async with get_sessionmaker()() as session:
+        result = await session.execute(text("""
+            SELECT DISTINCT provider_symbol FROM government_yield_observations
+            WHERE quality_status = 'valid'
+        """))
+    return {str(symbol).split(".")[0].upper() for symbol in result.scalars()}
+
+
+async def _stored_histories(
+    symbols: list[str], from_date: date, to_date: date, *, fx: bool = False,
+) -> list[list[dict[str, Any]]]:
+    table = "fx_spot_observations" if fx else "government_yield_observations"
+    date_column = "observation_date" if fx else "market_observation_date"
+    value_column = "close_value" if fx else "yield_value"
+    # The table and column names above are constants, never caller input.
+    query = text(f"""
+        SELECT DISTINCT ON (provider_symbol, {date_column})
+            provider_symbol, {date_column} AS obs_date, {value_column}::float AS close
+        FROM {table}
+        WHERE provider_symbol = ANY(:symbols)
+          AND {date_column} BETWEEN :from_date AND :to_date
+          AND quality_status = 'valid'
+        ORDER BY provider_symbol, {date_column}, ingested_at DESC, id DESC
+    """)
+    async with get_sessionmaker()() as session:
+        result = await session.execute(query, {
+            "symbols": symbols, "from_date": from_date, "to_date": to_date,
+        })
+    histories = {symbol: [] for symbol in symbols}
+    for row in result:
+        histories[row.provider_symbol].append({"date": row.obs_date.isoformat(), "close": row.close})
+    return [histories[symbol] for symbol in symbols]
+
 def _yield_symbol_prefix(benchmark: dict[str, Any]) -> str:
     symbol = str(benchmark["symbol"]).split(".", 1)[0]
     return symbol.removesuffix("10Y")
@@ -310,7 +345,7 @@ def _build_maturity_panels(
     ]
 
 async def _build_rates_research_context() -> dict[str, Any]:
-    available_symbols = await _fetch_gbond_symbol_set()
+    available_symbols = await _available_yield_symbols()
     yield_by_maturity: dict[str, dict[str, Any]] = {}
     for maturity in YIELD_MATURITIES:
         maturity_key = str(maturity["key"])
@@ -324,7 +359,7 @@ async def _build_rates_research_context() -> dict[str, Any]:
                 "symbols": [],
                 "errors": [],
                 "chart_data": _build_yield_chart_data({}),
-                "message": "No EODHD GBOND symbols were found for this maturity.",
+                "message": "No stored government yields were found for this maturity.",
             }
             continue
         yield_by_maturity[maturity_key] = await _build_yield_differentials(
@@ -346,26 +381,9 @@ async def _build_rates_research_context() -> dict[str, Any]:
     histories_by_pair: dict[str, list[dict[str, Any]]] = {}
     fx_errors: list[dict[str, Any]] = []
 
-    try:
-        async with EODHDClient() as client:
-            histories = await asyncio.gather(
-                *(
-                    client.fetch_eod_history(
-                        str(pair["symbol"]),
-                        from_date=from_date,
-                        to_date=today,
-                    )
-                    for pair in FX_PAIR_DEFS
-                ),
-                return_exceptions=True,
-            )
-    except (EODHDError, ValueError):
-        histories = []
-        fx_errors.append({
-            "symbol": "FOREX",
-            "label": "FX comparison",
-            "error": "FX pair history is unavailable right now.",
-        })
+    histories = await _stored_histories(
+        [str(pair["symbol"]) for pair in FX_PAIR_DEFS], from_date, today, fx=True,
+    )
 
     for pair, history in zip(FX_PAIR_DEFS, histories, strict=False):
         if isinstance(history, Exception):
@@ -424,37 +442,9 @@ async def _build_yield_differentials(
     today = _now().date()
     from_date = today - timedelta(days=YIELD_HISTORY_DAYS)
 
-    try:
-        async with EODHDClient() as client:
-            histories = await asyncio.gather(
-                *(
-                    client.fetch_eod_history(
-                        str(benchmark["symbol"]),
-                        from_date=from_date,
-                        to_date=today,
-                    )
-                    for benchmark in benchmarks
-                ),
-                return_exceptions=True,
-            )
-    except (EODHDError, ValueError):
-        return {
-            "rows": [],
-            "pairs": [],
-            "stats": [],
-            "base_currency": YIELD_BASE_CURRENCY,
-            "symbols": [benchmark["symbol"] for benchmark in benchmarks],
-            "errors": [],
-            "chart_data": {
-                "yield_series": [],
-                "spread_series": [],
-                "latest_spreads": [],
-                "base_currency": YIELD_BASE_CURRENCY,
-                "unit": "%",
-                "spread_unit": "bp",
-            },
-            "message": "Bond yield data is unavailable from EODHD right now.",
-        }
+    histories = await _stored_histories(
+        [str(benchmark["symbol"]) for benchmark in benchmarks], from_date, today,
+    )
 
     auth_blocked = any(isinstance(history, EODHDAuthError) for history in histories)
     failed_symbols = [
@@ -517,7 +507,7 @@ async def _build_yield_differentials(
             "EODHD rejected the GBOND yield requests for the current subscription. "
             "The symbols are valid, but this API key needs GBOND/government-bond access."
             if auth_blocked
-            else "Bond yield data is unavailable from EODHD right now."
+            else "Stored bond yield data is unavailable right now."
         )
         return {
             "rows": [],
@@ -741,17 +731,10 @@ async def _build_rate_repricing() -> dict[str, Any]:
     long_symbols = [f"{prefixes[code]}{REPRICING_LONG_TENOR}.GBOND" for code in currencies]
     fx_symbols = [str(pair["symbol"]) for pair in FX_PAIR_DEFS]
 
-    try:
-        async with EODHDClient() as client:
-            payloads = await asyncio.gather(
-                *(
-                    client.fetch_eod_history(symbol, from_date=from_date, to_date=today)
-                    for symbol in front_symbols + long_symbols + fx_symbols
-                ),
-                return_exceptions=True,
-            )
-    except (EODHDError, ValueError):
-        return {"rows": [], "regime": {}, "message": "Rate data is unavailable from EODHD right now."}
+    payloads = (
+        await _stored_histories(front_symbols + long_symbols, from_date, today)
+        + await _stored_histories(fx_symbols, from_date, today, fx=True)
+    )
 
     curves = [
         _repricing_curve(payload) if not isinstance(payload, Exception) else {}
@@ -860,7 +843,7 @@ def _now():
     return datetime.now(timezone.utc)
 
 
-# Public entry points retain the existing EODHD-backed calculations in Step 3.5.
+# Public entry points retain the existing calculations.
 async def get_rates_research_context() -> dict[str, Any]:
     return await _build_rates_research_context()
 

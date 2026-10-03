@@ -42,3 +42,9 @@
 - `app/services/curve_metrics.py` exposes 2s10s, 10s30s, 2Y-minus-dated-policy, 1W/1M/3M regimes, inversion and most recent qualifying un-inversion. Regimes permanently use 2Y/10Y and include both tenor identifiers.
 - Local check: all eight benchmark countries have 2s10s; all have unavailable 10s30s with a reason; CH has unavailable policy spread because its dated actual is stale. Seven policy spreads are available.
 - Focused tests: 8 passed. Full suite: 304 passed, 7 skipped, 1 deselected, same 18 auth-related integration failures.
+
+## Part G: daily-change drivers
+
+- `app/services/rates_drivers.py` correlates 60 and 15 aligned daily changes, returns current spread/spot levels and 20-observation changes, and labels weak link/diverging/aligned.
+- Local 2Y check: 8 weak links, 6 aligned, 14 unavailable because the spot pair is missing. Missing pairs include a reason and no synthetic correlation.
+- Focused tests: 3 passed. Full suite: 307 passed, 7 skipped, 1 deselected, same 18 auth-related integration failures.

@@ -794,6 +794,86 @@ mappings:
     unit: index
     importance: 2
 
+  # Step 7: current EODHD names and legacy aliases for ISM services sub-indices.
+  - eodhd_type: ISM Services Employment
+    eodhd_comparison: null
+    country: US
+    canonical_name: ism_services_employment
+    display_name: ISM Services Employment
+    primary_category: Growth
+    secondary_categories: [Labor]
+    frequency: monthly
+    unit: index
+    importance: 2
+    notes: "EODHD's current name; legacy 'ISM Non-Manufacturing Employment'."
+
+  - eodhd_type: ISM Non-Manufacturing Business Activity
+    eodhd_comparison: null
+    country: US
+    canonical_name: ism_services_business_activity
+    display_name: ISM Services Business Activity
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+    notes: "Legacy EODHD name for 'ISM Services Business Activity'."
+
+  - eodhd_type: ISM Services New Orders
+    eodhd_comparison: null
+    country: US
+    canonical_name: ism_services_new_orders
+    display_name: ISM Services New Orders
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: ISM Non-Manufacturing New Orders
+    eodhd_comparison: null
+    country: US
+    canonical_name: ism_services_new_orders
+    display_name: ISM Services New Orders
+    primary_category: Growth
+    frequency: monthly
+    unit: index
+    importance: 2
+    notes: "Legacy EODHD name for 'ISM Services New Orders'."
+
+  - eodhd_type: ISM Services Prices
+    eodhd_comparison: null
+    country: US
+    canonical_name: ism_services_prices
+    display_name: ISM Services Prices Paid
+    primary_category: Growth
+    secondary_categories: [Inflation]
+    frequency: monthly
+    unit: index
+    importance: 2
+
+  - eodhd_type: ISM Non-Manufacturing Prices
+    eodhd_comparison: null
+    country: US
+    canonical_name: ism_services_prices
+    display_name: ISM Services Prices Paid
+    primary_category: Growth
+    secondary_categories: [Inflation]
+    frequency: monthly
+    unit: index
+    importance: 2
+    notes: "Legacy EODHD name for 'ISM Services Prices'."
+
+  # US headline GDP from BEA is quarter-on-quarter at a seasonally adjusted
+  # annual rate; EODHD publishes advance, second and third estimates under one name.
+  - eodhd_type: GDP Growth Rate
+    eodhd_comparison: qoq
+    country: US
+    canonical_name: real_gdp_qoq_annualised
+    display_name: Real GDP (QoQ annualised)
+    primary_category: Growth
+    frequency: quarterly
+    unit: "%"
+    importance: 1
+
   - eodhd_type: New Home Sales
     eodhd_comparison: null
     country: US

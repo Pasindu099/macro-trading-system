@@ -90,7 +90,7 @@ Decisions: `DECISIONS_STEP6.md`. Commits: `step6: <sub-task>`.
 ## Step 7 — Pipeline health, missing indicators, rate-probability methodology
 Decisions: `DECISIONS_STEP7.md`. Commits: `step7: <sub-task>`.
 - [x] 7a. Health: CB docs never run (unscheduled); news_alerts + enrichment failing since 09-24 (OpenAI no credits); rp scraper 403 since 08-21; 5 OIS proxies 403 (doubled jina URL) since 07-22; prod SQL `scripts/sql/pipeline_health.sql`.
-- [ ] 7b. US real GDP and ISM sub-index mappings; re-ingest; desk check.
+- [x] 7b. US GDP (`GDP Growth Rate` qoq) + ISM services new orders/prices mapped; ISM mfg production not published by EODHD; reclassify script; desk check 17/1 missing; full suite 414 passed.
 - [ ] 7c. Restart stale news_alerts and CB policy document pipelines; Fed statements/minutes (13 months) analysed.
 - [ ] 7d. ZQ de-averaging, piecewise-constant path, 14-day override staleness, FED test fixed; before/after probabilities.
 - [ ] 7e. Vendor HTMX + ECharts; no runtime CDN scripts.

@@ -15,6 +15,8 @@ from pathlib import Path
 from app.db.session import session_scope
 from app.ingestion.eodhd_client import EODHDClient
 from app.services.fx_spot import FX_PAIR_SYMBOLS, ingest_eodhd_fx_spot
+from app.services.fx_synthetic import ingest_synthetic_cross
+from app.services.rates import _gbond_symbol_code
 
 DEFAULT_CHECKPOINT = Path("data/fx_spot_backfill_checkpoint.json")
 
@@ -27,6 +29,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--max-requests", type=int, default=None)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--summary-only", action="store_true")
     parser.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
     return parser.parse_args()
 
@@ -39,6 +42,10 @@ async def main() -> None:
     report = []
 
     async with EODHDClient() as client:
+        available = {
+            _gbond_symbol_code(row) for row in await client.fetch_exchange_symbols("FOREX")
+            if isinstance(row, dict)
+        }
         for pair in [p.upper() for p in args.pairs]:
             key = f"{pair}:{args.start}:{args.end}"
             if key in done:
@@ -46,15 +53,21 @@ async def main() -> None:
             if args.max_requests is not None and requests_used >= args.max_requests:
                 print(json.dumps({"stopped": "max_requests", "requests_used": requests_used, "report": report}, indent=2))
                 return
+            if FX_PAIR_SYMBOLS[pair].split(".")[0] not in available:
+                if args.dry_run:
+                    seen = inserted = 0
+                else:
+                    async with session_scope() as session:
+                        seen, inserted = await ingest_synthetic_cross(session, pair, args.start, args.end)
+                report.append({"pair": pair, "source": "synthetic", "seen": seen, "inserted": inserted})
+                if not args.dry_run:
+                    done.add(key)
+                    _save_checkpoint(args.checkpoint, done)
+                continue
             async with session_scope() as session:
                 stats = await ingest_eodhd_fx_spot(
-                    session,
-                    client,
-                    from_date=args.start,
-                    to_date=args.end,
-                    pairs=[pair],
-                    max_requests=1,
-                    dry_run=args.dry_run,
+                    session, client, from_date=args.start, to_date=args.end,
+                    pairs=[pair], max_requests=1, dry_run=args.dry_run,
                 )
             requests_used += stats.requests_used
             report.append({
@@ -65,10 +78,18 @@ async def main() -> None:
                 "missing": stats.pairs_missing,
                 "errors": stats.errors,
             })
-            done.add(key)
-            _save_checkpoint(args.checkpoint, done)
+            if not args.dry_run and not stats.errors and not stats.pairs_missing:
+                done.add(key)
+                _save_checkpoint(args.checkpoint, done)
 
-    print(json.dumps({"requests_used": requests_used, "report": report}, indent=2))
+    if args.summary_only:
+        print({"requests_used": requests_used, "pairs": len(report),
+               "seen": sum(item.get("seen", 0) for item in report),
+               "inserted": sum(item.get("inserted", 0) for item in report),
+               "synthetic": sum(item.get("source") == "synthetic" for item in report),
+               "errors": sum(bool(item.get("errors")) for item in report)})
+    else:
+        print(json.dumps({"requests_used": requests_used, "report": report}, indent=2))
 
 
 def _load_checkpoint(path: Path) -> set[str]:

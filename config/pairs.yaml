@@ -12,17 +12,16 @@ currency_benchmarks:
 
 regime_tenors: [2Y, 10Y]
 
-# No 20Y or 30Y government yield is currently stored for any country.
-# A null fallback means 30Y metrics stay unavailable until Part I sources data.
+# 30Y is sourced where available. Null means neither 30Y nor a 20Y fallback exists.
 tenor_fallbacks:
-  US: {30Y: null}
-  DE: {30Y: null}
+  US: {30Y: 30Y}
+  DE: {30Y: 30Y}
   FR: {30Y: null}
-  UK: {30Y: null}
-  JP: {30Y: null}
-  AU: {30Y: null}
+  UK: {30Y: 30Y}
+  JP: {30Y: 30Y}
+  AU: {30Y: 30Y}
   NZ: {30Y: null}
-  CA: {30Y: null}
+  CA: {30Y: 30Y}
   CH: {30Y: null}
 
 named_spreads:

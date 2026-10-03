@@ -6,9 +6,9 @@ from app.services.curve_metrics import calculate_curve, classify_regime, latest_
 
 
 @pytest.mark.parametrize(("d2", "d10", "expected"), [
-    (2, 1, "bear_flattener"), (1, 2, "bear_steepener"),
-    (-2, -1, "bull_steepener"), (-1, -2, "bull_flattener"),
-    (-1, 2, "twist_steepener"), (2, -1, "twist_flattener"),
+    (18, 4, "bear_flattener"), (5, 15, "bear_steepener"),
+    (-20, -5, "bull_steepener"), (-3, -12, "bull_flattener"),
+    (-4, 3, "twist_steepener"), (40, -2, "twist_flattener"),
 ])
 def test_regime_uses_2y_and_10y(d2, d10, expected):
     assert classify_regime(d2, d10) == expected

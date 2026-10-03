@@ -48,6 +48,7 @@ ALLOWED_COUNTRIES: frozenset[str] = frozenset({
 GBOND_COUNTRY_PREFIXES: dict[str, dict[str, str]] = {
     "US": {"country_code": "US", "currency_code": "USD", "market_timezone": "America/New_York"},
     "DE": {"country_code": "DE", "currency_code": "EUR", "market_timezone": "Europe/Berlin"},
+    "FR": {"country_code": "FR", "currency_code": "EUR", "market_timezone": "Europe/Paris"},
     "UK": {"country_code": "UK", "currency_code": "GBP", "market_timezone": "Europe/London"},
     "JP": {"country_code": "JP", "currency_code": "JPY", "market_timezone": "Asia/Tokyo"},
     "AU": {"country_code": "AU", "currency_code": "AUD", "market_timezone": "Australia/Sydney"},
@@ -67,6 +68,12 @@ GBOND_MATURITIES: tuple[str, ...] = (
     "10Y",
 )
 
+GBOND_COUNTRY_MATURITIES: dict[str, tuple[str, ...]] = {
+    prefix: GBOND_MATURITIES + (("30Y",) if prefix in {"US", "DE", "UK", "JP", "AU", "CA"} else ())
+    for prefix in GBOND_COUNTRY_PREFIXES
+}
+GBOND_COUNTRY_MATURITIES["FR"] = ("2Y", "10Y")
+
 GBOND_MATURITY_MONTHS: dict[str, int] = {
     "1M": 1,
     "3M": 3,
@@ -76,6 +83,8 @@ GBOND_MATURITY_MONTHS: dict[str, int] = {
     "3Y": 36,
     "5Y": 60,
     "10Y": 120,
+    "20Y": 240,
+    "30Y": 360,
 }
 
 # Exponential backoff delays in seconds. First retry waits 1s, second 5s,
@@ -485,6 +494,6 @@ def build_gbond_symbol(country_prefix: str, maturity: str) -> str:
     mat = maturity.upper()
     if prefix not in GBOND_COUNTRY_PREFIXES:
         raise ValueError(f"Unsupported GBOND country prefix: {country_prefix!r}")
-    if mat not in GBOND_MATURITIES:
+    if mat not in GBOND_MATURITY_MONTHS:
         raise ValueError(f"Unsupported GBOND maturity: {maturity!r}")
     return f"{prefix}{mat}.GBOND"

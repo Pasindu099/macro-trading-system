@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import GovernmentYieldIngestionStatus, GovernmentYieldObservation
 from app.ingestion.eodhd_client import (
     GBOND_COUNTRY_PREFIXES,
-    GBOND_MATURITIES,
+    GBOND_COUNTRY_MATURITIES,
     GBOND_MATURITY_MONTHS,
     EODHDAuthError,
     EODHDClient,
@@ -67,8 +67,8 @@ def configured_gbond_symbols() -> list[str]:
     """Return every configured EODHD GBOND symbol, including actual 2Y tenors."""
     return [
         build_gbond_symbol(prefix, maturity)
-        for prefix in GBOND_COUNTRY_PREFIXES
-        for maturity in GBOND_MATURITIES
+        for prefix, maturities in GBOND_COUNTRY_MATURITIES.items()
+        for maturity in maturities
     ]
 
 
@@ -110,7 +110,7 @@ async def ingest_eodhd_government_yields(
         started_at=datetime.now(UTC),
     )
     prefixes = [p.upper() for p in (country_prefixes or list(GBOND_COUNTRY_PREFIXES))]
-    tenors = [m.upper() for m in (maturities or list(GBOND_MATURITIES))]
+    tenors = [m.upper() for m in maturities] if maturities else None
 
     if available_symbols is None:
         available_symbols = await _fetch_available_gbond_symbols(client, stats)
@@ -120,7 +120,9 @@ async def ingest_eodhd_government_yields(
         return stats
 
     for prefix in prefixes:
-        for maturity in tenors:
+        for maturity in (tenors or GBOND_COUNTRY_MATURITIES[prefix]):
+            if maturity not in GBOND_COUNTRY_MATURITIES[prefix]:
+                continue
             symbol = build_gbond_symbol(prefix, maturity)
             stats.symbols_requested += 1
             if available_symbols is not None and symbol_name(symbol) not in available_symbols:

@@ -66,5 +66,5 @@ Decisions: `DECISIONS_STEP1.md`. Each completed sub-task is committed as `step1:
 - [x] 4f. Curve metrics, 2Y/10Y regimes, inversion, and un-inversion service functions. Focused tests: 8 passed; full suite: 304 passed with the same 18 auth-related integration failures.
 - [x] 4g. Daily-change driver correlations and status service. Local 2Y check: 14 pairs available, 14 unavailable with reason. Focused tests: 3 passed; full suite: 307 passed with the same 18 auth-related integration failures.
 - [x] 4h. Post-ingest `job:rates_derived` and four service-backed JSON endpoints. Full suite: 329 passed, 7 skipped, known FED date test deselected; jobs integration: 2 passed.
-- [ ] 4i. After H passes: symbol availability report, source FR/long-end yields and missing FX pairs (synthetic only when unavailable), backfill, rebuild derived data, and verify unavailable-to-available transitions.
-- [ ] 4t. Unit and integration checkpoints, `REPORT_STEP4.md`, and final verification.
+- [x] 4i. `REPORT_STEP4_SOURCING.md`: availability, 20 yield and 14 FX backfills, 54 Part I API calls, 60,476 derived spreads, six available 10s30s curves, FR−DE 2Y/10Y and all 14 new pairs' drivers verified.
+- [x] 4t. Focused unit and integration checkpoints, `REPORT_STEP4.md`, final full suite: 333 passed, 7 skipped, known FED date test deselected.

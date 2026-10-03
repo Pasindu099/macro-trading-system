@@ -20,7 +20,12 @@ def test_yield_benchmarks_and_missing_long_tenors():
     assert data["currency_benchmarks"]["EUR"] == "DE"
     assert data["regime_tenors"] == ["2Y", "10Y"]
     assert set(data["tenor_fallbacks"]) == {"US", "DE", "FR", "UK", "JP", "AU", "NZ", "CA", "CH"}
-    assert all(tenors["30Y"] is None for tenors in data["tenor_fallbacks"].values())
+    assert {country for country, tenors in data["tenor_fallbacks"].items() if tenors["30Y"] == "30Y"} == {
+        "US", "DE", "UK", "JP", "AU", "CA",
+    }
+    assert {country for country, tenors in data["tenor_fallbacks"].items() if tenors["30Y"] is None} == {
+        "FR", "NZ", "CH",
+    }
     assert data["named_spreads"] == [{
         "name": "FR-DE", "base_country": "FR", "quote_country": "DE",
         "tenors": ["2Y", "10Y", "30Y"],

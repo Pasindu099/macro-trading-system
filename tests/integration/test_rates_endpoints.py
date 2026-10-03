@@ -23,4 +23,4 @@ def test_rates_endpoints_return_service_payloads():
     assert spread.json()["pair"] == "USD/JPY"
     assert spread.json()["tenor"] == "2Y"
     assert len(regimes.json()["regimes"]) == 24
-    assert drivers.json()["drivers"]["2Y"]["status"] == "unavailable"
+    assert drivers.json()["drivers"]["2Y"]["status"] in {"weak_link", "diverging", "aligned"}

@@ -55,3 +55,16 @@
 - Local job run: 0 new yield flags, 0 FX flags, 45,200 spread rows.
 - Endpoints: `/api/rates/curve/{country}`, `/api/rates/spreads/{pair}`, `/api/rates/regimes`, `/api/rates/drivers/{pair}`; all require viewer access when auth is enabled.
 - Integration auth tests now clear cached settings after disabling auth. Focused route tests: 3 unit and 1 integration passed; affected integration modules: 21 passed. Full suite: 329 passed, 7 skipped, 1 deselected (known FED date test). `pytest tests/integration -k jobs -q`: 2 passed.
+
+## Part I: missing source data
+
+- Availability matrix, source commands, backfill counts, API calls and post-backfill checks: `REPORT_STEP4_SOURCING.md`.
+- EODHD config now includes FR 2Y/10Y, six available 30Y symbols and all 28 G10 FX pairs. Synthetic cross code is ready for symbols absent from the provider listing; none of the 14 newly sourced pairs required it.
+- Migration: `migrations/versions/2026_10_03_0022_rates_quality_and_spreads.py`.
+- Part I focused tests: 18 source/config/ingestion tests, 3 spread tests, 8 regime tests passed. Full suite: 333 passed, 7 skipped, 1 deselected (known FED date test). The post-backfill rates API integration test passed.
+
+## Files
+
+- Config and ingestion: `config/pairs.yaml`, `app/ingestion/eodhd_client.py`, `app/services/government_yields.py`, `app/services/fx_spot.py`, `app/services/fx_synthetic.py`, `scripts/backfill_government_yields.py`, `scripts/backfill_fx_spot.py`.
+- Analytics and API: `app/services/rates.py`, `rates_quality.py`, `yield_spreads.py`, `curve_metrics.py`, `rates_drivers.py`, `rates_derived_jobs.py`, `app/api/routes/rates.py`, `app/ingestion/scheduler.py`, `app/main.py`.
+- Migration `0022_rates_quality_spreads` adds both outlier flags and `yield_spreads`; no existing migration changed.

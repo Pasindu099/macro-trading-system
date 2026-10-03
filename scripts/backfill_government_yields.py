@@ -15,7 +15,7 @@ from pathlib import Path
 from app.db.session import session_scope
 from app.ingestion.eodhd_client import (
     GBOND_COUNTRY_PREFIXES,
-    GBOND_MATURITIES,
+    GBOND_COUNTRY_MATURITIES,
     EODHDClient,
     build_gbond_symbol,
 )
@@ -27,12 +27,13 @@ DEFAULT_CHECKPOINT = Path("data/government_yield_backfill_checkpoint.json")
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Backfill durable EODHD government yields.")
     parser.add_argument("--countries", nargs="*", default=list(GBOND_COUNTRY_PREFIXES))
-    parser.add_argument("--maturities", nargs="*", default=list(GBOND_MATURITIES))
+    parser.add_argument("--maturities", nargs="*", default=None)
     parser.add_argument("--start", required=True, type=date.fromisoformat)
     parser.add_argument("--end", required=True, type=date.fromisoformat)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--max-requests", type=int, default=None)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--summary-only", action="store_true")
     parser.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
     return parser.parse_args()
 
@@ -51,15 +52,18 @@ async def main() -> None:
             for row in available_rows
         }
         for country in args.countries:
-            for maturity in args.maturities:
+            for maturity in GBOND_COUNTRY_MATURITIES[country]:
+                if args.maturities is not None and maturity not in args.maturities:
+                    continue
                 symbol = build_gbond_symbol(country, maturity)
                 key = f"{symbol}:{args.start}:{args.end}"
                 if key in done:
                     continue
                 if symbol_name(symbol) not in available:
                     report.append({"symbol": symbol, "status": "missing_from_exchange_list"})
-                    done.add(key)
-                    _save_checkpoint(args.checkpoint, done)
+                    if not args.dry_run:
+                        done.add(key)
+                        _save_checkpoint(args.checkpoint, done)
                     continue
                 if args.max_requests is not None and requests_used >= args.max_requests:
                     print(json.dumps({"stopped": "max_requests", "requests_used": requests_used, "report": report}, indent=2))
@@ -89,10 +93,17 @@ async def main() -> None:
                         "stale": stats.stale_symbols,
                         "errors": stats.errors,
                     })
-                done.add(key)
-                _save_checkpoint(args.checkpoint, done)
+                if not args.dry_run and not stats.errors and not stats.symbols_missing:
+                    done.add(key)
+                    _save_checkpoint(args.checkpoint, done)
 
-    print(json.dumps({"requests_used": requests_used, "report": report}, indent=2))
+    if args.summary_only:
+        print({"requests_used": requests_used, "symbols": len(report),
+               "seen": sum(item.get("seen", 0) for item in report),
+               "inserted": sum(item.get("inserted", 0) for item in report),
+               "missing": sum(item["status"] == "missing_from_exchange_list" for item in report)})
+    else:
+        print(json.dumps({"requests_used": requests_used, "report": report}, indent=2))
 
 
 def _load_checkpoint(path: Path) -> set[str]:

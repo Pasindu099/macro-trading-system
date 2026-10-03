@@ -48,7 +48,10 @@ def test_configured_gbond_symbols_include_actual_2y() -> None:
 
     assert "US2Y.GBOND" in symbols
     assert "DE2Y.GBOND" in symbols
-    assert len(symbols) == 8 * 8
+    assert len(symbols) == 72  # Original 64, FR 2Y/10Y, six available 30Y.
+    assert "FR2Y.GBOND" in symbols
+    assert "FR10Y.GBOND" in symbols
+    assert "US30Y.GBOND" in symbols
 
 
 def test_build_observation_record_uses_close_as_actual_yield() -> None:

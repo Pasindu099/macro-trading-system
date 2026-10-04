@@ -18,6 +18,7 @@ ENV/
 data/bank_research/admin_state.json
 data/retail_sentiment_history/
 .env.local
+backups/
 
 # Testing
 .pytest_cache/

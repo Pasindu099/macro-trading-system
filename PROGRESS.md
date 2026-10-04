@@ -122,5 +122,5 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 
 ## Deployment preparation
 - [x] A. Standalone production Compose with baked code, one app worker/scheduler, healthchecks and persistent named data/DB volumes. Built locally; isolated smoke stack migrated to 0027, app/postgres healthy, `/health` 200.
-- [ ] B. Local backup and scratch restore verification.
+- [x] B. Custom-format timestamped backup (14-file retention) and prompted restore scripts. Local isolated backup: 305257 bytes; scratch restore matched checked row counts `1|1|0` for alembic_version/ingestion_runs/situation_episodes.
 - [ ] C. Operator runbook and release tag.

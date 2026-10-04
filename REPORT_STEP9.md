@@ -47,3 +47,8 @@
 - `app/services/ecb_pricing.py` uses recent German 3M/6M/1Y/2Y yields and current DFR for labelled 3M/6M/12M approximations; 12M 1W/1M repricing is primary. `/api/rate-prob/ecb-horizons` exposes the method and limitations.
 - ECB meeting probabilities and EUR scenario probabilities are “not priced”. No source passed the approval threshold.
 - Focused tests: 61 passed. Host full suite could not resolve the container DB host; local app-container full suite: **508 passed, 7 skipped**.
+
+## Part E: daily EUR effective exchange rate
+
+- [ECB nominal EER daily series](https://data.ecb.europa.eu/data/data-categories/ecbeurosystem-policy-and-exchange-rates/exchange-rates/effective-exchange-rates/nominal-eers): `EXR.D.E03.EUR.EN00.A` (broad EER group, displayed as EER-40 on portal). `scripts/load_eur_eer.py` uses the existing ECB series table and parser; no migration or EODHD calls.
+- Direct API sample timed out twice locally; live load awaits deployment. Focused 1 passed; container full suite **509 passed, 7 skipped**.

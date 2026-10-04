@@ -14,6 +14,7 @@ from app.ingestion.run_logger import run_logger
 
 API = "https://data-api.ecb.europa.eu/service/data"
 HICP_SA = "HICP.M.U2.Y.000000.4F0.INX"
+EUR_EER_BROAD_DAILY = "EXR.D.E03.EUR.EN00.A"
 
 
 def parse_series_csv(payload: str, series_key: str) -> list[tuple[date, float]]:

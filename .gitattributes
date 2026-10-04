@@ -1,2 +1,3 @@
 # Vendored minified libraries are pinned by checksum: never convert line endings.
 app/web/static/vendor/*.js -text
+*.sh text eol=lf

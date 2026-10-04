@@ -6,8 +6,8 @@ if [[ $# -ne 1 || ! -f $1 ]]; then
   exit 2
 fi
 archive=$(realpath "$1")
-root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-compose=(docker compose -f "$root/docker-compose.prod.yml")
+root=${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}
+compose=(docker compose -f "${COMPOSE_FILE:-$root/docker-compose.prod.yml}")
 "${compose[@]}" exec -T postgres pg_restore -l < "$archive" > /dev/null
 database=${RESTORE_DB:-$("${compose[@]}" exec -T postgres sh -c 'printf %s "$POSTGRES_DB"')}
 printf 'Restore %s into database %s? This replaces matching database objects.\n' "$archive" "$database"

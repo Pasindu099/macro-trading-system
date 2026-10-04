@@ -332,9 +332,27 @@ def _build_event(
     period_raw = raw_event.get("period")
     period_start_date = _parse_period(period_raw, released_at)
 
+    # EODHD uses one label for ECB percent expectations and the European
+    # Commission's survey balance. Its payload has no source/unit field.
+    is_eu_balance = (
+        mapping is not None
+        and country == "EU"
+        and mapping.canonical_name == "consumer_inflation_expectation"
+        and (
+            (period_start_date is not None
+             and period_start_date.year == released_at.year
+             and period_start_date.month == released_at.month)
+            or any(
+                abs(value) >= 10
+                for key in ("actual", "previous", "estimate")
+                if (value := _to_decimal(raw_event.get(key))) is not None
+            )
+        )
+    )
+
     return CanonicalEvent(
-        canonical_name=mapping.canonical_name if mapping else None,
-        display_name=mapping.display_name if mapping else None,
+        canonical_name="consumer_price_expectations_balance" if is_eu_balance else (mapping.canonical_name if mapping else None),
+        display_name="Consumer price expectations (survey balance)" if is_eu_balance else (mapping.display_name if mapping else None),
         primary_category=mapping.primary_category if mapping else None,
         secondary_categories=mapping.secondary_categories if mapping else (),
         importance=mapping.importance if mapping else 2,

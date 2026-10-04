@@ -23,7 +23,7 @@ Usage:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from typing import Any
 
@@ -127,6 +127,8 @@ class IngestService:
             # Country outside allowlist — silently skipped
             stats.skipped_null_country += 1
             return
+
+        canonical = quarantine_future_actual(canonical, datetime.now(timezone.utc))
 
         if canonical.canonical_name is None:
             stats.unmapped += 1
@@ -332,6 +334,16 @@ class IngestService:
 
 # ── Helpers ─────────────────────────────────────────────────────────────
 
+def quarantine_future_actual(canonical: CanonicalEvent, as_of: datetime) -> CanonicalEvent:
+    """Keep a scheduled event but never publish an actual before release time."""
+    if canonical.actual is None or canonical.released_at <= as_of:
+        return canonical
+    return replace(
+        canonical, actual=None,
+        raw_payload={**canonical.raw_payload, "quarantine_reason": "future_actual_before_release"},
+    )
+
+
 def _infer_frequency(canonical: CanonicalEvent) -> str:
     """Fall back to 'irregular' if we can't derive frequency from period_raw."""
     period = canonical.period_raw
@@ -351,6 +363,10 @@ def _infer_frequency(canonical: CanonicalEvent) -> str:
 
 
 def _infer_unit(canonical: CanonicalEvent) -> str | None:
+    if canonical.country == "EU" and canonical.canonical_name == "consumer_inflation_expectation":
+        return "%"
+    if canonical.country == "EU" and canonical.canonical_name == "consumer_price_expectations_balance":
+        return "balance"
     """We don't have unit in CanonicalEvent, so return None. Future Phase
     improvement: enrich CanonicalEvent to carry unit through."""
     return None

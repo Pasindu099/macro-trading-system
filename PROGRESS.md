@@ -127,3 +127,8 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] A. Standalone production Compose with baked code, one app worker/scheduler, healthchecks and persistent named data/DB volumes. Built locally; isolated smoke stack migrated to 0027, app/postgres healthy, `/health` 200.
 - [x] B. Custom-format timestamped backup (14-file retention) and prompted restore scripts. Local isolated backup: 305257 bytes; scratch restore matched checked row counts `1|1|0` for alembic_version/ingestion_runs/situation_episodes.
 - [x] C. Operator runbook with ordered data commands, EODHD budget (~1,794 calls), smoke checks, cron, rollback and explicit Step 9 ECB/EER availability gate. Release tag `v2.0-desks` on final preparation commit; no production commands run. Full suite: 502 passed, 7 skipped.
+
+## P0 dashboard data corrections (local, not deployed)
+- [x] A. Premature EODHD actuals are quarantined at ingestion; processed Macro State excludes future and flagged releases; board dates are per currency and bounded by observed data. Three local Japanese rows flagged, not deleted.
+- [x] B. Split ECB percent expectations from Commission survey balances (85 local rows; 15 latest flags corrected); apply 0.5-unit/5%-relative standard-deviation floor and ±5 cap with per-value logging. Eight-currency scan and unfixed findings: `REPORT_P0_SCAN.md`.
+- [x] Final local Macro State chain: five successful stages; before/after eight-currency scores: `REPORT_P0_FIX.md`. Focused tests 31 passed; full suite 526 passed, 7 skipped, nothing deselected. Production unchanged pending review.

@@ -392,7 +392,8 @@ async def rebuild_indicator_metadata(session: AsyncSession) -> None:
                     min(period_start_date) AS first_reference_period,
                     max(period_start_date) AS last_reference_period,
                     count(*)::integer AS release_count,
-                    count(actual)::integer AS actual_count,
+                    count(actual) FILTER (WHERE released_at <= CURRENT_TIMESTAMP
+                        AND raw_payload->>'quarantine_reason' IS NULL)::integer AS actual_count,
                     count(*) FILTER (WHERE actual IS NULL)::integer AS missing_actual_count
                 FROM indicator_releases
                 WHERE indicator_id IS NOT NULL
@@ -483,6 +484,8 @@ async def rebuild_macro_observations(session: AsyncSession) -> None:
                     ) AS exact_duplicate_rank
                 FROM indicator_releases r
                 WHERE r.indicator_id IS NOT NULL
+                  AND r.released_at <= CURRENT_TIMESTAMP
+                  AND r.raw_payload->>'quarantine_reason' IS NULL
             ),
             actual_stats AS (
                 SELECT
@@ -493,6 +496,8 @@ async def rebuild_macro_observations(session: AsyncSession) -> None:
                     (percentile_cont(0.75) WITHIN GROUP (ORDER BY actual))::numeric AS q3_actual
                 FROM indicator_releases
                 WHERE indicator_id IS NOT NULL AND actual IS NOT NULL
+                  AND released_at <= CURRENT_TIMESTAMP
+                  AND raw_payload->>'quarantine_reason' IS NULL
                 GROUP BY indicator_id
             )
             INSERT INTO processed.macro_observations (

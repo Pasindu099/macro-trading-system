@@ -1604,11 +1604,11 @@ mappings:
     eodhd_comparison: null
     country: EU
     canonical_name: consumer_inflation_expectation
-    display_name: Consumer Inflation Expectation
+    display_name: ECB consumer inflation expectation (12-month median)
     primary_category: Inflation
     secondary_categories: [Sentiment]
     frequency: monthly
-    unit: index
+    unit: "%"
     importance: 2
 
   # ════════════════════════════════════════════════════════════════════════

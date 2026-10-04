@@ -1,0 +1,62 @@
+from datetime import datetime, timezone
+import asyncio
+
+from app.ingestion.canonicalizer import Canonicalizer
+from app.ingestion.ingest_service import quarantine_future_actual
+from app.processing.macro_features import cap_surprise_z, surprise_std_floor
+from app.processing.macro_dataset import rebuild_macro_observations
+
+
+def _event(actual, previous, estimate, day, period="Sep"):
+    return {
+        "type": "Consumer Inflation Expectation", "country": "EU",
+        "comparison": None, "date": f"2026-09-{day:02d} 09:00:00",
+        "period": period, "actual": actual, "previous": previous,
+        "estimate": estimate,
+    }
+
+
+def test_future_actual_is_quarantined_but_schedule_is_kept():
+    canonical = Canonicalizer.from_default_config().canonicalize(_event(35.2, 33, 40, 29))
+    assert canonical is not None
+    future = quarantine_future_actual(canonical, datetime(2026, 9, 28, tzinfo=timezone.utc))
+    assert future.actual is None
+    assert future.released_at == canonical.released_at
+    assert future.raw_payload["actual"] == 35.2
+    assert future.raw_payload["quarantine_reason"] == "future_actual_before_release"
+    assert quarantine_future_actual(canonical, canonical.released_at).actual == canonical.actual
+
+
+def test_eu_percent_and_survey_balance_are_separate_indicators():
+    canonicalizer = Canonicalizer.from_default_config()
+    balance = canonicalizer.canonicalize(_event(35.2, 33, 40, 29))
+    percent = canonicalizer.canonicalize(_event(3.0, 2.9, 3.0, 18, "Aug"))
+    borderline = canonicalizer.canonicalize(_event(6.1, 12.1, 10.0, 29))
+    low_balance = canonicalizer.canonicalize(_event(4.8, 6.0, 5.0, 29))
+    assert balance.canonical_name == borderline.canonical_name == "consumer_price_expectations_balance"
+    assert low_balance.canonical_name == "consumer_price_expectations_balance"
+    assert percent.canonical_name == "consumer_inflation_expectation"
+
+
+def test_surprise_floor_and_cap():
+    assert surprise_std_floor(3.28, 0.1) == 0.5
+    assert surprise_std_floor(200, 1) == 10
+    assert surprise_std_floor(3, 2) == 2
+    assert cap_surprise_z(68.52) == 5
+    assert cap_surprise_z(-7) == -5
+    assert cap_surprise_z(4.36) == 4.36
+
+
+def test_processing_excludes_future_and_quarantined_actuals():
+    class CaptureSession:
+        def __init__(self):
+            self.sql = []
+
+        async def execute(self, statement):
+            self.sql.append(str(statement))
+
+    session = CaptureSession()
+    asyncio.run(rebuild_macro_observations(session))
+    insert = next(sql for sql in session.sql if "INSERT INTO processed.macro_observations" in sql)
+    assert "r.released_at <= CURRENT_TIMESTAMP" in insert
+    assert "r.raw_payload->>'quarantine_reason' IS NULL" in insert

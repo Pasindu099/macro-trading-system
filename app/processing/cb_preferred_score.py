@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import csv
 import json
+import logging
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -53,6 +54,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import session_scope
 from app.processing.macro_dataset import csv_value, json_default
+
+logger = logging.getLogger(__name__)
 
 
 # ── CB watchlist config ────────────────────────────────────────────────────────
@@ -451,6 +454,12 @@ def _compute_scores(
                 raw_signal = latest["signal"]
                 if pd.isna(raw_signal):
                     continue
+
+                if latest.get("standardized_surprise_score") is not None and not pd.isna(latest.get("standardized_surprise_score")):
+                    bounded = max(-5.0, min(5.0, float(raw_signal)))
+                    if bounded != float(raw_signal):
+                        logger.warning("Capped CB signal: indicator=%s date=%s raw_z=%s", ind.canonical_name, latest["score_date"], raw_signal)
+                    raw_signal = bounded
 
                 directional = float(raw_signal) * ind.direction
                 weighted    = directional * ind.weight

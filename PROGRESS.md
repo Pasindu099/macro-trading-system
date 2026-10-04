@@ -112,7 +112,10 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] 9-0. Null-period identity uses release date; 23-indicator repair changed 544 flags, rescored 911 Event Innovation rows, repeat dry-run 0; curve policy query restored `is_latest`. Full suite: 482 passed, 7 skipped, nothing deselected.
 - [x] 9a. EUR desk config (EZ/DE/FR, DE yield benchmark), canonical indicators, ECB source verification and gap report. Full suite: 482 passed, 7 skipped, nothing deselected.
 - [x] 9b. EZ/DE/FR country monitor, annual Eurostat deficit store (migration 0026, 18 rows through 2025), and FR−DE 10Y. Full suite: 485 passed, 7 skipped, nothing deselected.
-- [ ] 9c–f. ECB projections/tracking, €STR maths, EUR price data and desk (next session after the Part B stop).
+- [x] 9c. ECB MPD point-projection parser/loader, HICP index tracking, deposit-rate regime and qualitative gap; migration 0028, ECB CB APIs. Fixture and route tests: 7 passed; full suite: 506 passed, 7 skipped. Live local load deferred because container ECB API timed out twice.
+- [ ] 9d. ECB €STR meeting de-averaging.
+- [ ] 9e. EUR EER price series.
+- [ ] 9f. EUR desk panel completion and Step 10 input wiring.
 
 ## Step 10 — situations, verdicts, scenarios
 - [x] 10a. Eight deterministic situations; migration 0027; FRED Brent/VIX/SP500; 23:50 UTC job; full-history backtest 174 episodes with the June 2024 FR sanity gap recorded. Full suite: 495 passed, 7 skipped, nothing deselected.

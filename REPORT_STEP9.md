@@ -31,3 +31,10 @@
 - Migration `2026_10_03_0026_country_fiscal_observations.py` stores annual general-government balance as % GDP; `scripts/ingest_eurostat_deficit.py` reads [Eurostat `gov_10dd_edpt1`](https://ec.europa.eu/eurostat/databrowser/view/gov_10dd_edpt1/default/table), with dry-run. Loaded 18 rows (2020–2025): 2025 deficits EZ 2.9%, DE 2.7%, FR 5.1% of GDP.
 - FR–DE 10Y from existing `yield_spreads`: 139.07 bp as of 2026-10-02. `country` panel routes only for desks with `members`; USD returns 404 and its panel list is unchanged.
 - Focused country/desk tests: 46 passed; live EUR panel rendered HTTP 200 with deficit and spread. Full suite: **485 passed, 7 skipped, nothing deselected**.
+
+## Part C: ECB projections and tracking
+
+- [ECB MPD](https://data.ecb.europa.eu/data/datasets/MPD/data-information) supplies annual HICP, core HICP, real GDP and unemployment point projections. `app/services/ecb_projections.py` parses quarterly MPD exercises from 2020, validates bounds, and writes `cb_projection_values` with `stat=median`; round dates use the first day of the exercise month because MPD omits the publication day.
+- [ECB seasonally adjusted HICP index](https://data.ecb.europa.eu/data/datasets/HICP/HICP.M.U2.Y.000000.4F0.INX) feeds the Fed-equivalent Q4 required-pace vs 3m annualised rule. Migration `0028_ecb_series_observations` stores ECB series; `scripts/load_ecb_projections.py` and `scripts/load_ecb_hicp.py` are the idempotent loaders.
+- ECB deposit-rate regime reuses the Fed rate/last-move classifier. End-horizon HICP minus 2% produces dovish/neutral/hawkish at ±0.1pp, with no bp value. `/api/cb/ECB/*` exposes projections, tracking, regime and method-labelled gap; dots/risk counts explicitly unavailable.
+- Saved MPD fixture: `tests/fixtures/ecb/mpd_w24.csv`. Focused tests: 7 passed; full suite: **506 passed, 7 skipped**. The local container timed out twice on the ECB API, so live loading awaits an environment with source access; no production request was made.

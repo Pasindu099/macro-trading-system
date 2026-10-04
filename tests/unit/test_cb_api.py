@@ -17,7 +17,10 @@ def _client(monkeypatch) -> TestClient:
         return {"ok": True, "args": [str(a) for a in args]}
 
     for module, names in ((cb.fed_projections, ("get_projections", "get_dots", "get_risk_balance")),
-                          (cb.cb_tracking, ("get_tracking", "get_revisions")), (cb.fed_regime, ("get_regime", "get_gap"))):
+                          (cb.cb_tracking, ("get_tracking", "get_revisions")), (cb.fed_regime, ("get_regime", "get_gap")),
+                          (cb.ecb_projections, ("get_projections",)),
+                          (cb.ecb_tracking, ("get_tracking", "get_revisions")),
+                          (cb.ecb_regime, ("get_regime", "get_gap"))):
         for name in names:
             monkeypatch.setattr(module, name, stub)
     app = FastAPI()
@@ -32,9 +35,13 @@ def test_all_six_endpoints_for_fed(monkeypatch):
     assert client.get("/api/cb/FED/projections?round=all").json()["args"] == ["all"]
 
 
-def test_other_banks_404_and_bad_round_422(monkeypatch):
+def test_ecb_endpoints_and_bad_round_422(monkeypatch):
     client = _client(monkeypatch)
-    assert client.get("/api/cb/ECB/projections").status_code == 404
+    for path in ("projections", "tracking", "regime", "gap"):
+        assert client.get(f"/api/cb/ECB/{path}").status_code == 200
+    assert client.get("/api/cb/ECB/dots").json()["status"] == "unavailable"
+    assert client.get("/api/cb/ECB/risk-balance").json()["status"] == "unavailable"
+    assert client.get("/api/cb/BOE/projections").status_code == 404
     assert client.get("/api/cb/FED/dots?round=junk").status_code == 422
     assert client.get("/api/cb/FED/projections?round=junk").status_code == 422
 

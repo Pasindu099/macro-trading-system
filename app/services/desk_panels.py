@@ -18,7 +18,7 @@ from typing import Any, Awaitable, Callable
 from sqlalchemy import text
 
 from app.db.session import get_sessionmaker
-from app.services import cb_tracking, fed_projections, fed_regime
+from app.services import cb_tracking, ecb_regime, ecb_tracking, fed_projections, fed_regime
 from app.services import positioning as positioning_service
 from app.services.central_banks import get_cb_policy_data
 from app.services.curve_metrics import get_curve
@@ -27,6 +27,7 @@ from app.services.event_innovation_feed import FeedFilters, build_event_innovati
 from app.services.macro_state import get_macro_state_board
 from app.services.rate_probability import get_rate_probability_view
 from app.services.ecb_pricing import get_ecb_yield_approximation
+from app.services.ecb_series import EUR_EER_BROAD_DAILY, load_series
 from app.settings import get_settings
 
 HOT, COOL, TEXT, MUTED = "#f6b65a", "#8fc3ff", "#e6e9ef", "#9aa3b2"
@@ -199,6 +200,8 @@ def usd_change(points: list[tuple[date, float]], days: int, direction: int) -> f
 
 
 async def panel_price(desk: dict, params: dict) -> dict[str, Any]:
+    if desk["currency"] == "EUR":
+        return await _eur_price(params)
     rng = params.get("range") if params.get("range") in RANGE_DAYS else "1Y"
     series = await fx_series([DXY_PAIR, *(p for p, _ in USD_LEGS.values())])
     dxy = series.get(DXY_PAIR, [])
@@ -223,6 +226,24 @@ async def panel_price(desk: dict, params: dict) -> dict[str, Any]:
             {"name": "DXY", "data": [round(v, 3) for _, v in view], "color": TEXT, "width": 2},
         ]}),
     })
+    return ctx
+
+
+async def _eur_price(params: dict) -> dict[str, Any]:
+    rng = params.get("range") if params.get("range") in RANGE_DAYS else "1Y"
+    eer = await load_series(EUR_EER_BROAD_DAILY, date.today() - timedelta(days=400))
+    spot = (await fx_series(["EUR/USD"])).get("EUR/USD", [])
+    primary, name = (eer, "EUR nominal EER (broad group)") if len(eer) >= 2 else (spot, "EUR/USD")
+    ctx = {"range": rng, "ranges": list(RANGE_DAYS), "source": name,
+           "fallback": not bool(len(eer) >= 2), "eur_usd": spot[-1][1] if spot else None}
+    if len(primary) < 2:
+        return unavailable("No stored EUR EER or EUR/USD observations.", **ctx)
+    view = primary[-RANGE_DAYS[rng]:]
+    first, last = view[0][1], view[-1][1]
+    ctx.update({"state": "ok", "as_of": view[-1][0], "last": round(last, 4),
+                "change_pct": round((last / first - 1) * 100, 2),
+                "chart": chart_json({"kind": "line", "dates": [d for d, _ in view],
+                                     "series": [{"name": name, "data": [v for _, v in view], "color": TEXT, "width": 2.5}]})})
     return ctx
 
 
@@ -261,7 +282,9 @@ def _sep_status(theme: str, tracking: dict[str, Any]) -> dict[str, Any]:
 
 
 async def panel_direction(desk: dict, params: dict) -> dict[str, Any]:
-    tracking = await cb_tracking.get_tracking() if desk["cb"] == "FED" else {}
+    tracking = await cb_tracking.get_tracking() if desk["cb"] == "FED" else await ecb_tracking.get_tracking()
+    if desk["cb"] == "ECB":
+        tracking = {"variables": {"core_pce_inflation": tracking.get("variables", {}).get("hicp_inflation", {})}}
     async with get_sessionmaker()() as session:
         feed = await build_event_innovation_feed(
             session, FeedFilters(days=30, include_unscored=False, country_code=desk["country"], category=None))
@@ -306,10 +329,16 @@ PALETTE = ["#f2a33a", "#5aa9ff", "#c9d1dd", "#4fd1b5", "#b794f6"]
 
 async def panel_keydata(desk: dict, params: dict) -> dict[str, Any]:
     since = _shift_months(date.today().replace(day=1), -24)
-    canonicals = [s["canonical"] for c in desk["charts"] for s in c["series"] if s.get("canonical")]
-    history = await indicator_history(desk["country"], canonicals, since)
+    member = params.get("country") if params.get("country") in {m["code"] for m in desk.get("members", [])} else "EZ"
+    member_country = next((m["country"] for m in desk.get("members", []) if m["code"] == member), desk["country"])
+    charts = ([{"id": item["id"], "title": item["label"], "sub": member,
+                "unit": "" if "pmi" in item["id"] or "sentiment" in item["id"] else "%",
+                "series": [{"name": item["label"], "canonical": item["series"].get(member)}]}
+               for item in desk["key_data"]] if desk["currency"] == "EUR" else desk["charts"])
+    canonicals = [s["canonical"] for c in charts for s in c["series"] if s.get("canonical")]
+    history = await indicator_history(member_country, canonicals, since)
     cards = []
-    for chart in desk["charts"]:
+    for chart in charts:
         legend, series_out, all_dates = [], [], set()
         for i, s in enumerate(chart["series"]):
             pts = history.get(s.get("canonical") or "", [])
@@ -341,7 +370,8 @@ async def panel_keydata(desk: dict, params: dict) -> dict[str, Any]:
                 {"name": s["name"], "data": [lookup[k].get(d) for d in dates], "color": s["color"],
                  "width": s["width"], "bar": s["bar"]} for k, s in enumerate(series_out)]})
         cards.append(card)
-    return {"state": "ok", "cards": cards}
+    return {"state": "ok", "cards": cards, "country": member,
+            "country_options": [m["code"] for m in desk.get("members", [])]}
 
 
 async def panel_country(desk: dict, params: dict) -> dict[str, Any]:
@@ -359,8 +389,20 @@ FLAG_TEXT = {"tolerance": "Tolerance: inflation revised up without a higher rate
 
 
 async def _projection_block(desk: dict) -> dict[str, Any]:
+    if desk["cb"] == "ECB":
+        rounds = await ecb_tracking.rounds()
+        if not rounds:
+            return unavailable("No ECB projection rounds stored.")
+        values = await ecb_tracking.round_values(rounds[-1])
+        revisions = await ecb_tracking.get_revisions()
+        changes = {(r["variable"], r["horizon"]): r for r in revisions.get("revisions", [])}
+        rows = [{"variable": variable, "horizon": horizon, "value": value,
+                 "change_pp": changes.get((variable, horizon), {}).get("median_change")}
+                for (variable, horizon), value in sorted(values.items())]
+        return {"state": "ok", "round": rounds[-1], "previous_round": rounds[-2] if len(rounds) > 1 else None,
+                "rows": rows, "method": "ECB/Eurosystem staff point projections; changes in percentage points"}
     if desk["cb"] != "FED":
-        return pending(9, "Projections")
+        return unavailable("No projection service for this bank.")
     revisions = await cb_tracking.get_revisions()
     if revisions.get("status") == "unavailable":
         return unavailable(revisions["reason"])
@@ -419,11 +461,14 @@ REGIME_LABEL = {"qe": "QE", "near_zero": "Near zero", "cutting": "Cutting", "hol
 
 
 async def panel_fedpath(desk: dict, params: dict) -> dict[str, Any]:
-    if desk["cb"] != "FED":
-        return pending(9, "Policy regime model")
-    regime = await fed_regime.get_regime()
+    regime = await (ecb_regime.get_regime() if desk["cb"] == "ECB" else fed_regime.get_regime())
     if regime.get("regime") == "unavailable":
         return unavailable(regime.get("reason", "No policy-rate history"))
+    if desk["cb"] == "ECB":
+        return {"state": "ok", "regime": regime["regime"], "rate": regime["rate"],
+                "last_move_date": regime.get("last_move_date"), "last_move_bp": regime.get("last_move_bp"),
+                "ladder": [{"label": REGIME_LABEL[r], "active": r == regime["regime"], "unavailable": r == "qe"}
+                           for r in regime["ladder"]], "transitions": []}
     marks = {"met": ("●", TEXT), "not_met": ("○", MUTED), "unavailable": ("–", MUTED)}
     transitions = []
     for t in regime["transitions"]:
@@ -451,10 +496,20 @@ async def panel_priced(desk: dict, params: dict) -> dict[str, Any]:
     if desk["cb"] == "ECB":
         async with get_sessionmaker()() as session:
             pricing = await get_ecb_yield_approximation(session)
+        since = date.today() - timedelta(days=730)
+        two = (await yield_series("DE", ["2Y"], since)).get("2Y", {})
+        policy = await policy_history("EU", "ecb_deposit_rate", since)
+        chart = None
+        if two:
+            dates = sorted(two)
+            chart = chart_json({"kind": "line", "dates": dates, "series": [
+                {"name": "ECB deposit facility rate", "step": True, "color": "#7c8698", "width": 2,
+                 "data": [(value_on_or_before(policy, d) or (None, None))[1] for d in dates]},
+                {"name": "2Y Schatz", "color": "#5aa9ff", "width": 2.5, "data": [two[d] for d in dates]}]})
         return {"state": pricing["status"], "method": pricing["method"], "label": pricing["label"],
                 "horizons": pricing["horizons"], "main_change_1w_bp": pricing["main_change_1w_bp"],
                 "main_change_1m_bp": pricing["main_change_1m_bp"],
-                "meeting_probabilities": "not priced"}
+                "meeting_probabilities": "not priced", "chart": chart}
     async with get_sessionmaker()() as session:
         view = await get_rate_probability_view(desk["cb"], session)
     meetings = []
@@ -561,8 +616,9 @@ async def panel_curve(desk: dict, params: dict) -> dict[str, Any]:
 
 
 async def panel_gap(desk: dict, params: dict) -> dict[str, Any]:
-    if desk["cb"] != "FED":
-        return pending(9, "Projections vs market gap")
+    if desk["cb"] == "ECB":
+        gap = await ecb_regime.get_gap()
+        return {"state": "ok" if gap["status"] == "available" else "unavailable", **gap}
     gap = await fed_regime.get_gap()
     if gap.get("status") == "unavailable":
         return unavailable(gap["reason"])
@@ -625,9 +681,11 @@ async def upcoming_events(country: str) -> list[Any]:
 
 
 async def panel_catalysts(desk: dict, params: dict) -> dict[str, Any]:
-    events = await upcoming_events(desk["country"])
+    countries = [m["country"] for m in desk.get("members", [])] or [desk["country"]]
+    events = [event for country in countries for event in await upcoming_events(country)]
     now = datetime.now(UTC)
-    upcoming = [e for e in events if e.released_at and e.released_at > now][:10]
+    upcoming = sorted((e for e in events if e.released_at and e.released_at > now),
+                      key=lambda e: e.released_at)[:10]
     if not upcoming:
         return empty(f"No upcoming {desk['currency']} events in the calendar.")
     return {"state": "ok", "events": [{"date": e.released_at, "event": e.display_name + (f" ({e.period})" if e.period else ""),

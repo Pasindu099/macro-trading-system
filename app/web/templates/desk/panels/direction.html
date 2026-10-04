@@ -4,7 +4,7 @@
   {% if ctx.state == 'ok' %}
     <div class="table-wrap">
       <table class="tbl rows">
-        <thead><tr><th>Theme</th><th>vs {{ desk.cb_short }} SEP</th><th>Surprise (avg, 30d)</th><th class="r">Live (decayed)</th></tr></thead>
+        <thead><tr><th>Theme</th><th>vs {{ desk.cb_short }} projections</th><th>Surprise (avg, 30d)</th><th class="r">Live (decayed)</th></tr></thead>
         <tbody>
         {% for r in ctx.rows %}
           <tr>
@@ -17,6 +17,6 @@
         </tbody>
       </table>
     </div>
-    <p class="note">vs {{ desk.cb_short }} SEP = CB Tracking against the latest projections (inflation: core PCE; labor: unemployment; growth: real GDP). Surprise: positive = hawkish; the number after the theme = scored releases in the window; live = what remains after decay.</p>
+    <p class="note">CB Tracking against the latest projections ({% if desk.cb == 'ECB' %}headline HICP; labor and growth unavailable{% else %}inflation: core PCE; labor: unemployment; growth: real GDP{% endif %}). Surprise: positive = hawkish; the number after the theme = scored releases in the window; live = what remains after decay.</p>
   {% else %}{{ state(ctx) }}{% endif %}
 </section>

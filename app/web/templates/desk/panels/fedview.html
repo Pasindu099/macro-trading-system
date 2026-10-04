@@ -26,8 +26,13 @@
   <div class="stack divider-top">
     {% set pj = ctx.projections %}
     <div class="row-between"><h3 class="eyebrow-h">{{ desk.cb_short }} projections and revisions</h3>
-      {% if pj and pj.state == 'ok' %}<span class="muted small">SEP {{ pj.round.strftime('%d %b %Y') }} vs {{ pj.previous_round.strftime('%b %Y') }}</span>{% endif %}</div>
-    {% if pj and pj.state == 'ok' %}
+      {% if pj and pj.state == 'ok' %}<span class="muted small">{% if desk.cb == 'ECB' %}ECB staff {{ pj.round.strftime('%b %Y') }}{% if pj.previous_round %} vs {{ pj.previous_round.strftime('%b %Y') }}{% endif %}{% else %}SEP {{ pj.round.strftime('%d %b %Y') }} vs {{ pj.previous_round.strftime('%b %Y') }}{% endif %}</span>{% endif %}</div>
+    {% if desk.cb == 'ECB' and pj and pj.state == 'ok' %}
+      <div class="table-wrap"><table class="tbl rows"><thead><tr><th>Variable</th><th>Year</th><th>Projection</th><th>Revision</th></tr></thead><tbody>
+      {% for r in pj.rows %}<tr><td>{{ r.variable | replace('_', ' ') | title }}</td><td>{{ r.horizon }}</td>
+        <td>{{ '%.1f' | format(r.value) }}%</td><td>{{ '%+.1f' | format(r.change_pp) if r.change_pp is not none else '—' }}{% if r.change_pp is not none %} pp{% endif %}</td></tr>{% endfor %}
+      </tbody></table></div><p class="note">{{ pj.method }}. No dot plot or risk-balance survey.</p>
+    {% elif pj and pj.state == 'ok' %}
       <div class="banner"><span class="chip tone-{{ 'up' if pj.flag == 'response' else 'warn' if pj.flag == 'tolerance' else 'flat' }}">Reaction function: {{ pj.flag }}</span>
         <span class="text-2 small">{{ pj.flag_text }} · {{ pj.flag_detail }}</span></div>
       <div class="split">

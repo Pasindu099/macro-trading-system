@@ -4,6 +4,16 @@
     <h2>0 · Where is {{ desk.currency }} trading?</h2>
     {{ pills(ctx.ranges, ctx.range, url, 'range', 'Price range') }}
   </div>
+  {% if desk.currency == 'EUR' %}
+    {% if ctx.state == 'ok' %}
+      <div class="headline-row"><span class="big">{{ ctx.source }} {{ '%.2f' | format(ctx.last) }}</span>
+        <span>{{ '%+.2f' | format(ctx.change_pct) }}% ({{ ctx.range }})</span></div>
+      <div class="chart chart-lg" data-chart="{{ ctx.chart }}" role="img" aria-label="{{ ctx.source }} history"></div>
+      <p class="note">{{ ctx.source }}{% if ctx.fallback %} · EER unavailable, using EUR/USD{% endif %}
+        {% if ctx.eur_usd is not none %} · EUR/USD {{ '%.4f' | format(ctx.eur_usd) }}{% endif %}
+        · {{ ctx.as_of.strftime('%d %b %Y') }}</p>
+    {% else %}{{ state(ctx) }}{% endif %}
+  {% else %}
   <div class="split">
     <div class="stack">
       {% if ctx.state == 'ok' %}
@@ -37,4 +47,5 @@
       <p class="note">Positive = {{ desk.currency }} stronger. Broad-based strength confirms a {{ desk.currency }} story; strength against only one or two currencies points to their weakness instead.</p>
     </div>
   </div>
+  {% endif %}
 </section>

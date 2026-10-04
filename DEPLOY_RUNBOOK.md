@@ -56,7 +56,7 @@ docker compose -f docker-compose.prod.yml ps
 curl -fsS http://127.0.0.1:8000/health
 ```
 
-Check: `alembic current` ends at `0027_situation_episodes`; app and Postgres become healthy, `/health` returns `{"status":"ok"}`. From the last known deployed `0026_country_fiscal_observations`, migration `0027_situation_episodes` applies. If the current revision is earlier, the chain is `0023_cot_positions` → `0024_cb_projections` → `0025_fred_observations` → `0026_country_fiscal_observations` → `0027_situation_episodes` (plus any intervening revisions shown by Alembic). Stop if the revision is unexpected.
+Check: `alembic current` ends at `0028_ecb_series_observations`; app and Postgres become healthy, `/health` returns `{"status":"ok"}`. From the last known deployed `0026_country_fiscal_observations`, migrations `0027_situation_episodes` → `0028_ecb_series_observations` apply. If the current revision is earlier, the chain is `0023_cot_positions` → `0024_cb_projections` → `0025_fred_observations` → `0026_country_fiscal_observations` → `0027_situation_episodes` → `0028_ecb_series_observations` (plus any intervening revisions shown by Alembic). Stop if the revision is unexpected.
 
 ## 5. Backfill data in dependency order
 
@@ -74,7 +74,9 @@ Set `dc(){ docker compose -f docker-compose.prod.yml "$@"; }` in the VPS shell. 
 | Event Innovation | `dc exec -T app python -m scripts.rebuild_event_innovation --dry-run --key-diff` then repeat without `--dry-run --key-diff` | Counts and `rows_written` reasonable; dedup collapses zero; 5–30 min; 0 calls. |
 | Macro State | `dc exec -T app python -c 'import asyncio; from app.services.macro_state_jobs import run_macro_state_chain; asyncio.run(run_macro_state_chain())'` | Five `job:macro_state:*` runs succeed with nonzero output; 5–30 min; 0 calls. |
 | Fed SEP | `dc exec -T app python -c 'import asyncio; from app.services.fed_projections import load_sep_rounds; print(asyncio.run(load_sep_rounds()))'` | Loaded rounds from 2020; inspect rejected rounds; 3–15 min; 0 EODHD calls. |
-| ECB projections and EER | **Unavailable:** Step 9 Parts C/E loaders are absent at this release. There is no valid command. Do not claim these data are populated; EUR tracking, gap and EER remain unavailable. | Stop here if these are deployment prerequisites. 0 calls. |
+| ECB projections | `dc exec -T app python -m scripts.load_ecb_projections` | ECB MPD rounds from 2020, four variables; ~3–15 min; 0 EODHD calls. If ECB API times out, stop and retry later; do not claim populated data. |
+| ECB HICP index | `dc exec -T app python -m scripts.load_ecb_hicp` | Seasonally adjusted HICP index rows for tracking; ~1–5 min; 0 EODHD calls. |
+| EUR nominal EER | `dc exec -T app python -m scripts.load_eur_eer` | Daily broad EUR EER (`EXR.D.E03.EUR.EN00.A`) rows; ~1–5 min; 0 EODHD calls. EUR/USD is the labelled fallback until loaded. |
 | Situations | `dc exec -T app python -m scripts.backtest_situations` then `dc exec -T app python -c 'import asyncio; from app.services.situations import run_situations_job; print(asyncio.run(run_situations_job()))'` | Backtest file and episode count; daily job persists episodes. Baseline local run: 174 episodes, 9 active; 2–15 min; 0 calls. |
 
 EODHD budget: ≤74 yield + ≤60 FX + ~1,660 calendar = **~1,794 calls** for this runbook, plus cap-split retries and routine scheduler traffic. This is far below 50,000/day. If calendar reports many cap splits, stop at 40,000 calls and resume the next day. FRED, Fed/CFTC and Eurostat traffic do not consume EODHD calls.
@@ -85,7 +87,8 @@ Open these in an authenticated browser session (API endpoints require viewer/adm
 
 | URL | Expected result |
 |---|---|
-| `/desks/USD`, `/desks/EUR` | HTTP 200; verdict, active situations and scenarios load; EUR ECB/EER fields explicitly unavailable until Step 9. |
+| `/desks/USD`, `/desks/EUR` | HTTP 200; USD unchanged. EUR shows EER or labelled EUR/USD fallback, ECB projections/tracking/gap after loaders, and labelled German-yield horizon pricing without meeting odds. |
+| `/api/rate-prob/ecb-horizons` | HTTP 200; method `german_yield_approximation`, 3M/6M/12M horizons and 12M 1W/1M repricing, or explicit unavailable if no recent German yields. |
 | `/api/admin/jobs/status` | HTTP 200, scheduler jobs listed, recent runs visible; admin role required. |
 | `/api/rates/regimes` | HTTP 200, available 2Y-vs-10Y regimes and honest unavailable tenors. |
 | `/api/positioning/crowding` | HTTP 200, currency rows and COT dates. |

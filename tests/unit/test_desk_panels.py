@@ -141,6 +141,46 @@ def _clear_cache():
     desks.cache_clear()
 
 
+@pytest.mark.parametrize("panel_id", ["price", "keydata", "fedview", "fedpath", "priced", "gap", "catalysts"])
+def test_eur_panel_200_with_data_or_unavailable(monkeypatch, panel_id):
+    _data_sources(monkeypatch)
+    monkeypatch.setattr(dp, "load_series", _stub([(d, 120 + i * 0.01) for i, d in enumerate(DAYS)]))
+    monkeypatch.setattr(dp, "get_ecb_yield_approximation", _stub({
+        "status": "approximate", "method": "german_yield_approximation", "label": "Approximate: not €STR OIS",
+        "horizons": [{"horizon": "12M", "status": "approximate", "yield_tenor": "2Y", "german_yield_pct": 2.0,
+                      "implied_move_bp": -50, "change_1w_bp": 10, "change_1m_bp": 20}],
+        "main_change_1w_bp": 10, "main_change_1m_bp": 20}))
+    monkeypatch.setattr(dp.ecb_tracking, "rounds", _stub([TODAY - timedelta(days=90), TODAY]))
+    monkeypatch.setattr(dp.ecb_tracking, "round_values", _stub({("hicp_inflation", str(TODAY.year)): 2.1}))
+    monkeypatch.setattr(dp.ecb_tracking, "get_revisions", _stub({"revisions": []}))
+    monkeypatch.setattr(dp.ecb_regime, "get_regime", _stub({"regime": "holding", "rate": 2.0,
+        "last_move_date": TODAY, "last_move_bp": -25, "ladder": ["qe", "near_zero", "cutting", "holding", "hiking"]}))
+    monkeypatch.setattr(dp.ecb_regime, "get_gap", _stub({"status": "available", "direction": "hawkish",
+        "horizon": str(TODAY.year + 2), "projection_pct": 2.2, "difference_pp": 0.2,
+        "message": "hawkish", "method": "ECB point projection vs 2% target"}))
+    response = make_client().get(f"/desks/EUR/panels/{panel_id}")
+    assert response.status_code == 200 and "state-error" not in response.text
+    if panel_id == "priced":
+        assert "German-yield approximation" in response.text and "1W" in response.text
+    if panel_id == "gap":
+        assert "0.2 pp" in response.text
+
+
+@pytest.mark.parametrize("panel_id", ["price", "keydata", "fedview", "fedpath", "priced", "gap"])
+def test_eur_panel_200_when_inputs_unavailable(monkeypatch, panel_id):
+    _empty_sources(monkeypatch)
+    monkeypatch.setattr(dp, "load_series", _stub([]))
+    monkeypatch.setattr(dp, "get_ecb_yield_approximation", _stub({
+        "status": "unavailable", "method": "german_yield_approximation", "label": "Approximate",
+        "horizons": [], "main_change_1w_bp": None, "main_change_1m_bp": None}))
+    monkeypatch.setattr(dp.ecb_tracking, "rounds", _stub([]))
+    monkeypatch.setattr(dp.ecb_regime, "get_regime", _stub({"regime": "unavailable", "reason": "No rate"}))
+    monkeypatch.setattr(dp.ecb_regime, "get_gap", _stub({"status": "unavailable", "reason": "No projections"}))
+    response = make_client().get(f"/desks/EUR/panels/{panel_id}")
+    assert response.status_code == 200 and "state-error" not in response.text
+    assert "Unavailable" in response.text or "No " in response.text
+
+
 @pytest.mark.parametrize("panel_id", [p.id for p in dp.PANELS if p.id != "country"])
 def test_panel_200_with_data(monkeypatch, panel_id):
     _data_sources(monkeypatch)

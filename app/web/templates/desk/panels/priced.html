@@ -1,5 +1,24 @@
 {% from "desk/_macros.html" import state, head %}
 <section id="q4" class="panel" aria-label="What does the market price">
+  {% if desk.cb == 'ECB' %}
+  {{ head('5 · Market-implied ECB path', 'German-yield approximation') }}
+  {% if ctx.state == 'approximate' %}
+    <div class="headline-row"><span class="big">12M repricing</span>
+      <span>1W {{ '%+.1f' | format(ctx.main_change_1w_bp) if ctx.main_change_1w_bp is not none else 'Unavailable' }} bp ·
+        1M {{ '%+.1f' | format(ctx.main_change_1m_bp) if ctx.main_change_1m_bp is not none else 'Unavailable' }} bp</span></div>
+    <table class="tbl rows"><thead><tr><th>Horizon</th><th>German tenor</th><th>Yield</th><th>Move vs DFR</th><th>1W change</th><th>1M change</th></tr></thead><tbody>
+    {% for h in ctx.horizons %}<tr><td>{{ h.horizon }}</td>
+      {% if h.status == 'approximate' %}<td>{{ h.yield_tenor }}</td><td>{{ '%.2f' | format(h.german_yield_pct) }}%</td>
+        <td>{{ '%+.1f' | format(h.implied_move_bp) }} bp</td><td>{{ '%+.1f' | format(h.change_1w_bp) if h.change_1w_bp is not none else '—' }} bp</td>
+        <td>{{ '%+.1f' | format(h.change_1m_bp) if h.change_1m_bp is not none else '—' }} bp</td>
+      {% else %}<td colspan="5">Unavailable: {{ h.reason }}</td>{% endif %}</tr>{% endfor %}
+    </tbody></table>
+  {% else %}<p class="note">No recent German yields stored.</p>{% endif %}
+  <p class="note">{{ ctx.label }} Meeting probabilities: not priced.</p>
+  <div class="stack divider-top"><h3 class="eyebrow-h">2Y Schatz vs ECB deposit facility rate</h3>
+    {% if ctx.chart %}<div class="chart chart-md" data-chart="{{ ctx.chart }}" role="img" aria-label="Two-year German yield and ECB deposit facility rate"></div>
+    {% else %}<p class="note">No 2Y Schatz history stored.</p>{% endif %}</div>
+  {% else %}
   {{ head('5 · What does the market price?', 'Rate probability engine' ~ ((' · ' ~ ctx.market.source) if ctx.market and ctx.market.source else '')) }}
   {% if ctx.current_rate is not none %}
     <div class="row-between small">
@@ -36,4 +55,5 @@
       <p class="note">2Y above the policy rate means the market expects further hikes; below it, cuts.</p>
     {% else %}{{ state({'state': 'unavailable', 'message': 'No 2Y yield history stored.'}) }}{% endif %}
   </div>
+  {% endif %}
 </section>

@@ -13,7 +13,7 @@ from app.services import desk_panels, desks
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["desks"])
 templates = Jinja2Templates(directory=str(Path("app/web/templates")))
-PANEL_PARAMS = ("range", "window", "type")
+PANEL_PARAMS = ("range", "window", "type", "country")
 
 
 def _desk_or_404(currency: str) -> dict:

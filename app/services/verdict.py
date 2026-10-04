@@ -9,7 +9,7 @@ import yaml
 from sqlalchemy import text
 
 from app.db.session import get_sessionmaker
-from app.services import cb_tracking, fed_regime, positioning
+from app.services import cb_tracking, ecb_regime, ecb_tracking, fed_regime, positioning
 from app.services.curve_metrics import get_curve
 from app.services.macro_state import get_macro_state_board
 
@@ -156,8 +156,13 @@ async def get_verdict(currency: str) -> dict[str, Any]:
         gap_component = _component(_clip(first_gap["gap_bp"] / cfg["normalization"]["fed_gap_bp_per_unit"], 2)
                                    if first_gap else None, raw=first_gap, reason=gap.get("reason"))
     else:
-        cb_component = _component(None, reason="ECB tracking pending Step 9 Part C")
-        gap_component = _component(None, reason="ECB qualitative gap pending Step 9 Part C")
+        tracking = await ecb_tracking.get_tracking()
+        hicp = tracking.get("variables", {}).get("hicp_inflation", {})
+        cb_component = _component(TRACKING_VALUES.get(hicp.get("status")), raw=hicp,
+                                  reason=hicp.get("reason", "ECB HICP tracking unavailable"))
+        gap = await ecb_regime.get_gap()
+        gap_component = _component({"hawkish": 1.0, "neutral": 0.0, "dovish": -1.0}.get(gap.get("direction")),
+                                   raw=gap, reason=gap.get("reason"))
     crowding = await positioning.get_crowding()
     row = next((row for row in crowding["currencies"] if row["currency"] == currency), None)
     lever = row.get("leveraged_funds", {}) if row else {}

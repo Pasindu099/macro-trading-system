@@ -45,10 +45,16 @@
 - `yfinance.Search` returned no futures for “3 month Euribor futures” or “ESTR futures”; “Euribor” returned only three funds. No four-contract daily history verified.
 - The configured ECB `EON/...` forward request returned HTTP 400 twice; it is disabled. Existing `ecb_yc_proxy` rows no longer produce meeting odds.
 - `app/services/ecb_pricing.py` uses recent German 3M/6M/1Y/2Y yields and current DFR for labelled 3M/6M/12M approximations; 12M 1W/1M repricing is primary. `/api/rate-prob/ecb-horizons` exposes the method and limitations.
-- ECB meeting probabilities and EUR scenario probabilities are “not priced”. No source passed the approval threshold.
-- Focused tests: 61 passed. Host full suite could not resolve the container DB host; local app-container full suite: **508 passed, 7 skipped**.
+- ECB meeting probabilities and EUR scenario probabilities are “not priced”. No source passed the approval threshold. Focused 61 passed; host could not resolve DB; container full suite **508 passed, 7 skipped**.
 
 ## Part E: daily EUR effective exchange rate
 
 - [ECB nominal EER daily series](https://data.ecb.europa.eu/data/data-categories/ecbeurosystem-policy-and-exchange-rates/exchange-rates/effective-exchange-rates/nominal-eers): `EXR.D.E03.EUR.EN00.A` (broad EER group, displayed as EER-40 on portal). `scripts/load_eur_eer.py` uses the existing ECB series table and parser; no migration or EODHD calls.
 - Direct API sample timed out twice locally; live load awaits deployment. Focused 1 passed; container full suite **509 passed, 7 skipped**.
+
+## Part F: EUR desk
+
+- EUR panels now use EER (EUR/USD fallback), EZ/DE/FR key-data switch, ECB projections/revisions, DFR regime, labelled German-yield pricing, 2Y Schatz vs DFR, qualitative gap, and EZ/DE/FR catalysts. Country monitor, curve/OAT–Bund, positioning, news, situations, scenarios remain wired.
+- Step 10 verdict consumes ECB HICP tracking and qualitative gap through existing weights; EUR scenario odds remain “not priced.” Governing Council balance remains unavailable.
+- `app/processing/currency_stance.py:204` equally averages available inflation, labor and growth scores for EUR; **single-mandate weights are not used**. No scoring change made.
+- Focused desk/verdict/scenario tests: 61 passed. Local EUR panel smoke: 10 routes HTTP 200, no panel errors. Container full suite: **522 passed, 7 skipped**; nothing deselected.

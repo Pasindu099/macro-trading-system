@@ -1,6 +1,7 @@
-{% from "desk/_macros.html" import state, head %}
+{% from "desk/_macros.html" import state, head, pills %}
 <section id="data" class="panel wide" aria-label="Key data at a glance">
   {{ head('Key data at a glance', 'Last 24 months · Expand a chart for detail') }}
+  {% if desk.currency == 'EUR' %}{{ pills(ctx.country_options, ctx.country, url, 'country', 'Country') }}{% endif %}
   {% if ctx.state == 'ok' %}
   <div class="cards">
     {% for c in ctx.cards %}

@@ -6,6 +6,9 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
+from app.db.session import get_sessionmaker
+from app.services.macro_state import get_macro_state_board
+
 router = APIRouter(tags=["shell"])
 templates = Jinja2Templates(directory=str(Path("app/web/templates")))
 
@@ -33,7 +36,16 @@ SECTIONS = {
 @router.get("/data", response_class=HTMLResponse)
 async def section_page(request: Request) -> HTMLResponse:
     title, description = SECTIONS[request.url.path]
+    desks = []
+    if request.url.path in ("/", "/desks"):
+        try:
+            async with get_sessionmaker()() as session:
+                board = await get_macro_state_board(session)
+            rows = {row["currency"]: row for row in board["rows"] if row["currency"] in ("USD", "EUR")}
+            desks = [{"currency": currency, "macro": rows.get(currency)} for currency in ("USD", "EUR")]
+        except Exception:
+            desks = [{"currency": currency, "macro": None} for currency in ("USD", "EUR")]
     return templates.TemplateResponse(request, "section.html", {
         "page_title": f"{title} | ForexCompass", "section_title": title,
-        "description": description,
+        "description": description, "desks": desks,
     })

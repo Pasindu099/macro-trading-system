@@ -4,8 +4,28 @@
   <p class="eyebrow">ForexCompass / {{ section_title }}</p>
   <h1>{{ section_title }}</h1>
   <p class="intro">{{ description }}</p>
+  {% if desks %}
+  <section class="desk-entry-grid" aria-label="Available currency desks">
+    {% for desk in desks %}
+    <a class="desk-entry" href="/desks/{{ desk.currency }}">
+      <span class="eyebrow">{{ desk.currency }} desk</span>
+      {% if desk.macro and desk.macro.overall_score is not none %}
+      <strong>Macro score {{ '%+.2f' | format(desk.macro.overall_score) }}</strong>
+      <span>Inflation {{ '%+.2f' | format(desk.macro.inflation_score) if desk.macro.inflation_score is not none else 'Unavailable' }}
+        · Labor {{ '%+.2f' | format(desk.macro.labor_score) if desk.macro.labor_score is not none else 'Unavailable' }}
+        · Growth {{ '%+.2f' | format(desk.macro.growth_score) if desk.macro.growth_score is not none else 'Unavailable' }}</span>
+      <small>As of {{ desk.macro.date }} · Open live {{ desk.currency }} research →</small>
+      {% else %}
+      <strong>Open {{ desk.currency }} research →</strong>
+      <span>Macro summary is temporarily unavailable.</span>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </section>
+  {% else %}
   <section class="placeholder" aria-label="Section placeholder">
     <p>This section is being prepared. The data services and APIs are available for the new workspace.</p>
   </section>
+  {% endif %}
 </main>
 {% endblock %}

@@ -4,11 +4,18 @@ from types import SimpleNamespace
 from app.main import app
 import app.auth as auth
 from app.api.routes import auth as auth_routes
+from app.api.routes import shell
 from starlette.requests import Request
 
 
 def test_placeholder_sections_and_event_log_navigation(monkeypatch):
     monkeypatch.setattr(auth, "get_settings", lambda: SimpleNamespace(auth_enabled=False))
+    async def board(_session):
+        return {"rows": [{"currency": "USD", "overall_score": 0.75, "inflation_score": 0.5,
+                          "labor_score": 0.25, "growth_score": 0.1, "date": "2026-10-04"},
+                         {"currency": "EUR", "overall_score": -0.2, "inflation_score": -0.1,
+                          "labor_score": 0.0, "growth_score": -0.3, "date": "2026-10-04"}]}
+    monkeypatch.setattr(shell, "get_macro_state_board", board)
     client = TestClient(app)
     for path, title in (("/", "Overview"), ("/desks", "Desks"), ("/pairs", "Pairs"),
                         ("/calendar", "Calendar"), ("/event-log", "Event Log"),
@@ -18,6 +25,11 @@ def test_placeholder_sections_and_event_log_navigation(monkeypatch):
         assert response.status_code == 200
         assert f"<h1>{title}</h1>" in response.text
     assert 'href="/event-log" class="nav-sub' in client.get("/").text
+    for path in ("/", "/desks"):
+        page = client.get(path).text
+        assert 'href="/desks/USD"' in page and 'href="/desks/EUR"' in page
+        assert "Macro score +0.75" in page and "Macro score -0.20" in page
+        assert "This section is being prepared" not in page
     assert "chart.umd.min.js" not in client.get("/").text
 
 

@@ -38,3 +38,12 @@
 - [ECB seasonally adjusted HICP index](https://data.ecb.europa.eu/data/datasets/HICP/HICP.M.U2.Y.000000.4F0.INX) feeds the Fed-equivalent Q4 required-pace vs 3m annualised rule. Migration `0028_ecb_series_observations` stores ECB series; `scripts/load_ecb_projections.py` and `scripts/load_ecb_hicp.py` are the idempotent loaders.
 - ECB deposit-rate regime reuses the Fed rate/last-move classifier. End-horizon HICP minus 2% produces dovish/neutral/hawkish at ±0.1pp, with no bp value. `/api/cb/ECB/*` exposes projections, tracking, regime and method-labelled gap; dots/risk counts explicitly unavailable.
 - Saved MPD fixture: `tests/fixtures/ecb/mpd_w24.csv`. Focused tests: 7 passed; full suite: **506 passed, 7 skipped**. The local container timed out twice on the ECB API, so live loading awaits an environment with source access; no production request was made.
+
+## Part D: ECB pricing source check and approximation
+
+- EODHD live `exchanges-list` (70) and `exchange-symbol-list/INDX` (1,679) returned no €STR/Euribor futures symbol; no settlement history verified.
+- `yfinance.Search` returned no futures for “3 month Euribor futures” or “ESTR futures”; “Euribor” returned only three funds. No four-contract daily history verified.
+- The configured ECB `EON/...` forward request returned HTTP 400 twice; it is disabled. Existing `ecb_yc_proxy` rows no longer produce meeting odds.
+- `app/services/ecb_pricing.py` uses recent German 3M/6M/1Y/2Y yields and current DFR for labelled 3M/6M/12M approximations; 12M 1W/1M repricing is primary. `/api/rate-prob/ecb-horizons` exposes the method and limitations.
+- ECB meeting probabilities and EUR scenario probabilities are “not priced”. No source passed the approval threshold.
+- Focused tests: 61 passed. Host full suite could not resolve the container DB host; local app-container full suite: **508 passed, 7 skipped**.

@@ -92,10 +92,10 @@ async def get_scenarios(currency: str) -> dict[str, Any]:
     async with get_sessionmaker()() as session:
         market = await get_rate_probability_view(desk["cb"], session)
     if currency == "EUR":
-        # Step 9 Part D has not yet corrected ECB €STR meeting-date de-averaging.
+        # No verified ECB €STR OIS/futures curve exists; horizon approximation has no meeting odds.
         market = {**market, "meetings": [{**row, "market_data_available": False}
                                           for row in market.get("meetings", [])],
-                  "probability_reason": "ECB €STR meeting-date de-averaging pending Step 9 Part D"}
+                  "probability_reason": "not priced: no verified €STR OIS or futures source"}
     countries = [member["country"] for member in desk.get("members", [])] or [desk["country"]]
     now = datetime.now(UTC)
     events = []

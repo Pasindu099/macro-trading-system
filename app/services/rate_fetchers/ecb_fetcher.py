@@ -42,38 +42,8 @@ async def fetch_estr_ois_curve(
     db_session: AsyncSession,
     as_of_date: date | None = None,
 ) -> dict[int, float]:
-    """Return {tenor_days: rate_pct} for the most recent available ECB curve."""
-    target_date = as_of_date or date.today()
-    try:
-        async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
-            response = await client.get(
-                f"{ECB_API_BASE}/{ECB_ESTR_OIS_SERIES}",
-                params={
-                    "format": "csvdata",
-                    "detail": "dataonly",
-                    "endPeriod": target_date.isoformat(),
-                    "lastNObservations": 16,
-                },
-                headers={"Accept": "text/csv"},
-            )
-            response.raise_for_status()
-    except httpx.HTTPError as exc:
-        logger.warning("ECB ESTR OIS fetch failed: %s; trying ECB YC proxy.", exc)
-        return await fetch_ecb_yield_curve_proxy(db_session, as_of_date=as_of_date)
-
-    curve = _parse_ecb_csv(response.text, target_date)
-    if not curve:
-        logger.warning("ECB ESTR OIS response contained no curve points; trying ECB YC proxy.")
-        return await fetch_ecb_yield_curve_proxy(db_session, as_of_date=as_of_date)
-
-    await upsert_ois_curve(
-        db_session,
-        bank="ECB",
-        curve_date=target_date,
-        values=curve,
-        source="ecb_estr_ois",
-    )
-    return curve
+    """No verified daily €STR forward source is available; never retry the invalid key."""
+    return {}
 
 
 async def fetch_ecb_yield_curve_proxy(

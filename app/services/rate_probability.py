@@ -147,7 +147,8 @@ def step_path_rate(meeting_rates: list[tuple[date, float]], start_rate: float, t
 
 
 # Latest policy decision in indicator_releases per bank (Step 8: Fed only; other banks use config).
-POLICY_DECISION_INDICATORS = {"FED": ("US", "fed_interest_rate_decision")}
+POLICY_DECISION_INDICATORS = {"FED": ("US", "fed_interest_rate_decision"),
+                              "ECB": ("EU", "ecb_deposit_rate")}
 
 
 async def resolve_current_rate(bank: str, db_session: AsyncSession) -> dict[str, Any]:
@@ -348,6 +349,12 @@ async def compute_meeting_probabilities(
 
     config = _bank_config(bank)
     meetings = await get_upcoming_meetings(bank, n_meetings, db_session)
+    if bank == "ECB":
+        current = (await resolve_current_rate(bank, db_session))["rate"]
+        return [_unavailable_probability(bank=bank, meeting_dt=_parse_dt(meeting["meeting_dt"]),
+                                         current_rate=current, data_state=DATA_STATE_UNAVAILABLE,
+                                         message="ECB meeting probabilities are not priced: no verified €STR OIS or futures source.",
+                                         config=config) for meeting in meetings]
     if not meetings:
         return [
             _unavailable_probability(

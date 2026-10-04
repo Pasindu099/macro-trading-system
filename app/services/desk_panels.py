@@ -26,6 +26,7 @@ from app.services.dxy import DXY_PAIR
 from app.services.event_innovation_feed import FeedFilters, build_event_innovation_feed
 from app.services.macro_state import get_macro_state_board
 from app.services.rate_probability import get_rate_probability_view
+from app.services.ecb_pricing import get_ecb_yield_approximation
 from app.settings import get_settings
 
 HOT, COOL, TEXT, MUTED = "#f6b65a", "#8fc3ff", "#e6e9ef", "#9aa3b2"
@@ -447,6 +448,13 @@ def _cond_value(c: dict[str, Any]) -> str:
 
 
 async def panel_priced(desk: dict, params: dict) -> dict[str, Any]:
+    if desk["cb"] == "ECB":
+        async with get_sessionmaker()() as session:
+            pricing = await get_ecb_yield_approximation(session)
+        return {"state": pricing["status"], "method": pricing["method"], "label": pricing["label"],
+                "horizons": pricing["horizons"], "main_change_1w_bp": pricing["main_change_1w_bp"],
+                "main_change_1m_bp": pricing["main_change_1m_bp"],
+                "meeting_probabilities": "not priced"}
     async with get_sessionmaker()() as session:
         view = await get_rate_probability_view(desk["cb"], session)
     meetings = []

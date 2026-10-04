@@ -83,3 +83,35 @@ Work one part at a time: implement, run only the tests for that part,
 commit, update PROGRESS.md. Run the full suite once at the end of each 
 part. Stop after Part B and give me a status of at most 10 lines; I will 
 then start a fresh session for Parts C–F.
+
+## Decision — Step 9 Part D (2026-10-04)
+
+1. SOURCE CHECK (report only, max 30 minutes, ≤10 lines in the report):
+   Check whether daily settlement prices for 3-month €STR futures or
+   3-month Euribor futures are available from:
+   (a) EODHD (our existing plan: futures/indices listings),
+   (b) yfinance (existing dependency).
+   Only report what you can verify by actually fetching data; do not guess
+   tickers. If a source returns at least 12 months of daily history for the
+   next 4+ contracts, propose it and STOP for my approval.
+
+2. IF NO FREE SOURCE: ship an approximation, clearly labelled.
+   - "Market-implied ECB path" by horizon (3M, 6M, 12M), NOT by meeting:
+     derived from the shortest available German yields in our DB (bills /
+     1Y / 2Y, whatever exists), minus the current deposit facility rate.
+   - Label in the API and on the desk: "Approximate: from German
+     government yields, not €STR OIS. Bunds trade below €STR because of
+     collateral scarcity, so this understates the expected rate level;
+     read changes, not levels."
+   - Show the CHANGE over 1W / 1M in the implied 12M move as the main
+     number (repricing direction is reliable even if the level is biased).
+   - No meeting-by-meeting probabilities for the ECB. The EUR desk "Priced"
+     panel shows the horizon table + its 1W/1M change.
+   - Step 10 EUR scenarios: probabilities become "not priced" (same as
+     situation scenarios). Step 10 tests must still pass.
+   - Disable the broken €STR forward-series request (HTTP 400); no retries.
+
+3. Note in TECH_DEBT.md: "ECB meeting probabilities need a paid €STR OIS
+   or €STR/Euribor futures source; revisit before selling to clients."
+
+Then continue with Parts E and F.

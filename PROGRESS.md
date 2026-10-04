@@ -113,7 +113,7 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] 9a. EUR desk config (EZ/DE/FR, DE yield benchmark), canonical indicators, ECB source verification and gap report. Full suite: 482 passed, 7 skipped, nothing deselected.
 - [x] 9b. EZ/DE/FR country monitor, annual Eurostat deficit store (migration 0026, 18 rows through 2025), and FR−DE 10Y. Full suite: 485 passed, 7 skipped, nothing deselected.
 - [x] 9c. ECB MPD point-projection parser/loader, HICP index tracking, deposit-rate regime and qualitative gap; migration 0028, ECB CB APIs. Fixture and route tests: 7 passed; full suite: 506 passed, 7 skipped. Live local load deferred because container ECB API timed out twice.
-- [ ] 9d. ECB €STR meeting de-averaging.
+- [x] 9d. No verified free €STR/Euribor four-contract history; disabled invalid EON request and false meeting odds. Labelled German-yield 3M/6M/12M approximation with 12M 1W/1M repricing; ECB scenarios not priced. Focused 61 passed; container full suite 508 passed, 7 skipped. Source check in REPORT_STEP9.md.
 - [ ] 9e. EUR EER price series.
 - [ ] 9f. EUR desk panel completion and Step 10 input wiring.
 

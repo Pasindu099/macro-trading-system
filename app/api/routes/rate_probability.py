@@ -11,6 +11,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_session
+from app.services.ecb_pricing import get_ecb_yield_approximation
 from app.services.meeting_calendar import SUPPORTED_BANKS, get_upcoming_meetings, normalize_bank
 from app.services.rate_probability import (
     DATA_STATE_NO_CURVE,
@@ -24,6 +25,11 @@ from app.services.rate_probability import (
 
 router = APIRouter(prefix="/api/rate-prob", tags=["rate-probability"])
 SessionDep = Depends(get_session)
+
+
+@router.get("/ecb-horizons")
+async def ecb_horizons(session: AsyncSession = SessionDep) -> dict:
+    return await get_ecb_yield_approximation(session)
 
 _RATE_LABELS: dict[str, str] = {
     "FED":  "Fed Funds Rate",

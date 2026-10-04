@@ -119,3 +119,8 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] 10b. Weighted v1 verdict and two-sentence templated thesis for USD/EUR; missing ECB inputs explicit. Full suite: 498 passed, 7 skipped, nothing deselected.
 - [x] 10c. Meeting-priced USD scenarios, unavailable ECB pricing pending Step 9 Part D, and unpriced high-severity situation tails. Full suite: 501 passed, 7 skipped, nothing deselected.
 - [x] 10d. Situation/history, verdict and scenario APIs; USD/EUR verdict, active-evidence and scenario panels. Focused tests: 38 passed. Full suite: 502 passed, 7 skipped, nothing deselected. `REPORT_STEP10.md` includes current verdicts.
+
+## Deployment preparation
+- [x] A. Standalone production Compose with baked code, one app worker/scheduler, healthchecks and persistent named data/DB volumes. Built locally; isolated smoke stack migrated to 0027, app/postgres healthy, `/health` 200.
+- [ ] B. Local backup and scratch restore verification.
+- [ ] C. Operator runbook and release tag.

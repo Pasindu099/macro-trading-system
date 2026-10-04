@@ -1,0 +1,103 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-macro_dashboard_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-macro_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the VPS environment}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    image: macro-dashboard:${APP_IMAGE_TAG:-local}
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    volumes:
+      - app_data:/app/data
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-macro_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-macro_dashboard_dev}
+      REDIS_URL: redis://redis:6379/0
+      EODHD_API_KEY: ${EODHD_API_KEY:-}
+      FRED_API_KEY: ${FRED_API_KEY:-}
+      GOOGLE_DRIVE_API_KEY: ${GOOGLE_DRIVE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      NEWS_AI_ENABLED: ${NEWS_AI_ENABLED:-false}
+      BANK_RESEARCH_DRIVE_FOLDER_URL: ${BANK_RESEARCH_DRIVE_FOLDER_URL:-}
+      BANK_RESEARCH_RETENTION_DAYS: ${BANK_RESEARCH_RETENTION_DAYS:-7}
+      MYFXBOOK_USER: ${MYFXBOOK_USER:-}
+      MYFXBOOK_PASS: ${MYFXBOOK_PASS:-}
+      RETAIL_SENTIMENT_CACHE_TTL: ${RETAIL_SENTIMENT_CACHE_TTL:-300}
+      AUTH_ENABLED: "true"
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:?Set AUTH_SECRET_KEY in the VPS environment}
+      ENABLE_SCHEDULER: "true"
+      LOG_LEVEL: INFO
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--proxy-headers", "--forwarded-allow-ips", "*"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 15s
+      timeout: 7s
+      start_period: 30s
+      retries: 5
+
+  news_pipeline:
+    build: {context: ./news_pipeline}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-macro_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-macro_dashboard_dev}
+      REDIS_URL: redis://redis:6379/0
+      FRED_API_KEY: ${FRED_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      NEWS_AI_ENABLED: ${NEWS_AI_ENABLED:-false}
+      LOG_LEVEL: INFO
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    command: ["uvicorn", "news_pipeline.main:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "1"]
+
+  telegram_bot:
+    build: {context: ./news_pipeline}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-macro_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-macro_dashboard_dev}
+      REDIS_URL: redis://redis:6379/0
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      TELEGRAM_TOPIC_THREAD_IDS: ${TELEGRAM_TOPIC_THREAD_IDS:-{}}
+      LOG_LEVEL: INFO
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    command: ["python", "-m", "news_pipeline.telegram_bot"]
+
+volumes:
+  postgres_data:
+    name: ${POSTGRES_VOLUME:-macro_dashboard_postgres_data}
+  redis_data:
+    name: ${REDIS_VOLUME:-macro_dashboard_redis_data}
+  app_data:
+    name: ${APP_DATA_VOLUME:-macro_dashboard_app_data}

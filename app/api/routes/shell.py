@@ -1,16 +1,19 @@
-"""Replacement navigation shell and empty section placeholders."""
+"""Workspace navigation and Overview panel routes."""
 
+import logging
 from pathlib import Path
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from app.db.session import get_sessionmaker
 from app.services.macro_state import get_macro_state_board
+from app.services import overview
 
 router = APIRouter(tags=["shell"])
 templates = Jinja2Templates(directory=str(Path("app/web/templates")))
+logger = logging.getLogger(__name__)
 
 SECTIONS = {
     "/": ("Overview", "A clear view of the macro backdrop across currencies."),
@@ -26,6 +29,25 @@ SECTIONS = {
 
 
 @router.get("/", response_class=HTMLResponse)
+async def overview_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(request, "overview/page.html", {
+        "page_title": "Overview | ForexCompass", "panels": overview.PANELS,
+    })
+
+
+@router.get("/overview/panels/{panel_id}", response_class=HTMLResponse)
+async def overview_panel(request: Request, panel_id: str) -> HTMLResponse:
+    builder = overview.PANELS.get(panel_id)
+    if builder is None:
+        raise HTTPException(status_code=404, detail="Unknown Overview panel")
+    try:
+        ctx = await builder()
+    except Exception:
+        logger.exception("Overview panel %s failed", panel_id)
+        ctx = {"state": "error", "message": "This panel could not load. Try again shortly."}
+    return templates.TemplateResponse(request, "overview/panel.html", {"panel_id": panel_id, "ctx": ctx})
+
+
 @router.get("/desks", response_class=HTMLResponse)
 @router.get("/pairs", response_class=HTMLResponse)
 @router.get("/calendar", response_class=HTMLResponse)
@@ -37,7 +59,7 @@ SECTIONS = {
 async def section_page(request: Request) -> HTMLResponse:
     title, description = SECTIONS[request.url.path]
     desks = []
-    if request.url.path in ("/", "/desks"):
+    if request.url.path == "/desks":
         try:
             async with get_sessionmaker()() as session:
                 board = await get_macro_state_board(session)

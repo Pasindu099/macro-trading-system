@@ -17,20 +17,22 @@ def test_placeholder_sections_and_event_log_navigation(monkeypatch):
                           "labor_score": 0.0, "growth_score": -0.3, "date": "2026-10-04"}]}
     monkeypatch.setattr(shell, "get_macro_state_board", board)
     client = TestClient(app)
-    for path, title in (("/", "Overview"), ("/desks", "Desks"), ("/pairs", "Pairs"),
+    for path, title in (("/desks", "Desks"), ("/pairs", "Pairs"),
                         ("/calendar", "Calendar"), ("/event-log", "Event Log"),
                         ("/news", "News"), ("/positioning", "Positioning"),
                         ("/central-banks", "Central Banks"), ("/data", "Data")):
         response = client.get(path)
         assert response.status_code == 200
         assert f"<h1>{title}</h1>" in response.text
+        assert '<header class="site-header">' in response.text
     overview = client.get("/").text
+    assert 'hx-get="/overview/panels/hero"' in overview
     assert '<header class="site-header">' in overview
     assert 'class="mobile-menu"' in overview
     assert overview.index('>Overview</a>') < overview.index('>Desks</a>') < overview.index('>Pairs</a>')
     assert overview.index('>Central Banks</a>') < overview.index('>News</a>') < overview.index('>Calendar</summary>')
     assert 'href="/event-log"' in overview
-    for path in ("/", "/desks"):
+    for path in ("/desks",):
         page = client.get(path).text
         assert 'href="/desks/USD"' in page and 'href="/desks/EUR"' in page
         assert "Macro score +0.75" in page and "Macro score -0.20" in page

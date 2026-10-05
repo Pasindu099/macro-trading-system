@@ -130,3 +130,4 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 
 ## Overview v1
 - [x] A. Shared top navigation with Calendar/Event Log menu and mobile collapse; amber/blue semantic tokens; desks otherwise untouched. Focused shell tests 3 passed; full suite 530 passed, 7 skipped.
+- [x] B. Seven lazy Overview panels: deterministic hero, active situations, 24h market news, eight-currency ranking, CB map, 28-pair map and upcoming high-impact events. Live local service reads completed; focused tests 26 passed, full suite 533 passed, 7 skipped.

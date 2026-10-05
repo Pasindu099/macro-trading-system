@@ -23,11 +23,13 @@ logger = logging.getLogger(__name__)
 # units and avoids imposing the same absolute scale on rates, indices and flows.
 SURPRISE_STD_WINDOW = 24
 SURPRISE_LONG_RUN_STD_FRACTION = 0.25
+SURPRISE_MIN_SCALE = 1e-9
 SURPRISE_Z_CAP = 5.0
 
 
-def surprise_std_scale(rolling_std: float, long_run_std: float) -> float:
-    return max(rolling_std, long_run_std * SURPRISE_LONG_RUN_STD_FRACTION)
+def surprise_std_scale(rolling_std: float, long_run_std: float) -> float | None:
+    scale = max(rolling_std, long_run_std * SURPRISE_LONG_RUN_STD_FRACTION)
+    return scale if scale > SURPRISE_MIN_SCALE else None
 
 
 def cap_surprise_z(raw_z: float) -> float:
@@ -47,15 +49,16 @@ FEATURE_TABLES = (
 async def build_feature_layer(
     output_dir: Path | str = Path("data/features"),
     *, export: bool = True, statement_timeout: str | None = None,
+    shared_session: AsyncSession | None = None,
 ) -> dict[str, Any]:
     """Build feature engineering tables and file exports from processed observations."""
     output_path = Path(output_dir)
     if export:
         output_path.mkdir(parents=True, exist_ok=True)
 
-    from app.processing._build_guard import require_rows
+    from app.processing._build_guard import build_session, require_rows
 
-    async with session_scope(statement_timeout=statement_timeout) as session:
+    async with build_session(shared_session, statement_timeout=statement_timeout) as session:
         await create_feature_schema(session)
         await build_indicator_feature_map(session)
         await build_indicator_features(session)
@@ -390,6 +393,7 @@ async def build_indicator_features(session: AsyncSession) -> None:
                 FROM processed.macro_observations o
                 JOIN processed.indicator_feature_map fmap ON fmap.indicator_id = o.indicator_id
                 WHERE o.actual_value IS NOT NULL
+                  AND o.release_timestamp_utc <= CURRENT_TIMESTAMP
                   AND o.is_latest IS TRUE
             ),
             enriched AS (
@@ -451,21 +455,33 @@ async def build_indicator_features(session: AsyncSession) -> None:
                 actual_value - prior_rolling_avg_6,
                 actual_value - previous_observed_value,
                 CASE
-                    WHEN prior_rolling_stddev_24 IS NOT NULL OR prior_expanding_stddev IS NOT NULL
+                    WHEN GREATEST(prior_rolling_stddev_24,
+                                  prior_expanding_stddev * :long_run_fraction) > :min_scale
                     THEN ((actual_value - prior_rolling_avg_6) /
-                          NULLIF(GREATEST(prior_rolling_stddev_24,
-                                         prior_expanding_stddev * :long_run_fraction), 0))
+                          GREATEST(prior_rolling_stddev_24,
+                                   prior_expanding_stddev * :long_run_fraction))
                 END,
                 array_remove(ARRAY[
                     CASE WHEN previous_observed_value IS NULL THEN 'insufficient_prior_history' END,
                     CASE WHEN lag_yoy_value IS NULL THEN 'insufficient_seasonal_history' END,
                     CASE WHEN prior_expanding_stddev IS NULL OR prior_expanding_stddev = 0 THEN 'z_score_unavailable' END,
-                    CASE WHEN prior_rolling_avg_6 IS NULL THEN 'surprise_proxy_short_history' END
+                    CASE WHEN prior_rolling_avg_6 IS NULL THEN 'surprise_proxy_short_history' END,
+                    CASE WHEN prior_rolling_avg_6 IS NOT NULL AND
+                              COALESCE(GREATEST(prior_rolling_stddev_24,
+                                                prior_expanding_stddev * :long_run_fraction), 0) <= :min_scale
+                         THEN 'surprise_zero_scale' END
                 ], NULL)::text[]
             FROM final_features
             """
-        ), {"long_run_fraction": SURPRISE_LONG_RUN_STD_FRACTION}
+        ), {"long_run_fraction": SURPRISE_LONG_RUN_STD_FRACTION,
+            "min_scale": SURPRISE_MIN_SCALE}
     )
+    zero_scale = (await session.execute(text("""
+        SELECT indicator_key, release_date_utc FROM processed.indicator_features
+        WHERE 'surprise_zero_scale' = ANY(feature_quality_flags)
+    """))).all()
+    for indicator, release_date in zero_scale:
+        logger.warning("Excluded zero-scale surprise: indicator=%s date=%s", indicator, release_date)
     capped = (await session.execute(text("""
         SELECT indicator_key, release_date_utc, standardized_surprise_score
         FROM processed.indicator_features

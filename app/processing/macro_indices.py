@@ -38,15 +38,16 @@ async def build_macro_indices(
     output_dir: Path | str = Path("data/indices"),
     config: IndexBuildConfig = IndexBuildConfig(),
     *, export: bool = True, statement_timeout: str | None = None,
+    shared_session: AsyncSession | None = None,
 ) -> dict[str, Any]:
     """Build relationship weights and country-level macro pressure indices."""
     output_path = Path(output_dir)
     if export:
         output_path.mkdir(parents=True, exist_ok=True)
 
-    from app.processing._build_guard import require_rows
+    from app.processing._build_guard import build_session, require_rows
 
-    async with session_scope(statement_timeout=statement_timeout) as session:
+    async with build_session(shared_session, statement_timeout=statement_timeout) as session:
         await create_index_schema(session)
         await build_relationship_weights(session, config)
         await build_low_confidence_relationships(session, config)
@@ -358,12 +359,7 @@ async def build_theme_index_components(session: AsyncSession) -> None:
                     w.candidate_indicator_id,
                     w.candidate_indicator_key,
                     f.release_timestamp_utc AS feature_release_timestamp_utc,
-                    coalesce(
-                        f.standardized_surprise_score,
-                        f.expanding_z_score,
-                        f.momentum,
-                        f.mom_change
-                    ) AS normalized_signal,
+                    f.standardized_surprise_score AS normalized_signal,
                     w.assigned_weight,
                     w.signal_direction,
                     w.observation_pairs,
@@ -439,7 +435,8 @@ async def build_theme_indices(
                     c.country_code,
                     c.currency_code,
                     c.macro_theme,
-                    sum(c.weighted_signal) FILTER (WHERE c.component_available) AS theme_score,
+                    sum(c.weighted_signal) FILTER (WHERE c.component_available)
+                        / nullif(sum(c.assigned_weight) FILTER (WHERE c.component_available), 0) AS theme_score,
                     count(*) FILTER (WHERE c.component_available) AS contributors,
                     avg(c.abs_correlation) FILTER (WHERE c.component_available) AS avg_abs_corr,
                     count(*) FILTER (WHERE c.component_available)::numeric
@@ -472,12 +469,7 @@ async def build_theme_indices(
                             WHEN fmap.headline_target_type = 'GDP' THEN 'Growth'
                         END AS macro_theme,
                         (
-                            coalesce(
-                                f.standardized_surprise_score,
-                                f.momentum,
-                                f.mom_change,
-                                f.expanding_z_score
-                            )
+                            f.standardized_surprise_score
                             * CASE
                                 WHEN fmap.headline_target_type = 'UNEMPLOYMENT' THEN -1
                                 ELSE 1
@@ -493,12 +485,7 @@ async def build_theme_indices(
                     JOIN processed.indicator_feature_map fmap
                         ON fmap.indicator_id = f.indicator_id
                         AND fmap.headline_target_type IN ('CPI', 'UNEMPLOYMENT', 'GDP')
-                    WHERE coalesce(
-                        f.standardized_surprise_score,
-                        f.momentum,
-                        f.mom_change,
-                        f.expanding_z_score
-                    ) IS NOT NULL
+                    WHERE f.standardized_surprise_score IS NOT NULL
                 ) headline_candidates
             ),
             headline_latest AS (

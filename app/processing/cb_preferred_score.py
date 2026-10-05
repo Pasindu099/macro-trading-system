@@ -304,12 +304,15 @@ async def build_cb_preferred_score(
     output_dir: Path | str = Path("data/cb_preferred"),
     config: CBPreferredConfig = CBPreferredConfig(),
     *, export: bool = True, statement_timeout: str | None = None,
+    shared_session: AsyncSession | None = None,
 ) -> dict[str, Any]:
     output_path = Path(output_dir)
     if export:
         output_path.mkdir(parents=True, exist_ok=True)
 
-    async with session_scope(statement_timeout=statement_timeout) as session:
+    from app.processing._build_guard import build_session
+
+    async with build_session(shared_session, statement_timeout=statement_timeout) as session:
         await _create_schema(session)
 
         print("  Loading indicator features…")
@@ -369,18 +372,15 @@ async def _load_features(session: AsyncSession) -> pd.DataFrame:
             i.canonical_name,
             f.release_date_utc          AS score_date,
             f.release_timestamp_utc,
-            COALESCE(
-                f.standardized_surprise_score,
-                f.expanding_z_score,
-                f.momentum,
-                f.mom_change
-            )                           AS signal,
+            f.standardized_surprise_score AS signal,
             f.standardized_surprise_score,
             f.expanding_z_score,
             f.momentum
         FROM processed.indicator_features f
         JOIN public.indicators i ON i.id = f.indicator_id
         WHERE (f.country_code, i.canonical_name) IN ({values_sql})
+          AND f.standardized_surprise_score IS NOT NULL
+          AND f.release_timestamp_utc <= CURRENT_TIMESTAMP
         ORDER BY f.country_code, i.canonical_name, f.release_date_utc
         """,
     )

@@ -64,15 +64,16 @@ def history_threshold_for_frequency(frequency: str | None) -> int:
 async def build_processed_dataset(
     output_dir: Path | str = Path("data/processed"),
     *, export: bool = True, statement_timeout: str | None = None,
+    shared_session: AsyncSession | None = None,
 ) -> dict[str, Any]:
     """Create processed DB tables plus file-based quality and metadata outputs."""
     output_path = Path(output_dir)
     if export:
         output_path.mkdir(parents=True, exist_ok=True)
 
-    from app.processing._build_guard import require_rows
+    from app.processing._build_guard import build_session, require_rows
 
-    async with session_scope(statement_timeout=statement_timeout) as session:
+    async with build_session(shared_session, statement_timeout=statement_timeout) as session:
         await create_processed_schema(session)
         raw_profile = await inspect_raw_tables(session)
         await rebuild_indicator_metadata(session)
@@ -567,6 +568,7 @@ async def rebuild_macro_observations(session: AsyncSession) -> None:
                 AND rr.period_start_date IS NOT DISTINCT FROM r.period_start_date
             LEFT JOIN actual_stats s ON s.indicator_id = r.indicator_id
             WHERE r.exact_duplicate_rank = 1
+              AND r.actual IS NOT NULL
             ORDER BY (r.released_at AT TIME ZONE 'UTC')::date, i.country_code, i.canonical_name
             """
         )

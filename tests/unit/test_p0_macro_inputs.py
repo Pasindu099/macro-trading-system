@@ -42,6 +42,8 @@ def test_series_specific_surprise_scale_and_cap():
     assert surprise_std_scale(0.1, 2.0) == 0.5
     assert surprise_std_scale(1.0, 20.0) == 5.0
     assert surprise_std_scale(2.0, 3.0) == 2.0
+    assert surprise_std_scale(0.0, 0.0) is None
+    assert surprise_std_scale(1e-12, 0.0) is None
     assert cap_surprise_z(68.52) == 5
     assert cap_surprise_z(-7) == -5
     assert cap_surprise_z(4.36) == 4.36
@@ -68,7 +70,8 @@ def test_feature_query_uses_24_prior_observations_and_series_scale():
     assert "ROWS BETWEEN 24 PRECEDING AND 1 PRECEDING" in insert
     assert "prior_expanding_stddev * :long_run_fraction" in insert
     assert "prior_rolling_avg_6" in insert
-    assert parameters == {"long_run_fraction": 0.25}
+    assert parameters == {"long_run_fraction": 0.25, "min_scale": 1e-9}
+    assert "surprise_zero_scale" in insert
 
 
 def test_processing_excludes_future_and_quarantined_actuals():
@@ -83,4 +86,5 @@ def test_processing_excludes_future_and_quarantined_actuals():
     asyncio.run(rebuild_macro_observations(session))
     insert = next(sql for sql in session.sql if "INSERT INTO processed.macro_observations" in sql)
     assert "r.released_at <= CURRENT_TIMESTAMP" in insert
+    assert "r.actual IS NOT NULL" in insert
     assert "r.raw_payload->>'quarantine_reason' IS NULL" in insert

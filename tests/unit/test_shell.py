@@ -29,6 +29,7 @@ def test_placeholder_sections_and_event_log_navigation(monkeypatch):
         page = client.get(path).text
         assert 'href="/desks/USD"' in page and 'href="/desks/EUR"' in page
         assert "Macro score +0.75" in page and "Macro score -0.20" in page
+        assert "Growth +0.10" in page and "Growth -0.30" in page
         assert "This section is being prepared" not in page
     assert "chart.umd.min.js" not in client.get("/").text
 

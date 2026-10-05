@@ -36,14 +36,15 @@ async def build_currency_stance_layer(
     output_dir: Path | str = Path("data/currency_stance"),
     config: CurrencyStanceConfig = CurrencyStanceConfig(),
     *, export: bool = True, statement_timeout: str | None = None,
+    shared_session: AsyncSession | None = None,
 ) -> dict[str, Any]:
     output_path = Path(output_dir)
     if export:
         output_path.mkdir(parents=True, exist_ok=True)
 
-    from app.processing._build_guard import require_rows
+    from app.processing._build_guard import build_session, require_rows
 
-    async with session_scope(statement_timeout=statement_timeout) as session:
+    async with build_session(shared_session, statement_timeout=statement_timeout) as session:
         await create_stance_schema(session)
         await build_currency_stance(session, config)
         await require_rows(session, "processed.currency_stance")
@@ -132,11 +133,19 @@ async def create_stance_schema(session: AsyncSession) -> None:
 async def build_currency_stance(
     session: AsyncSession, config: CurrencyStanceConfig
 ) -> None:
+    from app.processing.cb_preferred_score import MANDATE_WEIGHTS
+
     values = ", ".join(f"({window})" for window in config.windows_months)
+    mandate_values = ", ".join(
+        f"('{country}', {weights.inflation_weight}, {weights.labor_weight}, {weights.growth_weight})"
+        for country, weights in MANDATE_WEIGHTS.items()
+    )
     await session.execute(
         text(
             f"""
             WITH windows(window_months) AS (VALUES {values}),
+            mandate_weights(country_code, inflation_weight, labor_weight, growth_weight)
+                AS (VALUES {mandate_values}),
             theme_by_currency AS (
                 SELECT
                     index_date,
@@ -190,7 +199,7 @@ async def build_currency_stance(
             ),
             scored AS (
                 SELECT
-                    *,
+                    r.*,
                     (CASE WHEN inflation_score IS NOT NULL THEN 1 ELSE 0 END
                      + CASE WHEN labor_score IS NOT NULL THEN 1 ELSE 0 END
                      + CASE WHEN growth_score IS NOT NULL THEN 1 ELSE 0 END) AS categories_available,
@@ -201,13 +210,13 @@ async def build_currency_stance(
                      + CASE WHEN labor_score < 0 THEN 1 ELSE 0 END
                      + CASE WHEN growth_score < 0 THEN 1 ELSE 0 END) AS negative_categories,
                     (
-                        coalesce(inflation_score, 0)
-                        + coalesce(labor_score, 0)
-                        + coalesce(growth_score, 0)
+                        coalesce(r.inflation_score * mw.inflation_weight, 0)
+                        + coalesce(r.labor_score * mw.labor_weight, 0)
+                        + coalesce(r.growth_score * mw.growth_weight, 0)
                     ) / nullif(
-                        (CASE WHEN inflation_score IS NOT NULL THEN 1 ELSE 0 END
-                         + CASE WHEN labor_score IS NOT NULL THEN 1 ELSE 0 END
-                         + CASE WHEN growth_score IS NOT NULL THEN 1 ELSE 0 END),
+                        (CASE WHEN r.inflation_score IS NOT NULL THEN mw.inflation_weight ELSE 0 END
+                         + CASE WHEN r.labor_score IS NOT NULL THEN mw.labor_weight ELSE 0 END
+                         + CASE WHEN r.growth_score IS NOT NULL THEN mw.growth_weight ELSE 0 END),
                         0
                     ) AS average_score,
                     (
@@ -220,7 +229,8 @@ async def build_currency_stance(
                          + CASE WHEN growth_direction IS NOT NULL THEN 1 ELSE 0 END),
                         0
                     ) AS recent_direction_score
-                FROM rolling
+                FROM rolling r
+                JOIN mandate_weights mw ON mw.country_code = r.country_code
             ),
             final_scores AS (
                 SELECT
@@ -231,15 +241,7 @@ async def build_currency_stance(
                         WHEN positive_categories >= negative_categories THEN positive_categories::numeric / categories_available
                         ELSE -negative_categories::numeric / categories_available
                     END AS persistence_score,
-                    (
-                        coalesce(average_score, 0) * 0.70
-                        + coalesce(recent_direction_score, 0) * 0.20
-                        + CASE
-                            WHEN categories_available = 0 THEN 0
-                            WHEN positive_categories >= negative_categories THEN (positive_categories::numeric / categories_available) * 0.10
-                            ELSE (-negative_categories::numeric / categories_available) * 0.10
-                          END
-                    ) AS overall_stance_score
+                    average_score AS overall_stance_score
                 FROM scored
                 WHERE categories_available > 0
             )

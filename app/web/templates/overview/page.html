@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/overview.css') }}">
+<script src="{{ url_for('static', path='vendor/htmx-1.9.12.min.js') }}" defer></script>
+{% endblock %}
+{% block body %}
+<main class="overview">
+  {% for id, title in [('hero','Global picture'), ('situations','Active situations'), ('news',"What’s moving markets"), ('ranking','Currency ranking')] %}
+  <section class="overview-panel overview-{{ id }}" aria-label="{{ title }}"><div hx-get="/overview/panels/{{ id }}" hx-trigger="revealed once" hx-swap="innerHTML"><h2>{{ title }}</h2><p class="panel-state">Loading…</p></div></section>
+  {% endfor %}
+  <div class="overview-two">
+    {% for id, title in [('central-banks','Central bank regime map'), ('pairs','Pair map')] %}
+    <section class="overview-panel overview-{{ id }}" aria-label="{{ title }}"><div hx-get="/overview/panels/{{ id }}" hx-trigger="revealed once" hx-swap="innerHTML"><h2>{{ title }}</h2><p class="panel-state">Loading…</p></div></section>
+    {% endfor %}
+  </div>
+  <section class="overview-panel overview-events" aria-label="Key events ahead"><div hx-get="/overview/panels/events" hx-trigger="revealed once" hx-swap="innerHTML"><h2>Key events ahead</h2><p class="panel-state">Loading…</p></div></section>
+</main>
+{% endblock %}

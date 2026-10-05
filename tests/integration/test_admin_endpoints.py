@@ -39,7 +39,7 @@ def test_root_endpoint(client: TestClient) -> None:
     r = client.get("/")
     assert r.status_code == 200
     assert "text/html" in r.headers["content-type"]
-    assert "<h1>Overview</h1>" in r.text
+    assert 'hx-get="/overview/panels/hero"' in r.text
 
 
 def test_health_endpoint(client: TestClient) -> None:

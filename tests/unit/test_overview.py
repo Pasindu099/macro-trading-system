@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 import app.auth as auth
 from app.main import app
 from app.services import overview
+from app.services import desks
 
 
 def _client(monkeypatch):
@@ -14,6 +15,7 @@ def _client(monkeypatch):
 
 def test_each_overview_panel_renders_data_and_pending(monkeypatch):
     client = _client(monkeypatch)
+    desks.cache_clear()
     data = {
         "hero": {"state": "ok", "driver": "data", "theme": "Data drives FX.", "hierarchy": overview.HIERARCHY},
         "situations": {"state": "ok", "rows": [{"href": "/desks/EUR", "name": "Fiscal stress", "scope_key": "EUR", "severity": "high", "started_at": __import__("datetime").datetime(2026, 1, 1)}]},
@@ -30,6 +32,7 @@ def test_each_overview_panel_renders_data_and_pending(monkeypatch):
         response = client.get(f"/overview/panels/{panel_id}")
         assert response.status_code == 200
         assert "<h2>" in response.text or "<h1>G10 Overview</h1>" in response.text
+        desks.cache_clear()
         async def pending():
             return {"state": "pending", "message": "Desk pending"}
         monkeypatch.setitem(overview.PANELS, panel_id, pending)
@@ -37,6 +40,30 @@ def test_each_overview_panel_renders_data_and_pending(monkeypatch):
         assert response.status_code == 200
         assert "Desk pending" in response.text
         assert "0.5" not in response.text
+        desks.cache_clear()
+
+
+def test_panel_cache_and_error_state(monkeypatch):
+    client = _client(monkeypatch)
+    desks.cache_clear()
+    calls = 0
+    async def builder():
+        nonlocal calls
+        calls += 1
+        return {"state": "empty", "message": "Nothing yet"}
+    monkeypatch.setitem(overview.PANELS, "events", builder)
+    assert "Nothing yet" in client.get("/overview/panels/events").text
+    assert "Nothing yet" in client.get("/overview/panels/events").text
+    assert calls == 1
+    desks.cache_clear()
+    async def broken():
+        raise RuntimeError("source offline")
+    monkeypatch.setitem(overview.PANELS, "events", broken)
+    assert "could not load" in client.get("/overview/panels/events").text
+    monkeypatch.setitem(overview.PANELS, "events", builder)
+    assert "Nothing yet" in client.get("/overview/panels/events").text
+    assert calls == 2
+    desks.cache_clear()
 
 
 def test_pair_score_and_policy_lens_are_distinct():

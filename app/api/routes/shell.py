@@ -9,7 +9,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.db.session import get_sessionmaker
 from app.services.macro_state import get_macro_state_board
-from app.services import overview
+from app.services import desks, overview
 
 router = APIRouter(tags=["shell"])
 templates = Jinja2Templates(directory=str(Path("app/web/templates")))
@@ -40,12 +40,19 @@ async def overview_panel(request: Request, panel_id: str) -> HTMLResponse:
     builder = overview.PANELS.get(panel_id)
     if builder is None:
         raise HTTPException(status_code=404, detail="Unknown Overview panel")
+    cache_key = ("overview", panel_id)
+    cached = desks.cache_get(cache_key)
+    if cached is not None:
+        return HTMLResponse(cached)
     try:
         ctx = await builder()
     except Exception:
         logger.exception("Overview panel %s failed", panel_id)
         ctx = {"state": "error", "message": "This panel could not load. Try again shortly."}
-    return templates.TemplateResponse(request, "overview/panel.html", {"panel_id": panel_id, "ctx": ctx})
+        return HTMLResponse(templates.get_template("overview/panel.html").render(panel_id=panel_id, ctx=ctx))
+    html = templates.get_template("overview/panel.html").render(panel_id=panel_id, ctx=ctx)
+    desks.cache_set(cache_key, html, ttl=60)
+    return HTMLResponse(html)
 
 
 @router.get("/desks", response_class=HTMLResponse)

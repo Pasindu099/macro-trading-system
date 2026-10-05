@@ -112,3 +112,52 @@ curl -fsS http://127.0.0.1:8000/health
 ```
 
 Check: previous app image and revision are active; Postgres data matches the saved dump; old `/health` responds. Never delete the backup until the restored app is verified.
+
+## P0 review release (run only after approval)
+
+This sequence applies the P0 code, the three future-JP quarantines, the 85-row EU split, the 15 `is_latest` corrections, and the recalibrated five-stage Macro State build. No schema migration was added. The repair is idempotent: `scripts/repair_p0_macro_inputs.py` previews affected IDs, and its second dry-run should report zero future actuals and zero EU rows to split. Verify counts against `REPORT_P0_FIX.md` and `REPORT_P0_REVIEW.md`; stop if they differ materially. All commands below are for the VPS operator, from the checkout directory.
+
+On the workstation, after reviewing the local commit, publish its branch with `git push origin HEAD:refs/heads/p0-review`. On the VPS:
+
+```bash
+set -e
+dc(){ docker compose -f docker-compose.prod.yml "$@"; }
+git status --short
+mkdir -p backups
+git rev-parse HEAD > backups/pre-p0-revision.txt
+docker inspect -f '{{.Config.Image}}' macro_dashboard_app > backups/pre-p0-image-name.txt
+docker image tag "$(docker inspect -f '{{.Image}}' macro_dashboard_app)" macro-dashboard:pre-p0
+bash scripts/backup_db.sh
+BACKUP=$(ls -1t backups/macro-dashboard-*.dump | head -1)
+test -s "$BACKUP" && du -h "$BACKUP"
+dc stop app news_pipeline telegram_bot
+git fetch origin refs/heads/p0-review:refs/remotes/origin/p0-review
+git switch --detach origin/p0-review
+export APP_IMAGE_TAG=p0-review
+dc build app
+dc run --rm --no-deps app python -m scripts.repair_p0_macro_inputs --dry-run
+dc run --rm --no-deps app python -m scripts.repair_p0_macro_inputs --apply
+dc run --rm --no-deps app python -m scripts.repair_p0_macro_inputs --dry-run
+dc run --rm --no-deps app python -c 'import asyncio; from app.services.macro_state_jobs import run_macro_state_chain; asyncio.run(run_macro_state_chain())'
+dc up -d --no-build app news_pipeline telegram_bot
+dc ps
+curl -fsS http://127.0.0.1:8000/health
+```
+
+Check before `--apply`: exactly three future JP actuals and 85 EU survey rows are expected from the production clone; the repair should report 15 corrected latest flags. Each of the five `job:macro_state:*` runs must end `success`; inspect `/api/admin/jobs/status` and both desk dates/scores. The chain takes roughly 10–15 minutes on the local clone and uses zero EODHD calls. Save the printed `$BACKUP` path and the pre-P0 revision/image files. Do not use `--truncate`.
+
+If any repair or smoke check fails, stop the app and restore the exact pre-P0 dump:
+
+```bash
+dc stop app news_pipeline telegram_bot
+bash scripts/restore_db.sh "$BACKUP"  # type the requested RESTORE confirmation
+git switch --detach "$(cat backups/pre-p0-revision.txt)"
+PRE_APP_IMAGE=$(cat backups/pre-p0-image-name.txt)
+docker image tag macro-dashboard:pre-p0 "$PRE_APP_IMAGE"
+export APP_IMAGE_TAG="${PRE_APP_IMAGE#macro-dashboard:}"
+dc up -d --no-build app news_pipeline telegram_bot
+dc ps
+curl -fsS http://127.0.0.1:8000/health
+```
+
+Check: restored DB row counts and the old desk scores match the backup, and the active app image is the saved pre-P0 image. Keep the dump until the rollback or deployment is verified.

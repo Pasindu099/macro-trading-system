@@ -31,7 +31,9 @@ async def main(apply: bool) -> None:
         for row in future:
             print(f"  id={row.id} {row.country_code}/{row.canonical_name} {row.released_at} actual={row.actual}")
         print(f"EU survey-balance releases to split: {len(balance)}")
+        print(f"EU survey-balance release IDs: {','.join(map(str, balance))}")
         if not apply:
+            print("dry-run only; database unchanged")
             return
         await session.execute(text("""
             UPDATE indicator_releases
@@ -87,6 +89,8 @@ async def main(apply: bool) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--apply", action="store_true", help="commit the repair; default is dry-run")
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument("--dry-run", action="store_true", help="preview only (default)")
+    action.add_argument("--apply", action="store_true", help="commit the repair")
     args = parser.parse_args()
     asyncio.run(main(args.apply))

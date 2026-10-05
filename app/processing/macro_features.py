@@ -18,15 +18,16 @@ from app.processing.macro_dataset import csv_value, json_default
 
 logger = logging.getLogger(__name__)
 
-# A 0.5-unit floor prevents one-decimal macro prints from producing huge z
-# values when the preceding six values barely move; 5% scales with indices.
-SURPRISE_STD_FLOOR = 0.5
-SURPRISE_STD_RELATIVE_FLOOR = 0.05
+# Use two years of monthly history where available and anchor local volatility
+# to one quarter of the series' own long-run volatility. This stays in native
+# units and avoids imposing the same absolute scale on rates, indices and flows.
+SURPRISE_STD_WINDOW = 24
+SURPRISE_LONG_RUN_STD_FRACTION = 0.25
 SURPRISE_Z_CAP = 5.0
 
 
-def surprise_std_floor(prior_mean: float, prior_std: float) -> float:
-    return max(prior_std, SURPRISE_STD_FLOOR, abs(prior_mean) * SURPRISE_STD_RELATIVE_FLOOR)
+def surprise_std_scale(rolling_std: float, long_run_std: float) -> float:
+    return max(rolling_std, long_run_std * SURPRISE_LONG_RUN_STD_FRACTION)
 
 
 def cap_surprise_z(raw_z: float) -> float:
@@ -380,7 +381,12 @@ async def build_indicator_features(session: AsyncSession) -> None:
                         PARTITION BY o.indicator_id
                         ORDER BY o.reference_period_start NULLS LAST, o.release_timestamp_utc, o.source_release_id
                         ROWS BETWEEN 5 PRECEDING AND 1 PRECEDING
-                    ) AS prior_rolling_stddev_6
+                    ) AS prior_rolling_stddev_6,
+                    stddev_samp(o.actual_value) OVER (
+                        PARTITION BY o.indicator_id
+                        ORDER BY o.reference_period_start NULLS LAST, o.release_timestamp_utc, o.source_release_id
+                        ROWS BETWEEN 24 PRECEDING AND 1 PRECEDING
+                    ) AS prior_rolling_stddev_24
                 FROM processed.macro_observations o
                 JOIN processed.indicator_feature_map fmap ON fmap.indicator_id = o.indicator_id
                 WHERE o.actual_value IS NOT NULL
@@ -445,12 +451,10 @@ async def build_indicator_features(session: AsyncSession) -> None:
                 actual_value - prior_rolling_avg_6,
                 actual_value - previous_observed_value,
                 CASE
-                    WHEN prior_rolling_stddev_6 IS NOT NULL
+                    WHEN prior_rolling_stddev_24 IS NOT NULL OR prior_expanding_stddev IS NOT NULL
                     THEN ((actual_value - prior_rolling_avg_6) /
-                          GREATEST(prior_rolling_stddev_6, :std_floor, abs(prior_rolling_avg_6) * :relative_floor))
-                    WHEN prior_expanding_stddev IS NOT NULL
-                    THEN ((actual_value - prior_expanding_avg) /
-                          GREATEST(prior_expanding_stddev, :std_floor, abs(prior_expanding_avg) * :relative_floor))
+                          NULLIF(GREATEST(prior_rolling_stddev_24,
+                                         prior_expanding_stddev * :long_run_fraction), 0))
                 END,
                 array_remove(ARRAY[
                     CASE WHEN previous_observed_value IS NULL THEN 'insufficient_prior_history' END,
@@ -460,7 +464,7 @@ async def build_indicator_features(session: AsyncSession) -> None:
                 ], NULL)::text[]
             FROM final_features
             """
-        ), {"std_floor": SURPRISE_STD_FLOOR, "relative_floor": SURPRISE_STD_RELATIVE_FLOOR}
+        ), {"long_run_fraction": SURPRISE_LONG_RUN_STD_FRACTION}
     )
     capped = (await session.execute(text("""
         SELECT indicator_key, release_date_utc, standardized_surprise_score

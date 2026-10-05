@@ -1,0 +1,354 @@
+currency,indicator,unit_type,eligible,old_floor_binds,bind_percent
+USD,continuing_jobless_claims,signed flow,351,284,80.9
+USD,jobless_claims_4week_average,signed flow,338,270,79.9
+EUR,cpi_headline_mom,MoM/QoQ %,310,237,76.5
+EUR,cpi_headline_yoy,YoY %,325,228,70.2
+EUR,manufacturing_pmi,level index,218,195,89.4
+USD,initial_jobless_claims,signed flow,351,177,50.4
+EUR,unemployment_rate,other,184,176,95.7
+JPY,leading_economic_index,level index,149,143,96.0
+EUR,core_cpi_yoy,YoY %,146,141,96.6
+JPY,coincident_index,level index,152,141,92.8
+EUR,business_confidence,level index,157,138,87.9
+JPY,manufacturing_pmi,level index,142,136,95.8
+USD,umich_inflation_exp_5y,other,134,132,98.5
+JPY,services_pmi,level index,149,127,85.2
+JPY,composite_pmi,level index,140,125,89.3
+EUR,consumer_confidence,level index,287,122,42.5
+EUR,composite_pmi,level index,130,114,87.7
+EUR,cpi_index,level index,151,114,75.5
+EUR,hicp_yoy,YoY %,184,114,62.0
+EUR,hicp_mom,MoM/QoQ %,180,110,61.1
+USD,fed_balance_sheet,signed flow,108,108,100.0
+USD,michigan_inflation_expectations,other,132,108,81.8
+EUR,services_pmi,level index,130,106,81.5
+AUD,manufacturing_pmi,level index,104,97,93.3
+AUD,services_pmi,level index,109,87,79.8
+CAD,gdp_mom,MoM/QoQ %,98,85,86.7
+USD,redbook_yoy,YoY %,349,81,23.2
+USD,average_weekly_hours,other,80,80,100.0
+CHF,unemployment_rate,other,79,79,100.0
+JPY,unemployment_rate,other,79,79,100.0
+USD,participation_rate,other,79,79,100.0
+EUR,gdp_qoq,MoM/QoQ %,120,78,65.0
+GBP,unemployment_rate,other,78,78,100.0
+JPY,cpi_headline_mom,MoM/QoQ %,78,78,100.0
+AUD,composite_pmi,level index,96,77,80.2
+USD,umich_consumer_sentiment,level index,133,77,57.9
+AUD,consumer_inflation_expectation,other,89,75,84.3
+USD,core_pce_price_index_mom,MoM/QoQ %,75,75,100.0
+AUD,private_sector_credit_mom,MoM/QoQ %,77,74,96.1
+CHF,cpi_headline_yoy,YoY %,79,74,93.7
+USD,core_cpi_mom,MoM/QoQ %,74,74,100.0
+USD,nfib_business_optimism,level index,79,74,93.7
+USD,pce_price_index_mom,MoM/QoQ %,74,74,100.0
+AUD,unemployment_rate,other,78,73,93.6
+EUR,ifo_current_conditions,level index,78,73,93.6
+EUR,jobseekers_total,signed flow,79,73,92.4
+USD,ism_manufacturing_pmi,level index,80,73,91.3
+USD,avg_hourly_earnings_mom,MoM/QoQ %,79,72,91.1
+USD,consumer_inflation_expectations,other,79,72,91.1
+USD,core_pce_price_index_yoy,YoY %,79,72,91.1
+EUR,ifo_business_climate,level index,78,71,91.0
+AUD,leading_index_mom,MoM/QoQ %,75,70,93.3
+CAD,imports,signed flow,80,70,87.5
+USD,core_ppi_mom,MoM/QoQ %,70,70,100.0
+JPY,core_cpi_yoy,YoY %,79,69,87.3
+USD,cpi_headline_mom,MoM/QoQ %,75,69,92.0
+GBP,avg_earnings_excl_bonus,other,98,68,69.4
+USD,core_cpi_yoy,YoY %,79,68,86.1
+JPY,cpi_ex_food_energy_yoy,YoY %,77,67,87.0
+JPY,cpi_headline_yoy,YoY %,80,67,83.8
+USD,unemployment_rate,other,79,67,84.8
+CAD,core_cpi_yoy,YoY %,78,66,84.6
+USD,ism_services_pmi,other,83,66,79.5
+USD,sp_global_manufacturing_pmi,level index,68,66,97.1
+GBP,niesr_monthly_gdp_tracker,other,88,65,73.9
+USD,cpi_index,level index,65,65,100.0
+USD,imports,other,84,64,76.2
+USD,sp_global_composite_pmi,level index,71,64,90.1
+AUD,td_mi_inflation_gauge_mom,MoM/QoQ %,85,63,74.1
+USD,avg_hourly_earnings_yoy,YoY %,77,63,81.8
+EUR,ifo_expectations,level index,78,62,79.5
+CAD,unemployment_rate,other,79,61,77.2
+GBP,core_cpi_yoy,YoY %,78,61,78.2
+USD,pce_price_index_yoy,YoY %,79,61,77.2
+USD,sp_global_services_pmi,level index,71,61,85.9
+CAD,exports,signed flow,80,60,75.0
+CAD,new_housing_price_index_mom,MoM/QoQ %,67,60,89.6
+CHF,cpi_headline_mom,MoM/QoQ %,60,60,100.0
+JPY,ppi_mom,MoM/QoQ %,71,60,84.5
+USD,ppi_mom,MoM/QoQ %,75,59,78.7
+AUD,westpac_consumer_confidence_index,level index,79,57,72.2
+CHF,producer_import_prices_mom,MoM/QoQ %,71,57,80.3
+CAD,cpi_headline_mom,MoM/QoQ %,75,56,74.7
+EUR,unemployed_persons,signed flow,56,56,100.0
+AUD,cash_rate,other,64,55,85.9
+EUR,exports,signed flow,54,54,100.0
+USD,durable_goods_ex_transport_mom,MoM/QoQ %,77,54,70.1
+USD,ism_services_prices,other,82,54,65.9
+CAD,cpi_headline_yoy,YoY %,81,53,65.4
+EUR,imports,signed flow,54,53,98.1
+GBP,core_cpi_mom,MoM/QoQ %,72,53,73.6
+GBP,cpi_headline_mom,MoM/QoQ %,73,53,72.6
+JPY,consumer_confidence,level index,79,53,67.1
+AUD,private_sector_credit_yoy,YoY %,79,52,65.8
+GBP,bank_rate,other,64,52,81.3
+GBP,gdp_mom,MoM/QoQ %,71,52,73.2
+JPY,boj_interest_rate_decision,other,52,52,100.0
+USD,ism_manufacturing_employment,level index,80,51,63.8
+USD,wholesale_inventories_mom,MoM/QoQ %,78,51,65.4
+GBP,cpi_headline_yoy,YoY %,81,50,61.7
+GBP,ppi_core_output_mom,MoM/QoQ %,57,50,87.7
+USD,cpi_headline_yoy,YoY %,82,50,61.0
+USD,ism_services_employment,level index,84,49,58.3
+GBP,composite_pmi,level index,48,48,100.0
+GBP,retail_price_index_mom,MoM/QoQ %,74,48,64.9
+GBP,services_pmi,level index,48,48,100.0
+CAD,core_cpi_mom,MoM/QoQ %,47,47,100.0
+USD,core_ppi_yoy,YoY %,79,46,58.2
+AUD,housing_credit_mom,MoM/QoQ %,45,45,100.0
+USD,umich_current_conditions,other,99,45,45.5
+CAD,manufacturing_pmi,level index,50,44,88.0
+GBP,manufacturing_pmi,level index,44,44,100.0
+GBP,ppi_output_mom,MoM/QoQ %,59,44,74.6
+GBP,gdp_yoy,YoY %,84,43,51.2
+USD,ism_services_business_activity,level index,85,43,50.6
+EUR,economic_sentiment,level index,99,42,42.4
+USD,ism_manufacturing_new_orders,level index,80,42,52.5
+EUR,ppi_mom,MoM/QoQ %,151,41,27.2
+USD,cpi_sa_index,level index,40,40,100.0
+CHF,producer_import_prices_yoy,YoY %,82,39,47.6
+JPY,eco_watchers_current,level index,80,39,48.8
+USD,retail_inventories_ex_autos_mom,MoM/QoQ %,55,38,69.1
+EUR,wholesale_prices_mom,MoM/QoQ %,75,37,49.3
+GBP,retail_price_index_yoy,YoY %,78,37,47.4
+AUD,retail_sales_mom,MoM/QoQ %,107,36,33.6
+USD,ism_services_new_orders,other,83,36,43.4
+USD,umich_consumer_expectations,other,99,36,36.4
+NZD,imports,signed flow,86,35,40.7
+USD,fed_interest_rate_decision,other,45,35,77.8
+CAD,new_housing_price_index_yoy,YoY %,61,34,55.7
+GBP,avg_earnings_incl_bonus,other,77,33,42.9
+USD,u6_unemployment_rate,other,33,33,100.0
+JPY,eco_watchers_outlook,level index,79,32,40.5
+EUR,gdp_yoy,YoY %,54,31,57.4
+USD,ppi_ex_food_energy_trade_mom,MoM/QoQ %,31,31,100.0
+USD,ppi_ex_food_energy_trade_yoy,YoY %,34,31,91.2
+GBP,ppi_core_output_yoy,YoY %,69,30,43.5
+CAD,overnight_rate,other,42,29,69.0
+USD,import_prices_mom,MoM/QoQ %,71,29,40.8
+GBP,gdp_qoq,MoM/QoQ %,44,27,61.4
+JPY,cpi_index,level index,87,27,31.0
+AUD,rba_weighted_median_cpi_qoq,MoM/QoQ %,26,26,100.0
+JPY,ppi_yoy,YoY %,78,26,33.3
+USD,ppi_index,level index,28,26,92.9
+AUD,corelogic_dwelling_prices_mom,MoM/QoQ %,30,25,83.3
+AUD,rba_trimmed_mean_cpi_qoq,MoM/QoQ %,25,25,100.0
+CAD,cpi_common_yoy,YoY %,25,25,100.0
+CAD,cpi_median_yoy,YoY %,25,25,100.0
+CAD,cpi_trimmed_mean_yoy,YoY %,25,25,100.0
+EUR,consumer_inflation_expectation,other,31,25,80.6
+EUR,consumer_spending_mom,MoM/QoQ %,92,25,27.2
+NZD,labour_cost_index_qoq,MoM/QoQ %,25,25,100.0
+NZD,participation_rate,other,25,25,100.0
+USD,employment_cost_index_qoq,MoM/QoQ %,25,25,100.0
+USD,employment_cost_wages_qoq,MoM/QoQ %,25,25,100.0
+USD,ppi_yoy,YoY %,79,25,31.6
+CAD,composite_pmi,level index,30,23,76.7
+CHF,balance_of_trade,signed flow,79,23,29.1
+USD,employment_cost_benefits_qoq,MoM/QoQ %,25,23,92.0
+EUR,ecb_deposit_rate,other,31,22,71.0
+EUR,ppi_yoy,YoY %,143,22,15.4
+NZD,capacity_utilization,other,26,22,84.6
+USD,retail_sales_mom,MoM/QoQ %,75,22,29.3
+CAD,services_pmi,level index,30,21,70.0
+AUD,monthly_cpi_indicator,other,36,20,55.6
+AUD,thomson_reuters_ipsos_pcsi,level index,23,20,87.0
+CAD,cfib_business_barometer,level index,57,20,35.1
+EUR,import_prices_mom,MoM/QoQ %,76,20,26.3
+AUD,rba_trimmed_mean_cpi_yoy,YoY %,31,19,61.3
+GBP,ppi_output_yoy,YoY %,70,19,27.1
+NZD,exports,signed flow,78,19,24.4
+AUD,producer_price_index_qoq,MoM/QoQ %,25,18,72.0
+NZD,unemployment_rate,other,25,18,72.0
+AUD,cpi_headline_qoq,MoM/QoQ %,27,17,63.0
+EUR,nonfarm_payrolls_qoq,MoM/QoQ %,25,17,68.0
+GBP,core_rpi_yoy,YoY %,26,17,65.4
+GBP,ppi_input_mom,MoM/QoQ %,68,17,25.0
+NZD,official_cash_rate,other,30,17,56.7
+USD,inflation_expectations,other,31,17,54.8
+CAD,ppi_mom,MoM/QoQ %,85,16,18.8
+CHF,retail_sales_mom,MoM/QoQ %,80,16,20.0
+NZD,labour_cost_index_yoy,YoY %,25,16,64.0
+USD,core_pce_prices_qoq,MoM/QoQ %,41,16,39.0
+EUR,wholesale_prices_yoy,YoY %,77,15,19.5
+GBP,house_price_index_mom,MoM/QoQ %,88,15,17.0
+EUR,zew_current_conditions,level index,78,14,17.9
+JPY,gdp_qoq,MoM/QoQ %,47,14,29.8
+NZD,cpi_headline_qoq,MoM/QoQ %,25,14,56.0
+NZD,milk_auctions,other,20,14,70.0
+AUD,rba_weighted_median_cpi_yoy,YoY %,26,13,50.0
+CAD,retail_sales_mom,MoM/QoQ %,88,13,14.8
+EUR,import_prices_yoy,YoY %,79,13,16.5
+AUD,consumer_price_index,level index,20,12,60.0
+CHF,gdp_qoq,MoM/QoQ %,23,12,52.2
+GBP,core_rpi_mom,MoM/QoQ %,24,12,50.0
+USD,ism_manufacturing_prices,level index,80,12,15.0
+CAD,new_motor_vehicle_sales,other,78,11,14.1
+CAD,ppi_yoy,YoY %,88,11,12.5
+GBP,nationwide_hpi_yoy,YoY %,79,11,13.9
+GBP,ppi_input_yoy,YoY %,70,11,15.7
+JPY,leading_index_mom,MoM/QoQ %,37,11,29.7
+USD,building_permits,other,82,11,13.4
+USD,import_prices_yoy,YoY %,76,11,14.5
+AUD,ai_group_manufacturing_index,level index,73,10,13.7
+AUD,cpi_headline_yoy,YoY %,37,10,27.0
+GBP,house_price_index_yoy,YoY %,121,10,8.3
+JPY,tertiary_industry_index_mom,MoM/QoQ %,77,10,13.0
+USD,avg_hourly_earnings_level,other,10,10,100.0
+CAD,ivey_pmi_sa,level index,70,9,12.9
+CAD,retail_sales_ex_autos_mom,MoM/QoQ %,75,9,12.0
+NZD,cpi_headline_yoy,YoY %,25,9,36.0
+USD,export_prices_yoy,YoY %,78,9,11.5
+AUD,ai_group_construction_index,level index,73,8,11.0
+AUD,composite_pmi_flash,level index,8,8,100.0
+AUD,manufacturing_pmi_flash,level index,8,8,100.0
+AUD,producer_price_index_yoy,YoY %,25,8,32.0
+AUD,services_pmi_flash,level index,8,8,100.0
+CHF,m3_money_supply,other,8,8,100.0
+CHF,policy_rate,other,13,8,61.5
+GBP,industrial_production_yoy,YoY %,78,8,10.3
+JPY,adjusted_trade_balance,signed flow,8,8,100.0
+NZD,employment_change_qoq,MoM/QoQ %,22,7,31.8
+USD,core_cpi_index,level index,7,7,100.0
+USD,umich_inflation_exp_1y,other,9,7,77.8
+AUD,cpi_headline_mom,MoM/QoQ %,7,6,85.7
+CAD,vehicle_sales_mom,MoM/QoQ %,27,6,22.2
+EUR,retail_sales_mom,MoM/QoQ %,117,6,5.1
+EUR,retail_sales_yoy,YoY %,118,6,5.1
+JPY,industrial_production_yoy,YoY %,150,6,4.0
+JPY,tankan_large_non_manufacturing_index,level index,25,6,24.0
+JPY,tankan_non_manufacturing_outlook,level index,25,6,24.0
+USD,new_home_sales,signed flow,79,6,7.6
+AUD,ai_group_services_index,level index,32,5,15.6
+AUD,household_spending_mom,MoM/QoQ %,13,5,38.5
+AUD,household_spending_yoy,YoY %,14,5,35.7
+CAD,retail_sales_yoy,YoY %,77,5,6.5
+CAD,wholesale_sales_mom,MoM/QoQ %,136,5,3.7
+NZD,consumer_price_index,level index,11,5,45.5
+USD,economic_optimism_index,level index,9,5,55.6
+USD,export_prices_mom,MoM/QoQ %,74,5,6.8
+AUD,balance_of_trade,signed flow,80,4,5.0
+CAD,manufacturing_sales_mom,MoM/QoQ %,125,4,3.2
+EUR,cpi_nsa_mom,MoM/QoQ %,8,4,50.0
+EUR,cpi_nsa_yoy,YoY %,8,4,50.0
+GBP,halifax_hpi_yoy,YoY %,8,4,50.0
+GBP,retail_sales_ex_fuel_yoy,YoY %,78,4,5.1
+USD,pce_prices_qoq,MoM/QoQ %,39,4,10.3
+USD,retail_sales_yoy,YoY %,79,4,5.1
+AUD,commodity_prices_yoy,YoY %,56,3,5.4
+CAD,balance_of_trade,signed flow,79,3,3.8
+EUR,balance_of_trade,signed flow,158,3,1.9
+EUR,consumer_price_expectations_balance,balance,77,3,3.9
+EUR,industrial_production_mom,MoM/QoQ %,156,3,1.9
+EUR,loans_to_companies_yoy,YoY %,3,3,100.0
+EUR,loans_to_households_yoy,YoY %,3,3,100.0
+EUR,m3_money_supply_yoy,YoY %,3,3,100.0
+EUR,zew_economic_sentiment,level index,181,3,1.7
+GBP,rightmove_hpi_yoy,YoY %,7,3,42.9
+JPY,composite_pmi_flash,level index,3,3,100.0
+JPY,manufacturing_pmi_flash,level index,3,3,100.0
+JPY,services_pmi_flash,level index,3,3,100.0
+AUD,cpi_monthly_yoy,YoY %,3,2,66.7
+AUD,private_house_approvals_mom,MoM/QoQ %,83,2,2.4
+CAD,ivey_pmi,level index,9,2,22.2
+CHF,retail_sales_yoy,YoY %,78,2,2.6
+EUR,exports_mom,MoM/QoQ %,78,2,2.6
+GBP,retail_sales_yoy,YoY %,76,2,2.6
+JPY,coincident_indicator_mom,MoM/QoQ %,38,2,5.3
+JPY,retail_sales_mom,MoM/QoQ %,79,2,2.5
+JPY,tokyo_core_cpi_yoy,YoY %,3,2,66.7
+NZD,balance_of_trade,signed flow,78,2,2.6
+NZD,global_dairy_trade_price_index,other,209,2,1.0
+AUD,participation_rate,other,1,1,100.0
+CAD,employment_change,signed flow,79,1,1.3
+CAD,full_time_employment_change,signed flow,79,1,1.3
+CAD,ivey_pmi_nsa,level index,9,1,11.1
+CHF,consumer_confidence,level index,47,1,2.1
+CHF,economic_sentiment_index,level index,78,1,1.3
+EUR,construction_output_mom,MoM/QoQ %,22,1,4.5
+EUR,construction_output_yoy,YoY %,77,1,1.3
+EUR,current_account,signed flow,157,1,0.6
+EUR,imports_mom,MoM/QoQ %,79,1,1.3
+JPY,capacity_utilization,level index,77,1,1.3
+JPY,household_spending_yoy,YoY %,78,1,1.3
+JPY,imports_yoy,YoY %,78,1,1.3
+JPY,industrial_production_mom,MoM/QoQ %,184,1,0.5
+JPY,machine_tool_orders_yoy,YoY %,82,1,1.2
+JPY,tankan_small_non_manufacturing_index,level index,7,1,14.3
+NZD,business_confidence,level index,84,1,1.2
+USD,manufacturing_payrolls,signed flow,79,1,1.3
+AUD,ai_group_industry_index,level index,39,0,0.0
+AUD,anz_job_advertisements_mom,MoM/QoQ %,2,0,0.0
+AUD,building_permits,other,103,0,0.0
+AUD,building_permits_mom,MoM/QoQ %,10,0,0.0
+AUD,building_permits_yoy,YoY %,10,0,0.0
+AUD,current_account,signed flow,25,0,0.0
+AUD,employment_change,signed flow,78,0,0.0
+AUD,export_price_index_qoq,MoM/QoQ %,33,0,0.0
+AUD,exports_mom,MoM/QoQ %,79,0,0.0
+AUD,full_time_employment_change,signed flow,78,0,0.0
+AUD,home_loans_mom,MoM/QoQ %,1,0,0.0
+AUD,import_price_index_qoq,MoM/QoQ %,31,0,0.0
+AUD,imports_mom,MoM/QoQ %,80,0,0.0
+AUD,nab_business_confidence,level index,74,0,0.0
+AUD,part_time_employment_change,signed flow,78,0,0.0
+AUD,westpac_consumer_confidence_change,other,78,0,0.0
+CAD,budget_balance,signed flow,78,0,0.0
+CAD,part_time_employment_change,signed flow,79,0,0.0
+CAD,raw_materials_prices_mom,MoM/QoQ %,77,0,0.0
+CAD,raw_materials_prices_yoy,YoY %,78,0,0.0
+EUR,balance_of_trade,other,1,0,0.0
+EUR,current_account,other,1,0,0.0
+EUR,employment_change,signed flow,78,0,0.0
+EUR,factory_orders_mom,MoM/QoQ %,78,0,0.0
+EUR,industrial_production_yoy,YoY %,25,0,0.0
+EUR,new_car_sales_mom,MoM/QoQ %,16,0,0.0
+EUR,new_car_sales_yoy,YoY %,28,0,0.0
+EUR,unemployment_benefit_claims,signed flow,79,0,0.0
+GBP,cbi_business_optimism,level index,24,0,0.0
+GBP,cbi_industrial_trends_orders,level index,78,0,0.0
+GBP,claimant_count_change,signed flow,78,0,0.0
+GBP,consumer_confidence,level index,80,0,0.0
+GBP,employment_change,signed flow,78,0,0.0
+GBP,hmrc_payrolls_change,signed flow,43,0,0.0
+GBP,public_sector_net_borrowing,signed flow,76,0,0.0
+GBP,retail_sales_ex_fuel_mom,MoM/QoQ %,78,0,0.0
+GBP,retail_sales_mom,MoM/QoQ %,76,0,0.0
+JPY,balance_of_trade,signed flow,80,0,0.0
+JPY,current_account,signed flow,78,0,0.0
+JPY,exports_yoy,YoY %,78,0,0.0
+JPY,foreign_bond_investment,signed flow,347,0,0.0
+JPY,household_spending_mom,MoM/QoQ %,78,0,0.0
+JPY,machinery_orders_mom,MoM/QoQ %,77,0,0.0
+JPY,machinery_orders_yoy,YoY %,78,0,0.0
+JPY,retail_sales_yoy,YoY %,79,0,0.0
+JPY,reuters_tankan_index,level index,78,0,0.0
+JPY,stock_investment_by_foreigners,signed flow,347,0,0.0
+JPY,tankan_all_small_industry_capex,other,7,0,0.0
+JPY,tankan_large_all_industry_capex,other,25,0,0.0
+JPY,tankan_large_manufacturers_index,level index,25,0,0.0
+JPY,tankan_large_manufacturing_outlook,level index,25,0,0.0
+JPY,tankan_small_manufacturers_index,level index,24,0,0.0
+NZD,balance_of_trade_mom,MoM/QoQ %,8,0,0.0
+NZD,balance_of_trade_yoy,YoY %,8,0,0.0
+NZD,credit_card_spending_yoy,YoY %,65,0,0.0
+USD,adp_employment_change,signed flow,80,0,0.0
+USD,challenger_job_cuts,other,80,0,0.0
+USD,government_payrolls,signed flow,80,0,0.0
+USD,nfp,signed flow,80,0,0.0
+USD,ny_empire_state_mfg,level index,79,0,0.0
+USD,philly_fed_mfg,level index,79,0,0.0
+USD,private_nonfarm_payrolls,signed flow,80,0,0.0
+USD,real_gdp_qoq_annualised,MoM/QoQ %,25,0,0.0

@@ -3,7 +3,7 @@ import asyncio
 
 from app.ingestion.canonicalizer import Canonicalizer
 from app.ingestion.ingest_service import quarantine_future_actual
-from app.processing.macro_features import cap_surprise_z, surprise_std_floor
+from app.processing.macro_features import build_indicator_features, cap_surprise_z, surprise_std_scale
 from app.processing.macro_dataset import rebuild_macro_observations
 
 
@@ -38,13 +38,37 @@ def test_eu_percent_and_survey_balance_are_separate_indicators():
     assert percent.canonical_name == "consumer_inflation_expectation"
 
 
-def test_surprise_floor_and_cap():
-    assert surprise_std_floor(3.28, 0.1) == 0.5
-    assert surprise_std_floor(200, 1) == 10
-    assert surprise_std_floor(3, 2) == 2
+def test_series_specific_surprise_scale_and_cap():
+    assert surprise_std_scale(0.1, 2.0) == 0.5
+    assert surprise_std_scale(1.0, 20.0) == 5.0
+    assert surprise_std_scale(2.0, 3.0) == 2.0
     assert cap_surprise_z(68.52) == 5
     assert cap_surprise_z(-7) == -5
     assert cap_surprise_z(4.36) == 4.36
+
+
+def test_feature_query_uses_24_prior_observations_and_series_scale():
+    class CaptureSession:
+        def __init__(self):
+            self.statements = []
+
+        async def execute(self, statement, parameters=None):
+            self.statements.append((str(statement), parameters))
+
+            class Result:
+                def all(self):
+                    return []
+
+            return Result()
+
+    session = CaptureSession()
+    asyncio.run(build_indicator_features(session))
+    insert, parameters = next((sql, params) for sql, params in session.statements
+                              if "INSERT INTO processed.indicator_features" in sql)
+    assert "ROWS BETWEEN 24 PRECEDING AND 1 PRECEDING" in insert
+    assert "prior_expanding_stddev * :long_run_fraction" in insert
+    assert "prior_rolling_avg_6" in insert
+    assert parameters == {"long_run_fraction": 0.25}
 
 
 def test_processing_excludes_future_and_quarantined_actuals():

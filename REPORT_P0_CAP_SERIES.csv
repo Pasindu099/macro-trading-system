@@ -1,0 +1,153 @@
+currency,indicator,unit_type,capped_count,first_date,last_date
+CAD,budget_balance,signed flow,10,2020-05-29,2026-05-29
+JPY,foreign_bond_investment,signed flow,9,2020-10-14,2025-09-03
+JPY,stock_investment_by_foreigners,signed flow,8,2020-01-22,2026-09-30
+EUR,zew_economic_sentiment,level index,7,2020-03-17,2026-03-17
+EUR,retail_sales_yoy,YoY %,6,2020-05-06,2026-04-30
+NZD,global_dairy_trade_price_index,other,6,2021-03-02,2026-01-06
+USD,building_permits,other,6,2021-03-17,2024-12-23
+USD,redbook_yoy,YoY %,6,2020-03-17,2024-02-13
+AUD,retail_sales_mom,MoM/QoQ %,5,2020-05-06,2023-01-31
+CAD,manufacturing_sales_mom,MoM/QoQ %,5,2020-05-14,2024-04-24
+CAD,retail_sales_yoy,YoY %,5,2020-05-22,2025-02-21
+GBP,industrial_production_yoy,YoY %,5,2020-05-13,2022-10-12
+GBP,retail_sales_ex_fuel_yoy,YoY %,5,2020-04-24,2023-03-24
+USD,initial_jobless_claims,signed flow,5,2020-01-02,2022-01-20
+EUR,consumer_confidence,level index,4,2020-03-23,2022-12-21
+EUR,consumer_price_expectations_balance,balance,4,2020-04-29,2026-03-30
+GBP,gdp_yoy,YoY %,4,2020-05-13,2021-06-11
+GBP,retail_sales_yoy,YoY %,4,2020-04-24,2021-05-21
+JPY,imports_yoy,YoY %,4,2020-03-17,2025-02-18
+JPY,industrial_production_mom,MoM/QoQ %,4,2020-04-29,2024-02-28
+JPY,industrial_production_yoy,YoY %,4,2020-05-28,2023-11-29
+USD,challenger_job_cuts,other,4,2020-04-02,2025-03-06
+USD,continuing_jobless_claims,signed flow,4,2020-01-02,2021-01-07
+USD,nfp,signed flow,4,2020-04-03,2024-08-21
+AUD,ai_group_construction_index,level index,3,2020-05-04,2024-06-04
+AUD,ai_group_industry_index,level index,3,2023-05-02,2026-09-01
+AUD,building_permits,other,3,2021-03-02,2023-10-10
+AUD,employment_change,signed flow,3,2020-05-14,2025-03-20
+AUD,private_house_approvals_mom,MoM/QoQ %,3,2022-03-03,2024-12-02
+CAD,balance_of_trade,signed flow,3,2021-03-05,2025-12-11
+CHF,economic_sentiment_index,level index,3,2020-03-25,2024-02-28
+CHF,retail_sales_mom,MoM/QoQ %,3,2020-04-30,2021-04-30
+CHF,retail_sales_yoy,YoY %,3,2020-04-30,2021-04-30
+EUR,construction_output_yoy,YoY %,3,2021-04-19,2023-02-20
+EUR,employment_change,signed flow,3,2020-04-30,2026-04-30
+EUR,import_prices_yoy,YoY %,3,2020-04-29,2026-04-30
+EUR,imports_mom,MoM/QoQ %,3,2020-05-08,2023-04-04
+EUR,industrial_production_mom,MoM/QoQ %,3,2020-05-07,2025-08-05
+EUR,ppi_yoy,YoY %,3,2022-09-20,2025-12-19
+EUR,unemployment_benefit_claims,signed flow,3,2020-04-27,2025-02-27
+EUR,wholesale_prices_yoy,YoY %,3,2021-03-15,2026-04-14
+GBP,claimant_count_change,signed flow,3,2020-05-19,2024-08-13
+GBP,employment_change,signed flow,3,2020-06-16,2024-04-16
+GBP,public_sector_net_borrowing,signed flow,3,2020-05-22,2024-02-21
+NZD,business_confidence,level index,3,2020-03-31,2026-04-20
+NZD,credit_card_spending_yoy,YoY %,3,2021-05-21,2023-11-21
+AUD,commodity_prices_yoy,YoY %,2,2022-03-01,2023-11-01
+AUD,exports_mom,MoM/QoQ %,2,2020-03-05,2021-11-04
+AUD,import_price_index_qoq,MoM/QoQ %,2,2023-04-27,2026-07-30
+AUD,nab_business_confidence,level index,2,2020-04-14,2026-04-14
+CAD,employment_change,signed flow,2,2020-04-09,2022-02-04
+CAD,full_time_employment_change,signed flow,2,2020-04-09,2020-05-08
+CAD,raw_materials_prices_yoy,YoY %,2,2020-02-28,2026-04-23
+CAD,retail_sales_ex_autos_mom,MoM/QoQ %,2,2020-06-19,2022-09-23
+CAD,retail_sales_mom,MoM/QoQ %,2,2020-05-22,2021-02-19
+EUR,economic_sentiment,level index,2,2020-04-29,2024-02-13
+EUR,gdp_qoq,MoM/QoQ %,2,2020-04-30,2021-07-30
+EUR,gdp_yoy,YoY %,2,2020-08-25,2022-10-28
+EUR,import_prices_mom,MoM/QoQ %,2,2020-04-29,2026-04-30
+EUR,new_car_sales_mom,MoM/QoQ %,2,2026-01-26,2026-02-24
+EUR,ppi_mom,MoM/QoQ %,2,2024-12-20,2026-04-20
+EUR,zew_current_conditions,level index,2,2020-03-17,2021-04-13
+GBP,cbi_industrial_trends_orders,level index,2,2020-04-23,2023-01-24
+GBP,gdp_mom,MoM/QoQ %,2,2020-05-13,2020-06-12
+GBP,ppi_input_mom,MoM/QoQ %,2,2022-04-13,2026-04-22
+GBP,ppi_input_yoy,YoY %,2,2022-04-13,2026-04-22
+GBP,retail_sales_ex_fuel_mom,MoM/QoQ %,2,2020-05-22,2021-02-19
+GBP,retail_sales_mom,MoM/QoQ %,2,2020-04-24,2020-05-22
+JPY,balance_of_trade,signed flow,2,2022-02-16,2025-02-18
+JPY,capacity_utilization,level index,2,2020-06-12,2024-03-19
+JPY,household_spending_yoy,YoY %,2,2022-03-10,2024-03-07
+JPY,retail_sales_mom,MoM/QoQ %,2,2020-04-29,2024-10-30
+NZD,imports,signed flow,2,2024-06-04,2025-12-01
+USD,adp_employment_change,signed flow,2,2020-05-06,2022-02-02
+USD,avg_hourly_earnings_yoy,YoY %,2,2020-05-08,2021-05-07
+USD,government_payrolls,signed flow,2,2020-05-08,2025-03-07
+USD,manufacturing_payrolls,signed flow,2,2020-03-06,2020-05-08
+USD,new_home_sales,signed flow,2,2024-01-25,2026-05-05
+USD,private_nonfarm_payrolls,signed flow,2,2020-04-03,2020-05-08
+USD,retail_sales_yoy,YoY %,2,2020-04-15,2021-04-15
+AUD,ai_group_manufacturing_index,level index,1,2023-04-04,2023-04-04
+AUD,balance_of_trade,signed flow,1,2020-05-07,2020-05-07
+AUD,cash_rate,other,1,2020-02-04,2020-02-04
+AUD,consumer_price_index,level index,1,2026-01-28,2026-01-28
+AUD,full_time_employment_change,signed flow,1,2020-05-14,2020-05-14
+AUD,imports_mom,MoM/QoQ %,1,2026-05-07,2026-05-07
+AUD,part_time_employment_change,signed flow,1,2020-05-14,2020-05-14
+AUD,westpac_consumer_confidence_change,other,1,2020-04-15,2020-04-15
+CAD,cfib_business_barometer,level index,1,2025-03-24,2025-03-24
+CAD,exports,signed flow,1,2020-06-04,2020-06-04
+CAD,gdp_mom,MoM/QoQ %,1,2020-05-29,2020-05-29
+CAD,imports,signed flow,1,2020-06-04,2020-06-04
+CAD,ivey_pmi_sa,level index,1,2020-04-07,2020-04-07
+CAD,part_time_employment_change,signed flow,1,2020-04-09,2020-04-09
+CAD,ppi_yoy,YoY %,1,2026-06-18,2026-06-18
+CAD,raw_materials_prices_mom,MoM/QoQ %,1,2026-02-20,2026-02-20
+CAD,unemployment_rate,other,1,2020-05-08,2020-05-08
+CAD,wholesale_sales_mom,MoM/QoQ %,1,2020-06-18,2020-06-18
+EUR,balance_of_trade,signed flow,1,2020-06-09,2020-06-09
+EUR,business_confidence,level index,1,2020-04-23,2020-04-23
+EUR,consumer_spending_mom,MoM/QoQ %,1,2020-04-30,2020-04-30
+EUR,cpi_index,level index,1,2024-04-02,2024-04-02
+EUR,current_account,signed flow,1,2025-02-07,2025-02-07
+EUR,exports_mom,MoM/QoQ %,1,2020-05-08,2020-05-08
+EUR,factory_orders_mom,MoM/QoQ %,1,2020-03-06,2020-03-06
+EUR,jobseekers_total,signed flow,1,2020-05-28,2020-05-28
+EUR,manufacturing_pmi,level index,1,2020-04-23,2020-04-23
+EUR,retail_sales_mom,MoM/QoQ %,1,2020-05-06,2020-05-06
+EUR,wholesale_prices_mom,MoM/QoQ %,1,2022-04-12,2022-04-12
+GBP,bank_rate,other,1,2020-01-30,2020-01-30
+GBP,consumer_confidence,level index,1,2020-04-05,2020-04-05
+GBP,gdp_qoq,MoM/QoQ %,1,2020-08-12,2020-08-12
+GBP,hmrc_payrolls_change,signed flow,1,2023-05-16,2023-05-16
+GBP,nationwide_hpi_yoy,YoY %,1,2021-06-01,2021-06-01
+GBP,ppi_output_yoy,YoY %,1,2025-10-22,2025-10-22
+JPY,coincident_indicator_mom,MoM/QoQ %,1,2025-09-05,2025-09-05
+JPY,composite_pmi,level index,1,2020-03-24,2020-03-24
+JPY,current_account,signed flow,1,2026-02-08,2026-02-08
+JPY,eco_watchers_current,level index,1,2020-03-09,2020-03-09
+JPY,eco_watchers_outlook,level index,1,2020-03-09,2020-03-09
+JPY,exports_yoy,YoY %,1,2026-02-17,2026-02-17
+JPY,gdp_qoq,MoM/QoQ %,1,2020-08-16,2020-08-16
+JPY,household_spending_mom,MoM/QoQ %,1,2020-08-06,2020-08-06
+JPY,leading_index_mom,MoM/QoQ %,1,2025-06-06,2025-06-06
+JPY,machine_tool_orders_yoy,YoY %,1,2024-06-11,2024-06-11
+JPY,machinery_orders_yoy,YoY %,1,2020-06-09,2020-06-09
+JPY,ppi_yoy,YoY %,1,2026-06-09,2026-06-09
+JPY,reuters_tankan_index,level index,1,2020-03-16,2020-03-16
+JPY,services_pmi,level index,1,2020-03-24,2020-03-24
+JPY,tertiary_industry_index_mom,MoM/QoQ %,1,2020-05-18,2020-05-18
+NZD,balance_of_trade,signed flow,1,2021-09-23,2021-09-23
+NZD,balance_of_trade_yoy,YoY %,1,2026-03-19,2026-03-19
+NZD,consumer_price_index,level index,1,2024-04-16,2024-04-16
+USD,avg_hourly_earnings_mom,MoM/QoQ %,1,2020-05-08,2020-05-08
+USD,durable_goods_ex_transport_mom,MoM/QoQ %,1,2020-05-28,2020-05-28
+USD,export_prices_yoy,YoY %,1,2022-08-12,2022-08-12
+USD,imports,other,1,2025-01-02,2025-01-02
+USD,inflation_expectations,other,1,2025-04-25,2025-04-25
+USD,ism_manufacturing_employment,level index,1,2020-05-01,2020-05-01
+USD,ism_services_business_activity,level index,1,2020-05-05,2020-05-05
+USD,ism_services_employment,level index,1,2020-05-05,2020-05-05
+USD,ism_services_new_orders,other,1,2020-05-05,2020-05-05
+USD,jobless_claims_4week_average,signed flow,1,2025-11-18,2025-11-18
+USD,ny_empire_state_mfg,level index,1,2020-03-16,2020-03-16
+USD,pce_prices_qoq,MoM/QoQ %,1,2020-09-30,2020-09-30
+USD,philly_fed_mfg,level index,1,2024-02-15,2024-02-15
+USD,ppi_yoy,YoY %,1,2026-05-13,2026-05-13
+USD,real_gdp_qoq_annualised,MoM/QoQ %,1,2020-09-30,2020-09-30
+USD,retail_sales_mom,MoM/QoQ %,1,2020-04-15,2020-04-15
+USD,umich_consumer_sentiment,level index,1,2020-04-09,2020-04-09
+USD,umich_current_conditions,other,1,2020-04-24,2020-04-24
+USD,unemployment_rate,other,1,2020-05-08,2020-05-08

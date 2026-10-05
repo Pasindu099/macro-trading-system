@@ -24,7 +24,12 @@ def test_placeholder_sections_and_event_log_navigation(monkeypatch):
         response = client.get(path)
         assert response.status_code == 200
         assert f"<h1>{title}</h1>" in response.text
-    assert 'href="/event-log" class="nav-sub' in client.get("/").text
+    overview = client.get("/").text
+    assert '<header class="site-header">' in overview
+    assert 'class="mobile-menu"' in overview
+    assert overview.index('>Overview</a>') < overview.index('>Desks</a>') < overview.index('>Pairs</a>')
+    assert overview.index('>Central Banks</a>') < overview.index('>News</a>') < overview.index('>Calendar</summary>')
+    assert 'href="/event-log"' in overview
     for path in ("/", "/desks"):
         page = client.get(path).text
         assert 'href="/desks/USD"' in page and 'href="/desks/EUR"' in page

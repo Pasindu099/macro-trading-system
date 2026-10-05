@@ -8,31 +8,31 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', path='css/shell.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/navigation.css') }}">
   <script src="{{ url_for('static', path='vendor/echarts-5.6.0.min.js') }}" defer></script>
   {% block extra_head %}{% endblock %}
 </head>
 <body>
   {% if request.url.path not in ['/login', '/setup'] %}
   <div class="app-shell">
-    <aside class="sidebar" aria-label="Main navigation">
-      <a class="brand" href="/"><span class="brand-mark">F<span>×</span></span><span>FOREX<br>COMPASS</span></a>
-      <nav>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="ForexCompass home"><span class="brand-mark">F<span>×</span></span><span>FOREX<br>COMPASS</span></a>
+      <details class="mobile-menu"><summary aria-label="Toggle navigation">Menu</summary><nav class="site-nav" aria-label="Main navigation">
         <a href="/" class="{% if request.url.path == '/' %}active{% endif %}">Overview</a>
-        <a href="/desks" class="{% if request.url.path == '/desks' %}active{% endif %}">Desks</a>
+        <a href="/desks" class="{% if request.url.path.startswith('/desks') %}active{% endif %}">Desks</a>
         <a href="/pairs" class="{% if request.url.path == '/pairs' %}active{% endif %}">Pairs</a>
-        <a href="/calendar" class="{% if request.url.path == '/calendar' %}active{% endif %}">Calendar</a>
-        <a href="/event-log" class="nav-sub {% if request.url.path == '/event-log' %}active{% endif %}">Event Log</a>
-        <a href="/news" class="{% if request.url.path == '/news' %}active{% endif %}">News</a>
-        <a href="/positioning" class="{% if request.url.path == '/positioning' %}active{% endif %}">Positioning</a>
         <a href="/central-banks" class="{% if request.url.path == '/central-banks' %}active{% endif %}">Central Banks</a>
+        <a href="/news" class="{% if request.url.path == '/news' %}active{% endif %}">News</a>
+        <details class="nav-calendar"><summary class="{% if request.url.path in ['/calendar', '/event-log'] %}active{% endif %}">Calendar</summary><div class="nav-dropdown"><a href="/calendar">Calendar</a><a href="/event-log" class="{% if request.url.path == '/event-log' %}active{% endif %}">Event Log</a></div></details>
+        <a href="/positioning" class="{% if request.url.path == '/positioning' %}active{% endif %}">Positioning</a>
         <a href="/data" class="{% if request.url.path == '/data' %}active{% endif %}">Data</a>
-      </nav>
-      <div class="sidebar-foot">
+      </nav></details>
+      <div class="header-actions">
         {% if request.state.current_user and request.state.current_user.role == 'admin' %}<a href="/users">Users</a>{% endif %}
         {% if request.state.current_user %}<form method="post" action="/logout"><button type="submit">Sign out</button></form>{% endif %}
       </div>
-    </aside>
-    <div class="main-column"><header class="topbar"><span>FX RESEARCH WORKSPACE</span><span>UTC · LIVE DATA</span></header>
+    </header>
+    <div class="main-column">
   {% endif %}
   {% block body %}{% endblock %}
   {% if request.url.path not in ['/login', '/setup'] %}

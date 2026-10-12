@@ -15,6 +15,7 @@ from app.services.curve_metrics import get_curve
 from app.services.macro_state import get_macro_state_board
 from app.services.meeting_calendar import get_upcoming_meetings
 from app.services.fred import load_series
+from app.services.rate_probability import get_rate_probability_view
 
 CURRENCIES = ("USD", "EUR", "GBP", "JPY", "AUD", "NZD", "CAD", "CHF")
 BANKS = {"USD": "FED", "EUR": "ECB", "GBP": "BOE", "JPY": "BOJ", "AUD": "RBA",
@@ -364,16 +365,37 @@ async def currency_ranking() -> dict:
 
 
 async def central_bank_map() -> dict:
-    regimes = {"USD": await fed_regime.get_regime(), "EUR": await ecb_regime.get_regime()}
+    regimes = await _policy_regimes()
+    views = {currency: await verdict.get_verdict(currency) for currency in ("USD", "EUR")}
     rows = []
     for currency in CURRENCIES:
         bank = BANKS[currency]
         meetings = await get_upcoming_meetings(bank, 1)
         regime = regimes.get(currency)
+        async with get_sessionmaker()() as session:
+            pricing = await get_rate_probability_view(bank, session)
         rows.append({"currency": currency, "bank": bank, "regime": regime,
                      "meeting": datetime.fromisoformat(meetings[0]["meeting_dt"]) if meetings else None,
+                     "guidance": _gap_label(currency, views[currency]) if currency in views else "—",
+                     "priced_move": _priced_move(pricing, currency, datetime.now(UTC).date()),
+                     "ladder": ("qe", "near_zero", "cutting", "holding", "hiking"),
                      "state": "ok" if regime and regime.get("regime") != "unavailable" else "pending"})
     return {"state": "ok", "rows": rows}
+
+
+def _priced_move(pricing: dict, currency: str, today: date) -> str:
+    market = pricing.get("market_data") or {}
+    curve_date = market.get("curve_date")
+    if isinstance(curve_date, str):
+        curve_date = date.fromisoformat(curve_date)
+    if not market.get("available") or not isinstance(curve_date, date) or not 0 <= (today - curve_date).days <= 3:
+        return "n/a"
+    meeting = next((row for row in pricing.get("meetings", [])
+                    if row.get("market_data_available") and row.get("delta_bps") is not None), None)
+    if meeting is None:
+        return "n/a"
+    move = f"{meeting['delta_bps']:+.0f}bp"
+    return move if currency == "USD" else f"{move} approx."
 
 
 async def pair_map() -> dict:

@@ -7,6 +7,7 @@
 | B | Complete in code | One card per situation, grouped currencies/pairs, severity, since date, evidence and first available link. |
 | C | Complete in code | Max six recent investingLive items with currency and situation/tier chips; intraday reaction pending label. |
 | D | Complete in code | Verdict-score ranking, six partial verdicts, all-eight rate-history regimes, positioning labels and score bars. |
+| E | Complete in code | Eight-bank regime ladder, guidance, next meetings and freshness-gated priced moves. |
 
 - `app/services/overview.py:79`: News reads gated investingLive items from the past 24 hours through now, max six.
 - `app/services/overview.py:134`: Calendar ISO timestamp is parsed before the regime-map template formats it.
@@ -20,3 +21,4 @@
 - USD/JPY intervention: last spot 157.83 on 2 Oct; distance 0.1076% from zone versus exit >5% for 5 days. Current spot evidence is stale/pending; episode remains active. Thresholds unchanged.
 - Date comparison for stored episodes fixed in `app/services/overview.py:128`; all seven live panel builders and templates render in-container. Focused tests: 12 passed.
 - Part D: `app/services/overview.py:280`, `app/services/verdict.py:100`, `app/web/templates/overview/panel.html:12`. Live ranking 8/8 sorted, all 8 regimes present. Focused tests 15 passed; in-container full suite 545 passed, 7 skipped.
+- Part E: `app/services/overview.py:366`, `app/web/templates/overview/panel.html:14`. Eight live rows rendered; Fed futures and five fresh approximate proxies shown, stale ECB/RBNZ `n/a`. Focused tests 12 passed; full suite 546 passed, 7 skipped.

@@ -150,20 +150,44 @@ def test_news_uses_recent_investinglive_items_only(monkeypatch):
 
 
 def test_regime_map_renders_calendar_string(monkeypatch):
-    async def regime():
-        return {"regime": "holding"}
+    async def regimes():
+        return {currency: {"regime": "holding"} for currency in overview.CURRENCIES}
     async def meetings(_bank, _limit):
         return [{"meeting_dt": "2026-11-01T12:00:00+00:00"}]
-    monkeypatch.setattr(overview.fed_regime, "get_regime", regime)
-    monkeypatch.setattr(overview.ecb_regime, "get_regime", regime)
+    async def verdict_for(_currency):
+        return {"why": {"gap": {"raw": {"direction": "neutral"}}}}
+    async def pricing(_bank, _session):
+        return {"market_data": {"available": False}}
+    class Session:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *_):
+            pass
+    monkeypatch.setattr(overview, "_policy_regimes", regimes)
     monkeypatch.setattr(overview, "get_upcoming_meetings", meetings)
+    monkeypatch.setattr(overview.verdict, "get_verdict", verdict_for)
+    monkeypatch.setattr(overview, "get_rate_probability_view", pricing)
+    monkeypatch.setattr(overview, "get_sessionmaker", lambda: lambda: Session())
     client = _client(monkeypatch)
     desks.cache_clear()
     response = client.get("/overview/panels/central-banks")
     assert response.status_code == 200
     assert "could not load" not in response.text
     assert "01 Nov 2026" in response.text
+    assert response.text.count('class="current"') == 8
     desks.cache_clear()
+
+
+def test_priced_move_requires_recent_market_data():
+    today = date(2026, 10, 12)
+    view = {"market_data": {"available": True, "curve_date": date(2026, 10, 10)},
+            "meetings": [{"market_data_available": True, "delta_bps": -12.5}]}
+    assert overview._priced_move(view, "USD", today) == "-12bp"
+    assert overview._priced_move(view, "EUR", today) == "-12bp approx."
+    view["market_data"]["curve_date"] = date(2026, 10, 8)
+    assert overview._priced_move(view, "USD", today) == "n/a"
+    view["market_data"]["curve_date"] = date(2026, 10, 13)
+    assert overview._priced_move(view, "EUR", today) == "n/a"
 
 
 def test_dominance_override_and_share_threshold():

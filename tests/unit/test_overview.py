@@ -295,3 +295,34 @@ def test_board_excludes_future_observations(monkeypatch):
     monkeypatch.setattr(overview, "get_macro_state_board", board)
     rows = __import__("asyncio").run(overview._board())["rows"]
     assert [row["currency"] for row in rows] == ["USD"]
+
+
+def test_key_events_group_components_and_use_fourteen_days(monkeypatch):
+    when = datetime.now(UTC) + timedelta(days=10)
+    class Result:
+        def mappings(self):
+            return self
+        def all(self):
+            return [{"released_at": when, "period": "2026-09", "display_name": name,
+                     "canonical_name": canonical, "country_code": "US", "currency_code": "USD"}
+                    for name, canonical in (("Core CPI (YoY)", "core_cpi_yoy"),
+                                            ("Headline CPI (YoY)", "cpi_headline_yoy"))]
+    class Session:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *_):
+            pass
+        async def execute(self, query):
+            assert "interval '14 days'" in str(query)
+            assert "i.importance = 1" in str(query)
+            return Result()
+    async def tracking():
+        return {"USD": "inflation running hot vs projections"}
+    monkeypatch.setattr(overview, "get_sessionmaker", lambda: lambda: Session())
+    monkeypatch.setattr(overview, "_event_tracking", tracking)
+    result = __import__("asyncio").run(overview.key_events())
+    assert len(result["rows"]) == 1
+    assert result["rows"][0]["event"] == "CPI (Sep)"
+    assert result["rows"][0]["components"] == 2
+    assert "Fed dual mandate" in result["rows"][0]["why"]
+    assert result["rows"][0]["impact"] == "High"

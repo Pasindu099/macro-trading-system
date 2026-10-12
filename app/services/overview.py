@@ -10,7 +10,7 @@ import yaml
 from sqlalchemy import text
 
 from app.db.session import get_sessionmaker
-from app.services import ecb_regime, fed_regime, positioning, situations, verdict
+from app.services import cb_tracking, ecb_regime, ecb_tracking, fed_regime, positioning, situations, verdict
 from app.services.curve_metrics import get_curve
 from app.services.macro_state import get_macro_state_board
 from app.services.meeting_calendar import get_upcoming_meetings
@@ -26,6 +26,15 @@ COUNTRIES = {"USD": "US", "EUR": "DE", "GBP": "UK", "JPY": "JP", "AUD": "AU",
 POLICY_RATES = {"GBP": ("UK", "bank_rate"), "JPY": ("JP", "boj_interest_rate_decision"),
                 "AUD": ("AU", "cash_rate"), "NZD": ("NZ", "official_cash_rate"),
                 "CAD": ("CA", "overnight_rate"), "CHF": ("CH", "policy_rate")}
+EVENT_TRACKING = {"GBP": ("UK", "cpi_headline_yoy", 2.0),
+                  "JPY": ("JP", "cpi_ex_food_energy_yoy", 2.0),
+                  "AUD": ("AU", "rba_trimmed_mean_cpi_yoy", 2.5),
+                  "NZD": ("NZ", "cpi_headline_yoy", 2.0),
+                  "CAD": ("CA", "cpi_trimmed_mean_yoy", 2.0),
+                  "CHF": ("CH", "cpi_headline_yoy", 1.0)}
+MANDATES = {"USD": "Fed dual mandate", "EUR": "ECB price stability", "GBP": "BoE price stability",
+            "JPY": "BoJ price stability", "AUD": "RBA price stability and employment",
+            "NZD": "RBNZ price stability", "CAD": "BoC price stability", "CHF": "SNB price stability"}
 DOMINANCE_CONFIG = Path("config/dominance.yaml")
 HIERARCHY = tuple(yaml.safe_load(DOMINANCE_CONFIG.read_text(encoding="utf-8"))["tiers"])
 
@@ -464,16 +473,88 @@ async def pair_map(*, lens: str = "overall", path: str = "data", group: str = "a
 async def key_events() -> dict:
     async with get_sessionmaker()() as session:
         rows = (await session.execute(text("""
-            SELECT r.released_at, i.display_name, i.country_code, c.currency_code,
-                   r.estimate::float AS estimate, r.previous::float AS previous
+            SELECT r.released_at, r.period, i.display_name, i.canonical_name,
+                   i.country_code, c.currency_code
             FROM indicator_releases r JOIN indicators i ON i.id = r.indicator_id
             JOIN countries c ON c.code = i.country_code
-            WHERE r.released_at > now() AND r.released_at <= now() + interval '7 days'
+            WHERE r.released_at > now() AND r.released_at <= now() + interval '14 days'
               AND i.importance = 1 AND r.is_latest
-            ORDER BY r.released_at, i.display_name LIMIT 16
+            ORDER BY r.released_at, i.display_name LIMIT 200
         """))).mappings().all()
-    return {"state": "ok" if rows else "empty", "rows": [dict(row) for row in rows],
-            "message": "No high-impact events in the next seven days."}
+    grouped = _group_key_events([dict(row) for row in rows])[:8]
+    if not grouped:
+        return {"state": "empty", "rows": [], "message": "No high-impact events in the next 14 days."}
+    tracking = await _event_tracking()
+    for row in grouped:
+        row["why"] = _event_why(row, tracking.get(row["currency_code"], "tracking pending"))
+        row["impact"] = "High"
+    return {"state": "ok", "rows": grouped}
+
+
+def _group_key_events(rows: list[dict]) -> list[dict]:
+    groups: dict[tuple[str, datetime], list[dict]] = {}
+    now = datetime.now(UTC)
+    for row in rows:
+        if now < row["released_at"] <= now + timedelta(days=14):
+            groups.setdefault((row["country_code"], row["released_at"]), []).append(row)
+    output = []
+    for items in groups.values():
+        head = items[0]
+        names = " ".join((item["canonical_name"] or "") + " " + item["display_name"] for item in items).lower()
+        family = ("Policy decision" if "rate_decision" in names or "bank rate" in names else
+                  "CPI" if "cpi" in names or "inflation" in names else
+                  "Employment" if any(word in names for word in ("employment", "unemployment", "payroll")) else
+                  "GDP" if "gdp" in names else "Retail sales" if "retail" in names else
+                  "PMI" if "pmi" in names else head["display_name"].split(" (")[0])
+        period = next((item["period"] for item in items if item.get("period")), None)
+        if period and re.fullmatch(r"\d{4}-\d{2}", period):
+            period = datetime.strptime(period, "%Y-%m").strftime("%b")
+        elif period and len(period) > 12:
+            period = None
+        output.append({"released_at": head["released_at"], "currency_code": head["currency_code"],
+                       "event": f"{family} ({period})" if period else family,
+                       "family": family, "components": len(items)})
+    return sorted(output, key=lambda row: row["released_at"])
+
+
+def _event_why(row: dict, status: str) -> str:
+    mandate = MANDATES.get(row["currency_code"], "Central bank mandate")
+    family = row["family"]
+    if family == "Policy decision":
+        return f"{mandate}: {status}; guidance may change the priced path."
+    if family == "Employment":
+        return f"{mandate}: {status}; stronger hiring supports a firmer path."
+    if family in ("CPI",):
+        return f"{mandate}: {status}; an upside inflation surprise supports a firmer path."
+    return f"{mandate}: {status}; a growth beat supports a firmer path."
+
+
+async def _event_tracking() -> dict[str, str]:
+    out = {}
+    for currency, builder, key in (("USD", cb_tracking.get_tracking, "core_pce_inflation"),
+                                    ("EUR", ecb_tracking.get_tracking, "hicp_inflation")):
+        tracking = await builder()
+        status = tracking.get("variables", {}).get(key, {}).get("status")
+        out[currency] = f"inflation {status.replace('_', ' ')} vs projections" if status and status != "unavailable" else "inflation tracking pending"
+    async with get_sessionmaker()() as session:
+        rows = (await session.execute(text("""
+            SELECT DISTINCT ON (i.country_code, i.canonical_name) i.country_code, i.canonical_name,
+                   r.actual::float AS value, r.released_at::date AS day
+            FROM indicator_releases r JOIN indicators i ON i.id = r.indicator_id
+            WHERE r.is_latest AND r.actual IS NOT NULL AND r.released_at <= now()
+              AND i.country_code = ANY(:countries) AND i.canonical_name = ANY(:names)
+            ORDER BY i.country_code, i.canonical_name, r.released_at DESC
+        """), {"countries": [country for country, _, _ in EVENT_TRACKING.values()],
+                "names": [name for _, name, _ in EVENT_TRACKING.values()]})).mappings().all()
+    today = datetime.now(UTC).date()
+    for currency, (country, indicator, target) in EVENT_TRACKING.items():
+        hit = next((row for row in rows if row["country_code"] == country and row["canonical_name"] == indicator), None)
+        if not hit or (today - hit["day"]).days > 180:
+            out[currency] = "inflation tracking pending"
+        else:
+            relation = "above" if hit["value"] > target + .2 else "below" if hit["value"] < target - .2 else "near"
+            out[currency] = f"inflation {relation} target"
+    return out
 
 
 PANELS = {"hero": hero, "situations": active_situations, "news": moving_markets,

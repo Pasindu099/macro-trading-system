@@ -21,6 +21,9 @@ BANKS = {"USD": "FED", "EUR": "ECB", "GBP": "BOE", "JPY": "BOJ", "AUD": "RBA",
          "NZD": "RBNZ", "CAD": "BOC", "CHF": "SNB"}
 COUNTRIES = {"USD": "US", "EUR": "DE", "GBP": "UK", "JPY": "JP", "AUD": "AU",
              "NZD": "NZ", "CAD": "CA", "CHF": "CH"}
+POLICY_RATES = {"GBP": ("UK", "bank_rate"), "JPY": ("JP", "boj_interest_rate_decision"),
+                "AUD": ("AU", "cash_rate"), "NZD": ("NZ", "official_cash_rate"),
+                "CAD": ("CA", "overnight_rate"), "CHF": ("CH", "policy_rate")}
 DOMINANCE_CONFIG = Path("config/dominance.yaml")
 HIERARCHY = tuple(yaml.safe_load(DOMINANCE_CONFIG.read_text(encoding="utf-8"))["tiers"])
 
@@ -263,27 +266,101 @@ async def moving_markets() -> dict:
             "message": "No high-impact items in the last 24 hours."}
 
 
+async def _policy_regimes() -> dict[str, dict]:
+    regimes = {"USD": await fed_regime.get_regime(), "EUR": await ecb_regime.get_regime()}
+    async with get_sessionmaker()() as session:
+        rows = (await session.execute(text("""
+            SELECT DISTINCT ON (i.country_code, i.canonical_name, r.released_at::date)
+                   i.country_code, i.canonical_name, r.released_at::date AS day, r.actual::float AS rate
+            FROM indicator_releases r JOIN indicators i ON i.id = r.indicator_id
+            WHERE r.is_latest AND r.actual IS NOT NULL AND r.released_at <= now()
+              AND i.country_code = ANY(:countries) AND i.canonical_name = ANY(:names)
+            ORDER BY i.country_code, i.canonical_name, r.released_at::date, r.retrieved_at DESC, r.id DESC
+        """), {"countries": [country for country, _ in POLICY_RATES.values()],
+                "names": [name for _, name in POLICY_RATES.values()]})).mappings().all()
+    for currency, (country, indicator) in POLICY_RATES.items():
+        decisions = [(row["day"], row["rate"]) for row in rows
+                     if row["country_code"] == country and row["canonical_name"] == indicator]
+        regimes[currency] = fed_regime.classify_regime(decisions, datetime.now(UTC).date())
+    return regimes
+
+
+def _partial_verdict(currency: str, macro: float | None, curve: str | None,
+                     percentile: float | None) -> dict:
+    cfg = verdict.load_config()
+    values = []
+    names = []
+    if macro is not None:
+        values.append(max(-2, min(2, macro)) * cfg["weights"]["macro"])
+        names.append("Macro State")
+    curve_value = cfg["curve_values"].get(curve)
+    if curve_value is not None:
+        values.append(curve_value * cfg["weights"]["curve"])
+        names.append("curve regime")
+    if percentile is not None:
+        preliminary = sum(values)
+        position_value = (-.5 if preliminary > 0 and percentile >= 85 else
+                          .5 if preliminary < 0 and percentile <= 15 else 0.0)
+        values.append(position_value * cfg["weights"]["positioning"])
+        names.append("positioning")
+    if not values:
+        return {"status": "unavailable", "partial": True}
+    weight = sum(cfg["weights"][name] for name in
+                 ("macro" if macro is not None else "", "curve" if curve_value is not None else "",
+                  "positioning" if percentile is not None else "") if name)
+    score = round(sum(values) / weight, 4)
+    bias = verdict._bias(score, cfg["bias_thresholds"])
+    subject = ", ".join(names[:-1]) + " and " + names[-1] if len(names) > 1 else names[0]
+    direction = "firmer" if score > 0 else "weaker" if score < 0 else "mixed"
+    subject = subject[0].upper() + subject[1:]
+    verb = "indicates" if len(names) == 1 else "indicate"
+    thesis = f"{subject} {verb} a {direction} {currency} backdrop. This is a partial view."
+    return {"status": "available", "score": score, "bias": bias, "partial": True, "thesis": thesis}
+
+
+def _gap_label(currency: str, view: dict | None) -> str:
+    raw = view.get("why", {}).get("gap", {}).get("raw") if view else None
+    if not isinstance(raw, dict):
+        return "pending"
+    if currency == "USD" and isinstance(raw.get("gap_bp"), (int, float)):
+        bp = raw["gap_bp"]
+        return f"{bp:+.0f}bp {'hawkish' if bp > 0 else 'dovish' if bp < 0 else 'neutral'}"
+    if currency == "EUR" and raw.get("direction"):
+        direction = raw["direction"]
+        relation = "at" if direction == "neutral" else "above" if direction == "hawkish" else "below"
+        return f"{direction}: projections {relation} target"
+    return "pending"
+
+
 async def currency_ranking() -> dict:
     board = await _board()
     by_currency = {row["currency"]: row for row in board["rows"]}
     crowding = {row["currency"]: row for row in (await positioning.get_crowding())["currencies"]}
     desk_views = {currency: await verdict.get_verdict(currency) for currency in ("USD", "EUR")}
-    regimes = {"USD": await fed_regime.get_regime(), "EUR": await ecb_regime.get_regime()}
+    regimes = await _policy_regimes()
     rows = []
     for currency in CURRENCIES:
         macro = by_currency.get(currency)
         curve = await get_curve(COUNTRIES[currency], "1M")
         cot = crowding.get(currency, {}).get("leveraged_funds", {})
-        view = desk_views.get(currency)
-        gap_raw = view.get("why", {}).get("gap", {}).get("raw") if view else None
-        gap = (gap_raw.get("direction") or gap_raw.get("gap_bp")) if isinstance(gap_raw, dict) else None
+        view = desk_views.get(currency) if currency in desk_views else _partial_verdict(
+            currency, float(macro["overall_score"]) if macro and macro["overall_score"] is not None else None,
+            curve.get("regime", {}).get("label") if curve.get("regime", {}).get("status") == "available" else None,
+            cot.get("percentile"))
+        gap = _gap_label(currency, view) if currency in desk_views else "pending"
+        percentile = cot.get("percentile")
+        cot_label = ("crowded long" if percentile >= 85 else "crowded short" if percentile <= 15 else "neutral") if percentile is not None else "pending"
         rows.append({"currency": currency, "macro": macro["overall_score"] if macro else None,
-                     "date": macro["date"] if macro else None, "cot": cot.get("percentile"),
+                     "date": macro["date"] if macro else None, "cot": percentile, "cot_label": cot_label,
                      "curve": curve.get("regime", {}).get("label") if curve.get("regime", {}).get("status") == "available" else None,
                      "verdict": view, "enabled": currency in desk_views, "gap": gap,
+                     "score": view.get("score") if view and view.get("status") == "available" else None,
+                     "score_bar": min(50, abs(view["score"]) * 25) if view and view.get("score") is not None else None,
+                     "bias": view.get("bias") if view else None, "partial": currency not in desk_views,
+                     "thesis": view.get("thesis") if view else None,
                      "cb_regime": regimes[currency].get("regime") if currency in regimes else None})
-    rows.sort(key=lambda row: (row["macro"] is None, -(row["macro"] or 0)))
-    return {"state": "ok" if any(row["macro"] is not None for row in rows) else "pending", "rows": rows}
+    rows.sort(key=lambda row: (row["score"] is None, -(row["score"] or 0)))
+    return {"state": "ok" if any(row["score"] is not None for row in rows) else "pending", "rows": rows}
 
 
 async def central_bank_map() -> dict:

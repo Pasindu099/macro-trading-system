@@ -101,12 +101,14 @@ def score_verdict(currency: str, components: dict[str, dict[str, Any]],
     def phrase(name: str, contribution: float) -> str:
         return cfg["phrases"][name]["positive" if contribution > 0 else "negative"]
 
-    first = phrase(*aligned[0]) if aligned else cfg["templates"]["no_second"].capitalize()
-    second = phrase(*aligned[1]).lower() if len(aligned) > 1 else cfg["templates"]["no_second"]
-    main_risk = phrase(*opposing[0]).lower() if opposing else cfg["templates"]["no_opposition"]
-    thesis = cfg["templates"]["thesis"].format(first=first, second=second,
-                                                  bias=bias.replace("_", " "), currency=currency)
-    thesis += " " + cfg["templates"]["risk"].format(risk=main_risk)
+    main_risk = phrase(*opposing[0]).lower() if opposing else "a reversal in the leading driver"
+    template = "thesis_two" if len(aligned) > 1 else "thesis_one" if aligned else "thesis_none"
+    thesis = cfg["templates"][template].format(
+        first=phrase(*aligned[0]) if aligned else "",
+        second=phrase(*aligned[1]) if len(aligned) > 1 else "",
+        bias=bias.replace("_", " "), currency=currency)
+    thesis += " " + (cfg["templates"]["risk_opposing"].format(risk=main_risk)
+                     if opposing else cfg["templates"]["risk_none"])
     return {"currency": currency, "status": "available", "horizon": cfg["horizon"],
             "bias": bias, "score": score, "conviction": conviction, "agreement": round(agreement, 3),
             "crowding_penalty": crowded_with_bias, "high_severity_penalty": high_severity,

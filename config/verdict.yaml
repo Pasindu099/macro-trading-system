@@ -43,7 +43,8 @@ phrases:
   positioning: {positive: Positioning leaves room for gains, negative: Crowded positioning limits upside}
   situations: {positive: Active situations support the currency, negative: Active situations weigh on the currency}
 templates:
-  thesis: "{first} and {second} support a {bias} {currency} view."
-  risk: "The main risk is {risk}."
-  no_second: "the remaining available inputs are mixed"
-  no_opposition: "a reversal in the leading driver"
+  thesis_two: "{first}. {second}. Together these support a {bias} {currency} view."
+  thesis_one: "{first}. This supports a {bias} {currency} view."
+  thesis_none: "Available inputs are mixed. The {currency} view is {bias}."
+  risk_opposing: "An opposing signal is that {risk}."
+  risk_none: "A reversal in the leading driver remains the main risk."

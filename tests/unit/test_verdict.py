@@ -18,7 +18,7 @@ def test_weighted_score_bias_thesis_and_why():
     assert result["score"] == 0.95
     assert result["conviction"] == "high" and result["agreement"] == 1.0
     assert result["dominant_driver"] == "data"
-    assert result["thesis"].count(".") == 2
+    assert result["thesis"].count(".") == 4
     assert set(result["why"]) == set(components())
     assert result["why"]["macro"]["contribution"] == 0.525
 
@@ -43,3 +43,20 @@ def test_unavailable_inputs_excluded_without_reweighting():
     assert result["score"] == -0.7 and result["bias"] == "bearish"
     assert result["why"]["gap"]["contribution"] is None
     assert result["conviction"] == "moderate"
+
+
+def test_thesis_templates_cover_two_one_and_no_aligned_signals():
+    mixed = {name: _component(None) for name in components()}
+    mixed["macro"] = _component(1)
+    mixed["curve"] = _component(-1)
+    two = score_verdict("USD", {**components(), "curve": _component(-1)}, [])["thesis"]
+    one = score_verdict("USD", mixed, [])["thesis"]
+    neutral = score_verdict("USD", {**mixed, "macro": _component(0),
+                                    "curve": _component(0)}, [])["thesis"]
+    assert "Together these support" in two and "An opposing signal is that" in two
+    assert "This supports" in one and "An opposing signal is that" in one
+    assert "Available inputs are mixed." in neutral
+    assert "A reversal in the leading driver remains the main risk." in neutral
+    for thesis in (two, one, neutral):
+        assert " and the remaining" not in thesis
+        assert "is macro data weighs" not in thesis

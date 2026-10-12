@@ -6,6 +6,7 @@
 | A | Backfilled through 4 Oct | Daily four-factor 20d/60d attribution, fixed tier rules and all-eight ranking header. |
 | B | Complete in code | One card per situation, grouped currencies/pairs, severity, since date, evidence and first available link. |
 | C | Complete in code | Max six recent investingLive items with currency and situation/tier chips; intraday reaction pending label. |
+| D | Complete in code | Verdict-score ranking, six partial verdicts, all-eight rate-history regimes, positioning labels and score bars. |
 
 - `app/services/overview.py:79`: News reads gated investingLive items from the past 24 hours through now, max six.
 - `app/services/overview.py:134`: Calendar ISO timestamp is parsed before the regime-map template formats it.
@@ -18,3 +19,4 @@
 - NZD labor: current gap 0.3000pp; exit requires <0.3pp for 5 days. The old episode ended 6 Nov 2025; current status is watch. Calendar-window and floating-point bugs fixed in `app/services/situations.py:148`.
 - USD/JPY intervention: last spot 157.83 on 2 Oct; distance 0.1076% from zone versus exit >5% for 5 days. Current spot evidence is stale/pending; episode remains active. Thresholds unchanged.
 - Date comparison for stored episodes fixed in `app/services/overview.py:128`; all seven live panel builders and templates render in-container. Focused tests: 12 passed.
+- Part D: `app/services/overview.py:280`, `app/services/verdict.py:100`, `app/web/templates/overview/panel.html:12`. Live ranking 8/8 sorted, all 8 regimes present. Focused tests 15 passed; in-container full suite 545 passed, 7 skipped.

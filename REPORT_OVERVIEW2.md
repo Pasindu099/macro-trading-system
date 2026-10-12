@@ -5,7 +5,7 @@
 | 0 | Partial | News source/time guard and regime-map timestamp fixed; situation evidence refresh and historical-date guards added. |
 | A | Code complete; backfill pending | Daily four-factor 20d/60d attribution, two-year backfill path, fixed tier rules and all-eight ranking header. |
 | B | Complete in code | One card per situation, grouped currencies/pairs, severity, since date, evidence and first available link. |
-| C | Pending | News chips/reaction layout not implemented. |
+| C | Complete in code | Max six recent investingLive items with currency and situation/tier chips; intraday reaction pending label. |
 
 - `app/services/overview.py:79`: News reads gated investingLive items from the past 24 hours through now, max six.
 - `app/services/overview.py:134`: Calendar ISO timestamp is parsed before the regime-map template formats it.
@@ -15,3 +15,5 @@
 - Focused tests: 16 passed. Full suite: 511 passed, 7 skipped, 6 failed, 20 errors; integration setup requires the unavailable database. No full-suite rerun.
 - Part A: `app/services/dominance.py:1`, `config/dominance.yaml:1`, `app/services/overview.py:50`. Focused tests: 8 passed. Full suite: 513 passed, 7 skipped, 6 failed, 20 errors. Backfill could not execute without the database.
 - Part B: `app/services/overview.py:130`, `app/web/templates/overview/panel.html:5`. Focused tests: 8 passed. Full suite: 514 passed, 7 skipped, 6 failed, 20 errors.
+- Part C: `app/services/overview.py:35`, `app/web/templates/overview/panel.html:7`. Focused tests: 10 passed. Full suite: 515 passed, 7 skipped, 6 failed, 20 errors. A final future-date guard was added after the full-suite run and covered by focused tests.
+- Remaining verification: run the dominance migration/backfill and inspect live NZD/JPY exit values when the configured database host resolves; then rerun the database-backed suite. No threshold was changed.

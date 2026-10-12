@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
+import re
 
 import yaml
 from sqlalchemy import text
@@ -26,7 +27,11 @@ HIERARCHY = tuple(yaml.safe_load(DOMINANCE_CONFIG.read_text(encoding="utf-8"))["
 
 async def _board() -> dict:
     async with get_sessionmaker()() as session:
-        return await get_macro_state_board(session)
+        board = await get_macro_state_board(session)
+    today = datetime.now(UTC).date()
+    board["rows"] = [row for row in board["rows"] if isinstance(row.get("date"), (date, datetime))
+                     and (row["date"].date() if isinstance(row["date"], datetime) else row["date"]) <= today]
+    return board
 
 
 def _pair_rows(scores: dict[str, float], pairs: list[dict]) -> list[dict]:
@@ -39,14 +44,51 @@ def _pair_rows(scores: dict[str, float], pairs: list[dict]) -> list[dict]:
     return sorted(rows, key=lambda row: abs(row["overall"] or 0), reverse=True)
 
 
-def _news_tag(headline: str) -> str:
-    lower = headline.lower()
-    for needle, label in (("inflation", "Inflation"), ("cpi", "Inflation"), ("rate", "Policy"),
-                          ("central bank", "Policy"), ("oil", "Energy"), ("brent", "Energy"),
-                          ("jobs", "Labor"), ("payroll", "Labor"), ("yield", "Rates")):
-        if needle in lower:
-            return label
-    return "Macro"
+NEWS_CURRENCY_WORDS = {
+    "USD": ("USD", "US", "FED", "DOLLAR", "DXY", "UNITED STATES"),
+    "EUR": ("EUR", "EURO", "ECB", "EUROZONE", "GERMANY", "FRANCE"),
+    "GBP": ("GBP", "STERLING", "BOE", "BRITAIN", "UK"),
+    "JPY": ("JPY", "YEN", "BOJ", "JAPAN"),
+    "AUD": ("AUD", "AUSSIE", "RBA", "AUSTRALIA"),
+    "NZD": ("NZD", "KIWI", "RBNZ", "NEW ZEALAND"),
+    "CAD": ("CAD", "LOONIE", "BOC", "CANADA"),
+    "CHF": ("CHF", "FRANC", "SNB", "SWITZERLAND"),
+}
+NEWS_TOPICS = (
+    ("Geopolitical shock", ("WAR", "INVASION", "MISSILE", "SANCTIONS", "CONFLICT", "TARIFF", "CEASEFIRE")),
+    ("Risk sentiment", ("VIX", "RISK-OFF", "EQUITIES", "STOCKS", "MARKET SELLOFF")),
+    ("CB policy divergence", ("RATE", "FED", "ECB", "BOE", "BOJ", "RBA", "RBNZ", "BOC", "SNB", "CENTRAL BANK", "YIELD", "OIS")),
+    ("Economic data", ("CPI", "INFLATION", "PAYROLL", "JOBS", "UNEMPLOYMENT", "GDP", "RETAIL SALES", "PMI", "WAGES")),
+    ("Positioning", ("POSITIONING", "COT", "SPECULATORS", "SHORT SQUEEZE")),
+    ("Technical", ("BREAKOUT", "SUPPORT LEVEL", "RESISTANCE LEVEL")),
+)
+SITUATION_NEWS_TOPICS = {
+    "energy_shock": ("OIL", "BRENT", "ENERGY"),
+    "fr_fiscal_stress": ("FRANCE", "FRENCH", "OAT"),
+    "labor_deterioration": ("JOBS", "PAYROLL", "UNEMPLOYMENT", "LABOR", "LABOUR"),
+    "risk_off": ("VIX", "RISK-OFF", "EQUITIES", "STOCKS", "MARKET SELLOFF"),
+    "bear_steepening": ("YIELD", "STEEPENING", "BOND"),
+    "yields_up_currency_down": ("YIELD", "BOND"),
+    "correlation_break": ("CORRELATION", "DECOUPLING"),
+    "intervention_risk_jpy": ("INTERVENTION", "YEN", "JPY"),
+}
+
+
+def _word_match(headline: str, words: tuple[str, ...]) -> bool:
+    upper = headline.upper()
+    return any(re.search(r"(?<![A-Z])" + re.escape(word) + r"(?![A-Z])", upper) for word in words)
+
+
+def _classify_news(headline: str, episodes: list[dict]) -> dict | None:
+    currencies = [currency for currency, words in NEWS_CURRENCY_WORDS.items() if _word_match(headline, words)]
+    tier = next((name for name, words in NEWS_TOPICS if _word_match(headline, words)), None)
+    for episode in episodes:
+        words = SITUATION_NEWS_TOPICS.get(episode["situation_id"], ())
+        affected = episode["scope_key"].replace(":", "/").split("/")
+        if words and _word_match(headline, words) and (not currencies or
+                "GLOBAL" in affected or any(currency in affected for currency in currencies)):
+            return {"currencies": currencies or ["G10"], "tag": episode["name"]}
+    return {"currencies": currencies or ["G10"], "tag": tier} if tier else None
 
 
 def _dominance_tiers(shares: dict | None, *, risk_off: bool, geo_count: int,
@@ -84,7 +126,8 @@ def _dominance_tiers(shares: dict | None, *, risk_off: bool, geo_count: int,
 
 
 async def hero() -> dict:
-    episodes = await situations.get_situation_episodes(active=True)
+    episodes = [row for row in await situations.get_situation_episodes(active=True)
+                if row["started_at"] <= datetime.now(UTC)]
     board = await _board()
     today = datetime.now(UTC).date()
     ranking = sorted((row for row in board["rows"] if row["currency"] in CURRENCIES
@@ -202,16 +245,19 @@ async def moving_markets() -> dict:
             SELECT title AS headline, source, url, published_at AS seen_at, NULL::text AS severity
             FROM raw_news WHERE published_at >= :since AND published_at <= :now
               AND source = 'investinglive.com' AND is_gated_relevant
-            ORDER BY published_at DESC LIMIT 30
+            ORDER BY published_at DESC LIMIT 60
         """), {"since": since, "now": now})).mappings().all()
+    episodes = [row for row in await situations.get_situation_episodes(active=True)
+                if row["started_at"] <= now]
     seen = set()
     rows = []
     for item in sorted([dict(row) for row in raw], key=lambda row: row["seen_at"], reverse=True):
         title = item["headline"].strip()
-        if title.lower() in seen:
+        classification = _classify_news(title, episodes)
+        if classification is None or title.lower() in seen or not since <= item["seen_at"] <= now:
             continue
         seen.add(title.lower())
-        rows.append({**item, "tag": _news_tag(title)})
+        rows.append({**item, **classification})
     return {"state": "ok" if rows else "empty", "rows": rows[:6],
             "ai_paused": True,
             "message": "No high-impact items in the last 24 hours."}

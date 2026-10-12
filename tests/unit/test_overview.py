@@ -106,8 +106,12 @@ def test_news_uses_recent_investinglive_items_only(monkeypatch):
         def mappings(self):
             return self
         def all(self):
-            return [{"headline": "Fed rate outlook", "source": "investinglive.com",
-                     "url": None, "seen_at": now - timedelta(hours=1), "severity": None}]
+            return [{"headline": title, "source": "investinglive.com", "url": None,
+                     "seen_at": timestamp, "severity": None} for title, timestamp in (
+                         ("Fed rate outlook", now - timedelta(hours=1)),
+                         ("USD CPI tomorrow", now + timedelta(hours=1)),
+                         ("Fed rate last week", now - timedelta(days=7)),
+                         ("Weekend lifestyle update", now - timedelta(minutes=5)))]
     class Session:
         async def __aenter__(self):
             return self
@@ -121,9 +125,15 @@ def test_news_uses_recent_investinglive_items_only(monkeypatch):
             assert params["since"] < now <= params["now"]
             return Result()
     monkeypatch.setattr(overview, "get_sessionmaker", lambda: lambda: Session())
+    async def episodes(*, active):
+        assert active
+        return []
+    monkeypatch.setattr(overview.situations, "get_situation_episodes", episodes)
     rows = __import__("asyncio").run(overview.moving_markets())["rows"]
     assert len(rows) == 1
     assert rows[0]["headline"] == "Fed rate outlook"
+    assert rows[0]["currencies"] == ["USD"]
+    assert rows[0]["tag"] == "CB policy divergence"
 
 
 def test_regime_map_renders_calendar_string(monkeypatch):
@@ -181,3 +191,28 @@ def test_situations_group_currencies_and_pairs():
     pair = next(card for card in cards if card["name"] == "Correlation break")
     assert pair["pairs"] == ["EUR/USD", "USD/JPY"]
     assert pair["href"] == "/pairs?pair=EUR/USD"
+
+
+def test_news_situation_tag_matches_topic_and_currency():
+    episodes = [{"situation_id": "labor_deterioration", "name": "Labor deterioration",
+                 "scope_key": "NZD:NZ"}]
+    assert overview._classify_news("NZD jobs weakness deepens", episodes) == {
+        "currencies": ["NZD"], "tag": "Labor deterioration"}
+    assert overview._classify_news("USD jobs growth rebounds", episodes)["tag"] == "Economic data"
+    assert overview._classify_news("Tourism season begins", episodes) is None
+
+
+def test_board_excludes_future_observations(monkeypatch):
+    class Session:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *_):
+            pass
+    async def board(_session):
+        today = datetime.now(UTC).date()
+        return {"rows": [{"currency": "USD", "date": today, "overall_score": 1},
+                         {"currency": "EUR", "date": today + timedelta(days=1), "overall_score": 2}]}
+    monkeypatch.setattr(overview, "get_sessionmaker", lambda: lambda: Session())
+    monkeypatch.setattr(overview, "get_macro_state_board", board)
+    rows = __import__("asyncio").run(overview._board())["rows"]
+    assert [row["currency"] for row in rows] == ["USD"]

@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
 
@@ -96,3 +97,46 @@ def test_ranking_sorts_by_macro_composite(monkeypatch):
     rows = __import__("asyncio").run(overview.currency_ranking())["rows"]
     assert [row["currency"] for row in rows[:2]] == ["USD", "EUR"]
     assert rows[2]["macro"] is None
+
+
+def test_news_uses_recent_investinglive_items_only(monkeypatch):
+    now = datetime.now(UTC)
+    class Result:
+        def mappings(self):
+            return self
+        def all(self):
+            return [{"headline": "Fed rate outlook", "source": "investinglive.com",
+                     "url": None, "seen_at": now - timedelta(hours=1), "severity": None}]
+    class Session:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *_):
+            pass
+        async def execute(self, query, params):
+            sql = str(query)
+            assert "news_alerts" not in sql
+            assert "source = 'investinglive.com'" in sql
+            assert "published_at <= :now" in sql
+            assert params["since"] < now <= params["now"]
+            return Result()
+    monkeypatch.setattr(overview, "get_sessionmaker", lambda: lambda: Session())
+    rows = __import__("asyncio").run(overview.moving_markets())["rows"]
+    assert len(rows) == 1
+    assert rows[0]["headline"] == "Fed rate outlook"
+
+
+def test_regime_map_renders_calendar_string(monkeypatch):
+    async def regime():
+        return {"regime": "holding"}
+    async def meetings(_bank, _limit):
+        return [{"meeting_dt": "2026-11-01T12:00:00+00:00"}]
+    monkeypatch.setattr(overview.fed_regime, "get_regime", regime)
+    monkeypatch.setattr(overview.ecb_regime, "get_regime", regime)
+    monkeypatch.setattr(overview, "get_upcoming_meetings", meetings)
+    client = _client(monkeypatch)
+    desks.cache_clear()
+    response = client.get("/overview/panels/central-banks")
+    assert response.status_code == 200
+    assert "could not load" not in response.text
+    assert "01 Nov 2026" in response.text
+    desks.cache_clear()

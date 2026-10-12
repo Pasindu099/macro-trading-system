@@ -77,7 +77,7 @@ async def load_history() -> dict[str, dict[Any, Series]]:
                 i.country_code, i.canonical_name, r.released_at::date AS day, r.actual::float AS value
             FROM indicator_releases r JOIN indicators i ON i.id = r.indicator_id
             WHERE i.canonical_name IN ('cpi_headline_yoy', 'core_cpi_yoy', 'unemployment_rate')
-              AND r.is_latest AND r.actual IS NOT NULL
+              AND r.is_latest AND r.actual IS NOT NULL AND r.released_at <= now()
             ORDER BY i.country_code, i.canonical_name, r.released_at::date, r.retrieved_at DESC, r.id DESC
         """))
         yield_rows = await session.execute(text("""
@@ -85,17 +85,19 @@ async def load_history() -> dict[str, dict[Any, Series]]:
                 country_code, maturity, market_observation_date AS day, yield_value::float AS value
             FROM government_yield_observations
             WHERE maturity IN ('2Y', '10Y', '30Y') AND quality_status = 'valid' AND NOT is_outlier
+              AND market_observation_date <= current_date
             ORDER BY country_code, maturity, market_observation_date, ingested_at DESC, id DESC
         """))
         fx_rows = await session.execute(text("""
             SELECT DISTINCT ON (pair, observation_date) pair, observation_date AS day,
                 close_value::float AS value
             FROM fx_spot_observations WHERE quality_status = 'valid' AND NOT is_outlier
+              AND observation_date <= current_date
             ORDER BY pair, observation_date, ingested_at DESC, id DESC
         """))
         spread_rows = await session.execute(text("""
             SELECT spread_name, tenor, obs_date AS day, spread_bp::float AS value
-            FROM yield_spreads WHERE tenor IN ('2Y', '10Y')
+            FROM yield_spreads WHERE tenor IN ('2Y', '10Y') AND obs_date <= current_date
         """))
         for row in indicator_rows:
             history["indicators"].setdefault((row.country_code, row.canonical_name), {})[row.day] = row.value

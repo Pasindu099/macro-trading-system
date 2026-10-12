@@ -35,6 +35,7 @@ def test_each_trigger_exit_and_no_flapping(situation, evidence, exit_evidence):
     days.append((START + timedelta(days=len(days)), evidence))
     episodes = build_episodes(spec, days)
     assert len(episodes) == 1 and episodes[0]["ended_at"] is None
+    assert episodes[0]["evidence"]["current"] == evidence
     for offset in range(spec["exit_persistence_days"]):
         days.append((START + timedelta(days=len(days)), exit_evidence))
     assert build_episodes(spec, days)[0]["ended_at"] == days[-spec["exit_persistence_days"]][0]
@@ -46,3 +47,12 @@ def test_missing_data_and_labor_watch():
     assert current_state(spec, [], {"unemployment_gap_pp": 0.35}) == "watch"
     assert build_episodes(spec, [(START, {"unemployment_gap_pp": 0.5}),
                                  (START + timedelta(days=2), {"unemployment_gap_pp": 0.5})]) == []
+
+
+def test_active_episode_evidence_tracks_exit_hysteresis():
+    spec = SPECS["labor_deterioration"]
+    days = [(START + timedelta(days=offset), {"unemployment_gap_pp": value})
+            for offset, value in enumerate((0.6, 0.6, 0.2, 0.2))]
+    episode = build_episodes(spec, days)[0]
+    assert episode["ended_at"] is None
+    assert episode["evidence"]["current"]["unemployment_gap_pp"] == 0.2

@@ -59,6 +59,7 @@ def build_episodes(spec: dict[str, Any], daily: list[tuple[date, dict[str, float
                 enter_start = None
             continue
         if condition(spec["exit"], evidence) is True:
+            active["evidence"]["current"] = dict(evidence)
             exit_start = exit_start or day
             if (day - exit_start).days + 1 >= spec.get("exit_persistence_days", 5):
                 active["ended_at"] = exit_start

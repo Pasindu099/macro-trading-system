@@ -9,7 +9,6 @@ import yaml
 from sqlalchemy import text
 
 from app.db.session import get_sessionmaker
-from app.settings import get_settings
 from app.services import ecb_regime, fed_regime, positioning, situations, verdict
 from app.services.curve_metrics import get_curve
 from app.services.macro_state import get_macro_state_board
@@ -78,28 +77,25 @@ async def active_situations() -> dict:
 
 
 async def moving_markets() -> dict:
-    since = datetime.now(UTC) - timedelta(hours=24)
+    now = datetime.now(UTC)
+    since = now - timedelta(hours=24)
     async with get_sessionmaker()() as session:
-        alerts = (await session.execute(text("""
-            SELECT headline, source, url, detected_at AS seen_at, severity
-            FROM intelligence.news_alerts WHERE detected_at >= :since
-            ORDER BY detected_at DESC LIMIT 15
-        """), {"since": since})).mappings().all()
         raw = (await session.execute(text("""
             SELECT title AS headline, source, url, published_at AS seen_at, NULL::text AS severity
-            FROM raw_news WHERE published_at >= :since AND is_gated_relevant
-            ORDER BY published_at DESC LIMIT 15
-        """), {"since": since})).mappings().all()
+            FROM raw_news WHERE published_at >= :since AND published_at <= :now
+              AND source = 'investinglive.com' AND is_gated_relevant
+            ORDER BY published_at DESC LIMIT 30
+        """), {"since": since, "now": now})).mappings().all()
     seen = set()
     rows = []
-    for item in sorted([dict(row) for row in (*alerts, *raw)], key=lambda row: row["seen_at"], reverse=True):
+    for item in sorted([dict(row) for row in raw], key=lambda row: row["seen_at"], reverse=True):
         title = item["headline"].strip()
         if title.lower() in seen:
             continue
         seen.add(title.lower())
         rows.append({**item, "tag": _news_tag(title)})
-    return {"state": "ok" if rows else "empty", "rows": rows[:8],
-            "ai_paused": not get_settings().news_ai_enabled,
+    return {"state": "ok" if rows else "empty", "rows": rows[:6],
+            "ai_paused": True,
             "message": "No high-impact items in the last 24 hours."}
 
 
@@ -134,7 +130,7 @@ async def central_bank_map() -> dict:
         meetings = await get_upcoming_meetings(bank, 1)
         regime = regimes.get(currency)
         rows.append({"currency": currency, "bank": bank, "regime": regime,
-                     "meeting": meetings[0]["meeting_dt"] if meetings else None,
+                     "meeting": datetime.fromisoformat(meetings[0]["meeting_dt"]) if meetings else None,
                      "state": "ok" if regime and regime.get("regime") != "unavailable" else "pending"})
     return {"state": "ok", "rows": rows}
 

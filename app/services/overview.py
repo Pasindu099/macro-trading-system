@@ -128,8 +128,8 @@ def _classify_news(headline: str, episodes: list[dict]) -> dict | None:
         affected = episode["scope_key"].replace(":", "/").split("/")
         if words and _word_match(headline, words) and (not currencies or
                 "GLOBAL" in affected or any(currency in affected for currency in currencies)):
-            return {"currencies": currencies or ["G10"], "tag": episode["name"]}
-    return {"currencies": currencies or ["G10"], "tag": tier} if tier else None
+            return {"currencies": currencies or ["G10"], "tag": episode["name"], "tag_kind": "confirmed"}
+    return {"currencies": currencies or ["G10"], "tag": tier, "tag_kind": "warning"} if tier else None
 
 
 def _dominance_tiers(shares: dict | None, *, risk_off: bool, geo_count: int,
@@ -208,9 +208,11 @@ async def hero() -> dict:
         vix=vix, vix_change=vix - old_vix if vix is not None and old_vix is not None else None,
         stretched=stretched, squeeze_against_crowd=squeeze_against_crowd)
     top = max(episodes, key=lambda row: {"high": 3, "medium": 2, "low": 1}.get(row["severity"], 0), default=None)
-    theme = (f"{driver}." + (f" Theme: {top['name']}." if top else "")
-             + f" {ranking[0]['currency']} strongest and {ranking[-1]['currency']} weakest on the ranking.")
-    return {"state": "ok", "theme": theme, "driver": driver, "hierarchy": tiers}
+    prefix = f"{driver}." + (f" Theme: {top['name']}." if top else "")
+    theme = f"{prefix} {ranking[0]['currency']} strongest and {ranking[-1]['currency']} weakest on the ranking."
+    return {"state": "ok", "theme": theme, "theme_prefix": prefix,
+            "strongest": ranking[0]["currency"], "weakest": ranking[-1]["currency"],
+            "driver": driver, "hierarchy": tiers}
 
 
 async def active_situations() -> dict:
@@ -454,6 +456,7 @@ async def pair_map(*, lens: str = "overall", path: str = "data", group: str = "a
             pair = f"{base}/{quote}"
             value = by_pair[pair]["overall"] if lens == "overall" else None
             cells.append({"kind": "pair", "pair": pair, "value": value,
+                          "label": f"{'▲' if value > 0 else '▼' if value < 0 else ''} {value:+.2f}" if value is not None else "pending",
                           "eligible": pair == "EUR/USD" if lens == "policy" else True,
                           "in_group": _pair_in_group(pair, group),
                           "reason": "Comparable 12-month policy path pending" if lens == "policy" and pair == "EUR/USD" else "Desk pending"})
@@ -462,9 +465,12 @@ async def pair_map(*, lens: str = "overall", path: str = "data", group: str = "a
         rows.append({"code": base, "cells": cells})
     ranked = sorted((row for row in rows if "pair" in row and row["value"] is not None),
                     key=lambda row: abs(row["value"]), reverse=True)
-    top = ranked[:5]
+    top = [{**row, "label": f"{'▲' if row['value'] > 0 else '▼' if row['value'] < 0 else ''} {row['value']:+.2f}"}
+           for row in ranked[:5]]
     widest = [{**row, "why": f"{row['base']} verdict {scores[row['base']]:+.2f} vs "
-               f"{row['quote']} {scores[row['quote']]:+.2f}"} for row in ranked[:3]]
+               f"{row['quote']} {scores[row['quote']]:+.2f}",
+               "label": f"{'▲' if row['value'] > 0 else '▼' if row['value'] < 0 else ''} {row['value']:+.2f}"}
+              for row in ranked[:3]]
     return {"state": "ok", "codes": PAIR_ORDER, "matrix": [row for row in rows if "code" in row],
             "lens": lens, "path": path, "group": group, "top": top, "widest": widest,
             "concentration": _pair_concentration(top, scores)}

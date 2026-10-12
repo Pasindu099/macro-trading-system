@@ -216,7 +216,7 @@ def test_regime_map_renders_calendar_string(monkeypatch):
     assert response.status_code == 200
     assert "could not load" not in response.text
     assert "01 Nov 2026" in response.text
-    assert response.text.count('class="current"') == 8
+    assert response.text.count('class="current ') == 8
     desks.cache_clear()
 
 
@@ -276,7 +276,7 @@ def test_news_situation_tag_matches_topic_and_currency():
     episodes = [{"situation_id": "labor_deterioration", "name": "Labor deterioration",
                  "scope_key": "NZD:NZ"}]
     assert overview._classify_news("NZD jobs weakness deepens", episodes) == {
-        "currencies": ["NZD"], "tag": "Labor deterioration"}
+        "currencies": ["NZD"], "tag": "Labor deterioration", "tag_kind": "confirmed"}
     assert overview._classify_news("USD jobs growth rebounds", episodes)["tag"] == "Economic data"
     assert overview._classify_news("Tourism season begins", episodes) is None
 

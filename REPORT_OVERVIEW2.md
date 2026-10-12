@@ -10,6 +10,7 @@
 | E | Complete in code | Eight-bank regime ladder, guidance, next meetings and freshness-gated priced moves. |
 | F | Overall lens complete; policy values pending | 8×8 upper triangle, five groups, top-five concentration and widest-three list. |
 | G | Complete in code | Fourteen-day high-importance releases grouped by country/time; eight rows with mandate/tracking context. |
+| H | Complete in code | Semantic colors, direction arrows, scoped font variables and 390px overflow rules. |
 
 - `app/services/overview.py:79`: News reads gated investingLive items from the past 24 hours through now, max six.
 - `app/services/overview.py:134`: Calendar ISO timestamp is parsed before the regime-map template formats it.
@@ -26,3 +27,4 @@
 - Part E: `app/services/overview.py:366`, `app/web/templates/overview/panel.html:14`. Eight live rows rendered; Fed futures and five fresh approximate proxies shown, stale ECB/RBNZ `n/a`. Focused tests 12 passed; full suite 546 passed, 7 skipped.
 - Part F: `app/services/overview.py:34`, `app/api/routes/shell.py:38`, `app/web/templates/overview/panel.html:16`. Overall lens 28/28; live top five share CHF. Policy path sublenses label cells pending because comparable 12-month ECB rate-path data is absent. Focused tests 14 passed; full suite 548 passed, 7 skipped.
 - Part G: `app/services/overview.py:460`, `app/web/templates/overview/panel.html:18`. Live 8/8 rows; US CPI combines three components. Focused tests 15 passed; full suite 549 passed, 7 skipped.
+- Part H: `app/web/static/css/overview.css:28`, `app/web/templates/overview/panel.html:6`. Focused tests 15 passed; in-container full suite 549 passed, 7 skipped. Responsive rules reviewed at 390px; no browser viewport measurement available.

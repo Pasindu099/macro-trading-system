@@ -127,7 +127,7 @@ def _dominance_tiers(shares: dict | None, *, risk_off: bool, geo_count: int,
 
 async def hero() -> dict:
     episodes = [row for row in await situations.get_situation_episodes(active=True)
-                if row["started_at"] <= datetime.now(UTC)]
+                if row["started_at"] <= datetime.now(UTC).date()]
     board = await _board()
     today = datetime.now(UTC).date()
     ranking = sorted((row for row in board["rows"] if row["currency"] in CURRENCIES
@@ -206,14 +206,14 @@ def _situation_evidence(situation_id: str, evidence: dict) -> str:
 
 def _group_situations(episodes: list[dict]) -> list[dict]:
     grouped: dict[str, dict] = {}
-    now = datetime.now(UTC)
+    now = datetime.now(UTC).date()
     for episode in episodes:
         if episode["started_at"] > now:
             continue
         key = episode["situation_id"]
         card = grouped.setdefault(key, {"name": episode["name"], "severity": episode["severity"],
             "started_at": episode["started_at"], "currencies": set(), "pairs": set(),
-            "evidence": "Evidence pending", "href": None, "_latest": datetime.min.replace(tzinfo=UTC)})
+            "evidence": "Evidence pending", "href": None, "_latest": date.min})
         card["started_at"] = min(card["started_at"], episode["started_at"])
         scope = episode["scope_key"]
         if episode["scope"] == "pair":
@@ -248,7 +248,7 @@ async def moving_markets() -> dict:
             ORDER BY published_at DESC LIMIT 60
         """), {"since": since, "now": now})).mappings().all()
     episodes = [row for row in await situations.get_situation_episodes(active=True)
-                if row["started_at"] <= now]
+                if row["started_at"] <= now.date()]
     seen = set()
     rows = []
     for item in sorted([dict(row) for row in raw], key=lambda row: row["seen_at"], reverse=True):

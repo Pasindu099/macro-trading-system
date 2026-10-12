@@ -5,6 +5,7 @@ from datetime import date, timedelta
 import pytest
 
 from app.services.situations import Series, features
+from app.services.situation_rules import condition, load_config
 
 
 def history():
@@ -41,3 +42,17 @@ def test_source_features_and_unavailable_eer():
     assert features("bear_steepening", "EUR:DE", day, source)["two_y_change_less_than_curve"] == 1
     assert features("intervention_risk_jpy", "USD/JPY", day, source)["intervention_zone_distance_pct"] == 0
     assert features("yields_up_currency_down", "EUR", day, source)["currency_index_10d_pct"] is None
+
+
+def test_quarterly_labor_uses_calendar_windows():
+    day, source = history()
+    source["indicators"][("NZ", "unemployment_rate")] = Series({
+        date(2025, 8, 5): 5.2, date(2025, 11, 4): 5.3,
+        date(2026, 2, 3): 5.4, date(2026, 5, 5): 5.3,
+        date(2026, 8, 4): 5.6,
+    })
+    current = features("labor_deterioration", "NZD:NZ", date(2026, 10, 12), source)
+    assert current["unemployment_gap_pp"] == 0.3
+    assert condition(load_config()["situations"]["labor_deterioration"]["exit"], current) is False
+    stale = features("labor_deterioration", "NZD:NZ", date(2027, 1, 1), source)
+    assert stale["unemployment_gap_pp"] is None

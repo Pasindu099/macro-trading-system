@@ -150,9 +150,11 @@ def features(situation_id: str, scope_key: str, day: date, history: dict[str, di
     if situation_id == "labor_deterioration":
         country = scope_key.split(":", 1)[-1]
         series = indicators.get((country, "unemployment_rate"))
-        three = series.recent(day, 3) if series else None
-        twelve = series.recent(day, 12) if series else None
-        return {"unemployment_gap_pp": sum(three) / 3 - min(twelve) if three and twelve else None}
+        latest = series.at(day, max_age=110 if country == "NZ" else 60) if series else None
+        three = [series.points[d] for d in series.days if months_before(day, 3) <= d <= latest[0]] if latest else None
+        twelve = [series.points[d] for d in series.days if months_before(day, 12) <= d <= latest[0]] if latest else None
+        return {"unemployment_gap_pp": round(sum(three) / len(three) - min(twelve), 4)
+                if three and twelve else None}
     if situation_id == "risk_off":
         vix, sp500 = fred.get("VIXCLS"), fred.get("SP500")
         return {"vix": _value(vix, day, 7),

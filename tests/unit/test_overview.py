@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from fastapi.testclient import TestClient
 
@@ -170,7 +170,7 @@ def test_dominance_override_and_share_threshold():
 
 
 def test_situations_group_currencies_and_pairs():
-    started = datetime(2026, 1, 1, tzinfo=UTC)
+    started = date(2026, 1, 1)
     episodes = [
         {"situation_id": "labor_deterioration", "name": "Labor deterioration", "scope": "currency",
          "scope_key": currency, "severity": "medium", "started_at": started,

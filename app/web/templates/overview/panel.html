@@ -3,7 +3,7 @@
 {% if ctx.state != 'ok' %}<p class="panel-state state-{{ ctx.state }}">{{ ctx.message or ('Desk data pending.' if ctx.state == 'pending' else 'Unavailable.') }}</p>{% endif %}
 {% if ctx.state == 'ok' %}
   {% if panel_id == 'hero' %}
-    <div class="hero-grid"><div><span class="kicker">G10 · GLOBAL PICTURE</span><h1>G10 Overview</h1><p>{{ ctx.theme }}</p></div><div><span class="kicker">WHAT DOMINATES FX NOW · DOMINANCE HIERARCHY</span><ol class="hierarchy">{% for tier in ctx.hierarchy %}<li class="{{ 'dominant' if tier == ctx.driver else '' }}">{{ tier }}</li>{% endfor %}</ol></div></div>
+    <div class="hero-grid"><div><span class="kicker">G10 · GLOBAL PICTURE</span><h1>G10 Overview</h1><p>{{ ctx.theme }}</p></div><div><span class="kicker">WHAT DOMINATES FX NOW · DOMINANCE HIERARCHY</span><ol class="hierarchy">{% for tier in ctx.hierarchy %}<li class="{{ 'dominant' if tier.state == 'Dominant' else '' }}"><div><strong>{{ tier.name }}</strong><span>{{ tier.state }}</span></div><small>{{ tier.evidence }}</small></li>{% endfor %}</ol></div></div>
   {% elif panel_id == 'situations' %}
     <div class="situation-strip">{% for row in ctx.rows %}<a href="{{ row.href }}" class="situation-item"><strong>{{ row.name }}</strong><span>{{ row.scope_key }} · {{ row.severity }} · since {{ row.started_at.strftime('%d %b %Y') }}</span></a>{% endfor %}</div>
   {% elif panel_id == 'news' %}

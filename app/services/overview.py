@@ -13,14 +13,15 @@ from app.services import ecb_regime, fed_regime, positioning, situations, verdic
 from app.services.curve_metrics import get_curve
 from app.services.macro_state import get_macro_state_board
 from app.services.meeting_calendar import get_upcoming_meetings
+from app.services.fred import load_series
 
 CURRENCIES = ("USD", "EUR", "GBP", "JPY", "AUD", "NZD", "CAD", "CHF")
 BANKS = {"USD": "FED", "EUR": "ECB", "GBP": "BOE", "JPY": "BOJ", "AUD": "RBA",
          "NZD": "RBNZ", "CAD": "BOC", "CHF": "SNB"}
 COUNTRIES = {"USD": "US", "EUR": "DE", "GBP": "UK", "JPY": "JP", "AUD": "AU",
              "NZD": "NZ", "CAD": "CA", "CHF": "CH"}
-HIERARCHY = ("geopolitics / risk sentiment", "CB divergence", "data",
-             "Yield curves", "positioning", "Event catalysts")
+DOMINANCE_CONFIG = Path("config/dominance.yaml")
+HIERARCHY = tuple(yaml.safe_load(DOMINANCE_CONFIG.read_text(encoding="utf-8"))["tiers"])
 
 
 async def _board() -> dict:
@@ -48,22 +49,84 @@ def _news_tag(headline: str) -> str:
     return "Macro"
 
 
+def _dominance_tiers(shares: dict | None, *, risk_off: bool, geo_count: int,
+                     vix: float | None, vix_change: float | None,
+                     stretched: list[str], squeeze_against_crowd: bool) -> tuple[list[dict], str]:
+    """Return six fixed tiers and the highest-priority qualifying driver."""
+    rates = shares.get("rates") if shares else None
+    data = shares.get("data") if shares else None
+    geopolitical = risk_off and geo_count >= 2
+    elevated = risk_off or (vix is not None and vix > 20) or (vix_change is not None and vix_change >= 4)
+    policy = rates is not None and rates >= .25 and (data is None or rates >= data)
+    economic = data is not None and data >= .25 and (rates is None or data > rates)
+    positioning_lead = bool(stretched and squeeze_against_crowd)
+    lead = next((name for qualifies, name in ((geopolitical, HIERARCHY[0]),
+               (risk_off, HIERARCHY[1]), (policy, HIERARCHY[2]),
+               (economic, HIERARCHY[3]), (positioning_lead, HIERARCHY[4]))
+               if qualifies), "No single driver")
+    risk_state = "Dominant" if risk_off and lead == HIERARCHY[1] else (
+        "Elevated" if elevated else "Calm" if vix is not None and vix < 15 else "Neutral" if vix is not None else "Pending")
+    evidence = [
+        f"{geo_count} high-impact geopolitics headlines in 3 days" if geo_count else "No confirmed geopolitical cluster",
+        f"VIX {vix:.1f}" if vix is not None else "VIX pending",
+        f"Rates explain {rates:.0%} of G10 moves (20d)" if rates is not None else "Rates attribution pending",
+        f"Data explain {data:.0%} of G10 moves (20d)" if data is not None else "Data attribution pending",
+        f"Stretched in {', '.join(stretched)}" if stretched else "No confirmed positioning stretch",
+        "Level engine pending",
+    ]
+    rows = []
+    for index, name in enumerate(HIERARCHY):
+        active = (geopolitical, elevated, policy or (rates is not None and rates >= .15),
+                  economic or (data is not None and data >= .15), bool(stretched), False)[index]
+        state = "Dominant" if name == lead else risk_state if index == 1 else "Active" if index == 0 and active else "Supporting" if active else "Secondary"
+        rows.append({"number": index + 1, "name": name, "state": state, "evidence": evidence[index]})
+    return rows, lead
+
+
 async def hero() -> dict:
     episodes = await situations.get_situation_episodes(active=True)
-    views = [await verdict.get_verdict(currency) for currency in ("USD", "EUR")]
-    available = [view for view in views if view.get("status") == "available"]
-    if not available and not episodes:
-        return {"state": "pending", "message": "Dominant theme pending desk verdicts."}
-    risk = next((row for row in episodes if row["situation_id"] == "risk_off"), None)
-    if risk:
-        theme = "Risk sentiment dominates FX while risk-off conditions persist."
-        driver = "geopolitics / risk sentiment"
-    else:
-        lead = max(available, key=lambda row: abs(row["score"])) if available else None
-        driver = lead["dominant_driver"] if lead else "Event catalysts"
-        theme = (f"{lead['currency']} has a {lead['bias'].replace('_', ' ')} one-month bias. "
-                 f"{lead['dominant_driver'].capitalize()} is the dominant driver.") if lead else "Active situations are shaping the macro backdrop."
-    return {"state": "ok", "theme": theme, "driver": driver, "hierarchy": HIERARCHY}
+    board = await _board()
+    today = datetime.now(UTC).date()
+    ranking = sorted((row for row in board["rows"] if row["currency"] in CURRENCIES
+                      and row.get("overall_score") is not None and isinstance(row.get("date"), date)
+                      and row["date"] <= today),
+                     key=lambda row: row["overall_score"], reverse=True)
+    if len(ranking) < 8:
+        return {"state": "pending", "message": "All-eight currency ranking pending current data."}
+    async with get_sessionmaker()() as session:
+        snapshot = (await session.execute(text("""
+            SELECT shares FROM dominance_snapshots WHERE window_days = 20
+              AND snapshot_date <= current_date ORDER BY snapshot_date DESC LIMIT 1
+        """))).mappings().first()
+        headlines = (await session.execute(text("""
+            SELECT title FROM raw_news WHERE source = 'investinglive.com' AND is_gated_relevant
+              AND published_at BETWEEN now() - interval '3 days' AND now()
+        """))).scalars().all()
+    keywords = yaml.safe_load(DOMINANCE_CONFIG.read_text(encoding="utf-8"))["geopolitics_keywords"]
+    geo_count = sum(any(word in title.lower() for word in keywords) for title in headlines)
+    vix_rows = [(day, value) for day, value in await load_series("VIXCLS", today - timedelta(days=10)) if day <= today]
+    vix = vix_rows[-1][1] if vix_rows else None
+    old_vix = next((value for day, value in reversed(vix_rows) if day <= today - timedelta(days=5)), None)
+    crowd = (await positioning.get_crowding()).get("currencies", [])
+    stretched = [row["currency"] for row in crowd if (p := row.get("leveraged_funds", {}).get("percentile")) is not None
+                 and (p >= 85 or p <= 15)]
+    squeeze = (await positioning.get_squeeze()).get("currencies", []) if stretched else []
+    spot = await positioning.load_spot() if stretched else {}
+    squeeze_against_crowd = any(
+        row["currency"] in stretched and row.get("leveraged_funds", {}).get("status") == "high"
+        and (move := positioning.pct_move(spot[row["currency"]].on(today - timedelta(days=7)),
+                                          spot[row["currency"]].on(today))) is not None
+        and (move < -1.5 if row["leveraged_funds"]["percentile"] >= 85 else move > 1.5)
+        for row in squeeze if row["currency"] in spot
+    )
+    tiers, driver = _dominance_tiers(snapshot["shares"] if snapshot else None,
+        risk_off=any(row["situation_id"] == "risk_off" for row in episodes), geo_count=geo_count,
+        vix=vix, vix_change=vix - old_vix if vix is not None and old_vix is not None else None,
+        stretched=stretched, squeeze_against_crowd=squeeze_against_crowd)
+    top = max(episodes, key=lambda row: {"high": 3, "medium": 2, "low": 1}.get(row["severity"], 0), default=None)
+    theme = (f"{driver}." + (f" Theme: {top['name']}." if top else "")
+             + f" {ranking[0]['currency']} strongest and {ranking[-1]['currency']} weakest on the ranking.")
+    return {"state": "ok", "theme": theme, "driver": driver, "hierarchy": tiers}
 
 
 async def active_situations() -> dict:

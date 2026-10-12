@@ -18,6 +18,7 @@ dependencies = [
     "pyyaml>=6.0.2",
     "jinja2>=3.1.4",
     "pandas>=2.2.0",
+    "numpy>=1.26.0",
     "pypdf>=4.3.1",
     "PyMuPDF>=1.24.0",
     "plotly>=5.24.0",

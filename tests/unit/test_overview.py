@@ -18,7 +18,8 @@ def test_each_overview_panel_renders_data_and_pending(monkeypatch):
     client = _client(monkeypatch)
     desks.cache_clear()
     data = {
-        "hero": {"state": "ok", "driver": "data", "theme": "Data drives FX.", "hierarchy": overview.HIERARCHY},
+        "hero": {"state": "ok", "driver": "Economic data", "theme": "Data drives FX.", "hierarchy": [
+            {"name": name, "state": "Supporting", "evidence": "Pending"} for name in overview.HIERARCHY]},
         "situations": {"state": "ok", "rows": [{"href": "/desks/EUR", "name": "Fiscal stress", "scope_key": "EUR", "severity": "high", "started_at": __import__("datetime").datetime(2026, 1, 1)}]},
         "news": {"state": "ok", "rows": [], "ai_paused": True},
         "ranking": {"state": "ok", "rows": [{"currency": "USD", "macro": 0.5, "date": None, "cot": None, "curve": None, "verdict": None, "enabled": False}]},
@@ -140,3 +141,19 @@ def test_regime_map_renders_calendar_string(monkeypatch):
     assert "could not load" not in response.text
     assert "01 Nov 2026" in response.text
     desks.cache_clear()
+
+
+def test_dominance_override_and_share_threshold():
+    tiers, lead = overview._dominance_tiers({"rates": .26, "data": .40}, risk_off=False,
+        geo_count=2, vix=16, vix_change=0, stretched=[], squeeze_against_crowd=False)
+    assert lead == "Economic data"
+    assert len(tiers) == 6
+    _, lead = overview._dominance_tiers({"rates": .24, "data": .24}, risk_off=False,
+        geo_count=0, vix=16, vix_change=0, stretched=[], squeeze_against_crowd=False)
+    assert lead == "No single driver"
+    _, lead = overview._dominance_tiers({"rates": .9, "data": .01}, risk_off=True,
+        geo_count=2, vix=30, vix_change=5, stretched=[], squeeze_against_crowd=False)
+    assert lead == "Geopolitical shock"
+    _, lead = overview._dominance_tiers({"rates": .9}, risk_off=True,
+        geo_count=1, vix=30, vix_change=5, stretched=[], squeeze_against_crowd=False)
+    assert lead == "Risk sentiment"

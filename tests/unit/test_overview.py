@@ -26,18 +26,19 @@ def test_each_overview_panel_renders_data_and_pending(monkeypatch):
             "bias": None, "partial": False, "cb_regime": None, "gap": "pending", "cot": None,
             "cot_label": "pending", "thesis": None, "enabled": False}]},
         "central-banks": {"state": "ok", "rows": []},
-        "pairs": {"state": "ok", "rows": [], "concentration": None},
+        "pairs": {"state": "ok", "codes": overview.PAIR_ORDER, "matrix": [], "lens": "overall",
+                  "path": "data", "group": "all", "top": [], "widest": [], "concentration": "No scored pairs."},
         "events": {"state": "ok", "rows": []},
     }
     for panel_id, ctx in data.items():
-        async def builder(result=ctx):
+        async def builder(result=ctx, **_kwargs):
             return result
         monkeypatch.setitem(overview.PANELS, panel_id, builder)
         response = client.get(f"/overview/panels/{panel_id}")
         assert response.status_code == 200
         assert "<h2>" in response.text or "<h1>G10 Overview</h1>" in response.text
         desks.cache_clear()
-        async def pending():
+        async def pending(**_kwargs):
             return {"state": "pending", "message": "Desk pending"}
         monkeypatch.setitem(overview.PANELS, panel_id, pending)
         response = client.get(f"/overview/panels/{panel_id}")
@@ -77,6 +78,47 @@ def test_pair_score_and_policy_lens_are_distinct():
     ])
     assert rows[0] == {"pair": "EUR/USD", "overall": 1.0, "policy": "available"}
     assert rows[1]["policy"] == "pending"
+
+
+def test_matrix_convention_groups_and_top_five_concentration(monkeypatch):
+    async def ranking():
+        return {"rows": [{"currency": currency, "score": float(8 - index)}
+                         for index, currency in enumerate(overview.PAIR_ORDER)]}
+    monkeypatch.setattr(overview, "currency_ranking", ranking)
+    result = __import__("asyncio").run(overview.pair_map())
+    cells = [cell for row in result["matrix"] for cell in row["cells"] if cell["kind"] == "pair"]
+    assert len(cells) == 28
+    assert result["matrix"][0]["cells"][4]["pair"] == "EUR/USD"
+    assert result["matrix"][4]["cells"][0]["kind"] == "lower"
+    assert "Concentrated:" in result["concentration"]
+    usd = __import__("asyncio").run(overview.pair_map(group="usd"))
+    assert len(usd["top"]) == 5
+    assert sum(cell["in_group"] for row in usd["matrix"] for cell in row["cells"]
+               if cell["kind"] == "pair") == 7
+    policy = __import__("asyncio").run(overview.pair_map(lens="policy", path="gap"))
+    eligible = [cell for row in policy["matrix"] for cell in row["cells"]
+                if cell["kind"] == "pair" and cell["eligible"]]
+    assert [cell["pair"] for cell in eligible] == ["EUR/USD"]
+    assert eligible[0]["value"] is None
+    assert policy["top"] == []
+
+
+def test_pair_filter_requests_use_distinct_cache_entries(monkeypatch):
+    calls = []
+    async def builder(*, lens, path, group):
+        calls.append((lens, path, group))
+        return {"state": "ok", "codes": overview.PAIR_ORDER, "matrix": [],
+                "lens": lens, "path": path, "group": group, "top": [], "widest": [],
+                "concentration": "No scored pairs."}
+    monkeypatch.setitem(overview.PANELS, "pairs", builder)
+    desks.cache_clear()
+    client = _client(monkeypatch)
+    first = client.get("/overview/panels/pairs?lens=overall&group=usd")
+    second = client.get("/overview/panels/pairs?lens=policy&path=gap&group=usd")
+    assert first.status_code == second.status_code == 200
+    assert calls == [("overall", "data", "usd"), ("policy", "gap", "usd")]
+    assert 'aria-pressed="true"' in second.text
+    desks.cache_clear()
 
 
 def test_ranking_sorts_by_verdict_score_and_labels_partial(monkeypatch):

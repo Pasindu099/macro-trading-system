@@ -8,6 +8,7 @@
 | C | Complete in code | Max six recent investingLive items with currency and situation/tier chips; intraday reaction pending label. |
 | D | Complete in code | Verdict-score ranking, six partial verdicts, all-eight rate-history regimes, positioning labels and score bars. |
 | E | Complete in code | Eight-bank regime ladder, guidance, next meetings and freshness-gated priced moves. |
+| F | Overall lens complete; policy values pending | 8×8 upper triangle, five groups, top-five concentration and widest-three list. |
 
 - `app/services/overview.py:79`: News reads gated investingLive items from the past 24 hours through now, max six.
 - `app/services/overview.py:134`: Calendar ISO timestamp is parsed before the regime-map template formats it.
@@ -22,3 +23,4 @@
 - Date comparison for stored episodes fixed in `app/services/overview.py:128`; all seven live panel builders and templates render in-container. Focused tests: 12 passed.
 - Part D: `app/services/overview.py:280`, `app/services/verdict.py:100`, `app/web/templates/overview/panel.html:12`. Live ranking 8/8 sorted, all 8 regimes present. Focused tests 15 passed; in-container full suite 545 passed, 7 skipped.
 - Part E: `app/services/overview.py:366`, `app/web/templates/overview/panel.html:14`. Eight live rows rendered; Fed futures and five fresh approximate proxies shown, stale ECB/RBNZ `n/a`. Focused tests 12 passed; full suite 546 passed, 7 skipped.
+- Part F: `app/services/overview.py:34`, `app/api/routes/shell.py:38`, `app/web/templates/overview/panel.html:16`. Overall lens 28/28; live top five share CHF. Policy path sublenses label cells pending because comparable 12-month ECB rate-path data is absent. Focused tests 14 passed; full suite 548 passed, 7 skipped.

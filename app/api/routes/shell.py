@@ -40,12 +40,14 @@ async def overview_panel(request: Request, panel_id: str) -> HTMLResponse:
     builder = overview.PANELS.get(panel_id)
     if builder is None:
         raise HTTPException(status_code=404, detail="Unknown Overview panel")
-    cache_key = ("overview", panel_id)
+    pair_options = {key: request.query_params.get(key, default) for key, default in
+                    (("lens", "overall"), ("path", "data"), ("group", "all"))} if panel_id == "pairs" else {}
+    cache_key = ("overview", panel_id, *pair_options.values()) if pair_options else ("overview", panel_id)
     cached = desks.cache_get(cache_key)
     if cached is not None:
         return HTMLResponse(cached)
     try:
-        ctx = await builder()
+        ctx = await builder(**pair_options)
     except Exception:
         logger.exception("Overview panel %s failed", panel_id)
         ctx = {"state": "error", "message": "This panel could not load. Try again shortly."}

@@ -18,6 +18,7 @@ from app.services.fred import load_series
 from app.services.rate_probability import get_rate_probability_view
 
 CURRENCIES = ("USD", "EUR", "GBP", "JPY", "AUD", "NZD", "CAD", "CHF")
+PAIR_ORDER = ("EUR", "GBP", "AUD", "NZD", "USD", "CAD", "CHF", "JPY")
 BANKS = {"USD": "FED", "EUR": "ECB", "GBP": "BOE", "JPY": "BOJ", "AUD": "RBA",
          "NZD": "RBNZ", "CAD": "BOC", "CHF": "SNB"}
 COUNTRIES = {"USD": "US", "EUR": "DE", "GBP": "UK", "JPY": "JP", "AUD": "AU",
@@ -46,6 +47,33 @@ def _pair_rows(scores: dict[str, float], pairs: list[dict]) -> list[dict]:
         rows.append({"pair": item["pair"], "overall": round(a - b, 2) if a is not None and b is not None else None,
                      "policy": "available" if {base, quote} == {"EUR", "USD"} else "pending"})
     return sorted(rows, key=lambda row: abs(row["overall"] or 0), reverse=True)
+
+
+def _pair_in_group(pair: str, group: str) -> bool:
+    if group == "usd":
+        return "USD" in pair.split("/")
+    if group == "jpy":
+        return "JPY" in pair.split("/") and "USD" not in pair.split("/")
+    if group == "neighbours":
+        return pair in ("EUR/GBP", "AUD/NZD", "EUR/CHF")
+    if group == "commodity":
+        return pair in ("AUD/CAD", "NZD/CAD", "CAD/JPY", "AUD/NZD")
+    return True
+
+
+def _pair_concentration(rows: list[dict], scores: dict[str, float]) -> str:
+    top = sorted((row for row in rows if row["value"] is not None),
+                 key=lambda row: abs(row["value"]), reverse=True)[:5]
+    if not top:
+        return "No scored pairs in this view."
+    counts = {currency: sum(currency in row["pair"].split("/") for row in top)
+              for currency in PAIR_ORDER}
+    lead = max(PAIR_ORDER, key=lambda currency: counts[currency])
+    if counts[lead] >= 3:
+        direction = "strength" if scores.get(lead, 0) >= 0 else "weakness"
+        return (f"Concentrated: {counts[lead]} of the top {len(top)} are driven by {lead} {direction}. "
+                "Treat them as one trade idea; pick the cleanest pair.")
+    return "Diversified: no single currency drives most of the top divergences."
 
 
 NEWS_CURRENCY_WORDS = {
@@ -398,16 +426,39 @@ def _priced_move(pricing: dict, currency: str, today: date) -> str:
     return move if currency == "USD" else f"{move} approx."
 
 
-async def pair_map() -> dict:
-    board = await _board()
-    scores = {row["currency"]: float(row["overall_score"]) for row in board["rows"]
-              if row["overall_score"] is not None}
+async def pair_map(*, lens: str = "overall", path: str = "data", group: str = "all") -> dict:
+    lens = lens if lens in ("overall", "policy") else "overall"
+    path = path if path in ("data", "priced", "gap") else "data"
+    group = group if group in ("all", "usd", "jpy", "neighbours", "commodity") else "all"
+    ranking = await currency_ranking()
+    scores = {row["currency"]: row["score"] for row in ranking["rows"] if row["score"] is not None}
     pairs = yaml.safe_load(Path("config/pairs.yaml").read_text(encoding="utf-8"))["pairs"]
-    rows = _pair_rows(scores, pairs)
-    available = [abs(row["overall"]) for row in rows if row["overall"] is not None]
-    concentration = round(sum(sorted(available, reverse=True)[:3]) / sum(available) * 100, 1) if sum(available) else None
-    return {"state": "ok" if available else "pending", "rows": rows,
-            "concentration": concentration}
+    pair_rows = _pair_rows(scores, pairs)
+    by_pair = {row["pair"]: row for row in pair_rows}
+    rows = []
+    for index, base in enumerate(PAIR_ORDER):
+        cells = []
+        for j, quote in enumerate(PAIR_ORDER):
+            if j <= index:
+                cells.append({"kind": "diagonal" if j == index else "lower"})
+                continue
+            pair = f"{base}/{quote}"
+            value = by_pair[pair]["overall"] if lens == "overall" else None
+            cells.append({"kind": "pair", "pair": pair, "value": value,
+                          "eligible": pair == "EUR/USD" if lens == "policy" else True,
+                          "in_group": _pair_in_group(pair, group),
+                          "reason": "Comparable 12-month policy path pending" if lens == "policy" and pair == "EUR/USD" else "Desk pending"})
+            if _pair_in_group(pair, group):
+                rows.append({"pair": pair, "value": value, "base": base, "quote": quote})
+        rows.append({"code": base, "cells": cells})
+    ranked = sorted((row for row in rows if "pair" in row and row["value"] is not None),
+                    key=lambda row: abs(row["value"]), reverse=True)
+    top = ranked[:5]
+    widest = [{**row, "why": f"{row['base']} verdict {scores[row['base']]:+.2f} vs "
+               f"{row['quote']} {scores[row['quote']]:+.2f}"} for row in ranked[:3]]
+    return {"state": "ok", "codes": PAIR_ORDER, "matrix": [row for row in rows if "code" in row],
+            "lens": lens, "path": path, "group": group, "top": top, "widest": widest,
+            "concentration": _pair_concentration(top, scores)}
 
 
 async def key_events() -> dict:

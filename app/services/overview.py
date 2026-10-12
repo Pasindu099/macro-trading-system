@@ -130,13 +130,68 @@ async def hero() -> dict:
 
 
 async def active_situations() -> dict:
-    rows = await situations.get_situation_episodes(active=True)
-    for row in rows:
-        key = row["scope_key"]
-        row["href"] = (f"/desks/{key}" if key in ("USD", "EUR") else
-                       f"/pairs?pair={key}" if row["scope"] == "pair" else "/desks")
+    rows = _group_situations(await situations.get_situation_episodes(active=True))
     return {"state": "ok" if rows else "empty", "rows": rows,
             "message": "No active situations."}
+
+
+def _situation_evidence(situation_id: str, evidence: dict) -> str:
+    current = evidence.get("current", evidence) if isinstance(evidence, dict) else {}
+    if not isinstance(current, dict):
+        return "Evidence pending"
+    def number(key: str, unit: str = "") -> str | None:
+        value = current.get(key)
+        return f"{value:+.1f}{unit}" if isinstance(value, (int, float)) else None
+    lines = {
+        "energy_shock": ("Brent 3m", "brent_3m_pct", "%"),
+        "fr_fiscal_stress": ("OAT–Bund 10Y", "oat_bund_10y_bp", "bp"),
+        "labor_deterioration": ("Unemployment gap", "unemployment_gap_pp", "pp"),
+        "risk_off": ("VIX", "vix", ""),
+        "bear_steepening": ("10s–30s change", "ten_s_thirty_s_1m_change_bp", "bp"),
+        "yields_up_currency_down": ("2Y yield change", "two_y_10d_change_bp", "bp"),
+        "intervention_risk_jpy": ("USD/JPY distance from zone", "intervention_zone_distance_pct", "%"),
+    }
+    if situation_id == "correlation_break":
+        return "Spot and 2Y rates drivers diverging" if current.get("rates_drivers_diverging") == 1 else "Rates driver evidence pending"
+    label, key, unit = lines.get(situation_id, ("Evidence", "", ""))
+    value = number(key, unit)
+    if situation_id == "energy_shock" and value:
+        gap = number("headline_core_gap_pp", "pp")
+        return f"{label} {value}; headline CPI above core by {gap}" if gap else f"{label} {value}"
+    return f"{label} {value}" if value else "Evidence pending"
+
+
+def _group_situations(episodes: list[dict]) -> list[dict]:
+    grouped: dict[str, dict] = {}
+    now = datetime.now(UTC)
+    for episode in episodes:
+        if episode["started_at"] > now:
+            continue
+        key = episode["situation_id"]
+        card = grouped.setdefault(key, {"name": episode["name"], "severity": episode["severity"],
+            "started_at": episode["started_at"], "currencies": set(), "pairs": set(),
+            "evidence": "Evidence pending", "href": None, "_latest": datetime.min.replace(tzinfo=UTC)})
+        card["started_at"] = min(card["started_at"], episode["started_at"])
+        scope = episode["scope_key"]
+        if episode["scope"] == "pair":
+            card["pairs"].add(scope)
+            card["currencies"].update(scope.split("/"))
+        elif scope == "GLOBAL":
+            card["currencies"].update(CURRENCIES)
+        else:
+            card["currencies"].add(scope.split(":")[0])
+        if episode["started_at"] >= card["_latest"]:
+            card["evidence"] = _situation_evidence(key, episode.get("evidence") or {})
+            card["_latest"] = episode["started_at"]
+    rows = []
+    for card in grouped.values():
+        card["currencies"] = [currency for currency in CURRENCIES if currency in card["currencies"]]
+        card["pairs"] = sorted(card["pairs"])
+        card["href"] = (f"/pairs?pair={card['pairs'][0]}" if card["pairs"] else
+                        next((f"/desks/{currency}" for currency in card["currencies"] if currency in ("USD", "EUR")), None))
+        del card["_latest"]
+        rows.append(card)
+    return sorted(rows, key=lambda row: (-{"high": 3, "medium": 2, "low": 1}.get(row["severity"], 0), row["started_at"]))
 
 
 async def moving_markets() -> dict:

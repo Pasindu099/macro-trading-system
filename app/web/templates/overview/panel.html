@@ -5,7 +5,7 @@
   {% if panel_id == 'hero' %}
     <div class="hero-grid"><div><span class="kicker">G10 · GLOBAL PICTURE</span><h1>G10 Overview</h1><p>{{ ctx.theme }}</p></div><div><span class="kicker">WHAT DOMINATES FX NOW · DOMINANCE HIERARCHY</span><ol class="hierarchy">{% for tier in ctx.hierarchy %}<li class="{{ 'dominant' if tier.state == 'Dominant' else '' }}"><div><strong>{{ tier.name }}</strong><span>{{ tier.state }}</span></div><small>{{ tier.evidence }}</small></li>{% endfor %}</ol></div></div>
   {% elif panel_id == 'situations' %}
-    <div class="situation-strip">{% for row in ctx.rows %}<a href="{{ row.href }}" class="situation-item"><strong>{{ row.name }}</strong><span>{{ row.scope_key }} · {{ row.severity }} · since {{ row.started_at.strftime('%d %b %Y') }}</span></a>{% endfor %}</div>
+    <div class="situation-strip">{% for row in ctx.rows %}<div class="situation-item">{% if row.href %}<a href="{{ row.href }}"><strong>{{ row.name }} →</strong></a>{% else %}<strong>{{ row.name }}</strong>{% endif %}<span>Affects: {{ row.pairs|join(', ') if row.pairs else row.currencies|join(', ') }}</span><span>{{ row.severity|capitalize }} · since {{ row.started_at.strftime('%d %b %Y') }}</span><small>{{ row.evidence }}</small></div>{% endfor %}</div>
   {% elif panel_id == 'news' %}
     {% if ctx.ai_paused %}<p class="panel-note">AI notes paused</p>{% endif %}
     <div class="overview-list">{% for row in ctx.rows %}<div class="list-row"><span class="badge">{{ row.tag }}</span><div><strong>{% if row.url %}<a href="{{ row.url }}" target="_blank" rel="noopener noreferrer">{{ row.headline }}</a>{% else %}{{ row.headline }}{% endif %}</strong><small>{{ row.source }} · {{ row.seen_at.strftime('%d %b %H:%M') }} UTC</small></div></div>{% endfor %}</div>

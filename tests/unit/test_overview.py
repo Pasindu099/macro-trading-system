@@ -157,3 +157,27 @@ def test_dominance_override_and_share_threshold():
     _, lead = overview._dominance_tiers({"rates": .9}, risk_off=True,
         geo_count=1, vix=30, vix_change=5, stretched=[], squeeze_against_crowd=False)
     assert lead == "Risk sentiment"
+
+
+def test_situations_group_currencies_and_pairs():
+    started = datetime(2026, 1, 1, tzinfo=UTC)
+    episodes = [
+        {"situation_id": "labor_deterioration", "name": "Labor deterioration", "scope": "currency",
+         "scope_key": currency, "severity": "medium", "started_at": started,
+         "evidence": {"current": {"unemployment_gap_pp": .6}}}
+        for currency in ("USD:US", "EUR:DE", "NZD:NZ")
+    ] + [
+        {"situation_id": "correlation_break", "name": "Correlation break", "scope": "pair",
+         "scope_key": pair, "severity": "medium", "started_at": started,
+         "evidence": {"current": {"rates_drivers_diverging": 1}}}
+        for pair in ("EUR/USD", "USD/JPY")
+    ]
+    cards = overview._group_situations(episodes)
+    assert len(cards) == 2
+    labor = next(card for card in cards if card["name"] == "Labor deterioration")
+    assert labor["currencies"] == ["USD", "EUR", "NZD"]
+    assert labor["href"] == "/desks/USD"
+    assert "0.6pp" in labor["evidence"]
+    pair = next(card for card in cards if card["name"] == "Correlation break")
+    assert pair["pairs"] == ["EUR/USD", "USD/JPY"]
+    assert pair["href"] == "/pairs?pair=EUR/USD"

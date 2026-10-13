@@ -44,6 +44,7 @@ ALLOWED_COUNTRIES: frozenset[str] = frozenset({
     "NZ",  # New Zealand — NZD
     "CA",  # Canada — CAD
     "CH",  # Switzerland — CHF
+    "CN",  # China — calendar only
 })
 
 GBOND_COUNTRY_PREFIXES: dict[str, dict[str, str]] = {

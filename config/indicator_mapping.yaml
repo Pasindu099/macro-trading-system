@@ -37,6 +37,18 @@
 #   the first entry (precedence by YAML order) when both arrive in one fetch.
 
 mappings:
+  # China is calendar-only. These indicators are excluded from macro scoring.
+  - {eodhd_type: CPI, eodhd_comparison: yoy, country: CN, canonical_name: cpi_headline_yoy, display_name: CPI (YoY), primary_category: Inflation, frequency: monthly, unit: '%', importance: 1}
+  - {eodhd_type: Inflation Rate, eodhd_comparison: yoy, country: CN, canonical_name: cpi_headline_yoy, display_name: CPI (YoY), primary_category: Inflation, frequency: monthly, unit: '%', importance: 1}
+  - {eodhd_type: Manufacturing PMI, country: CN, canonical_name: manufacturing_pmi, display_name: Manufacturing PMI, primary_category: Growth, frequency: monthly, unit: index, importance: 1}
+  - {eodhd_type: Non Manufacturing PMI, country: CN, canonical_name: nonmanufacturing_pmi, display_name: Non-Manufacturing PMI, primary_category: Growth, frequency: monthly, unit: index, importance: 1}
+  - {eodhd_type: Caixin Manufacturing PMI, country: CN, canonical_name: caixin_manufacturing_pmi, display_name: Caixin Manufacturing PMI, primary_category: Growth, frequency: monthly, unit: index, importance: 1}
+  - {eodhd_type: Caixin Services PMI, country: CN, canonical_name: caixin_services_pmi, display_name: Caixin Services PMI, primary_category: Growth, frequency: monthly, unit: index, importance: 1}
+  - {eodhd_type: GDP Growth Rate, eodhd_comparison: yoy, country: CN, canonical_name: gdp_yoy, display_name: GDP (YoY), primary_category: Growth, frequency: quarterly, unit: '%', importance: 1}
+  - {eodhd_type: Retail Sales, eodhd_comparison: yoy, country: CN, canonical_name: retail_sales_yoy, display_name: Retail Sales (YoY), primary_category: Growth, frequency: monthly, unit: '%', importance: 1}
+  - {eodhd_type: Industrial Production, eodhd_comparison: yoy, country: CN, canonical_name: industrial_production_yoy, display_name: Industrial Production (YoY), primary_category: Growth, frequency: monthly, unit: '%', importance: 1}
+  - {eodhd_type: Balance of Trade, country: CN, canonical_name: trade_balance, display_name: Trade Balance, primary_category: Trade, frequency: monthly, importance: 1}
+  - {eodhd_type: Trade Balance, country: CN, canonical_name: trade_balance, display_name: Trade Balance, primary_category: Trade, frequency: monthly, importance: 1}
 
   # ════════════════════════════════════════════════════════════════════════
   #  UNITED STATES (US)

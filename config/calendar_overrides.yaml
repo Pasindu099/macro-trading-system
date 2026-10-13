@@ -1,0 +1,5 @@
+high_impact_patterns:
+  - '(central bank|interest rate|rate decision|policy rate|federal funds)'
+  - '(cpi|hicp|consumer price|core pce|payroll|employment change|unemployment)'
+  - '(gdp|pmi|retail sales|wage|tankan|ifo|zew)'
+  - '(industrial production|trade balance|balance of trade)'

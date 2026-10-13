@@ -9,6 +9,13 @@
 # These are verified via the EODHD data audit (see spec v1.2 §4.2).
 
 countries:
+  - code: CN
+    currency_code: CNY
+    name: China
+    central_bank: People's Bank of China
+    cb_mandate_type: calendar_only
+    timezone: Asia/Shanghai
+
   - code: US
     currency_code: USD
     name: United States

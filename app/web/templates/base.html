@@ -16,24 +16,34 @@
   {% if request.url.path not in ['/login', '/setup'] %}
   <div class="app-shell">
     <header class="site-header">
-      <a class="brand" href="/" aria-label="ForexCompass home"><span class="brand-mark">F<span>×</span></span><span>FOREX<br>COMPASS</span></a>
-      <details class="mobile-menu"><summary aria-label="Toggle navigation">Menu</summary><nav class="site-nav" aria-label="Main navigation">
-        <a href="/" class="{% if request.url.path == '/' %}active{% endif %}">Overview</a>
-        <a href="/desks" class="{% if request.url.path.startswith('/desks') %}active{% endif %}">Desks</a>
-        <a href="/pairs" class="{% if request.url.path == '/pairs' %}active{% endif %}">Pairs</a>
-        <a href="/central-banks" class="{% if request.url.path == '/central-banks' %}active{% endif %}">Central Banks</a>
-        <a href="/news" class="{% if request.url.path == '/news' %}active{% endif %}">News</a>
-        <details class="nav-calendar"><summary class="{% if request.url.path in ['/calendar', '/event-log'] %}active{% endif %}">Calendar</summary><div class="nav-dropdown"><a href="/calendar">Calendar</a><a href="/event-log" class="{% if request.url.path == '/event-log' %}active{% endif %}">Event Log</a></div></details>
-        <a href="/positioning" class="{% if request.url.path == '/positioning' %}active{% endif %}">Positioning</a>
-        <a href="/data" class="{% if request.url.path == '/data' %}active{% endif %}">Data</a>
-      </nav></details>
-      <div class="header-actions">
-        {% if request.state.current_user and request.state.current_user.role == 'admin' %}<a href="/users">Users</a>{% endif %}
-        {% if request.state.current_user %}<form method="post" action="/logout"><button type="submit">Sign out</button></form>{% endif %}
+      <a class="brand" href="/" aria-label="ForexCompass home"><strong>ForexCompass</strong><span>Research Terminal</span></a>
+      <button class="mobile-menu-toggle" type="button" aria-controls="nav-panel" aria-expanded="false">Menu</button>
+      <div class="nav-panel" id="nav-panel">
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="/" class="{% if request.url.path == '/' %}active{% endif %}"{% if request.url.path == '/' %} aria-current="page"{% endif %}>Overview</a>
+          <details class="nav-group"><summary class="{% if request.url.path.startswith('/desks') %}active{% endif %}">Desks</summary><div class="nav-dropdown">
+            <a href="/desks/USD"{% if request.url.path == '/desks/USD' %} class="active" aria-current="page"{% endif %}>USD</a>
+            <a href="/desks/EUR"{% if request.url.path == '/desks/EUR' %} class="active" aria-current="page"{% endif %}>EUR</a>
+            {% for code in ['GBP', 'JPY', 'AUD', 'NZD', 'CAD', 'CHF'] %}<span class="nav-disabled" aria-disabled="true">{{ code }} <small>pending</small></span>{% endfor %}
+          </div></details>
+          <a href="/pairs" class="{% if request.url.path == '/pairs' %}active{% endif %}"{% if request.url.path == '/pairs' %} aria-current="page"{% endif %}>Pairs</a>
+          <a href="/central-banks" class="{% if request.url.path == '/central-banks' %}active{% endif %}"{% if request.url.path == '/central-banks' %} aria-current="page"{% endif %}>Central Banks</a>
+          <a href="/news" class="{% if request.url.path == '/news' %}active{% endif %}"{% if request.url.path == '/news' %} aria-current="page"{% endif %}>News</a>
+          <details class="nav-group"><summary class="{% if request.url.path in ['/calendar', '/event-log'] %}active{% endif %}">Calendar</summary><div class="nav-dropdown">
+            <a href="/calendar"{% if request.url.path == '/calendar' %} class="active" aria-current="page"{% endif %}>Calendar</a>
+            <a href="/event-log"{% if request.url.path == '/event-log' %} class="active" aria-current="page"{% endif %}>Event Log</a>
+          </div></details>
+          <a href="/positioning" class="{% if request.url.path == '/positioning' %}active{% endif %}"{% if request.url.path == '/positioning' %} aria-current="page"{% endif %}>Positioning</a>
+          <a href="/data" class="{% if request.url.path == '/data' %}active{% endif %}"{% if request.url.path == '/data' %} aria-current="page"{% endif %}>Data</a>
+        </nav>
+        <div class="header-actions">
+          <details class="nav-freshness"><summary id="freshness-summary">Checking freshness…</summary><div id="global-data-freshness" class="nav-freshness-list" role="status">Checking data freshness…</div></details>
+          {% if request.state.current_user and request.state.current_user.role == 'admin' %}<a href="/users">Users</a>{% endif %}
+          {% if request.state.current_user %}<form method="post" action="/logout"><button type="submit">Sign out</button></form>{% endif %}
+        </div>
       </div>
     </header>
     <div class="main-column">
-      <div id="global-data-freshness" class="global-data-freshness" role="status">Checking data freshness…</div>
   {% endif %}
   {% block body %}{% endblock %}
   {% if request.url.path not in ['/login', '/setup'] %}
@@ -41,12 +51,37 @@
   </div>
   {% endif %}
   <script>
+    const menuToggle = document.querySelector('.mobile-menu-toggle');
+    const navPanel = document.getElementById('nav-panel');
+    if (menuToggle && navPanel) menuToggle.addEventListener('click', () => {
+      const open = menuToggle.getAttribute('aria-expanded') !== 'true';
+      menuToggle.setAttribute('aria-expanded', String(open));
+      navPanel.classList.toggle('is-open', open);
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key !== 'Escape') return;
+      const opened = [...document.querySelectorAll('.site-header details[open]')];
+      opened.forEach(item => { item.open = false; });
+      if (opened.length) opened[opened.length - 1].querySelector('summary').focus();
+      if (menuToggle && navPanel && navPanel.classList.contains('is-open')) {
+        navPanel.classList.remove('is-open');
+        menuToggle.setAttribute('aria-expanded', 'false');
+        menuToggle.focus();
+      }
+    });
     const freshnessTarget = document.getElementById('global-data-freshness');
     if (freshnessTarget) fetch('/data-freshness').then(response => {
       if (!response.ok || response.redirected) throw new Error('Freshness unavailable');
       return response.text();
-    }).then(html => { freshnessTarget.innerHTML = html; }).catch(() => {
-      freshnessTarget.innerHTML = '<strong class="data-stale">stale</strong> Data freshness unavailable';
+    }).then(html => {
+      freshnessTarget.innerHTML = html;
+      const count = freshnessTarget.querySelectorAll('.data-freshness-item .data-stale').length;
+      const summary = document.getElementById('freshness-summary');
+      summary.textContent = count ? `${count} stale` : 'All sources fresh';
+      summary.classList.toggle('has-stale', count > 0);
+    }).catch(() => {
+      document.getElementById('freshness-summary').textContent = 'Freshness unavailable';
+      freshnessTarget.textContent = 'Data freshness unavailable';
     });
   </script>
 </body>

@@ -1,5 +1,9 @@
 from fastapi.testclient import TestClient
 from types import SimpleNamespace
+from pathlib import Path
+
+import pytest
+from bs4 import BeautifulSoup
 
 from app.main import app
 import app.auth as auth
@@ -28,8 +32,8 @@ def test_placeholder_sections_and_event_log_navigation(monkeypatch):
     overview = client.get("/").text
     assert 'hx-get="/overview/panels/hero"' in overview
     assert '<header class="site-header">' in overview
-    assert 'class="mobile-menu"' in overview
-    assert overview.index('>Overview</a>') < overview.index('>Desks</a>') < overview.index('>Pairs</a>')
+    assert 'class="mobile-menu-toggle"' in overview
+    assert overview.index('>Overview</a>') < overview.index('>Desks</summary>') < overview.index('>Pairs</a>')
     assert overview.index('>Central Banks</a>') < overview.index('>News</a>') < overview.index('>Calendar</summary>')
     assert 'href="/event-log"' in overview
     for path in ("/desks",):
@@ -46,6 +50,50 @@ def test_login_template_uses_new_tokens():
     assert response.status_code == 200
     assert "Sign in" in response.text
     assert "shell.css" in response.text
+
+
+@pytest.mark.parametrize("path,active", [
+    ("/", "Overview"), ("/desks", "Desks"), ("/desks/USD", "Desks"),
+    ("/desks/EUR", "Desks"), ("/pairs", "Pairs"),
+    ("/central-banks", "Central Banks"), ("/news", "News"),
+    ("/calendar", "Calendar"), ("/event-log", "Calendar"),
+    ("/positioning", "Positioning"), ("/data", "Data"),
+])
+def test_top_navigation_on_dashboard_pages(monkeypatch, path, active):
+    monkeypatch.setattr(auth, "get_settings", lambda: SimpleNamespace(auth_enabled=False))
+    async def board(_session):
+        return {"rows": []}
+    monkeypatch.setattr(shell, "get_macro_state_board", board)
+    response = TestClient(app).get(path)
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.text, "html.parser")
+    header = soup.select_one("header.site-header")
+    assert header is not None
+    assert header.select_one(".brand strong").get_text(strip=True) == "ForexCompass"
+    assert header.select_one(".brand span").get_text(strip=True) == "Research Terminal"
+    nav = header.select_one("nav.site-nav")
+    items = nav.select(":scope > a, :scope > details > summary")
+    assert [item.get_text(strip=True) for item in items] == [
+        "Overview", "Desks", "Pairs", "Central Banks", "News", "Calendar",
+        "Positioning", "Data"]
+    assert [item.get_text(strip=True) for item in items if "active" in item.get("class", [])] == [active]
+    assert header.select_one(".mobile-menu-toggle[aria-expanded='false']")
+    assert header.select_one(".nav-freshness > summary")
+
+
+def test_nav_subitems_and_mobile_breakpoint(monkeypatch):
+    monkeypatch.setattr(auth, "get_settings", lambda: SimpleNamespace(auth_enabled=False))
+    soup = BeautifulSoup(TestClient(app).get("/").text, "html.parser")
+    desks = soup.select_one(".nav-group .nav-dropdown")
+    assert [a.get_text(strip=True) for a in desks.select("a")] == ["USD", "EUR"]
+    assert [row.get_text(" ", strip=True) for row in desks.select(".nav-disabled")] == [
+        f"{code} pending" for code in ("GBP", "JPY", "AUD", "NZD", "CAD", "CHF")]
+    calendar = soup.select(".nav-group .nav-dropdown")[1]
+    assert [a.get_text(strip=True) for a in calendar.select("a")] == ["Calendar", "Event Log"]
+    css = Path("app/web/static/css/navigation.css").read_text(encoding="utf-8")
+    assert "@media(max-width:1023px)" in css
+    assert ".mobile-menu-toggle{display:none}" in css
+    assert ".nav-panel.is-open{display:flex" in css
 
 
 async def _zero_users(session):

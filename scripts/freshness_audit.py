@@ -6,6 +6,7 @@ from sqlalchemy import text
 
 from app.db.session import session_scope
 from app.services.job_status import get_job_status
+from app.services.freshness import get_data_freshness
 
 
 SOURCES = {
@@ -29,6 +30,8 @@ async def main() -> None:
                 await session.rollback()
                 value = f"ERROR {type(exc).__name__}: {str(exc).splitlines()[0][:100]}"
             print(f"SOURCE {name}: {value}")
+        for name, status in (await get_data_freshness(session)).items():
+            print(f"FRESHNESS {name}: {status['as_of']} stale={status['stale']} {status['reason'] or ''}")
         for row in await get_job_status(session):
             print(f"JOB {row['run_type']}: {row['last_run']} error={str(row['last_error'])[:120]}")
         runs = (await session.execute(text("""

@@ -258,7 +258,9 @@ async def admin_jobs_status(
     session: AsyncSession = Depends(get_session),
 ) -> dict[str, object]:
     """Last result, last success and watermark for each analytics job."""
-    return {"jobs": await get_job_status(session)}
+    from app.services.freshness import get_data_freshness
+    return {"jobs": await get_job_status(session),
+            "data_freshness": await get_data_freshness(session)}
 
 
 # ══════════════════════════════════════════════════════════════════════

@@ -8,3 +8,7 @@
 | COT | 6 Oct | Friday/Monday jobs registered; `job:cot_weekly` success 12 Oct after ZIP 403 fallback to [CFTC Data Hub](https://publicreporting.cftc.gov/resource/gpe5-46if.json). |
 | investingLive raw news | 12 Oct 18:32 | `collect_investinglive` registered in news pipeline; status absent from endpoint; no stored error. |
 - Cause: missed in-memory schedules during downtime; startup catch-up and hourly watchdog added; Overview news source key corrected. Derived catch-up succeeded 12 Oct: rates → event innovation → Macro State (latest 9 Oct) → situations → dominance (latest complete 11 Oct).
+
+## Part B — guard
+- `config/freshness.yaml` defines all eight limits; `app/services/freshness.py` calculates weekday and calendar ages. Live 13 Oct check: FRED daily 9 Oct and Macro State 9 Oct are stale; other six sources are within limits.
+- All pages load the global source strip; every Overview and desk panel renders source-specific as-of dates and visible stale reasons. Situation episodes show evidence-stale dates; stale inputs skip episode replacement. `/api/admin/jobs/status` now includes `data_freshness`.

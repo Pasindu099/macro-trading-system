@@ -9,7 +9,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.db.session import get_sessionmaker
 from app.services.macro_state import get_macro_state_board
-from app.services import desks, overview
+from app.services import desks, freshness, overview
 
 router = APIRouter(tags=["shell"])
 templates = Jinja2Templates(directory=str(Path("app/web/templates")))
@@ -35,6 +35,17 @@ async def overview_page(request: Request) -> HTMLResponse:
     })
 
 
+@router.get("/data-freshness", response_class=HTMLResponse)
+async def data_freshness() -> HTMLResponse:
+    try:
+        async with get_sessionmaker()() as session:
+            statuses = await freshness.get_data_freshness(session)
+    except Exception:
+        logger.exception("Data freshness lookup failed")
+        statuses = {source: freshness.status_for(source, None) for source in freshness.QUERIES}
+    return HTMLResponse(templates.get_template("_freshness.html").render(rows=list(statuses.values())))
+
+
 @router.get("/overview/panels/{panel_id}", response_class=HTMLResponse)
 async def overview_panel(request: Request, panel_id: str) -> HTMLResponse:
     builder = overview.PANELS.get(panel_id)
@@ -47,12 +58,20 @@ async def overview_panel(request: Request, panel_id: str) -> HTMLResponse:
     if cached is not None:
         return HTMLResponse(cached)
     try:
+        async with get_sessionmaker()() as session:
+            statuses = await freshness.get_data_freshness(session)
+    except Exception:
+        logger.exception("Overview freshness lookup failed")
+        statuses = {source: freshness.status_for(source, None) for source in freshness.QUERIES}
+    strip = templates.get_template("_freshness.html").render(
+        rows=freshness.panel_rows(statuses, freshness.OVERVIEW_PANEL_SOURCES[panel_id]))
+    try:
         ctx = await builder(**pair_options)
     except Exception:
         logger.exception("Overview panel %s failed", panel_id)
         ctx = {"state": "error", "message": "This panel could not load. Try again shortly."}
-        return HTMLResponse(templates.get_template("overview/panel.html").render(panel_id=panel_id, ctx=ctx))
-    html = templates.get_template("overview/panel.html").render(panel_id=panel_id, ctx=ctx)
+        return HTMLResponse(strip + templates.get_template("overview/panel.html").render(panel_id=panel_id, ctx=ctx))
+    html = strip + templates.get_template("overview/panel.html").render(panel_id=panel_id, ctx=ctx)
     desks.cache_set(cache_key, html, ttl=60)
     return HTMLResponse(html)
 

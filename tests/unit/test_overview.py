@@ -5,12 +5,23 @@ from fastapi.testclient import TestClient
 
 import app.auth as auth
 from app.main import app
+from app.api.routes import shell
 from app.services import overview
 from app.services import desks
 
 
 def _client(monkeypatch):
     monkeypatch.setattr(auth, "get_settings", lambda: SimpleNamespace(auth_enabled=False))
+    class Session:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *_):
+            pass
+    async def freshness(_session):
+        return {source: {"label": source, "as_of_label": "13 Oct 2026", "stale": False}
+                for source in shell.freshness.QUERIES}
+    monkeypatch.setattr(shell, "get_sessionmaker", lambda: lambda: Session())
+    monkeypatch.setattr(shell.freshness, "get_data_freshness", freshness)
     return TestClient(app)
 
 

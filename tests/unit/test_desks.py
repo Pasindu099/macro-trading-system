@@ -19,7 +19,17 @@ def make_client() -> TestClient:
 
 
 @pytest.fixture(autouse=True)
-def _clear_cache():
+def _clear_cache(monkeypatch):
+    class Session:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *_):
+            pass
+    async def freshness(_session):
+        return {source: {"label": source, "as_of_label": "13 Oct 2026", "stale": False}
+                for source in routes.freshness.QUERIES}
+    monkeypatch.setattr(routes, "get_sessionmaker", lambda: lambda: Session())
+    monkeypatch.setattr(routes.freshness, "get_data_freshness", freshness)
     desks.cache_clear()
     yield
     desks.cache_clear()

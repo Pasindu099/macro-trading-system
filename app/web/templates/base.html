@@ -33,11 +33,21 @@
       </div>
     </header>
     <div class="main-column">
+      <div id="global-data-freshness" class="global-data-freshness" role="status">Checking data freshness…</div>
   {% endif %}
   {% block body %}{% endblock %}
   {% if request.url.path not in ['/login', '/setup'] %}
     </div>
   </div>
   {% endif %}
+  <script>
+    const freshnessTarget = document.getElementById('global-data-freshness');
+    if (freshnessTarget) fetch('/data-freshness').then(response => {
+      if (!response.ok) throw new Error('Freshness unavailable');
+      return response.text();
+    }).then(html => { freshnessTarget.innerHTML = html; }).catch(() => {
+      freshnessTarget.innerHTML = '<strong class="data-stale">stale</strong> Data freshness unavailable';
+    });
+  </script>
 </body>
 </html>

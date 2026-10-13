@@ -251,10 +251,15 @@ async def get_situation_episodes(*, active: bool | None = None) -> list[dict[str
     async with get_sessionmaker()() as session:
         rows = await session.execute(text(query))
         items = [dict(row._mapping) for row in rows]
+        from app.services.freshness import SITUATION_SOURCES, get_data_freshness
+        statuses = await get_data_freshness(session) if active is True and items else {}
     specs = load_config()["situations"]
     return [{**row, "name": specs[row["situation_id"]]["name"],
              "severity": specs[row["situation_id"]]["severity"],
-             "evidence_panel_id": specs[row["situation_id"]]["evidence_panel_id"]}
+             "evidence_panel_id": specs[row["situation_id"]]["evidence_panel_id"],
+             "evidence_stale": next((f"evidence stale (as of {statuses[source].get('as_of_label', 'unknown')})"
+                                     for source in SITUATION_SOURCES[row["situation_id"]]
+                                     if statuses and statuses[source]["stale"]), None)}
             for row in items]
 
 
@@ -264,10 +269,13 @@ async def run_situations_job() -> int:
             if not acquired:
                 run.mark_skipped()
                 return 0
+            from app.services.freshness import get_data_freshness, situation_is_fresh
+            async with session_scope() as session:
+                statuses = await get_data_freshness(session)
             results = await asyncio.wait_for(backtest_all(), timeout=16 * 60)
             rows = []
             for result in results:
-                if not result["data_available"]:
+                if not result["data_available"] or not situation_is_fresh(result["situation_id"], statuses):
                     continue
                 for episode in result["episodes"]:
                     rows.append({"situation_id": result["situation_id"], "scope": result["scope"],
@@ -275,7 +283,7 @@ async def run_situations_job() -> int:
                                  "ended_at": episode["ended_at"], "evidence": json.dumps(episode["evidence"])})
             async with session_scope(statement_timeout="15min") as session:
                 for result in results:
-                    if not result["data_available"]:
+                    if not result["data_available"] or not situation_is_fresh(result["situation_id"], statuses):
                         continue
                     await session.execute(text("""
                         DELETE FROM situation_episodes WHERE situation_id = :s AND scope_key = :k

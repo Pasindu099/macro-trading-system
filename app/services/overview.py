@@ -267,7 +267,7 @@ def _group_situations(episodes: list[dict]) -> list[dict]:
         else:
             card["currencies"].add(scope.split(":")[0])
         if episode["started_at"] >= card["_latest"]:
-            card["evidence"] = _situation_evidence(key, episode.get("evidence") or {})
+            card["evidence"] = episode.get("evidence_stale") or _situation_evidence(key, episode.get("evidence") or {})
             card["_latest"] = episode["started_at"]
     rows = []
     for card in grouped.values():

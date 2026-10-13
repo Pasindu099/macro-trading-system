@@ -43,7 +43,7 @@
   <script>
     const freshnessTarget = document.getElementById('global-data-freshness');
     if (freshnessTarget) fetch('/data-freshness').then(response => {
-      if (!response.ok) throw new Error('Freshness unavailable');
+      if (!response.ok || response.redirected) throw new Error('Freshness unavailable');
       return response.text();
     }).then(html => { freshnessTarget.innerHTML = html; }).catch(() => {
       freshnessTarget.innerHTML = '<strong class="data-stale">stale</strong> Data freshness unavailable';

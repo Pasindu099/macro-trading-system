@@ -38,11 +38,17 @@ def _form_value(form: dict[str, list[str]], key: str, default: str = "") -> str:
     return (form.get(key) or [default])[0].strip()
 
 
-def _next_path(request: Request, fallback: str = "/") -> str:
-    next_path = request.query_params.get("next") or fallback
-    if not next_path.startswith("/") or next_path.startswith("//"):
+def _safe_next_path(next_path: str, fallback: str = "/") -> str:
+    if (not next_path.startswith("/") or next_path.startswith("//")
+            or next_path == "/data-freshness"
+            or next_path.startswith("/overview/panels/")
+            or "/panels/" in next_path):
         return fallback
     return next_path
+
+
+def _next_path(request: Request, fallback: str = "/") -> str:
+    return _safe_next_path(request.query_params.get("next") or fallback, fallback)
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -68,7 +74,7 @@ async def login_submit(
     form = parse_qs((await request.body()).decode("utf-8"), keep_blank_values=True)
     email = normalize_email(_form_value(form, "email"))
     password = _form_value(form, "password")
-    next_path = _form_value(form, "next", "/")
+    next_path = _safe_next_path(_form_value(form, "next", "/"))
 
     user = await get_user_by_email(session, email)
     if user is None or not user.is_active or not verify_password(password, user.password_hash):
@@ -87,7 +93,7 @@ async def login_submit(
 
     mark_login(user)
     await session.commit()
-    response = RedirectResponse(next_path if next_path.startswith("/") else "/", status_code=303)
+    response = RedirectResponse(next_path, status_code=303)
     set_session_cookie(response, user.id)
     return response
 

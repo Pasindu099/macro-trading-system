@@ -38,6 +38,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from sqlalchemy import text
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
@@ -66,6 +67,7 @@ from app.services.rate_probability import save_snapshot
 from app.services.rates_derived_jobs import run_rates_derived
 from app.services.situations import run_situations_job
 from app.services.dominance import run_dominance_job
+from app.services.job_lock import job_lock
 from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -298,6 +300,21 @@ class Scheduler:
             logger.info("  News monitor (LLM scoring) paused: NEWS_AI_ENABLED=false")
 
         self._scheduler.start()
+        self._scheduler.add_job(
+            self._catch_up_after_restart,
+            trigger=DateTrigger(run_date=datetime.now(UTC) + timedelta(minutes=1)),
+            id="source_catchup_after_restart",
+            replace_existing=True,
+            max_instances=1,
+        )
+        self._scheduler.add_job(
+            self._catch_up_after_restart,
+            trigger=IntervalTrigger(hours=1, timezone="UTC"),
+            id="source_catchup_watchdog",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True,
+        )
         await self._run_rate_probability_fetch_if_empty()
         logger.info("Scheduler started.")
 
@@ -309,7 +326,7 @@ class Scheduler:
 
     # ── Job implementations ─────────────────────────────────────────
 
-    async def _run_scheduled_session(self, session_name: str) -> None:
+    async def _run_scheduled_session(self, session_name: str, *, score: bool = True) -> None:
         """A daily scheduled run — fetches all tracked countries with wide lookback."""
         countries = sorted(ALLOWED_COUNTRIES)
         today = date.today()
@@ -345,7 +362,40 @@ class Scheduler:
                         stats.unmapped,
                     )
 
+            if score:
+                await run_incremental_event_innovation()
+
+    async def _catch_up_after_restart(self) -> None:
+        """Replay missed daily sources before rebuilding dependent tables."""
+        async with job_lock("source_catchup_after_restart") as acquired:
+            if not acquired:
+                return
+            async with session_scope() as session:
+                last = (await session.execute(text("""
+                    SELECT max(started_at) FROM ingestion_runs
+                    WHERE run_type IN ('scheduled_asia', 'scheduled_london', 'scheduled_ny')
+                """))).scalar_one()
+                last_macro = (await session.execute(text("""
+                    SELECT max(started_at) FROM ingestion_runs
+                    WHERE run_type = 'job:macro_state:chain' AND status = 'success'
+                """))).scalar_one()
+            cutoff = datetime.now(UTC) - timedelta(days=1)
+            source_due = last is None or last < cutoff
+            derived_due = last_macro is None or last_macro < cutoff
+            if not source_due and not derived_due:
+                return
+            logger.warning("Daily ingestion missed after restart; running source catch-up")
+            if source_due:
+                await self._run_government_yield_incremental(derive=False)
+                await ingest_fred_series()
+                await self._run_scheduled_session("scheduled_ny", score=False)
+            await run_cot_weekly(retry=True)
+            await run_rates_derived()
             await run_incremental_event_innovation()
+            await run_macro_state_chain()
+            await run_situations_job()
+            await run_dominance_job()
+            logger.info("Source catch-up and derived rebuild complete")
 
     async def _run_post_release(self, trigger_config: dict[str, Any]) -> None:
         """A single post-release trigger — one country, short lookback."""
@@ -402,7 +452,7 @@ class Scheduler:
 
     # ── Config loading ──────────────────────────────────────────────
 
-    async def _run_government_yield_incremental(self) -> None:
+    async def _run_government_yield_incremental(self, *, derive: bool = True) -> None:
         """Daily EODHD GBOND update after expected end-of-day availability."""
         settings = get_settings()
         today = date.today()
@@ -429,7 +479,7 @@ class Scheduler:
             len(stats.errors),
         )
         fx_inserted = await self._run_fx_spot_incremental(from_date, today)
-        if (stats.status in {"success", "partial"} and stats.observations_seen) or fx_inserted:
+        if derive and ((stats.status in {"success", "partial"} and stats.observations_seen) or fx_inserted):
             await run_rates_derived()
 
     async def _run_fx_spot_incremental(self, from_date: date, to_date: date) -> int:

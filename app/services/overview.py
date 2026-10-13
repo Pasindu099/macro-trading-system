@@ -183,7 +183,7 @@ async def hero() -> dict:
               AND snapshot_date <= current_date ORDER BY snapshot_date DESC LIMIT 1
         """))).mappings().first()
         headlines = (await session.execute(text("""
-            SELECT title FROM raw_news WHERE source = 'investinglive.com' AND is_gated_relevant
+            SELECT title FROM raw_news WHERE source = 'investinglive' AND is_gated_relevant
               AND published_at BETWEEN now() - interval '3 days' AND now()
         """))).scalars().all()
     keywords = yaml.safe_load(DOMINANCE_CONFIG.read_text(encoding="utf-8"))["geopolitics_keywords"]
@@ -287,7 +287,7 @@ async def moving_markets() -> dict:
         raw = (await session.execute(text("""
             SELECT title AS headline, source, url, published_at AS seen_at, NULL::text AS severity
             FROM raw_news WHERE published_at >= :since AND published_at <= :now
-              AND source = 'investinglive.com' AND is_gated_relevant
+              AND source = 'investinglive' AND is_gated_relevant
             ORDER BY published_at DESC LIMIT 60
         """), {"since": since, "now": now})).mappings().all()
     episodes = [row for row in await situations.get_situation_episodes(active=True)

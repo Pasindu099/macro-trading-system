@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
+import pytest
 from sqlalchemy.dialects import postgresql
 
 from app.services import cot_positions as cot
@@ -61,3 +62,29 @@ def test_upsert_skips_unchanged_rows() -> None:
     sql = str(cot.upsert_statement(rows).compile(dialect=postgresql.dialect()))
     assert "ON CONFLICT (report_date, contract_code, category) DO UPDATE" in sql
     assert "IS DISTINCT FROM" in sql
+
+
+@pytest.mark.asyncio
+async def test_official_data_hub_fallback_maps_recent_tff_rows() -> None:
+    class Response:
+        def raise_for_status(self):
+            pass
+        def json(self):
+            return [{"report_date_as_yyyy_mm_dd": "2026-10-06T00:00:00.000",
+                     "cftc_contract_market_code": "099741", "open_interest_all": "700",
+                     "dealer_positions_long_all": "10", "dealer_positions_short_all": "20",
+                     "dealer_positions_spread_all": "1", "asset_mgr_positions_long": "30",
+                     "asset_mgr_positions_short": "5", "asset_mgr_positions_spread": "2",
+                     "lev_money_positions_long": "40", "lev_money_positions_short": "60",
+                     "lev_money_positions_spread": "3", "other_rept_positions_long": "7",
+                     "other_rept_positions_short": "8", "other_rept_positions_spread": "4",
+                     "nonrept_positions_long_all": "9", "nonrept_positions_short_all": "11"}]
+    class Client:
+        async def get(self, url, *, params):
+            assert url.endswith("gpe5-46if.json")
+            assert "2026-09-29" in params["$where"]
+            return Response()
+    rows = await cot.recent_tff_from_data_hub(Client(), CODES, date(2026, 9, 29))
+    assert len(rows) == 5
+    assert rows[2]["report_date"] == date(2026, 10, 6)
+    assert (rows[2]["long"], rows[2]["short"], rows[2]["spreading"]) == (40, 60, 3)

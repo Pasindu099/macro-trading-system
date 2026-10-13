@@ -124,6 +124,38 @@ async def download(client: httpx.AsyncClient, url: str) -> bytes:
     return response.content
 
 
+async def recent_tff_from_data_hub(client: httpx.AsyncClient, codes: dict[str, str],
+                                   start: date) -> list[dict[str, Any]]:
+    """Use the official CFTC data feed when its historical ZIP blocks requests."""
+    response = await client.get(
+        "https://publicreporting.cftc.gov/resource/gpe5-46if.json",
+        params={"$where": f"report_date_as_yyyy_mm_dd >= '{start.isoformat()}T00:00:00'",
+                "$limit": 5000},
+    )
+    response.raise_for_status()
+    output: list[dict[str, Any]] = []
+    for raw in response.json():
+        code = str(raw.get("cftc_contract_market_code", "")).strip()
+        if code not in codes:
+            continue
+        report_date = date.fromisoformat(raw["report_date_as_yyyy_mm_dd"][:10])
+        open_interest = _int(raw.get("open_interest_all"))
+        for category, stem in (("dealer", "dealer_positions"),
+                               ("asset_manager", "asset_mgr_positions"),
+                               ("leveraged_funds", "lev_money_positions"),
+                               ("other_reportable", "other_rept_positions"),
+                               ("nonreportable", "nonrept_positions")):
+            suffix = "" if category in {"asset_manager", "leveraged_funds", "other_reportable"} else "_all"
+            output.append({"report_date": report_date, "contract_code": code,
+                           "category": category, "currency": codes[code],
+                           "long": _int(raw.get(f"{stem}_long{suffix}")),
+                           "short": _int(raw.get(f"{stem}_short{suffix}")),
+                           "spreading": None if category == "nonreportable" else
+                           _int(raw.get(f"{stem}_spread" + ("_all" if category == "dealer" else ""))),
+                           "open_interest": open_interest})
+    return output
+
+
 def expected_report_date(today: date) -> date:
     """Tuesday of the latest report that should be published by `today`.
 
@@ -163,8 +195,16 @@ async def run_cot_weekly(*, retry: bool = False, today: date | None = None) -> d
                 rows: list[dict[str, Any]] = []
                 async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
                     for year in sorted({expected.year, today.year}):
-                        content = await download(client, config["yearly_url"].format(year=year))
-                        rows += parse_tff_zip(content, codes)
+                        try:
+                            content = await download(client, config["yearly_url"].format(year=year))
+                            rows += parse_tff_zip(content, codes)
+                        except httpx.HTTPStatusError as exc:
+                            if exc.response.status_code != 403:
+                                raise
+                            async with session_scope() as session:
+                                latest = await latest_report_date(session)
+                            rows += await recent_tff_from_data_hub(
+                                client, codes, (latest or expected) - timedelta(days=14))
                 async with session_scope(statement_timeout="5min") as session:
                     written = await upsert_cot_positions(session, rows)
                     latest = await latest_report_date(session)

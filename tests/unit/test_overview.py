@@ -161,7 +161,7 @@ def test_news_uses_recent_investinglive_items_only(monkeypatch):
         def mappings(self):
             return self
         def all(self):
-            return [{"headline": title, "source": "investinglive.com", "url": None,
+            return [{"headline": title, "source": "investinglive", "url": None,
                      "seen_at": timestamp, "severity": None} for title, timestamp in (
                          ("Fed rate outlook", now - timedelta(hours=1)),
                          ("USD CPI tomorrow", now + timedelta(hours=1)),
@@ -175,7 +175,7 @@ def test_news_uses_recent_investinglive_items_only(monkeypatch):
         async def execute(self, query, params):
             sql = str(query)
             assert "news_alerts" not in sql
-            assert "source = 'investinglive.com'" in sql
+            assert "source = 'investinglive'" in sql
             assert "published_at <= :now" in sql
             assert params["since"] < now <= params["now"]
             return Result()

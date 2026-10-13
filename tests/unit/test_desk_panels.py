@@ -28,6 +28,7 @@ def _data_sources(monkeypatch):
         "horizon": "1M", "thesis": "Data supports USD. Policy is steady.", "dominant_driver": "data",
         "main_risk": "curve", "active_situations": []}))
     monkeypatch.setattr(situations, "get_situation_episodes", _stub([]))
+    monkeypatch.setattr(situations, "get_labor_watch_rows", _stub([]))
     monkeypatch.setattr(scenarios, "get_scenarios", _stub({"status": "available", "market_probabilities_available": True,
         "scenarios": [{"label": "Base", "direction": "up", "probability_pct": 100, "trigger": "Next meeting"}]}))
     curves = {
@@ -117,6 +118,7 @@ def _empty_sources(monkeypatch):
     from app.services import scenarios, situations, verdict
     monkeypatch.setattr(verdict, "get_verdict", _stub({"status": "unavailable", "reason": "No verdict"}))
     monkeypatch.setattr(situations, "get_situation_episodes", _stub([]))
+    monkeypatch.setattr(situations, "get_labor_watch_rows", _stub([]))
     monkeypatch.setattr(scenarios, "get_scenarios", _stub({"status": "unavailable", "reason": "No scenarios"}))
     _step8_sources(monkeypatch, with_data=False)
     monkeypatch.setattr(dp, "get_curve", _stub({"country": "US", "status": "unavailable", "reason": "No yields"}))

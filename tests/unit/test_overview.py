@@ -283,6 +283,27 @@ def test_situations_group_currencies_and_pairs():
     assert pair["href"] == "/pairs?pair=EUR/USD"
 
 
+def test_labor_watch_is_separate_and_stale_evidence_is_visible():
+    started = date(2026, 10, 1)
+    rows = overview._group_situations([
+        {"situation_id": "labor_deterioration", "name": "Labor deterioration",
+         "scope": "currency", "scope_key": "USD:US", "severity": "medium",
+         "started_at": started, "state": "active", "evidence": {"current": {"unemployment_gap_pp": .6}}},
+        {"situation_id": "labor_deterioration", "name": "Labor deterioration",
+         "scope": "currency", "scope_key": "NZD:NZ", "severity": "medium",
+         "started_at": started, "state": "watch", "evidence_stale": "evidence stale (as of 9 Oct 2026)",
+         "evidence": {"current": {"unemployment_gap_pp": .3}}},
+    ])
+    assert {row["state"] for row in rows} == {"active", "watch"}
+    watch = next(row for row in rows if row["state"] == "watch")
+    assert watch["currencies"] == ["NZD"]
+    assert watch["evidence"] == "evidence stale (as of 9 Oct 2026)"
+    html = shell.templates.get_template("overview/panel.html").render(
+        panel_id="situations", ctx={"state": "ok", "rows": rows})
+    assert 'class="situation-item watch ' in html
+    assert "Watch · Medium" in html
+
+
 def test_news_situation_tag_matches_topic_and_currency():
     episodes = [{"situation_id": "labor_deterioration", "name": "Labor deterioration",
                  "scope_key": "NZD:NZ"}]

@@ -53,6 +53,6 @@ def test_quarterly_labor_uses_calendar_windows():
     })
     current = features("labor_deterioration", "NZD:NZ", date(2026, 10, 12), source)
     assert current["unemployment_gap_pp"] == 0.3
-    assert condition(load_config()["situations"]["labor_deterioration"]["exit"], current) is False
+    assert condition(load_config()["situations"]["labor_deterioration"]["exit"], current) is True
     stale = features("labor_deterioration", "NZD:NZ", date(2027, 1, 1), source)
     assert stale["unemployment_gap_pp"] is None

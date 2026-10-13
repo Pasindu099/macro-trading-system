@@ -257,10 +257,53 @@ async def get_situation_episodes(*, active: bool | None = None) -> list[dict[str
     return [{**row, "name": specs[row["situation_id"]]["name"],
              "severity": specs[row["situation_id"]]["severity"],
              "evidence_panel_id": specs[row["situation_id"]]["evidence_panel_id"],
+             "state": current_state(specs[row["situation_id"]],
+                                    [{"ended_at": row["ended_at"]}],
+                                    (row.get("evidence") or {}).get("current")),
              "evidence_stale": next((f"evidence stale (as of {statuses[source].get('as_of_label', 'unknown')})"
                                      for source in SITUATION_SOURCES[row["situation_id"]]
                                      if statuses and statuses[source]["stale"]), None)}
             for row in items]
+
+
+async def get_labor_watch_rows(active_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Show current watch states even when no labor episode is active."""
+    from app.services.freshness import get_data_freshness
+    spec = load_config()["situations"]["labor_deterioration"]
+    active_scopes = {row["scope_key"] for row in active_rows
+                     if row["situation_id"] == "labor_deterioration"}
+    async with get_sessionmaker()() as session:
+        calendar_status = (await get_data_freshness(session))["calendar"]
+        rows = (await session.execute(text("""
+            SELECT DISTINCT ON (i.country_code, r.released_at::date)
+                i.country_code, r.released_at::date AS day, r.actual::float AS value
+            FROM indicator_releases r JOIN indicators i ON i.id = r.indicator_id
+            WHERE i.canonical_name = 'unemployment_rate' AND r.is_latest
+              AND r.actual IS NOT NULL AND r.released_at <= now()
+            ORDER BY i.country_code, r.released_at::date, r.retrieved_at DESC, r.id DESC
+        """))).mappings().all()
+    points: dict[str, dict[date, float]] = {}
+    for row in rows:
+        points.setdefault(row["country_code"], {})[row["day"]] = row["value"]
+    history = {"fred": {}, "indicators": {(country, "unemployment_rate"): Series(values)
+                                      for country, values in points.items()},
+               "yields": {}, "fx": {}, "spreads": {}}
+    output = []
+    for country, currency in spec["countries"].items():
+        scope_key = f"{currency}:{country}"
+        series = history["indicators"].get((country, "unemployment_rate"))
+        if scope_key in active_scopes or not series:
+            continue
+        evidence = features("labor_deterioration", scope_key, date.today(), history)
+        if condition(spec["watch"], evidence) is not True or condition(spec["trigger"], evidence) is not False:
+            continue
+        output.append({"situation_id": "labor_deterioration", "name": spec["name"],
+                       "severity": spec["severity"], "scope": "currency", "scope_key": scope_key,
+                       "started_at": series.days[-1], "ended_at": None,
+                       "state": "watch", "evidence": {"current": evidence},
+                       "evidence_stale": (f"evidence stale (as of {calendar_status.get('as_of_label', 'unknown')})"
+                                          if calendar_status["stale"] else None)})
+    return output
 
 
 async def run_situations_job() -> int:

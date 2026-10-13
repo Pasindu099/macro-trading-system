@@ -18,6 +18,7 @@ def _stub(value):
 
 def test_situation_evidence_panels_only_when_active(monkeypatch):
     monkeypatch.setattr(situations, "get_situation_episodes", _stub([]))
+    monkeypatch.setattr(situations, "get_labor_watch_rows", _stub([]))
     quiet = make_client().get("/desks/EUR/panels/situations")
     assert quiet.status_code == 200 and "No active situations" in quiet.text
     assert 'id="french_fiscal"' not in quiet.text

@@ -160,10 +160,12 @@ async def panel_verdict(desk: dict, params: dict) -> dict[str, Any]:
 
 
 async def panel_situations(desk: dict, params: dict) -> dict[str, Any]:
-    from app.services.situations import get_situation_episodes
+    from app.services.situations import get_labor_watch_rows, get_situation_episodes
     from app.services.verdict import _applies
 
-    episodes = [row for row in await get_situation_episodes(active=True) if _applies(row, desk["currency"])]
+    active = await get_situation_episodes(active=True)
+    episodes = [row for row in active + await get_labor_watch_rows(active)
+                if _applies(row, desk["currency"])]
     panels = []
     for row in episodes:
         current = row["evidence"].get("current", {})

@@ -56,3 +56,17 @@ def test_active_episode_evidence_tracks_exit_hysteresis():
     episode = build_episodes(spec, days)[0]
     assert episode["ended_at"] is None
     assert episode["evidence"]["current"]["unemployment_gap_pp"] == 0.2
+
+
+def test_labor_exact_point_three_exits_after_five_days_and_is_watch_before_exit():
+    spec = SPECS["labor_deterioration"]
+    trigger = {"unemployment_gap_pp": 0.5}
+    boundary = {"unemployment_gap_pp": 0.3}
+    days = [(START + timedelta(days=offset), trigger) for offset in range(2)]
+    days += [(START + timedelta(days=offset), boundary) for offset in range(2, 7)]
+    assert condition(spec["exit"], boundary) is True
+    waiting = build_episodes(spec, days[:6])
+    assert waiting[-1]["ended_at"] is None
+    assert current_state(spec, waiting, boundary) == "watch"
+    finished = build_episodes(spec, days)
+    assert finished[-1]["ended_at"] == START + timedelta(days=2)

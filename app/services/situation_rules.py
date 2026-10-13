@@ -74,6 +74,10 @@ def build_episodes(spec: dict[str, Any], daily: list[tuple[date, dict[str, float
 def current_state(spec: dict[str, Any], episodes: list[dict[str, Any]],
                   latest_evidence: dict[str, float | None] | None) -> str:
     if episodes and episodes[-1]["ended_at"] is None:
+        if (spec.get("id") == "labor_deterioration" and latest_evidence is not None
+                and condition(spec["watch"], latest_evidence) is True
+                and condition(spec["trigger"], latest_evidence) is False):
+            return "watch"
         return "active"
     if latest_evidence is None:
         return "unavailable"

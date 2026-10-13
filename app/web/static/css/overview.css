@@ -33,3 +33,4 @@
 .overview-two{grid-template-columns:repeat(2,minmax(0,1fr))}.table-scroll{max-width:100%}.pair-wide{flex-wrap:wrap;overflow-wrap:anywhere}.news-list .list-row>div{min-width:0;overflow-wrap:anywhere}
 @media(max-width:900px){.overview-two{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:390px){.overview-panel{min-width:0}.situation-item{min-width:0}.pair-controls button{max-width:100%}}
+.overview .situation-item.watch{border-color:#8fc3ff;color:#8fc3ff;background:#142538}

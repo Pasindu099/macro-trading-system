@@ -216,7 +216,8 @@ async def hero() -> dict:
 
 
 async def active_situations() -> dict:
-    rows = _group_situations(await situations.get_situation_episodes(active=True))
+    episodes = await situations.get_situation_episodes(active=True)
+    rows = _group_situations(episodes + await situations.get_labor_watch_rows(episodes))
     return {"state": "ok" if rows else "empty", "rows": rows,
             "message": "No active situations."}
 
@@ -254,7 +255,10 @@ def _group_situations(episodes: list[dict]) -> list[dict]:
         if episode["started_at"] > now:
             continue
         key = episode["situation_id"]
-        card = grouped.setdefault(key, {"name": episode["name"], "severity": episode["severity"],
+        state = episode.get("state", "active")
+        group_key = (key, state)
+        card = grouped.setdefault(group_key, {"name": episode["name"], "severity": episode["severity"],
+            "state": state,
             "started_at": episode["started_at"], "currencies": set(), "pairs": set(),
             "evidence": "Evidence pending", "href": None, "_latest": date.min})
         card["started_at"] = min(card["started_at"], episode["started_at"])

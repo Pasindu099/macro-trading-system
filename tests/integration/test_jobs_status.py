@@ -42,9 +42,14 @@ async def test_jobs_status_shows_logged_run() -> None:
         assert entry["last_success"] is not None
         freshness = response.json()["data_freshness"]
         assert set(freshness) == {"fx_spot", "government_yields", "fred_daily", "calendar",
-                                  "news", "cot", "macro_state", "dominance"}
+                                  "news", "cot", "macro_state", "dominance", "situations", "verdicts"}
         assert all("as_of" in row and "stale" in row and "reason" in row
                    for row in freshness.values())
+        sources = response.json()["sources"]
+        assert set(sources) == {"fx_spot", "government_yields", "eodhd_calendar_sessions",
+                                "investinglive_collection"}
+        assert all("last_run" in row and "status" in row and "newest_row_date" in row
+                   for row in sources.values())
     finally:
         if run_id is not None:
             async with session_scope() as session:

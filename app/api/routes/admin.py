@@ -259,8 +259,10 @@ async def admin_jobs_status(
 ) -> dict[str, object]:
     """Last result, last success and watermark for each analytics job."""
     from app.services.freshness import get_data_freshness
+    from app.services.job_status import get_source_status
     return {"jobs": await get_job_status(session),
-            "data_freshness": await get_data_freshness(session)}
+            "data_freshness": await get_data_freshness(session),
+            "sources": await get_source_status(session)}
 
 
 # ══════════════════════════════════════════════════════════════════════

@@ -485,10 +485,13 @@ class Scheduler:
     async def _run_fx_spot_incremental(self, from_date: date, to_date: date) -> int:
         """Re-fetch recent FX closes; revised closes become the newest row per date."""
         try:
-            async with EODHDClient() as client, session_scope() as session:
-                stats = await ingest_eodhd_fx_spot(
-                    session, client, from_date=from_date, to_date=to_date,
-                )
+            async with run_logger("job:fx_spot") as run:
+                async with EODHDClient() as client, session_scope() as session:
+                    stats = await ingest_eodhd_fx_spot(
+                        session, client, from_date=from_date, to_date=to_date,
+                    )
+                run.record_rows(stats.observations_inserted)
+                run.errors.extend(stats.errors)
         except Exception:
             logger.exception("FX spot update failed")
             return 0

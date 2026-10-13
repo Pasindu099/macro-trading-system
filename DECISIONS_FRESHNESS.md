@@ -15,3 +15,8 @@
 
 ## Verification
 - Focused tests for each changed part, then one in-container full suite per part. Include threshold, badge, stale-input, and exact-boundary cases.
+
+## Freshness tuning
+- FRED daily allows two US federal business days after one publication business day. FX uses its market calendar; government yields are checked per country market.
+- Macro State, dominance, and situations use their last successful job completion for staleness. Verdicts calculate on request, so their update time is the oldest last success of Macro State, situations, and rates derived. Show that time beside the underlying data date.
+- Admin jobs status includes FX spot, government yields, EODHD calendar sessions, and investingLive collection with run status and newest row date. Log FX spot runs going forward.

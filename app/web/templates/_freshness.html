@@ -1,3 +1,3 @@
 <div class="data-freshness" role="status" aria-label="Data freshness">
-  {% for row in rows %}<span class="data-freshness-item"><b>{{ row.label }}</b> as of {{ row.as_of_label or 'unknown' }}{% if row.stale %} <strong class="data-stale">stale</strong> <small>{{ row.reason }}</small>{% endif %}</span>{% endfor %}
+  {% for row in rows %}<span class="data-freshness-item"><b>{{ row.label }}</b>{% if row.source in ('macro_state', 'dominance', 'situations', 'verdicts') %} updated {{ row.updated_at_label or 'unknown' }}; data as of {{ row.as_of_label or 'unknown' }}{% else %} as of {{ row.as_of_label or 'unknown' }}{% endif %}{% if row.stale %} <strong class="data-stale">stale</strong> <small>{{ row.reason }}</small>{% endif %}</span>{% endfor %}
 </div>

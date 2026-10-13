@@ -35,6 +35,10 @@ async def test_daily_rates_job_refetches_fx_and_yields_then_rebuilds(monkeypatch
     async def _ctx(*_args, **_kwargs):
         yield object()
 
+    @asynccontextmanager
+    async def _run(*_args, **_kwargs):
+        yield SimpleNamespace(record_rows=lambda _count: None, errors=[])
+
     async def _yields(session, client, *, from_date, to_date, **_):
         calls["yield_from"] = from_date
         return SimpleNamespace(status="success", observations_seen=0, observations_inserted=0,
@@ -55,6 +59,7 @@ async def test_daily_rates_job_refetches_fx_and_yields_then_rebuilds(monkeypatch
     monkeypatch.setattr(sched, "date", _Date)
     monkeypatch.setattr(sched, "EODHDClient", _ctx)
     monkeypatch.setattr(sched, "session_scope", _ctx)
+    monkeypatch.setattr(sched, "run_logger", _run)
     monkeypatch.setattr(sched, "ingest_eodhd_government_yields", _yields)
     monkeypatch.setattr(sched, "ingest_eodhd_fx_spot", _fx)
     monkeypatch.setattr(sched, "run_rates_derived", _derived)

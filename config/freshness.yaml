@@ -1,8 +1,10 @@
 fx_spot: {max_age: 2, unit: business_days, label: FX spot}
 government_yields: {max_age: 2, unit: business_days, label: Government yields}
-fred_daily: {max_age: 3, unit: days, label: FRED daily}
+fred_daily: {max_age: 2, unit: business_days, publication_lag: 1, market: US, label: FRED daily}
 calendar: {max_age: 1, unit: days, label: Calendar}
 news: {max_age: 6, unit: hours, label: investingLive news}
 cot: {max_age: 10, unit: days, label: COT}
 macro_state: {max_age: 2, unit: days, label: Macro State}
 dominance: {max_age: 2, unit: business_days, label: Dominance}
+situations: {max_age: 2, unit: days, label: Situations}
+verdicts: {max_age: 2, unit: days, label: Verdicts}

@@ -19,11 +19,9 @@ NOW = datetime(2026, 10, 13, 12, tzinfo=UTC)
 @pytest.mark.parametrize("source,fresh,stale", [
     ("fx_spot", date(2026, 10, 9), date(2026, 10, 8)),
     ("government_yields", date(2026, 10, 9), date(2026, 10, 8)),
-    ("dominance", date(2026, 10, 9), date(2026, 10, 8)),
-    ("fred_daily", date(2026, 10, 10), date(2026, 10, 9)),
+    ("fred_daily", date(2026, 10, 7), date(2026, 10, 6)),
     ("calendar", date(2026, 10, 12), date(2026, 10, 11)),
     ("cot", date(2026, 10, 3), date(2026, 10, 2)),
-    ("macro_state", date(2026, 10, 11), date(2026, 10, 10)),
     ("news", NOW - timedelta(hours=6), NOW - timedelta(hours=6, minutes=1)),
 ])
 def test_source_threshold_boundaries(source, fresh, stale):
@@ -40,6 +38,31 @@ def test_badge_shows_as_of_and_visible_stale_reason():
     assert "as of 13 Oct 2026 05:00 UTC" in html
     assert ">stale</strong>" in html
     assert "7 hours old; limit 6 hours" in html
+
+
+def test_us_holiday_and_publication_lag():
+    assert date(2026, 10, 12) in freshness.us_federal_holidays(2026)
+    assert freshness.business_days_since(date(2026, 10, 9), NOW.date(), "US") == 1
+    row = freshness.status_for("fred_daily", date(2026, 10, 9), now=NOW)
+    assert row["age"] == 0 and not row["stale"]
+
+
+def test_weekend_and_market_calendar():
+    assert freshness.business_days_since(date(2026, 10, 9), date(2026, 10, 11), "US") == 0
+    assert freshness.business_days_since(date(2026, 10, 9), NOW.date(), "FX") == 2
+    assert freshness.business_days_since(date(2026, 10, 9), NOW.date(), "CA") == 1
+    assert freshness.status_for("government_yields", date(2026, 10, 8),
+                                now=NOW, market="US")["stale"] is False
+
+
+def test_derived_uses_successful_run_not_data_date():
+    row = freshness.status_for("macro_state", date(2026, 9, 1), now=NOW,
+                               updated_at=NOW - timedelta(hours=2))
+    assert row["stale"] is False
+    html = Environment(loader=FileSystemLoader(Path("app/web/templates"))).get_template(
+        "_freshness.html").render(rows=[row])
+    assert "updated 13 Oct 2026 10:00 UTC; data as of 01 Sep 2026" in html
+    assert freshness.status_for("macro_state", date(2026, 10, 13), now=NOW)["stale"] is True
 
 
 @pytest.mark.asyncio

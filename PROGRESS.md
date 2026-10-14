@@ -153,3 +153,5 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] C. Policy statements for 7 banks (RBA 403) as `policy_statement`, decision-day runs, sentence diff + topics API. Full suite 634 passed, 7 skipped.
 - [x] D. Upcoming meetings, blackout windows, minutes/projection dates; Fed/ECB speech calendars, others pending; summary priced-move baseline fix. Full suite 638 passed, 7 skipped. STOP after D.
 - [x] Decision (blocked sources): honest UA everywhere; RBA/RBNZ blocked → `/admin/cb-imports` upload + manual entry, `manual_import` job status and freshness label; migration 0033. Full suite 643 passed, 7 skipped.
+- [x] E. Officials config, speeches FED 111 / ECB 86 / BOE 50 / BOJ 26 / BOC 10 / SNB 9, RBA/RBNZ manual_import, 143 attributed investingLive comments, 16,853 sentences.
+- [x] F. lexicon_v1 scores, speaker tone/shift/lean/focus, 12-week committee balance; sample REPORT_STEP12_TONE_SAMPLE.md. Full suite 664 passed, 7 skipped. STOP after F.

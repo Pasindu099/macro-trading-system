@@ -757,6 +757,8 @@ async def _run_cb_speeches() -> None:
     from app.processing.cb_speeches import attribute_comments, ingest_speeches
     await ingest_speeches(since=date.today() - timedelta(days=14))
     await attribute_comments(since=datetime.now(UTC) - timedelta(days=3))
+    from app.services.cb_tone import score_pending
+    await score_pending()
 
 
 async def _run_cb_projections() -> None:

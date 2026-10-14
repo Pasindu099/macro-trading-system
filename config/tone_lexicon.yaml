@@ -1,0 +1,102 @@
+# Step 12 Part F: word-list tone scoring, method "lexicon_v1" (no LLM).
+# Sentence score = sum of matched phrase weights (hawkish > 0, dovish < 0), clipped to [-2, 2].
+# Matching: case-insensitive, word-start, longest phrase first; matched words are consumed so a phrase
+# inside a longer phrase is not counted twice.
+# Negation: a negator within `negation_window` words before a phrase flips its sign.
+# Hedging: a hedge word within `hedge_window` words before a phrase (and not part of it) multiplies by
+# `hedge_factor`. Explicit phrases below already encode common negated/hedged forms and win over the rules.
+method: lexicon_v1
+clip: 2.0
+negation_window: 3
+hedge_window: 3
+hedge_factor: 0.5
+negators: [not, "n't", "no", never, nor, without, hardly, "no longer", unlikely]
+hedges: [may, might, could, possibly, perhaps, somewhat, some, modestly, slightly, gradually]
+# Clause-scope negators: these phrases score themselves and flip the sign of every later phrase in the
+# sentence ("not yet confident that inflation is on track to return to target" is hawkish).
+scope_negators: ["not yet confident", "not confident", "not convinced"]
+
+hawkish:
+  # policy action / stance
+  "further tightening may be appropriate": 2.0
+  "additional tightening": 1.5
+  "raise rates": 1.5
+  "raise interest rates": 1.5
+  "rate hike": 1.5
+  "rate hikes": 1.5
+  "hike rates": 1.5
+  "higher for longer": 1.5
+  "premature to cut": 1.5
+  "too early to cut": 1.5
+  "no rush to cut": 1.0
+  "in no hurry": 1.0
+  "not yet confident": 1.0
+  "not confident": 1.0
+  "not convinced": 1.0
+  "keep policy restrictive": 1.5
+  "remain restrictive": 1.0
+  "sufficiently restrictive": 0.5
+  "tighter policy": 1.0
+  "tightening": 0.5
+  "vigilant": 0.5
+  "hold rates": 0.5
+  "on hold": 0.5
+  "patient": 0.5
+  # inflation pressure
+  "upside risks to inflation": 1.5
+  "inflation risks are tilted to the upside": 1.5
+  "inflation remains elevated": 1.0
+  "inflation is too high": 1.0
+  "inflation too high": 1.0
+  "persistent inflation": 1.0
+  "sticky inflation": 1.0
+  "inflation expectations could become unanchored": 1.5
+  "second-round effects": 0.5
+  "price pressures": 0.5
+  "overheating": 1.0
+  "tight labor market": 0.5
+  "tight labour market": 0.5
+  "wage pressures": 0.5
+  "strong demand": 0.5
+
+dovish:
+  # policy action / stance
+  "cut rates": -1.5
+  "rate cut": -1.5
+  "rate cuts": -1.5
+  "lower rates": -1.0
+  "lower interest rates": -1.0
+  "further easing": -1.5
+  "easing": -0.5
+  "accommodative": -1.0
+  "less restrictive": -1.0
+  "reduce the degree of restriction": -1.5
+  "removing restriction": -1.0
+  "room to cut": -1.5
+  "appropriate to cut": -1.5
+  "scope to ease": -1.5
+  "ready to act": -1.0
+  # balance of risks
+  "risks have become more balanced": -1.0
+  "risks are balanced": -0.5
+  "downside risks": -1.0
+  "downside risks to growth": -1.5
+  "downside risks to employment": -1.5
+  # inflation and activity
+  "disinflation": -1.0
+  "inflation is moving down": -1.0
+  "inflation has eased": -1.0
+  "inflation has come down": -1.0
+  "confident that inflation": -1.0
+  "on track to return to target": -1.0
+  "below target": -0.5
+  "labor market is cooling": -1.0
+  "labour market is cooling": -1.0
+  "labor market has cooled": -1.0
+  "labour market has softened": -1.0
+  "rising unemployment": -1.0
+  "weak demand": -1.0
+  "slowing growth": -1.0
+  "spare capacity": -0.5
+  "slack": -0.5
+  "recession": -1.0

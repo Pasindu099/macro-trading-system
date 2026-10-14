@@ -6,7 +6,6 @@
 - Blackout: Fed, ECB, BoE (8 days, approx), BoC (7/8 in MPR months), RBA verified; **BoJ unverified** (2001 notice), **RBNZ/SNB none published** → `unknown`.
 - `cb_summary.py`, `/api/cb/{bank}/summary`. 14 Oct: FED 4.00 hiking, priced +5.3bp (futures), 2Y−policy +80bp, gap bp; ECB 2.50 hiking, +5.2bp approx.; BOE 3.75 holding +13.1; BOJ 1.25 hiking −36.7 approx.; RBA 4.60 +0.2; BOC 2.25 holding +3.8; RBNZ 2.75 hidden (curve stale 9 Oct); SNB 0.00 (config; EODHD omits 0% actuals) +0.4. Non-Fed gaps "pending".
 - Fix (Part D): the probability module measures non-FED/ECB moves from stale `current_rate` config (BoJ 0.75, RBA 3.60, RBNZ 2.25); the summary now uses implied − stored decision rate (RBA was shown as "100bp hidden").
-
 ## B: projections (`cb_projection_parsers.py`, `cb_projection_loaders.py`, migration 0032 `point`/`assumption`)
 | Bank | Source | Rounds | Not loaded |
 | --- | --- | --- | --- |
@@ -17,11 +16,9 @@
 | BOJ / RBA | — | 0 | BoJ PDF only (skipped); RBA 403 to all scripted requests |
 - RBNZ is behind Cloudflare for the container: workbooks fetched on host into `data/rbnz_mps/` (gitignored), `--rbnz-dir`. Daily `job:cb_projections` 07:30 UTC (120 days) will log the RBNZ 403.
 - Revisions (Fed rule): RBNZ May→Sep CPI 2026Q4 −0.2, OCR −0.03 → none; BOE CPI +1.2 → unavailable (no common Bank Rate horizon Feb→Jul); BOC/SNB unavailable (no policy path).
-
 ## C: statements (`cb_statements.py`, `cb_statement_diff.py`, `/statement-diff`)
 - `doc_type='policy_statement'` (the old LLM ingester rewrites `statement`). 13 months: FED 9, ECB 8 (Q&A cut), BOE 9, BOJ 9 (5 PDF), BOC 9, RBNZ 7 (host files), SNB 5, **RBA 0**. Runs 30 min and 3 h after each decision. Old `scrape_bank` returned 0 for 6 banks.
 - Latest diff (changed sentences): FED 11 (vote 9–3 → 12–0; maintain → raise), BOE 18, SNB 68, BOC 79, BOJ 91, ECB 102, RBNZ 218 (includes record of meeting). Dates masked; topics by word-start keywords; PDF text adds "other" noise.
-
 ## D: upcoming (`cb_upcoming.py`, `/api/cb/{bank}/upcoming`)
 | Bank | Next | Blackout from | Projections | Minutes-type release | Speeches |
 | --- | --- | --- | --- | --- | --- |
@@ -34,12 +31,27 @@
 | RBNZ | 28 Oct | unknown | Dec MPS | same day | pending |
 | SNB | 10 Dec | unknown | every meeting | ~7 Jan | pending |
 - Fed calendar covers Board members only (no regional presidents). Speech calendars cached 1 h.
-
 ## Decision: blocked / PDF-only sources
 - Honest UA `ForexCompass/1.0 (research dashboard)` (no `CONTACT_EMAIL` set; new setting), robots.txt checked, 10 s spacing: **RBA** first request 200, next three 403 → blocked; **RBNZ** robots.txt 403 → no page request. All fetchers now use this UA (browser-spoof UA removed; FED/ECB/BoE/BoJ/BoC/SNB still 200). Host-curl and RBNZ sitemap paths removed.
 - `/admin/cb-imports` (admin): upload RBNZ xlsx / BoE·BoC HTML projections or any statement (HTML/PDF/TXT) through the existing parsers; manual projection entry with loader bounds and `YYYY`/`YYYYQn` horizons. Audit table `cb_manual_imports` (migration 0033).
 - Manual sources in `central_banks.yaml` (`manual_import`): BoJ projections; RBA and RBNZ projections/statements/speeches. Their jobs log status `manual_import` (`job:cb_*:{BANK}`); freshness rows read "manual import — last updated {date}".
 - **Open:** RBNZ's 24 projection rounds and 7 statements stored earlier came from host curl with a browser UA (now disallowed).
-
+## E: speeches (`cb_officials.yaml`, `cb_officials.py`, `cb_speeches.py`, migration 0034, daily 06:30 UTC)
+- Rosters from official pages (Fed, ECB, BoE, BoJ, BoC; SNB/RBA/RBNZ via search), departures dated for attribution; BoC council corrected to 6. Ambiguous surnames (Williams, Taylor, Lane…) need bank context.
+| Bank | Source | Speeches (12 m) | Attributed | Comments (investingLive) |
+| --- | --- | ---: | ---: | ---: |
+| FED | Board yearly index + Dallas Fed RSS (other regional sites: no feed) | 111 | 106 | 82 |
+| ECB | official speeches dataset CSV (monthly; to 30 Sep) | 86 (38 empty texts skipped) | 86 | 19 |
+| BOE | RSS (50 items, from Jan 2026 only) | 50 | 30 (rest non-MPC) | 10 |
+| BOJ | yearly speech index | 26 | 23 | 12 |
+| BOC | RSS 1.0 feed (10 items only) | 10 | 10 | — |
+| SNB | RSS + speeches page | 9 (9 short/PDF failed) | 9 | 2 |
+| RBA / RBNZ | manual_import (blocked) | 0 | — | 17 / 1 |
+- 16,853 policy sentences extracted (keyword filter; themes inflation/labor/growth/financial conditions/FX/other).
+## F: word-list tone (`tone_lexicon.yaml`, `tone_lexicon.py`, `cb_tone.py`, migration 0035, `/speakers`, `/committee-balance`)
+- `lexicon_v1`: weighted phrases, longest first, 3-word negation flip, hedge ×0.5, clause-scope negators ("not yet confident…"), clip ±2; stored per (sentence, method). 30-day tone, 180-day baseline (excl. last 30), shift ≥ 0.4, lean ±0.5, ≥ 3 tone-bearing sentences; weekly committee shares over 12 weeks with voter flags.
+- Coverage: only 3–10% of sentences carry tone (FED 5.5%, ECB 4.6%, BOJ 10.4%). Live e.g. FED Waller +0.80 (baseline +0.34, shifting hawkish), Hammack +1.17, Bowman −0.50; FED week of 12 Oct: 3 active, ⅔ hawkish.
+- Quality sample: **`REPORT_STEP12_TONE_SAMPLE.md`** (30 rows, review column blank). On my read ~11 of 20 non-zero rows are questionable.
+- Weak spots: descriptive/historical uses ("the tightening cycle"), other banks' actions ("countries tilt toward rate hikes"), non-policy "easing/tightening" (wages, credit), negation by verbs or inside phrases ("downside risks… dissipated", "hasn't eased"), hold signals without keywords ("prudent to give more time"), "no recession" read as hawkish.
 ## Tests
-- New: summary 7, config 4, projection parsers 11, statements 7, upcoming 4. Full suite after D: **638 passed, 7 skipped**.
+- New: summary 7, config 4, projection parsers 11, statements 7, upcoming 4, manual imports 5, speeches 7, tone 14. Full suite after F: **664 passed, 7 skipped**.

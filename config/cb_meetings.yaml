@@ -108,6 +108,11 @@ BOE:
     - dt: "2027-12-16T12:00:00+00:00"
       official: true
 BOJ:
+  # Step 12 Part D: Summary of Opinions release per decision day (official BoJ schedule).
+  summary_of_opinions: {"2026-09-18": "2026-10-01", "2026-10-30": "2026-11-10", "2026-12-18": "2026-12-28",
+                        "2027-01-22": "2027-02-01", "2027-03-18": "2027-03-29", "2027-04-28": "2027-05-12",
+                        "2027-06-11": "2027-06-21", "2027-07-22": "2027-07-30", "2027-09-22": "2027-10-01",
+                        "2027-10-29": "2027-11-09", "2027-12-17": "2027-12-27"}
   current_rate: 0.75
   step_bps: 10
   rate_basis_adj: 0.0
@@ -221,6 +226,8 @@ BOC:
     - dt: "2027-12-08T09:45:00-05:00"
       official: true
 RBNZ:
+  # Step 12 Part D: meetings with a Monetary Policy Statement (projections); the others are Reviews.
+  projection_meetings: ["2026-02-18", "2026-05-27", "2026-09-02", "2026-12-09", "2027-03-17", "2027-06-16"]
   current_rate: 2.25
   step_bps: 25
   rate_basis_adj: 0.0

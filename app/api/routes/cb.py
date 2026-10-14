@@ -5,7 +5,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from app.auth import require_role
-from app.services import cb_projection_loaders, cb_statement_diff, cb_summary, cb_tracking, ecb_projections, ecb_regime, ecb_tracking, fed_projections, fed_regime
+from app.services import cb_projection_loaders, cb_statement_diff, cb_summary, cb_upcoming, cb_tracking, ecb_projections, ecb_regime, ecb_tracking, fed_projections, fed_regime
 from app.settings import get_settings
 
 SUPPORTED = {"FED", "ECB"}
@@ -39,6 +39,14 @@ def _round_date(round_: str | None) -> date | None:
 async def summary(bank: str) -> dict:
     try:
         return await cb_summary.get_summary(bank)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/{bank}/upcoming")
+async def upcoming(bank: str) -> dict:
+    try:
+        return await cb_upcoming.get_upcoming(bank)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 

@@ -151,3 +151,4 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] A. All 8 banks verified in `central_banks.yaml` (blackout rules; BoJ/RBNZ/SNB unverified); meeting dates corrected and synced to DB; `/api/cb/{bank}/summary`. Full suite 616 passed, 7 skipped.
 - [x] B. BoE 17 / BoC 7 / RBNZ 24 / SNB 27 projection rounds; BoJ PDF-only and RBA 403 reported; revisions + reaction flags; migration 0032. Full suite 627 passed, 7 skipped.
 - [x] C. Policy statements for 7 banks (RBA 403) as `policy_statement`, decision-day runs, sentence diff + topics API. Full suite 634 passed, 7 skipped.
+- [x] D. Upcoming meetings, blackout windows, minutes/projection dates; Fed/ECB speech calendars, others pending; summary priced-move baseline fix. Full suite 638 passed, 7 skipped. STOP after D.

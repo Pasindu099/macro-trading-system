@@ -14,7 +14,9 @@ from app.db.session import get_sessionmaker
 from app.services import ecb_pricing, ecb_regime, fed_regime
 from app.services.fed_regime import classify_regime
 from app.services.meeting_calendar import SUPPORTED_BANKS, get_upcoming_meetings
-from app.services.rate_probability import DATA_STATE_LIVE, compute_meeting_probabilities
+from app.services.rate_probability import (
+    DATA_STATE_LIVE, POLICY_DECISION_INDICATORS, compute_meeting_probabilities,
+)
 
 CONFIG_PATH = Path("config/central_banks.yaml")
 MEETINGS_PATH = Path("config/cb_meetings.yaml")
@@ -156,7 +158,7 @@ async def _curve_date(bank: str) -> date | None:
                                       {"b": bank})).scalar_one_or_none()
 
 
-async def _priced_next_move(bank: str, today: date) -> dict[str, Any]:
+async def _priced_next_move(bank: str, today: date, rate: float | None) -> dict[str, Any]:
     if bank == "ECB":
         async with get_sessionmaker()() as session:
             approx = await ecb_pricing.get_ecb_yield_approximation(session)
@@ -167,7 +169,11 @@ async def _priced_next_move(bank: str, today: date) -> dict[str, Any]:
     if not probabilities or probabilities[0].data_state != DATA_STATE_LIVE:
         return {"status": "unavailable", "reason": probabilities[0].data_state_message if probabilities else "No curve",
                 "method": method}
-    return priced_move(probabilities[0].delta_bps, await _curve_date(bank), today, bank != "FED", method)
+    # FED keeps the module's validated delta; for the other banks the module's baseline is a stale config
+    # rate, so the move is measured from the stored decision rate.
+    move = probabilities[0].delta_bps if bank in POLICY_DECISION_INDICATORS else (
+        (probabilities[0].implied_rate - rate) * 100 if rate is not None else None)
+    return priced_move(move, await _curve_date(bank), today, bank != "FED", method)
 
 
 async def _gap(bank: str) -> dict[str, Any]:
@@ -211,7 +217,7 @@ async def get_summary(bank: str, today: date | None = None) -> dict[str, Any]:
         "regime": regime.get("regime", "unavailable"), "regime_detail": regime,
         "next_meeting": {"date": meeting_days[0], "official": meetings[0].get("is_official", True)} if meetings else None,
         "blackout": blackout_status(bank, recent + meeting_days, today),
-        "priced_next_move": await _priced_next_move(bank, today),
+        "priced_next_move": await _priced_next_move(bank, today, rate),
         "two_year_minus_policy": spread or {"status": "unavailable"},
         "gap": await _gap(bank),
     }

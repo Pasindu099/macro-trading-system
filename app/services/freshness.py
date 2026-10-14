@@ -50,6 +50,17 @@ OVERVIEW_PANEL_SOURCES = {
     "pairs": ("macro_state",),
     "events": ("calendar",),
 }
+# Central Bank Terminal panels (Step 12 Part G); manual-import rows are added per panel kind.
+CB_PANEL_SOURCES = {
+    "summary": ("calendar", "government_yields"),
+    "headlines": ("news",),
+    "speakers": ("news",),
+    "balance": ("news",),
+    "upcoming": ("calendar",),
+    "proj-tracking": ("fred_daily",),
+}
+CB_PANEL_MANUAL = {"statement": "statements", "speakers": "speeches", "balance": "speeches", "library": "speeches",
+                   "proj-revisions": "projections", "proj-vintages": "projections"}
 DESK_PANEL_SOURCES = {
     "verdict": ("verdicts", "macro_state", "government_yields", "cot"),
     "situations": ("situations", "fx_spot", "government_yields", "fred_daily", "calendar"),

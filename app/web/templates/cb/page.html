@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/overview.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/cb.css') }}">
+<script src="{{ url_for('static', path='vendor/htmx-1.9.12.min.js') }}" defer></script>
+{% endblock %}
+{% block body %}
+<main class="cb-terminal" data-bank="{{ bank }}">
+  <nav class="cb-tabs" aria-label="Central banks">
+    {% for code, name in banks %}<a href="/central-banks?bank={{ code }}&view={{ view }}" aria-current="{{ 'page' if code == bank else 'false' }}" title="{{ name }}">{{ code }}</a>{% endfor %}
+  </nav>
+  <nav class="cb-tabs cb-views" aria-label="Views">
+    {% for key, label in [('overview', 'Overview'), ('projections', 'Projections')] %}<a href="/central-banks?bank={{ bank }}&view={{ key }}" aria-current="{{ 'page' if key == view else 'false' }}">{{ label }}</a>{% endfor %}
+  </nav>
+  <div class="cb-grid">
+    {% for panel, title in panels %}
+    <section class="overview-panel cb-panel cbp-{{ panel }}" aria-label="{{ title }}" id="cb-panel-{{ panel }}">
+      <div hx-get="/central-banks/panels/{{ panel }}?bank={{ bank }}" hx-trigger="{{ 'load' if loop.index <= 2 else 'revealed once' }}" hx-swap="innerHTML">
+        <h2>{{ title }}</h2><p class="panel-state state-loading">Loading…</p>
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

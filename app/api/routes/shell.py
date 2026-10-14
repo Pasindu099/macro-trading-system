@@ -80,7 +80,6 @@ async def overview_panel(request: Request, panel_id: str) -> HTMLResponse:
 @router.get("/pairs", response_class=HTMLResponse)
 @router.get("/news", response_class=HTMLResponse)
 @router.get("/positioning", response_class=HTMLResponse)
-@router.get("/central-banks", response_class=HTMLResponse)
 @router.get("/data", response_class=HTMLResponse)
 async def section_page(request: Request) -> HTMLResponse:
     title, description = SECTIONS[request.url.path]

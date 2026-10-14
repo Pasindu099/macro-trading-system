@@ -49,6 +49,11 @@ mappings:
   - {eodhd_type: Industrial Production, eodhd_comparison: yoy, country: CN, canonical_name: industrial_production_yoy, display_name: Industrial Production (YoY), primary_category: Growth, frequency: monthly, unit: '%', importance: 1}
   - {eodhd_type: Balance of Trade, country: CN, canonical_name: trade_balance, display_name: Trade Balance, primary_category: Trade, frequency: monthly, importance: 1}
   - {eodhd_type: Trade Balance, country: CN, canonical_name: trade_balance, display_name: Trade Balance, primary_category: Trade, frequency: monthly, importance: 1}
+  - {eodhd_type: Balance of Trade Yuan, country: CN, canonical_name: trade_balance_cny, display_name: Trade Balance (CNY), primary_category: Trade, frequency: monthly, importance: 1}
+  - {eodhd_type: Exports, eodhd_comparison: yoy, country: CN, canonical_name: exports_yoy, display_name: Exports (YoY), primary_category: Trade, frequency: monthly, unit: '%', importance: 2}
+  - {eodhd_type: Imports, eodhd_comparison: yoy, country: CN, canonical_name: imports_yoy, display_name: Imports (YoY), primary_category: Trade, frequency: monthly, unit: '%', importance: 2}
+  - {eodhd_type: Exports, country: CN, canonical_name: exports_cny_yoy, display_name: Exports (YoY, CNY terms), primary_category: Trade, frequency: monthly, unit: '%', importance: 2}
+  - {eodhd_type: Imports, country: CN, canonical_name: imports_cny_yoy, display_name: Imports (YoY, CNY terms), primary_category: Trade, frequency: monthly, unit: '%', importance: 2}
 
   # ════════════════════════════════════════════════════════════════════════
   #  UNITED STATES (US)

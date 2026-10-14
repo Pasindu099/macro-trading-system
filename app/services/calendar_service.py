@@ -14,6 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 _OVERRIDES = yaml.safe_load(Path("config/calendar_overrides.yaml").read_text(encoding="utf-8"))
 _HIGH = tuple(re.compile(pattern, re.I) for pattern in _OVERRIDES["high_impact_patterns"])
+_CAL_BUNDLES = {(member, spec["country"]): spec
+                for spec in _OVERRIDES.get("calendar_bundles", []) for member in spec["members"]}
 
 _DAY_SQL = text("""
 SELECT r.id, r.indicator_id, r.released_at, r.period, r.actual, r.estimate,
@@ -55,14 +57,22 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
         if not country or not currency or (currencies and currency not in currencies):
             continue
         name = row["display_name"] or raw.get("type") or "Unmapped event"
-        impact = impact_for(name, raw.get("importance") or row["importance"])
+        cal_bundle = _CAL_BUNDLES.get((row["canonical_name"], country))
+        # Bundle members share the bundle's impact so components are never filtered apart.
+        impact = impact_for(cal_bundle["name"] if cal_bundle else name,
+                            raw.get("importance") or row["importance"])
         if impact > min_impact:
             continue
         score = float(row["surprise_normalized"]) if row["surprise_normalized"] is not None else None
         if surprise_only and (score is None or abs(score) <= 1):
             continue
         stamp = row["released_at"]
-        key = ("bundle", row["bundle_id"]) if row["bundle_id"] else ("time", country, stamp)
+        if row["bundle_id"]:
+            key = ("bundle", row["bundle_id"])
+        elif cal_bundle:
+            key = ("calendar", cal_bundle["name"], country, stamp.date())
+        else:
+            key = ("time", country, stamp)
         member = {
             "release_id": row["id"], "indicator_id": row["indicator_id"],
             "name": name, "actual": float(row["actual"]) if row["actual"] is not None else None,
@@ -73,18 +83,22 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
             "surprise_sigma": score, "unit": row["unit"],
             "source_status": "confirmed" if row["actual"] is not None else "scheduled",
             "mapped": row["indicator_id"] is not None,
+            "headline": bool(cal_bundle and cal_bundle["headline"] == row["canonical_name"]),
         }
         group = groups.setdefault(key, {
             "id": str(row["bundle_id"] or row["id"]), "released_at": stamp,
             "country_code": country, "currency_code": currency,
             "country_name": row["country_name"] or country,
-            "name": row["bundle_key"] or name, "impact": impact, "components": [],
+            "name": row["bundle_key"] or (cal_bundle and cal_bundle["name"]) or name,
+            "impact": impact, "components": [],
         })
+        group["released_at"] = min(group["released_at"], stamp)
         group["impact"] = min(group["impact"], impact)
         group["components"].append(member)
     result = list(groups.values())
     for group in result:
-        group["components"].sort(key=lambda item: (item["surprise_sigma"] is None,
+        group["components"].sort(key=lambda item: (not item["headline"],
+                                                   item["surprise_sigma"] is None,
                                                    -(abs(item["surprise_sigma"] or 0))))
         group.update({key: group["components"][0][key] for key in
                       ("actual", "consensus", "previous", "revised_from",

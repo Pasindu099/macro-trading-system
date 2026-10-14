@@ -3,3 +3,11 @@ high_impact_patterns:
   - '(cpi|hicp|consumer price|core pce|payroll|employment change|unemployment)'
   - '(gdp|pmi|retail sales|wage|tankan|ifo|zew)'
   - '(industrial production|trade balance|balance of trade)'
+
+# Calendar-only grouping (no Event Innovation scoring). Members released on
+# the same UTC date collapse into one row; the headline supplies its values.
+calendar_bundles:
+  - name: China trade balance
+    country: CN
+    headline: trade_balance
+    members: [trade_balance, trade_balance_cny, exports_yoy, imports_yoy, exports_cny_yoy, imports_cny_yoy]

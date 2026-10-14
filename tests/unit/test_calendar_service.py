@@ -35,6 +35,39 @@ def test_china_calendar_only_and_unmapped():
     assert events[0]["components"][0]["mapped"] is False
 
 
+def test_china_trade_bundle_groups_exports_and_imports():
+    cn = dict(country_code="CN", currency_code="CNY", country_name="China", surprise_normalized=None)
+    rows = [
+        row(id=1, canonical_name="exports_cny_yoy", display_name="Exports (YoY, CNY terms)", actual=18.6,
+            released_at=datetime(2026, 9, 8, 2, 30, tzinfo=timezone.utc), **cn),
+        row(id=2, canonical_name="trade_balance", display_name="Trade Balance", actual=119.1,
+            released_at=datetime(2026, 9, 8, 3, tzinfo=timezone.utc), **cn),
+        row(id=3, canonical_name="imports_yoy", display_name="Imports (YoY)", actual=28.2,
+            released_at=datetime(2026, 9, 8, 3, tzinfo=timezone.utc), **cn),
+    ]
+    events = _shape(rows, None, 1, False)
+    assert len(events) == 1
+    event = events[0]
+    assert event["name"] == "China trade balance" and event["impact"] == 1
+    assert event["actual"] == 119.1
+    assert [c["name"] for c in event["components"]][0] == "Trade Balance"
+    assert len(event["components"]) == 3
+    assert event["released_at"] == datetime(2026, 9, 8, 2, 30, tzinfo=timezone.utc)
+
+
+def test_china_trade_mappings_resolve():
+    from app.ingestion.canonicalizer import Canonicalizer
+    canonicalizer = Canonicalizer.from_default_config()
+    for event_type, comparison, expected in [
+        ("Exports", "yoy", "exports_yoy"), ("Imports", "yoy", "imports_yoy"),
+        ("Exports", None, "exports_cny_yoy"), ("Imports", None, "imports_cny_yoy"),
+        ("Balance of Trade", None, "trade_balance"), ("Balance of Trade Yuan", None, "trade_balance_cny"),
+    ]:
+        result = canonicalizer.canonicalize({"type": event_type, "comparison": comparison, "country": "CN",
+                                             "date": "2026-09-08 03:00:00", "period": "Aug"})
+        assert result is not None and result.canonical_name == expected
+
+
 @pytest.mark.asyncio
 async def test_day_paging_past_and_future():
     class Result:

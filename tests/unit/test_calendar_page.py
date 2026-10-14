@@ -50,3 +50,8 @@ def test_day_fragment_progresses_one_day(monkeypatch):
     assert len(calls) == 1
     assert 'day=2020-01-02' in response.text
     assert 'day=2020-01-03' not in response.text
+    calls.clear()
+    all_response = TestClient(app).get(
+        "/calendar/day?preset=custom&start=2020-01-01&end=2020-01-01&day=2020-01-01&impact=all")
+    assert all_response.status_code == 200
+    assert calls[0][3] == 3

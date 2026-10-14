@@ -19,8 +19,11 @@ _HIGH = tuple(re.compile(pattern, re.I) for pattern in _OVERRIDES["high_impact_p
 _CAL_BUNDLES = {(member, spec["country"]): spec
                 for spec in _OVERRIDES.get("calendar_bundles", []) for member in spec["members"]}
 # Event Innovation bundles: the highest-weighted member is the headline (e.g. payrolls on NFP day).
+_BUNDLES = load_config().bundles
 _BUNDLE_HEADLINES = {spec.bundle_key: max(spec.members, key=lambda m: m.weight).canonical_name
-                     for spec in load_config().bundles}
+                     for spec in _BUNDLES}
+_CONFIG_BUNDLES = {(member.canonical_name, spec.country): spec
+                   for spec in _BUNDLES for member in spec.members}
 
 _DAY_SQL = text("""
 SELECT r.id, r.indicator_id, r.released_at, r.period, r.actual, r.estimate,
@@ -63,21 +66,21 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
             continue
         name = row["display_name"] or raw.get("type") or "Unmapped event"
         cal_bundle = _CAL_BUNDLES.get((row["canonical_name"], country))
+        configured_bundle = _CONFIG_BUNDLES.get((row["canonical_name"], country))
         # Bundle members share the bundle's impact so components are never filtered apart.
         impact = impact_for(cal_bundle["name"] if cal_bundle else name,
                             raw.get("importance") or row["importance"])
-        if impact > min_impact:
-            continue
         score = float(row["surprise_normalized"]) if row["surprise_normalized"] is not None else None
-        if surprise_only and (score is None or abs(score) <= 1):
-            continue
         stamp = row["released_at"]
         if row["bundle_id"]:
             key = ("bundle", row["bundle_id"])
         elif cal_bundle:
             key = ("calendar", cal_bundle["name"], country, stamp.date())
+        elif configured_bundle:
+            key = ("configured", configured_bundle.bundle_key, country, stamp.date())
         else:
-            key = ("time", country, stamp)
+            # Coincident releases can be unrelated (CPI and real earnings, for example).
+            key = ("release", country, stamp, row["canonical_name"] or name.casefold(), row["period"])
         member = {
             "release_id": row["id"], "indicator_id": row["indicator_id"],
             "canonical_name": row["canonical_name"],
@@ -90,6 +93,8 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
             "source_status": "confirmed" if row["actual"] is not None else "scheduled",
             "mapped": row["indicator_id"] is not None,
             "headline": bool((cal_bundle and cal_bundle["headline"] == row["canonical_name"])
+                             or (configured_bundle and _BUNDLE_HEADLINES.get(configured_bundle.bundle_key)
+                                 == row["canonical_name"])
                              or (row["bundle_key"] and _BUNDLE_HEADLINES.get(row["bundle_key"])
                                  == row["canonical_name"])),
             "impact": impact,
@@ -98,7 +103,9 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
             "id": str(row["bundle_id"] or row["id"]), "released_at": stamp,
             "country_code": country, "currency_code": currency,
             "country_name": row["country_name"] or country,
-            "name": row["bundle_key"] or (cal_bundle and cal_bundle["name"]) or name,
+            "name": ((configured_bundle.bundle_key.split("_", 1)[1].removesuffix("_DAY")
+                      .replace("_", " ") + " release") if configured_bundle else
+                     (cal_bundle and cal_bundle["name"]) or name),
             "impact": impact, "components": [],
         })
         group["released_at"] = min(group["released_at"], stamp)
@@ -106,13 +113,16 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
         group["components"].append(member)
     result = list(groups.values())
     for group in result:
-        group["components"].sort(key=lambda item: (not item["headline"], item["impact"],
+        group["components"].sort(key=lambda item: (not item["headline"], not item["mapped"], item["impact"],
                                                    item["surprise_sigma"] is None,
                                                    -(abs(item["surprise_sigma"] or 0))))
         group.update({key: group["components"][0][key] for key in
                       ("actual", "consensus", "previous", "revised_from",
                        "surprise_sigma", "source_status")})
-    return result
+    return [group for group in result if group["impact"] <= min_impact
+            and (not surprise_only or any(c["surprise_sigma"] is not None
+                                          and abs(c["surprise_sigma"]) > 1
+                                          for c in group["components"]))]
 
 
 async def list_events(session: AsyncSession, start: date, end: date,

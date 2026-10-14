@@ -19,12 +19,40 @@ def row(**changes):
 def test_overrides_and_bundle_fallback():
     assert impact_for("Caixin Manufacturing PMI", 3) == 1
     assert impact_for("Minor auction", 3) == 3
-    events = _shape([row(), row(id=2, display_name="Core CPI", surprise_normalized=-2)],
+    events = _shape([row(canonical_name="cpi_headline_mom", display_name="Headline CPI (MoM)"),
+                     row(id=2, canonical_name="core_cpi_mom", display_name="Core CPI (MoM)",
+                         surprise_normalized=-2)],
                     None, 1, False)
     assert len(events) == 1
+    assert events[0]["name"] == "CPI release"
     assert len(events[0]["components"]) == 2
     assert events[0]["surprise_sigma"] == -2
+    assert events[0]["components"][0]["canonical_name"] == "core_cpi_mom"
     assert events[0]["components"][0]["revised_from"] == 0
+
+
+def test_coincident_unrelated_events_do_not_merge_and_history_headline_is_mapped():
+    events = _shape([
+        row(id=10, indicator_id=None, canonical_name=None, display_name=None,
+            raw_payload={"type": "Inflation Rate", "country": "US"}, actual=None),
+        row(id=11, canonical_name="core_cpi_mom", display_name="Core CPI (MoM)",
+            actual=0.3, estimate=0.2),
+        row(id=12, canonical_name="cpi_headline_yoy", display_name="Headline CPI (YoY)",
+            actual=3.0, estimate=2.9),
+        row(id=13, canonical_name="real_earnings", display_name="Real Earnings", importance=3),
+    ], None, 1, False)
+    assert len(events) == 1
+    cpi = next(event for event in events if event["name"] == "CPI release")
+    assert [member["release_id"] for member in cpi["components"]] == [11, 12]
+    assert cpi["components"][0]["indicator_id"] == 2
+    assert cpi["actual"] == 0.3
+    all_events = _shape([
+        row(id=10, indicator_id=None, canonical_name=None, display_name=None,
+            raw_payload={"type": "Inflation Rate", "country": "US"}),
+        row(id=11, canonical_name="core_cpi_mom", display_name="Core CPI (MoM)"),
+        row(id=13, canonical_name="real_earnings", display_name="Real Earnings"),
+    ], None, 3, False)
+    assert len(all_events) == 3
 
 
 def test_china_calendar_only_and_unmapped():

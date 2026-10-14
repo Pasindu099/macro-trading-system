@@ -284,16 +284,24 @@ class IngestService:
             select(IndicatorRelease)
             .where(
                 IndicatorRelease.indicator_id.is_(None),
+                IndicatorRelease.is_latest.is_(True),
                 IndicatorRelease.period == canonical.period_raw,
                 IndicatorRelease.released_at == canonical.released_at,
+                IndicatorRelease.raw_payload["country"].astext == canonical.country,
                 IndicatorRelease.raw_payload["type"].astext == raw_type,
                 IndicatorRelease.raw_payload["comparison"].astext == raw_comparison,
             )
             .order_by(IndicatorRelease.id.desc())
             .limit(1)
         )
-        if existing.scalar_one_or_none() is not None:
-            return  # already stored
+        latest = existing.scalar_one_or_none()
+        if latest is not None:
+            if (latest.actual == canonical.actual and latest.estimate == canonical.estimate
+                    and latest.previous == canonical.previous):
+                return
+            await session.execute(
+                update(IndicatorRelease).where(IndicatorRelease.id == latest.id).values(is_latest=False)
+            )
 
         new_row = IndicatorRelease(
             indicator_id=None,

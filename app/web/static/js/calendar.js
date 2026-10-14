@@ -9,6 +9,8 @@
   form.querySelectorAll('input[type=date]').forEach(input => input.addEventListener('change', () => {
     preset.value = 'custom';
   }));
+  form.querySelectorAll('input[name=impact], input[name=currency], input[name=surprise]')
+    .forEach(input => input.addEventListener('change', () => form.requestSubmit()));
   const cookie = name => document.cookie.split('; ').find(part => part.startsWith(name + '='))?.split('=')[1];
   if (!cookie('calendar_tz_name')) {
     document.cookie = 'calendar_tz_name=' + encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone) + '; path=/; SameSite=Lax';

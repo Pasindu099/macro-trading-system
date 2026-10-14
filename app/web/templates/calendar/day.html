@@ -6,7 +6,7 @@
        hx-trigger="click, keyup[key=='Enter']">
     <time datetime="{{ event.released_at.isoformat() }}">{{ event.local_time }}</time>
     <strong>{{ event.currency_code }}</strong>
-    <span class="calendar-event-name">{{ event.name.replace('_', ' ').title() }}<small>{{ event.country_name }} · {{ event.source_status }}{% if event.components|length > 1 %} · {{ event.components|length }} components{% endif %}</small></span>
+    <span class="calendar-event-name">{{ event.name.replace('_', ' ') }}<small>{{ event.country_name }} · {{ event.source_status }}{% if event.components|length > 1 %} · {{ event.components|length }} components{% endif %}</small></span>
     <span class="impact impact-{{ event.impact }}">{{ {1:'High', 2:'Med', 3:'Low'}[event.impact] }}</span>
     <span class="number">{{ event.actual if event.actual is not none else '—' }}</span>
     <span class="number">{{ event.consensus if event.consensus is not none else '—' }}</span>

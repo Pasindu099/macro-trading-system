@@ -162,3 +162,69 @@ curl -fsS http://127.0.0.1:8000/health
 ```
 
 Check: restored DB row counts and the old desk scores match the backup, and the active app image is the saved pre-P0 image. Keep the dump until the rollback or deployment is verified.
+
+## v2.2-calendar release (Step 11)
+
+Adds the calendar, event panel, Event Log and CN calendar-only data. Expected Alembic path from `v2.1-overview`: `0029_dominance_snapshots` → `0030_event_reaction_stats` → `0031_event_log_entries`. Migration 0031 copies `ai_interpretation` into `ai_note_raw` and `ai_note_final`, then drops the old column. **Order matters:** seed `countries` before starting the app. The app's scheduled ingestion now includes CN and fails on a foreign key without the CN row. Commands run on the VPS from the checkout directory.
+
+```bash
+set -e
+dc(){ docker compose -f docker-compose.prod.yml "$@"; }
+git status --short
+mkdir -p backups
+git rev-parse HEAD > backups/pre-v2.2-revision.txt
+docker image tag "$(docker inspect -f '{{.Image}}' macro_dashboard_app)" macro-dashboard:pre-v2.2
+bash scripts/backup_db.sh
+BACKUP=$(ls -1t backups/macro-dashboard-*.dump | head -1); test -s "$BACKUP" && du -h "$BACKUP"
+git fetch --tags origin
+git switch --detach v2.2-calendar
+export APP_IMAGE_TAG=v2.2-calendar
+dc build app
+dc stop app news_pipeline telegram_bot
+# 1. Migrations: current must be 0029_dominance_snapshots; head must be 0031_event_log_entries
+dc run --rm --no-deps app alembic current
+dc run --rm --no-deps app alembic upgrade head
+dc run --rm --no-deps app alembic current
+# 2. Countries seed (expects "Inserting country CN", 1 insert/update)
+dc run --rm --no-deps app python -m scripts.seed_countries
+# 3. Start services
+dc up -d --no-build app news_pipeline telegram_bot
+dc ps
+curl -fsS http://127.0.0.1:8000/health
+# 4. CN re-ingestion (45 days back, 14 forward; a few EODHD calls), then map stored CN rows
+dc exec app python -m scripts.run_manual_ingest --country CN
+dc exec app python -m scripts.reclassify_unmapped --country CN
+# 5. First event reaction stats run (nightly afterwards at 00:20 UTC; seconds, zero EODHD calls)
+dc exec app python -c 'import asyncio; from app.services.event_reactions import run_event_reaction_stats_job as j; print(asyncio.run(j()))'
+```
+
+Checks: the ingest summary prints inserted/unmapped counts with no `ForeignKeyViolation`. After reclassify, CN trade rows (Exports, Imports, Balance of Trade Yuan) are mapped. Locally this gave 20 mapped / 51 unmapped. The stats job prints a row count above 1,000 (local: 1,206), and `/api/admin/jobs/status` shows `job:event_reaction_stats` `success`. After the next Macro State chain (22:30 UTC, or run it as in the P0 section), this must return `0`:
+
+```bash
+dc exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -c "select count(*) from processed.macro_observations where country_code = '"'"'CN'"'"'"'
+```
+
+Smoke checks in an authenticated browser. Unauthenticated requests redirect to `/login`.
+
+| URL | Expected result |
+|---|---|
+| `/calendar` | HTTP 200; defaults to today; day groups load progressively; High filter shows impact labels and amber/blue surprise chips. |
+| `/calendar?preset=last_30_days&impact=high` | Past days load with actuals and σ chips; a CN day shows one "China trade balance" row with components. |
+| Click any row | Event panel: header figures, why-it-matters, History chart with Revised/First print toggle, Components, Reactions headed "Release-day move (daily close, not intraday)". Below 1024 px it opens as a full-screen sheet with ×. |
+| `/calendar/event-log` | HTTP 200; filters (currency, dates, type, traded); "New entry" opens the form. |
+| `/calendar/event-log/new?release_id=<id>` | Linked event shown, related pairs pre-ticked, release-day moves auto-filled; save redirects to edit with "Saved." Delete asks for confirmation. |
+| `/event-log` | 307 redirect to `/calendar/event-log`; nav "Calendar → Event Log" points there. |
+| `/api/admin/event-log` | HTTP 200 (admin); existing notes keep `ai_interpretation` (now the final note). |
+
+Event Log writes need the analyst role. "Generate AI note" calls OpenAI only on click. An API error (e.g. no credits) appears in the form and is not a deploy failure.
+
+Rollback: stop services, restore the dump, then return to the saved revision and image. Do not use `alembic downgrade` if free-text Event Log entries exist: downgrading 0031 deletes them.
+
+```bash
+dc stop app news_pipeline telegram_bot
+bash scripts/restore_db.sh "$BACKUP"  # type the requested RESTORE confirmation
+git switch --detach "$(cat backups/pre-v2.2-revision.txt)"
+export APP_IMAGE_TAG=pre-v2.2
+dc up -d --no-build app news_pipeline telegram_bot
+curl -fsS http://127.0.0.1:8000/health
+```

@@ -33,6 +33,6 @@
     <div class="calendar-table-heading"><span>Time</span><span>Ccy</span><span>Event · source</span><span>Impact</span><span>Actual</span><span>Cons.</span><span>Prev.</span><span>Surprise</span></div>
     <div id="calendar-days"><div hx-get="{{ first_url }}" hx-trigger="load" hx-swap="outerHTML" class="calendar-loading">Loading day…</div></div>
   </section>
-  <aside class="calendar-detail-pending" aria-label="Event detail"><h2>Event detail</h2><p>Select a release to inspect its history and reactions.</p></aside>
+  <aside id="calendar-detail" class="calendar-detail" aria-label="Event detail" aria-live="polite"><div class="calendar-detail-pending"><h2>Event detail</h2><p>Select a release to inspect its history and reactions.</p></div></aside>
 </main>
 {% endblock %}

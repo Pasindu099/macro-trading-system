@@ -1,0 +1,87 @@
+{% macro num(value) %}{{ value if value is not none else '—' }}{% endmacro %}
+{% macro sigma(value) %}{% if value is not none %}<b class="surprise{% if value < 0 %} miss{% endif %}">{{ '%+.1f'|format(value) }}σ</b>{% else %}—{% endif %}{% endmacro %}
+{% macro move(value) %}{% if value is none %}—{% elif value > 0 %}<span class="move up">▲ {{ '%.1f'|format(value) }}</span>{% elif value < 0 %}<span class="move down">▼ {{ '%.1f'|format(-value) }}</span>{% else %}<span class="move">0.0</span>{% endif %}{% endmacro %}
+<section class="calendar-detail-panel" aria-label="Event detail" data-calendar-detail>
+  <header class="detail-header">
+    <div>
+      <p class="eyebrow">{{ event.currency_code }} · {{ event.released_at.astimezone(zone).strftime('%a %d %b %Y %H:%M') }} {{ zone_name }} · {{ event.source_status }}</p>
+      <h2>{{ event.name.replace('_', ' ') }}</h2>
+    </div>
+    <button type="button" class="detail-close" data-detail-close aria-label="Close event detail">×</button>
+  </header>
+  <dl class="detail-figures">
+    <div><dt>Actual</dt><dd>{{ num(event.actual) }}</dd></div>
+    <div><dt>Consensus</dt><dd>{{ num(event.consensus) }}</dd></div>
+    <div><dt>Previous</dt><dd>{{ num(event.previous) }}{% if event.revised_from is not none %}<small>revised from {{ event.revised_from }}</small>{% endif %}</dd></div>
+    <div><dt>Surprise</dt><dd>{{ sigma(event.surprise_sigma) }}</dd></div>
+  </dl>
+  <div class="detail-why"><span>Why it matters now</span><p>{{ why }}</p></div>
+
+  <nav class="detail-tabs" role="tablist" aria-label="Detail views">
+    <button type="button" role="tab" data-tab="history" aria-selected="true">History</button>
+    <button type="button" role="tab" data-tab="components" aria-selected="false">Components</button>
+    <button type="button" role="tab" data-tab="reactions" aria-selected="false">Reactions</button>
+  </nav>
+
+  <div role="tabpanel" data-panel="history">
+    {% if history %}
+    <div class="detail-toggle" role="group" aria-label="Actual version">
+      <button type="button" data-version="actual" aria-pressed="true">Revised</button>
+      <button type="button" data-version="first_print" aria-pressed="false">First print</button>
+    </div>
+    <div class="detail-chart" data-history-chart role="img" aria-label="{{ headline.name }}: last {{ history|length }} releases, actual versus consensus"></div>
+    <p class="detail-caption">Surprise history (σ, from Event Innovation){% if upcoming %} · latest slot awaits the release{% endif %}</p>
+    <div class="detail-chart small" data-sigma-chart role="img" aria-label="Surprise sigma per release"></div>
+    <script type="application/json" data-chart-data>{{ chart|tojson }}</script>
+    {% else %}<p class="detail-empty">No stored history for this release{% if headline.indicator_id is none %} (unmapped event){% endif %}.</p>{% endif %}
+  </div>
+
+  <div role="tabpanel" data-panel="components" hidden>
+    {% if single_indicator %}<p class="detail-empty">Single-indicator release.</p>{% endif %}
+    <table class="detail-table">
+      <thead><tr><th>Component</th><th>Actual</th><th>Cons.</th><th>Prev.</th><th>Surprise</th></tr></thead>
+      <tbody>{% for c in event.components %}
+        <tr><td>{{ c.name }}{% if not c.mapped %} <small>unmapped</small>{% endif %}</td><td>{{ num(c.actual) }}</td><td>{{ num(c.consensus) }}</td>
+          <td>{{ num(c.previous) }}{% if c.revised_from is not none %}<small>rev. from {{ c.revised_from }}</small>{% endif %}</td><td>{{ sigma(c.surprise_sigma) }}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+  </div>
+
+  <div role="tabpanel" data-panel="reactions" hidden>
+    <h3>Release-day move (daily close, not intraday)</h3>
+    {% if reactions.pairs %}
+    <table class="detail-table">
+      <thead><tr><th>Pair</th><th>Avg |move|</th><th>Beat &gt;1σ</th><th>Miss &lt;−1σ</th><th>Hit rate</th><th>This release</th><th>Sample</th></tr></thead>
+      <tbody>{% for row in reactions.summary %}
+        <tr><td>{{ row.pair }}</td>
+          {% if row.stats %}<td>{{ '%.1f'|format(row.stats.avg_abs_move_pips) }}</td>
+            <td>{{ move(row.stats.beat_avg_pips) }} <small>n={{ row.stats.beat_n }}</small></td>
+            <td>{{ move(row.stats.miss_avg_pips) }} <small>n={{ row.stats.miss_n }}</small></td>
+            <td>{% if row.stats.hit_rate is not none %}{{ '%.0f'|format(row.stats.hit_rate * 100) }}%{% else %}—{% endif %} <small>n={{ row.stats.hit_n }}</small></td>
+          {% else %}<td colspan="4" class="detail-muted">too few releases</td>{% endif %}
+          <td>{{ move(row.this_move) }}</td><td>{{ row.sample_n }}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+    <p class="detail-caption">Pips, positive = {{ event.currency_code if event.currency_code != 'CNY' else 'AUD / NZD' }} up. Stats need {{ reactions.min_releases }}+ releases; hit rate counts |surprise| ≥ 0.5σ only.</p>
+    {% if reactions.releases %}
+    <table class="detail-table">
+      <thead><tr><th>Release</th><th>σ</th>{% for pair in reactions.pairs %}<th>{{ pair }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for release in reactions.releases %}
+        <tr><td>{{ release.released_at.strftime('%Y-%m-%d') }}</td><td>{{ sigma(release.sigma) }}</td>
+          {% for pair in reactions.pairs %}<td>{{ move(release.moves.get(pair)) }}</td>{% endfor %}</tr>
+      {% endfor %}</tbody>
+    </table>
+    {% endif %}
+    {% else %}<p class="detail-empty">No related pairs configured.</p>{% endif %}
+    <h3>Event Log reactions</h3>
+    {% for note in notes %}<article class="detail-note"><small>{{ note.created_at.strftime('%Y-%m-%d') }}</small><p>{{ note.manual_notes or note.ai_interpretation or 'No notes.' }}</p></article>
+    {% else %}<p class="detail-empty">No Event Log entries for this release.</p>{% endfor %}
+  </div>
+
+  <footer class="detail-links">
+    {% if links.desk %}<a href="{{ links.desk }}">{{ event.currency_code }} desk →</a>{% endif %}
+    {% for pair in links.pairs %}<a href="{{ pair.href }}">{{ pair.pair }} →</a>{% endfor %}
+    {% if links.data %}<a href="{{ links.data }}">Indicator history →</a>{% endif %}
+    <a href="{{ links.event_log }}" class="detail-log">Log to Event Log</a>
+  </footer>
+</section>

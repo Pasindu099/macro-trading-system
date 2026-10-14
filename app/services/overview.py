@@ -501,6 +501,15 @@ async def key_events() -> dict:
     return {"state": "ok", "rows": grouped}
 
 
+def event_family(items: list[dict]) -> str:
+    names = " ".join((item["canonical_name"] or "") + " " + item["display_name"] for item in items).lower()
+    return ("Policy decision" if "rate_decision" in names or "bank rate" in names else
+            "CPI" if "cpi" in names or "inflation" in names else
+            "Employment" if any(word in names for word in ("employment", "unemployment", "payroll")) else
+            "GDP" if "gdp" in names else "Retail sales" if "retail" in names else
+            "PMI" if "pmi" in names else items[0]["display_name"].split(" (")[0])
+
+
 def _group_key_events(rows: list[dict]) -> list[dict]:
     groups: dict[tuple[str, datetime], list[dict]] = {}
     now = datetime.now(UTC)
@@ -510,12 +519,7 @@ def _group_key_events(rows: list[dict]) -> list[dict]:
     output = []
     for items in groups.values():
         head = items[0]
-        names = " ".join((item["canonical_name"] or "") + " " + item["display_name"] for item in items).lower()
-        family = ("Policy decision" if "rate_decision" in names or "bank rate" in names else
-                  "CPI" if "cpi" in names or "inflation" in names else
-                  "Employment" if any(word in names for word in ("employment", "unemployment", "payroll")) else
-                  "GDP" if "gdp" in names else "Retail sales" if "retail" in names else
-                  "PMI" if "pmi" in names else head["display_name"].split(" (")[0])
+        family = event_family(items)
         period = next((item["period"] for item in items if item.get("period")), None)
         if period and re.fullmatch(r"\d{4}-\d{2}", period):
             period = datetime.strptime(period, "%Y-%m").strftime("%b")

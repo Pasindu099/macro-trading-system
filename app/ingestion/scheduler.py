@@ -68,6 +68,7 @@ from app.services.rate_probability import save_snapshot
 from app.services.rates_derived_jobs import run_rates_derived
 from app.services.situations import run_situations_job
 from app.services.dominance import run_dominance_job
+from app.services.event_reactions import run_event_reaction_stats_job
 from app.services.job_lock import job_lock
 from app.settings import get_settings
 
@@ -188,6 +189,18 @@ class Scheduler:
             max_instances=1,
             coalesce=True,
         )
+
+        self._scheduler.add_job(
+            run_event_reaction_stats_job,
+            trigger=CronTrigger(hour=0, minute=20, timezone="UTC"),
+            id="event_reaction_stats_daily",
+            name="Nightly release-day FX reaction stats",
+            replace_existing=True,
+            misfire_grace_time=60 * 60,
+            max_instances=1,
+            coalesce=True,
+        )
+        logger.info("  Registered event reaction stats at 00:20 UTC")
 
         self._scheduler.add_job(
             self._run_rate_probability_fetch,

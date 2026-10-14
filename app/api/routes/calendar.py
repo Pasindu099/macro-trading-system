@@ -12,6 +12,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from app.db.session import get_sessionmaker
+from app.services.calendar_detail import event_detail
 from app.services.calendar_service import list_events
 
 router = APIRouter(tags=["calendar"])
@@ -119,3 +120,14 @@ async def calendar_day(request: Request) -> HTMLResponse:
         "day": current, "events": events,
         "next_url": _day_url(next_day, filters) if next_day <= filters["end"] else None,
     })
+
+
+@router.get("/calendar/event/{release_id}", response_class=HTMLResponse)
+async def calendar_event(request: Request, release_id: int) -> HTMLResponse:
+    zone_name, zone = _zone(request)
+    async with get_sessionmaker()() as session:
+        detail = await event_detail(session, release_id)
+    if detail is None:
+        raise HTTPException(404, "Release not found")
+    detail["zone_name"], detail["zone"] = zone_name, zone
+    return templates.TemplateResponse(request, "calendar/detail.html", detail)

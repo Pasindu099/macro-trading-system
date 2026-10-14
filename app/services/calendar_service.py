@@ -75,6 +75,7 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
             key = ("time", country, stamp)
         member = {
             "release_id": row["id"], "indicator_id": row["indicator_id"],
+            "canonical_name": row["canonical_name"],
             "name": name, "actual": float(row["actual"]) if row["actual"] is not None else None,
             "consensus": float(row["estimate"]) if row["estimate"] is not None else None,
             "previous": float(row["previous"]) if row["previous"] is not None else None,

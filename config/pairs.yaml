@@ -59,3 +59,16 @@ pairs:
   - {pair: CAD/CHF, base: CAD, quote: CHF, pip_size: 0.0001}
   - {pair: CAD/JPY, base: CAD, quote: JPY, pip_size: 0.01}
   - {pair: CHF/JPY, base: CHF, quote: JPY, pip_size: 0.01}
+
+# Calendar event panel: the currency's USD pair plus its two most-traded crosses.
+# Calendar-only CNY events read through AUD and NZD.
+event_reaction_pairs:
+  USD: [EUR/USD, USD/JPY, GBP/USD]
+  EUR: [EUR/USD, EUR/JPY, EUR/GBP]
+  GBP: [GBP/USD, EUR/GBP, GBP/JPY]
+  JPY: [USD/JPY, EUR/JPY, GBP/JPY]
+  AUD: [AUD/USD, AUD/JPY, AUD/NZD]
+  NZD: [NZD/USD, AUD/NZD, NZD/JPY]
+  CAD: [USD/CAD, EUR/CAD, CAD/JPY]
+  CHF: [USD/CHF, EUR/CHF, CHF/JPY]
+  CNY: [AUD/USD, NZD/USD]

@@ -132,7 +132,7 @@ banks:
     projections: {name: Monetary Policy Report, cadence: quarterly, months: [1, 4, 7, 10]}
     rate_path_type: none
     conditioning: own_views             # internal policy-rate assumption, not published
-    voting: {body: Governing Council, participants: 7, voters: 7, decision: consensus}   # 7 incl. external deputy governors since end-2024
+    voting: {body: Governing Council, participants: 6, voters: 6, decision: consensus}   # 6 listed Oct 2026 (one external seat vacant)
     meetings: {per_year: 8, meeting_days: 1, calendar: "https://www.bankofcanada.ca/press/upcoming-events/"}
     minutes: {name: summary of deliberations, lag_days: 13}
     policy_rate: {name: target for the overnight rate}

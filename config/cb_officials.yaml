@@ -1,0 +1,133 @@
+# Step 12 Part E: policymakers per bank for speech / headline attribution.
+# Rosters as of 14 Oct 2026. Sources: federalreserve.gov FOMC page + 11 Dec 2025 reappointment release,
+# ECB Governing Council page, BoE MPC page, BoJ Policy Board page, BoC Governing Council page;
+# SNB, RBA, RBNZ from search results of their own pages / announcements (source: secondary).
+# voter: always | rotating (ECB monthly NCB rotation) | {year: bool} (Fed presidents) | never.
+# start/end: tenure on the committee; null = before the 12-month window / ongoing. dates_verified marks
+# dates confirmed on an official page.
+# aliases: matched case-sensitively at word boundaries. ambiguous: true means the alias is only used
+# when the text also names the bank (e.g. "Williams" = Fed NY or RBNZ).
+
+banks:
+  FED:
+    context: ["Fed", "FOMC", "Federal Reserve"]
+    officials:
+      - {id: warsh, name: Kevin Warsh, aliases: [Warsh], role: Chair, voter: always, start: 2026-05-01, end: null}
+      - {id: powell, name: Jerome H. Powell, aliases: [Powell], role: Governor (Chair until 2026), voter: always, start: null, end: null}
+      - {id: jefferson, name: Philip N. Jefferson, aliases: [Jefferson], role: Vice Chair, voter: always, start: null, end: null}
+      - {id: bowman, name: Michelle W. Bowman, aliases: [Bowman], role: Vice Chair for Supervision, voter: always, start: null, end: null}
+      - {id: barr, name: Michael S. Barr, aliases: [Barr], role: Governor, voter: always, start: null, end: null}
+      - {id: cook, name: Lisa D. Cook, aliases: [Lisa Cook, Governor Cook, "Fed's Cook"], role: Governor, voter: always, start: null, end: null}
+      - {id: miran, name: Stephen I. Miran, aliases: [Miran], role: Governor (former), voter: always, start: 2025-09-16, end: 2026-05-01}
+      - {id: waller, name: Christopher J. Waller, aliases: [Waller], role: Governor, voter: always, start: null, end: null}
+      - {id: williams_ny, name: John C. Williams, aliases: [John Williams, Williams], ambiguous: true, role: President New York (Vice Chair FOMC), voter: always, start: null, end: null}
+      - {id: collins, name: Susan M. Collins, aliases: [Collins], role: President Boston, voter: {2025: true, 2026: false, 2027: false}, start: null, end: null}
+      - {id: paulson, name: Anna Paulson, aliases: [Paulson], role: President Philadelphia, voter: {2025: false, 2026: true, 2027: false}, start: null, end: null}
+      - {id: hammack, name: Beth M. Hammack, aliases: [Hammack], role: President Cleveland, voter: {2025: false, 2026: true, 2027: false}, start: null, end: null}
+      - {id: barkin, name: Thomas I. Barkin, aliases: [Barkin], role: President Richmond, voter: {2025: false, 2026: false, 2027: true}, start: null, end: null}
+      - {id: bostic, name: Raphael W. Bostic, aliases: [Bostic], role: President Atlanta, voter: {2025: false, 2026: false}, start: null, end: 2026-02-28, dates_verified: true}
+      - {id: goolsbee, name: Austan D. Goolsbee, aliases: [Goolsbee], role: President Chicago, voter: {2025: true, 2026: false, 2027: true}, start: null, end: null}
+      - {id: musalem, name: Alberto Musalem, aliases: [Musalem], role: President St. Louis, voter: {2025: true, 2026: false, 2027: false}, start: null, end: null}
+      - {id: kashkari, name: Neel T. Kashkari, aliases: [Kashkari], role: President Minneapolis, voter: {2025: false, 2026: true, 2027: false}, start: null, end: null}
+      - {id: schmid, name: Jeffrey R. Schmid, aliases: [Schmid], ambiguous: true, role: President Kansas City, voter: {2025: true, 2026: false, 2027: false}, start: null, end: null}
+      - {id: logan, name: Lorie K. Logan, aliases: [Logan], role: President Dallas, voter: {2025: false, 2026: true, 2027: false}, start: null, end: null}
+      - {id: daly, name: Mary C. Daly, aliases: [Daly], role: President San Francisco, voter: {2025: false, 2026: false, 2027: true}, start: null, end: null}
+  ECB:
+    context: ["ECB", "Governing Council", "euro area", "eurozone"]
+    officials:
+      - {id: lagarde, name: Christine Lagarde, aliases: [Lagarde], role: President, voter: always, start: null, end: null}
+      - {id: vujcic, name: Boris Vujčić, aliases: [Vujčić, Vujcic], role: Vice-President (Croatia governor before 2026-06), voter: always, start: null, end: null}
+      - {id: de_guindos, name: Luis de Guindos, aliases: [de Guindos, Guindos], role: Vice-President, voter: always, start: null, end: 2026-05-31}
+      - {id: lane, name: Philip R. Lane, aliases: [Philip Lane, "ECB's Lane", Lane], ambiguous: true, role: Executive Board (chief economist), voter: always, start: null, end: null}
+      - {id: schnabel, name: Isabel Schnabel, aliases: [Schnabel], role: Executive Board, voter: always, start: null, end: null}
+      - {id: cipollone, name: Piero Cipollone, aliases: [Cipollone], role: Executive Board, voter: always, start: null, end: null}
+      - {id: elderson, name: Frank Elderson, aliases: [Elderson], role: Executive Board, voter: always, start: null, end: null}
+      - {id: wunsch, name: Pierre Wunsch, aliases: [Wunsch], role: Governor Belgium, voter: rotating, start: null, end: null}
+      - {id: radev, name: Dimitar Radev, aliases: [Radev], role: Governor Bulgaria, voter: rotating, start: 2026-01-01, end: null}
+      - {id: nagel, name: Joachim Nagel, aliases: [Nagel], role: President Bundesbank, voter: rotating, start: null, end: null}
+      - {id: kaasik, name: Ülo Kaasik, aliases: [Kaasik], role: Governor Estonia, voter: rotating, start: null, end: null}
+      - {id: makhlouf, name: Gabriel Makhlouf, aliases: [Makhlouf], role: Governor Ireland, voter: rotating, start: null, end: null}
+      - {id: stournaras, name: Yannis Stournaras, aliases: [Stournaras], role: Governor Greece, voter: rotating, start: null, end: null}
+      - {id: escriva, name: José Luis Escrivá, aliases: [Escrivá, Escriva], role: Governor Spain, voter: rotating, start: null, end: null}
+      - {id: moulin, name: Emmanuel Moulin, aliases: [Moulin], role: Governor France, voter: rotating, start: null, end: null}
+      - {id: villeroy, name: François Villeroy de Galhau, aliases: [Villeroy], role: Governor France (former), voter: rotating, start: null, end: null}
+      - {id: zigman, name: Ante Žigman, aliases: [Žigman, Zigman], role: Governor Croatia, voter: rotating, start: null, end: null}
+      - {id: panetta, name: Fabio Panetta, aliases: [Panetta], role: Governor Italy, voter: rotating, start: null, end: null}
+      - {id: patsalides, name: Christodoulos Patsalides, aliases: [Patsalides], role: Governor Cyprus, voter: rotating, start: null, end: null}
+      - {id: kazaks, name: Mārtiņš Kazāks, aliases: [Kazāks, Kazaks], role: Governor Latvia, voter: rotating, start: null, end: null}
+      - {id: simkus, name: Gediminas Šimkus, aliases: [Šimkus, Simkus], role: Governor Lithuania, voter: rotating, start: null, end: null}
+      - {id: reinesch, name: Gaston Reinesch, aliases: [Reinesch], role: Governor Luxembourg, voter: rotating, start: null, end: null}
+      - {id: demarco, name: Alexander Demarco, aliases: [Demarco], role: Governor Malta, voter: rotating, start: null, end: null}
+      - {id: sleijpen, name: Olaf Sleijpen, aliases: [Sleijpen], role: President Netherlands, voter: rotating, start: null, end: null}
+      - {id: kocher, name: Martin Kocher, aliases: [Kocher], role: Governor Austria, voter: rotating, start: null, end: null}
+      - {id: santos_pereira, name: Álvaro Santos Pereira, aliases: [Santos Pereira], role: Governor Portugal, voter: rotating, start: null, end: null}
+      - {id: dolenc, name: Primož Dolenc, aliases: [Dolenc], role: Governor Slovenia, voter: rotating, start: null, end: null}
+      - {id: kazimir, name: Peter Kažimír, aliases: [Kažimír, Kazimir], role: Governor Slovakia, voter: rotating, start: null, end: null}
+      - {id: rehn, name: Olli Rehn, aliases: [Rehn], role: Governor Finland, voter: rotating, start: null, end: null}
+  BOE:
+    context: ["BoE", "BOE", "Bank of England", "MPC"]
+    officials:
+      - {id: bailey, name: Andrew Bailey, aliases: [Bailey], role: Governor, voter: always, start: null, end: null}
+      - {id: breeden, name: Sarah Breeden, aliases: [Breeden], role: Deputy Governor Financial Stability, voter: always, start: null, end: null}
+      - {id: lombardelli, name: Clare Lombardelli, aliases: [Lombardelli], role: Deputy Governor Monetary Policy, voter: always, start: null, end: null}
+      - {id: ramsden, name: Dave Ramsden, aliases: [Ramsden], role: Deputy Governor Markets and Banking, voter: always, start: null, end: null}
+      - {id: pill, name: Huw Pill, aliases: [Pill], ambiguous: true, role: Chief Economist, voter: always, start: null, end: null}
+      - {id: mann, name: Catherine L. Mann, aliases: [Catherine Mann, Mann], ambiguous: true, role: External member, voter: always, start: null, end: null}
+      - {id: greene, name: Megan Greene, aliases: [Greene], role: External member, voter: always, start: null, end: null}
+      - {id: dhingra, name: Swati Dhingra, aliases: [Dhingra], role: External member, voter: always, start: null, end: null}
+      - {id: taylor, name: Alan Taylor, aliases: [Alan Taylor, Taylor], ambiguous: true, role: External member, voter: always, start: null, end: null}
+  BOJ:
+    context: ["BoJ", "BOJ", "Bank of Japan"]
+    officials:
+      - {id: ueda, name: Kazuo Ueda, aliases: [Ueda], role: Governor, voter: always, start: null, end: null}
+      - {id: uchida, name: Shinichi Uchida, aliases: [Uchida], role: Deputy Governor, voter: always, start: null, end: null}
+      - {id: himino, name: Ryozo Himino, aliases: [Himino], role: Deputy Governor, voter: always, start: null, end: null}
+      - {id: takata, name: Hajime Takata, aliases: [Takata], role: Board member, voter: always, start: null, end: null}
+      - {id: tamura, name: Naoki Tamura, aliases: [Tamura], role: Board member, voter: always, start: null, end: null}
+      - {id: koeda, name: Junko Koeda, aliases: [Koeda], role: Board member, voter: always, start: null, end: null}
+      - {id: masu, name: Kazuyuki Masu, aliases: [Masu], role: Board member, voter: always, start: null, end: null}
+      - {id: asada, name: Toichiro Asada, aliases: [Asada], role: Board member, voter: always, start: null, end: null}
+      - {id: sato, name: Ayano Sato, aliases: [Ayano Sato, Sato], ambiguous: true, role: Board member, voter: always, start: null, end: null}
+      - {id: nakagawa, name: Junko Nakagawa, aliases: [Nakagawa], role: Board member (former), voter: always, start: null, end: null}
+      - {id: noguchi, name: Asahi Noguchi, aliases: [Noguchi], role: Board member (former), voter: always, start: null, end: null}
+  RBA:
+    context: ["RBA", "Reserve Bank of Australia"]
+    officials:
+      - {id: bullock, name: Michele Bullock, aliases: [Bullock], role: Governor, voter: always, start: null, end: null}
+      - {id: hauser, name: Andrew Hauser, aliases: [Hauser], role: Deputy Governor, voter: always, start: null, end: null}
+      - {id: wilkinson, name: Jenny Wilkinson, aliases: [Wilkinson], ambiguous: true, role: Secretary to the Treasury, voter: always, start: null, end: null}
+      - {id: baker, name: Marnie Baker, aliases: [Marnie Baker], role: External member, voter: always, start: null, end: null}
+      - {id: fry_mckibbin, name: Renée Fry-McKibbin, aliases: [Fry-McKibbin], role: External member, voter: always, start: null, end: null}
+      - {id: hewson, name: Carolyn Hewson, aliases: [Hewson], role: External member, voter: always, start: null, end: null}
+      - {id: ross, name: Iain Ross, aliases: [Iain Ross], role: External member, voter: always, start: null, end: null}
+      - {id: preston, name: Bruce Preston, aliases: [Bruce Preston], role: External member, voter: always, start: 2026-03-01, end: null}
+      - {id: cilento, name: Melinda Cilento, aliases: [Cilento], role: External member, voter: always, start: 2026-09-01, end: null}
+      - {id: harper, name: Ian Harper, aliases: [Ian Harper], role: External member (former), voter: always, start: null, end: 2026-08-31}
+  BOC:
+    context: ["BoC", "BOC", "Bank of Canada"]
+    officials:
+      - {id: macklem, name: Tiff Macklem, aliases: [Macklem], role: Governor, voter: always, start: null, end: null, dates_verified: true}
+      - {id: rogers, name: Carolyn Rogers, aliases: [Carolyn Rogers, Rogers], ambiguous: true, role: Senior Deputy Governor, voter: always, start: null, end: null}
+      - {id: gravelle, name: Toni Gravelle, aliases: [Gravelle], role: Deputy Governor, voter: always, start: null, end: null}
+      - {id: gosselin, name: Marc-André Gosselin, aliases: [Gosselin], role: Deputy Governor, voter: always, start: 2026-05-25, end: null, dates_verified: true}
+      - {id: vincent, name: Nicolas Vincent, aliases: [Nicolas Vincent, Vincent], ambiguous: true, role: Deputy Governor, voter: always, start: null, end: null}
+      - {id: alexopoulos, name: Michelle Alexopoulos, aliases: [Alexopoulos], role: External Deputy Governor, voter: always, start: null, end: null}
+      - {id: kozicki, name: Sharon Kozicki, aliases: [Kozicki], role: Deputy Governor (former), voter: always, start: null, end: 2026-07-15, dates_verified: true}
+      - {id: mendes, name: Rhys Mendes, aliases: [Mendes], role: Deputy Governor (former), voter: always, start: null, end: 2026-04-10, dates_verified: true}
+  RBNZ:
+    context: ["RBNZ", "Reserve Bank of New Zealand"]
+    officials:
+      - {id: breman, name: Anna Breman, aliases: [Breman], role: Governor, voter: always, start: 2025-12-01, end: null}
+      - {id: silk, name: Karen Silk, aliases: [Silk], role: Assistant Governor, voter: always, start: null, end: 2026-12-15}
+      - {id: conway, name: Paul Conway, aliases: [Conway], role: Chief Economist, voter: always, start: null, end: null}
+      - {id: williams_nz, name: Rebecca Williams, aliases: [Rebecca Williams], role: Internal member, voter: always, start: 2026-10-15, end: null}
+      - {id: hansen, name: Carl Hansen, aliases: [Carl Hansen], role: External member, voter: always, start: 2024-04-01, end: 2027-03-31}
+      - {id: gai, name: Prasanna Gai, aliases: [Gai], ambiguous: true, role: External member, voter: always, start: null, end: 2028-12-31}
+      - {id: gourley, name: Hayley Gourley, aliases: [Gourley], role: External member, voter: always, start: null, end: null}
+      - {id: hawkesby, name: Christian Hawkesby, aliases: [Hawkesby], role: Deputy / Acting Governor (former), voter: always, start: null, end: 2025-12-31}
+  SNB:
+    context: ["SNB", "Swiss National Bank"]
+    officials:
+      - {id: schlegel, name: Martin Schlegel, aliases: [Schlegel], role: Chairman, voter: always, start: 2024-10-01, end: null}
+      - {id: martin, name: Antoine Martin, aliases: [Antoine Martin], role: Vice Chairman, voter: always, start: 2024-10-01, end: null}
+      - {id: tschudin, name: Petra Tschudin, aliases: [Tschudin], role: Member, voter: always, start: 2024-10-01, end: null}

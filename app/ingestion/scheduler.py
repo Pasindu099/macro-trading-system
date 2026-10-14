@@ -322,6 +322,17 @@ class Scheduler:
         )
         logger.info("  Registered job:cb_projections daily at 07:30 UTC")
 
+        # Step 12 Part E: speeches (14-day window) and investingLive comment attribution, daily.
+        self._scheduler.add_job(
+            _run_cb_speeches,
+            trigger=CronTrigger(hour=6, minute=30, timezone="UTC"),
+            id="cb_speeches_daily",
+            name="CB speeches and speaker comments",
+            replace_existing=True,
+            misfire_grace_time=60 * 60,
+        )
+        logger.info("  Registered job:cb_speeches daily at 06:30 UTC")
+
         # CFTC TFF positions: Friday release, Monday retry for holiday delays.
         for job_id, day, retry in (("cot_weekly", "fri", False), ("cot_weekly_retry", "mon", True)):
             self._scheduler.add_job(
@@ -740,6 +751,12 @@ STATEMENT_BANKS = ("FED", "ECB", "BOE", "BOJ", "RBA", "BOC", "RBNZ", "SNB")   # 
 async def _run_cb_statements(bank: str) -> None:
     from app.processing.cb_statements import ingest_statements
     await ingest_statements((bank,), since=date.today() - timedelta(days=60))
+
+
+async def _run_cb_speeches() -> None:
+    from app.processing.cb_speeches import attribute_comments, ingest_speeches
+    await ingest_speeches(since=date.today() - timedelta(days=14))
+    await attribute_comments(since=datetime.now(UTC) - timedelta(days=3))
 
 
 async def _run_cb_projections() -> None:

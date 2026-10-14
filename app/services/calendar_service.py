@@ -64,7 +64,11 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
         currency = row["currency_code"] or ("CNY" if country == "CN" else None)
         if not country or not currency or (currencies and currency not in currencies):
             continue
-        name = row["display_name"] or raw.get("type") or "Unmapped event"
+        source_name = raw.get("type")
+        comparison = (raw.get("comparison") or "").lower()
+        name = (f"{source_name} {'MoM' if comparison == 'mom' else 'YoY'}"
+                if source_name and comparison in {"mom", "yoy"}
+                else source_name or row["display_name"] or "Unmapped event")
         cal_bundle = _CAL_BUNDLES.get((row["canonical_name"], country))
         configured_bundle = _CONFIG_BUNDLES.get((row["canonical_name"], country))
         # Bundle members share the bundle's impact so components are never filtered apart.
@@ -103,7 +107,8 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
             "id": str(row["bundle_id"] or row["id"]), "released_at": stamp,
             "country_code": country, "currency_code": currency,
             "country_name": row["country_name"] or country,
-            "name": ((configured_bundle.bundle_key.split("_", 1)[1].removesuffix("_DAY")
+            "name": ("Inflation Rate" if configured_bundle and configured_bundle.bundle_key == "US_CPI_DAY" else
+                     (configured_bundle.bundle_key.split("_", 1)[1].removesuffix("_DAY")
                       .replace("_", " ") + " release") if configured_bundle else
                      (cal_bundle and cal_bundle["name"]) or name),
             "impact": impact, "components": [],

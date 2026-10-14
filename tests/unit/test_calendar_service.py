@@ -24,7 +24,7 @@ def test_overrides_and_bundle_fallback():
                          surprise_normalized=-2)],
                     None, 1, False)
     assert len(events) == 1
-    assert events[0]["name"] == "CPI release"
+    assert events[0]["name"] == "Inflation Rate"
     assert len(events[0]["components"]) == 2
     assert events[0]["surprise_sigma"] == -2
     assert events[0]["components"][0]["canonical_name"] == "core_cpi_mom"
@@ -42,7 +42,7 @@ def test_coincident_unrelated_events_do_not_merge_and_history_headline_is_mapped
         row(id=13, canonical_name="real_earnings", display_name="Real Earnings", importance=3),
     ], None, 1, False)
     assert len(events) == 1
-    cpi = next(event for event in events if event["name"] == "CPI release")
+    cpi = next(event for event in events if event["name"] == "Inflation Rate")
     assert [member["release_id"] for member in cpi["components"]] == [11, 12]
     assert cpi["components"][0]["indicator_id"] == 2
     assert cpi["actual"] == 0.3
@@ -53,6 +53,23 @@ def test_coincident_unrelated_events_do_not_merge_and_history_headline_is_mapped
         row(id=13, canonical_name="real_earnings", display_name="Real Earnings"),
     ], None, 3, False)
     assert len(all_events) == 3
+
+
+def test_cpi_components_use_standard_source_names():
+    source = [
+        ("core_cpi_mom", "Core Inflation Rate", "mom"),
+        ("core_cpi_yoy", "Core Inflation Rate", "yoy"),
+        ("cpi_headline_mom", "Inflation Rate", "mom"),
+        ("cpi_headline_yoy", "Inflation Rate", "yoy"),
+    ]
+    events = _shape([row(id=i, canonical_name=canonical,
+                         raw_payload={"type": name, "comparison": comparison})
+                     for i, (canonical, name, comparison) in enumerate(source, 1)], None, 3, False)
+    assert len(events) == 1
+    assert [component["name"] for component in events[0]["components"]] == [
+        "Core Inflation Rate MoM", "Core Inflation Rate YoY",
+        "Inflation Rate MoM", "Inflation Rate YoY",
+    ]
 
 
 def test_china_calendar_only_and_unmapped():

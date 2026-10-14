@@ -19,10 +19,14 @@ router = APIRouter(tags=["event-log"])
 templates = Jinja2Templates(directory=str(Path("app/web/templates")))
 CURRENCIES = ("USD", "EUR", "GBP", "JPY", "AUD", "NZD", "CAD", "CHF", "CNY")
 ALL_PAIRS = sorted({pair for pairs in REACTION_PAIRS.values() for pair in pairs})
+# Gold and US index CFDs alongside the FX pairs; moves are pips (FX), USD (gold) or index points.
+EXTRA_INSTRUMENTS = ("XAU/USD", "US100", "US30", "US500")
+INSTRUMENTS = (*ALL_PAIRS, *EXTRA_INSTRUMENTS)
+MOVE_UNITS = {"XAU/USD": "USD", "US100": "points", "US30": "points", "US500": "points"}
+# Trade fields are no longer edited from the form; existing values in the database are left as they are.
 _TEXT = ("event_title", "event_type", "expectation_before", "outcome_after", "manual_notes",
-         "ai_note_final", "direction")
-_NUMBERS = ("entry_price", "exit_price", "size", "pnl_pips", "pnl_amount",
-            "forecast_value", "actual_value", "previous_value")
+         "ai_note_final")
+_NUMBERS = ("forecast_value", "actual_value", "previous_value")
 
 
 def _optional_date(value: str | None) -> date | None:
@@ -44,11 +48,27 @@ def parse_entry_form(form: Any) -> dict[str, Any]:
     currency = (form.get("currency") or "").upper()
     data["currency"] = currency if currency in CURRENCIES else None
     data["event_date"] = _optional_date(form.get("event_date"))
-    data["pairs"] = [pair for pair in form.getlist("pairs") if pair in ALL_PAIRS]
-    data["traded"] = form.get("traded") == "yes"
-    if not data["traded"]:
-        data["direction"] = None
+    data["pairs"] = [pair for pair in form.getlist("pairs") if pair in INSTRUMENTS]
+    data["moves"] = parse_moves(form, data["pairs"])
     return data
+
+
+def parse_moves(form: Any, instruments: list[str]) -> dict[str, dict[str, Decimal]]:
+    """move__{instrument}__{horizon} cells for the selected instruments; signed, blank = not recorded."""
+    moves: dict[str, dict[str, Decimal]] = {}
+    for instrument in instruments:
+        for horizon in log.MOVE_HORIZONS:
+            value = (form.get(f"move__{instrument}__{horizon}") or "").strip().replace("+", "")
+            if not value:
+                continue
+            try:
+                move = Decimal(value)
+            except InvalidOperation as exc:
+                raise ValueError(f"{instrument} {horizon} move must be a number") from exc
+            if not move.is_finite() or abs(move) >= log.MAX_MOVE:
+                raise ValueError(f"{instrument} {horizon} move is out of range")
+            moves.setdefault(instrument, {})[horizon] = move.quantize(Decimal("0.1"))
+    return moves
 
 
 async def _form_context(session, note=None, release_id: int | None = None, **extra) -> dict[str, Any]:
@@ -56,9 +76,14 @@ async def _form_context(session, note=None, release_id: int | None = None, **ext
     release = await log._release_context(session, release_id) if release_id else None
     reactions = await log.linked_reactions(session, release_id)
     default_pairs = pairs_for(release["currency_code"]) if release and release["currency_code"] else []
+    moves = extra.pop("moves", None)
+    if moves is None:
+        moves = await log.load_moves(session, note.id) if note else {}
     return {"note": note, "release": release, "reactions": reactions, "currencies": CURRENCIES,
-            "all_pairs": ALL_PAIRS, "event_types": log.EVENT_TYPES,
-            "selected_pairs": (note.pairs if note else None) or default_pairs, **extra}
+            "all_pairs": INSTRUMENTS, "event_types": log.EVENT_TYPES, "horizons": log.MOVE_HORIZONS,
+            "move_units": MOVE_UNITS, "moves": moves,
+            "selected_pairs": extra.pop("selected", None) or (note.pairs if note else None) or default_pairs,
+            **extra}
 
 
 @router.get("/calendar/event-log", response_class=HTMLResponse)
@@ -68,17 +93,16 @@ async def event_log_page(request: Request) -> HTMLResponse:
         start, end = _optional_date(params.get("start")), _optional_date(params.get("end"))
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
-    traded = {"yes": True, "no": False}.get(params.get("traded", ""))
     currency = params.get("currency") if params.get("currency") in CURRENCIES else None
     event_type = params.get("event_type") if params.get("event_type") in log.EVENT_TYPES else None
     async with get_sessionmaker()() as session:
         entries = await log.list_entries(session, currency=currency, start=start, end=end,
-                                         event_type=event_type, traded=traded)
+                                         event_type=event_type)
     return templates.TemplateResponse(request, "calendar/event_log.html", {
         "page_title": "Event Log | ForexCompass", "entries": entries, "currencies": CURRENCIES,
         "event_types": log.EVENT_TYPES,
-        "filters": {"currency": currency, "start": start, "end": end, "event_type": event_type,
-                    "traded": params.get("traded", "")},
+        "horizons": log.MOVE_HORIZONS,
+        "filters": {"currency": currency, "start": start, "end": end, "event_type": event_type},
     })
 
 
@@ -104,7 +128,9 @@ async def event_log_create(request: Request):
     release_id = int(form["release_id"]) if (form.get("release_id") or "").isdigit() else None
     async with get_sessionmaker()() as session:
         try:
-            note = await log.save_entry(session, None, parse_entry_form(form), release_id=release_id)
+            data = parse_entry_form(form)
+            note = await log.save_entry(session, None, data, release_id=release_id)
+            await log.save_moves(session, note.id, data["moves"])
         except ValueError as exc:
             context = await _form_context(session, release_id=release_id, error=str(exc))
             return templates.TemplateResponse(request, "calendar/event_log_form.html",
@@ -130,7 +156,9 @@ async def event_log_update(request: Request, note_id: int):
     form = await request.form()
     async with get_sessionmaker()() as session:
         try:
-            note = await log.save_entry(session, note_id, parse_entry_form(form))
+            data = parse_entry_form(form)
+            note = await log.save_entry(session, note_id, data)
+            await log.save_moves(session, note.id, data["moves"])
         except ValueError as exc:
             await session.rollback()
             note = await session.get(log.EventReactionNote, note_id)

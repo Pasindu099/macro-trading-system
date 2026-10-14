@@ -33,8 +33,8 @@
           <label>Event type <select name="event_type"><option value="">Auto</option>
             {% for kind in event_types %}<option{% if note and note.event_type == kind %} selected{% endif %}>{{ kind }}</option>{% endfor %}</select></label>
         </div>
-        <fieldset class="pair-choices"><legend>Pairs</legend>
-          {% for pair in all_pairs %}<label><input type="checkbox" name="pairs" value="{{ pair }}"{% if pair in selected_pairs %} checked{% endif %}>{{ pair }}</label>{% endfor %}
+        <fieldset class="pair-choices"><legend>Instruments</legend>
+          {% for pair in all_pairs %}<label><input type="checkbox" name="pairs" value="{{ pair }}" data-move-toggle{% if pair in selected_pairs %} checked{% endif %}>{{ pair }}</label>{% endfor %}
         </fieldset>
       </fieldset>
 
@@ -48,21 +48,26 @@
       <fieldset><legend>Notes</legend>
         <label>Expectation before <textarea name="expectation_before" rows="3">{{ val('expectation_before') }}</textarea></label>
         <label>Outcome after <textarea name="outcome_after" rows="3">{{ val('outcome_after') }}</textarea></label>
-        <label>Notes <textarea name="manual_notes" rows="3">{{ val('manual_notes') }}</textarea></label>
+        <label>Notes <textarea name="manual_notes" rows="3">{{ val('manual_notes') }}</textarea></lab      <fieldset><legend>Price moves after the release</legend>
+        <p class="detail-muted">Signed move from the release time: pips for FX pairs, USD for gold, points for indices. Leave blank if not recorded. Tick an instrument above to add its row.</p>
+        <div class="event-moves-wrap">
+        <table class="detail-table event-moves">
+          <thead><tr><th>Instrument</th>{% for h in horizons %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+          <tbody>
+          {% for pair in all_pairs %}
+            <tr data-move-row="{{ pair }}"{% if pair not in selected_pairs and pair not in moves %} hidden{% endif %}>
+              <th scope="row">{{ pair }} <small>{{ move_units.get(pair, 'pips') }}</small></th>
+              {% for h in horizons %}{% set value = moves.get(pair, {}).get(h) %}
+              <td><input type="text" inputmode="decimal" name="move__{{ pair }}__{{ h }}" value="{{ value if value is not none else '' }}" aria-label="{{ pair }} move after {{ h }}" placeholder="±"></td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        </div>
       </fieldset>
 
-      <fieldset><legend>Trade (optional)</legend>
-        <label class="inline"><input type="checkbox" name="traded" value="yes"{% if note and note.traded %} checked{% endif %}> Traded</label>
-        <div class="form-grid">
-          <label>Direction <select name="direction"><option value="">—</option>
-            <option value="long"{% if note and note.direction == 'long' %} selected{% endif %}>Long</option>
-            <option value="short"{% if note and note.direction == 'short' %} selected{% endif %}>Short</option></select></label>
-          <label>Entry <input type="text" inputmode="decimal" name="entry_price" value="{{ val('entry_price') }}"></label>
-          <label>Exit <input type="text" inputmode="decimal" name="exit_price" value="{{ val('exit_price') }}"></label>
-          <label>Size <input type="text" inputmode="decimal" name="size" value="{{ val('size') }}"></label>
-          <label>P&amp;L pips <input type="text" inputmode="decimal" name="pnl_pips" value="{{ val('pnl_pips') }}"></label>
-          <label>P&amp;L amount <input type="text" inputmode="decimal" name="pnl_amount" value="{{ val('pnl_amount') }}"></label>
-        </div>
+iv>
       </fieldset>
 
       {% if note %}

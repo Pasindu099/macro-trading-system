@@ -445,6 +445,30 @@ ENTRY_FIELDS = {
 }
 
 
+MOVE_HORIZONS = ("1m", "5m", "30m", "1h", "4h")
+MAX_MOVE = Decimal("100000")
+
+
+async def load_moves(session: AsyncSession, note_id: int) -> dict[str, dict[str, Decimal]]:
+    """{instrument: {horizon: move}} for one entry."""
+    rows = await session.execute(text("SELECT instrument, horizon, move FROM event_log_moves WHERE note_id = :n"),
+                                 {"n": note_id})
+    moves: dict[str, dict[str, Decimal]] = {}
+    for row in rows:
+        moves.setdefault(row.instrument, {})[row.horizon] = row.move
+    return moves
+
+
+async def save_moves(session: AsyncSession, note_id: int, moves: dict[str, dict[str, Decimal]]) -> None:
+    """Replace the entry's moves with the submitted ones (blank cells are simply absent)."""
+    await session.execute(text("DELETE FROM event_log_moves WHERE note_id = :n"), {"n": note_id})
+    rows = [{"n": note_id, "i": instrument, "h": horizon, "m": value}
+            for instrument, by_horizon in moves.items() for horizon, value in by_horizon.items()]
+    if rows:
+        await session.execute(text("INSERT INTO event_log_moves (note_id, instrument, horizon, move) "
+                                   "VALUES (:n, :i, :h, :m)"), rows)
+
+
 async def list_entries(
     session: AsyncSession, *, currency: str | None = None, start: date | None = None,
     end: date | None = None, event_type: str | None = None, traded: bool | None = None,
@@ -470,7 +494,16 @@ async def list_entries(
         ORDER BY n.event_date DESC NULLS LAST, r.released_at DESC NULLS LAST, n.id DESC
         LIMIT :limit
     """), params)
-    return [dict(row) for row in rows.mappings().all()]
+    entries = [dict(row) for row in rows.mappings().all()]
+    if entries:
+        moves = await session.execute(text("""SELECT note_id, instrument, horizon, move FROM event_log_moves
+            WHERE note_id = ANY(:ids)"""), {"ids": [e["id"] for e in entries]})
+        by_note: dict[int, dict[str, dict[str, Decimal]]] = {}
+        for row in moves:
+            by_note.setdefault(row.note_id, {}).setdefault(row.instrument, {})[row.horizon] = row.move
+        for entry in entries:
+            entry["moves"] = by_note.get(entry["id"], {})
+    return entries
 
 
 async def _release_context(session: AsyncSession, release_id: int) -> dict[str, Any] | None:

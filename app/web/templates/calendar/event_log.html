@@ -15,20 +15,16 @@
       <label>To <input type="date" name="end" value="{{ filters.end.isoformat() if filters.end else '' }}"></label>
       <label>Event type <select name="event_type"><option value="">All</option>
         {% for kind in event_types %}<option{% if filters.event_type == kind %} selected{% endif %}>{{ kind }}</option>{% endfor %}</select></label>
-      <label>Traded <select name="traded"><option value="">All</option>
-        <option value="yes"{% if filters.traded == 'yes' %} selected{% endif %}>Yes</option>
-        <option value="no"{% if filters.traded == 'no' %} selected{% endif %}>No</option></select></label>
       <button type="submit">Apply</button>
     </form>
     <div class="event-log-table" role="table" aria-label="Event Log entries">
-      <div class="event-log-row heading" role="row"><span>Date</span><span>Ccy</span><span>Event</span><span>Type</span><span>Pairs</span><span>Trade</span><span>P&amp;L</span></div>
+      <div class="event-log-row heading" role="row"><span>Date</span><span>Ccy</span><span>Event</span><span>Type</span><span>Instruments</span><span>Moves</span></div>
       {% for entry in entries %}
       <a class="event-log-row" role="row" href="/calendar/event-log/{{ entry.id }}/edit">
         <span>{{ entry.event_date.isoformat() if entry.event_date else '—' }}</span><strong>{{ entry.currency or '—' }}</strong>
         <span>{{ entry.title or 'Untitled' }}{% if entry.indicator_release_id %} <small>calendar</small>{% endif %}</span>
         <span>{{ entry.event_type or '—' }}</span><span>{{ entry.pairs|join(', ') or '—' }}</span>
-        <span>{% if entry.traded %}{{ entry.direction or 'yes' }}{% else %}no{% endif %}</span>
-        <span class="number">{% if entry.pnl_pips is not none %}<span class="move {{ 'up' if entry.pnl_pips > 0 else 'down' if entry.pnl_pips < 0 else '' }}">{{ '▲' if entry.pnl_pips > 0 else '▼' if entry.pnl_pips < 0 else '' }} {{ entry.pnl_pips|abs }} pips</span>{% else %}—{% endif %}</span>
+        <span class="event-log-moves">{% for instrument, by_h in entry.moves.items() %}{% if loop.index <= 3 %}{% set last = (horizons|select('in', by_h)|list)[-1] %}{% set m = by_h[last] %}<span>{{ instrument }} {{ last }} <span class="move {{ 'up' if m > 0 else 'down' if m < 0 else '' }}">{{ '▲' if m > 0 else '▼' if m < 0 else '' }} {{ m|abs }}</span></span>{% endif %}{% else %}—{% endfor %}{% if entry.moves|length > 3 %} <small>+{{ entry.moves|length - 3 }}</small>{% endif %}</span>
       </a>
       {% else %}<p class="calendar-empty">No Event Log entries match these filters.</p>{% endfor %}
     </div>

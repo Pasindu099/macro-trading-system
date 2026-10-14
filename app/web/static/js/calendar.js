@@ -84,6 +84,13 @@
     label.hidden = false;
     document.getElementById('event-picker-results').innerHTML = '';
   });
+  // Event Log: ticking an instrument shows its price-move row; rows with values stay visible.
+  document.querySelectorAll('[data-move-toggle]').forEach(box => box.addEventListener('change', () => {
+    const row = document.querySelector(`[data-move-row="${box.value}"]`);
+    if (!row) return;
+    const filled = [...row.querySelectorAll('input')].some(input => input.value.trim());
+    row.hidden = !box.checked && !filled;
+  }));
   document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventListener('submit', event => {
     if (!window.confirm(form.dataset.confirm)) { event.preventDefault(); return; }
     form.querySelector('[name=confirm]').value = 'yes';

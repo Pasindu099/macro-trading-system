@@ -155,3 +155,4 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] Decision (blocked sources): honest UA everywhere; RBA/RBNZ blocked → `/admin/cb-imports` upload + manual entry, `manual_import` job status and freshness label; migration 0033. Full suite 643 passed, 7 skipped.
 - [x] E. Officials config, speeches FED 111 / ECB 86 / BOE 50 / BOJ 26 / BOC 10 / SNB 9, RBA/RBNZ manual_import, 143 attributed investingLive comments, 16,853 sentences.
 - [x] F. lexicon_v1 scores, speaker tone/shift/lean/focus, 12-week committee balance; sample REPORT_STEP12_TONE_SAMPLE.md. Full suite 664 passed, 7 skipped. STOP after F.
+- [x] Event Log: trade fields removed from the form (stored values kept); manual signed moves per instrument at 1m/5m/30m/1h/4h in `event_log_moves` (migration 0036); XAU/USD, US100, US30, US500 added; list shows latest-horizon moves.

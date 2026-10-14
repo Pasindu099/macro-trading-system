@@ -42,21 +42,30 @@ def _note(**values):
     return EventReactionNote(**(base | values))
 
 
-def test_form_parsing_keeps_trade_fields_optional():
+def test_form_parsing_moves_per_instrument_and_ignores_trade_fields():
     form = FormData([("event_title", " CPI surprise "), ("event_date", "2026-10-01"), ("currency", "usd"),
-                     ("pairs", "EUR/USD"), ("pairs", "XXX/YYY"), ("entry_price", ""), ("pnl_pips", "12.5"),
-                     ("direction", "long"), ("ai_note_raw", "ignored")])
+                     ("pairs", "EUR/USD"), ("pairs", "XAU/USD"), ("pairs", "US100"), ("pairs", "XXX/YYY"),
+                     ("move__EUR/USD__1m", "-12.5"), ("move__EUR/USD__1h", "+30"), ("move__EUR/USD__4h", ""),
+                     ("move__XAU/USD__5m", "8.25"), ("move__US100__30m", "-145"),
+                     ("move__GBP/USD__1m", "9"),          # instrument not ticked: ignored
+                     ("pnl_pips", "12.5"), ("direction", "long"), ("traded", "yes"), ("ai_note_raw", "ignored")])
     data = parse_entry_form(form)
     assert data["event_title"] == "CPI surprise" and data["currency"] == "USD"
-    assert data["pairs"] == ["EUR/USD"]
-    assert data["entry_price"] is None and data["pnl_pips"] == Decimal("12.5")
-    assert data["traded"] is False and data["direction"] is None  # untraded entries carry no direction
-    assert "ai_note_raw" not in data
-    with pytest.raises(ValueError):
-        parse_entry_form(FormData([("size", "lots")]))
+    assert data["pairs"] == ["EUR/USD", "XAU/USD", "US100"]
+    assert data["moves"] == {"EUR/USD": {"1m": Decimal("-12.5"), "1h": Decimal("30.0")},
+                             "XAU/USD": {"5m": Decimal("8.2")}, "US100": {"30m": Decimal("-145.0")}}
+    assert not {"traded", "direction", "pnl_pips", "ai_note_raw"} & set(data)   # trades are not edited
+    with pytest.raises(ValueError, match="EUR/USD 5m move must be a number"):
+        parse_entry_form(FormData([("pairs", "EUR/USD"), ("move__EUR/USD__5m", "lots")]))
 
 
-@pytest.mark.asyncio
+def test_form_lists_gold_and_indices_with_all_horizons():
+    from app.api.routes.event_log import INSTRUMENTS, templates
+    from app.services.event_reaction_log import MOVE_HORIZONS
+    assert {"XAU/USD", "US100", "US30", "US500"} <= set(INSTRUMENTS) and MOVE_HORIZONS == ("1m", "5m", "30m", "1h", "4h")
+    assert templates.env.get_template("calendar/event_log_form.html")      # template compiles
+
+
 async def test_create_edit_delete_free_text_entry():
     session = FakeSession()
     note = await log.save_entry(session, None, {"event_title": "Tariff headline", "event_date": date(2026, 10, 2),

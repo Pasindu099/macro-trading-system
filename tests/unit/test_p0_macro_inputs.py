@@ -4,7 +4,7 @@ import asyncio
 from app.ingestion.canonicalizer import Canonicalizer
 from app.ingestion.ingest_service import quarantine_future_actual
 from app.processing.macro_features import build_indicator_features, cap_surprise_z, surprise_std_scale
-from app.processing.macro_dataset import rebuild_macro_observations
+from app.processing.macro_dataset import rebuild_indicator_metadata, rebuild_macro_observations
 
 
 def _event(actual, previous, estimate, day, period="Sep"):
@@ -88,3 +88,18 @@ def test_processing_excludes_future_and_quarantined_actuals():
     assert "r.released_at <= CURRENT_TIMESTAMP" in insert
     assert "r.actual IS NOT NULL" in insert
     assert "r.raw_payload->>'quarantine_reason' IS NULL" in insert
+    assert "c.cb_mandate_type IS DISTINCT FROM 'calendar_only'" in insert
+
+
+def test_calendar_only_countries_never_enter_macro_state():
+    class CaptureSession:
+        def __init__(self):
+            self.sql = []
+
+        async def execute(self, statement):
+            self.sql.append(str(statement))
+
+    session = CaptureSession()
+    asyncio.run(rebuild_indicator_metadata(session))
+    insert = next(sql for sql in session.sql if "INSERT INTO processed.indicator_metadata" in sql)
+    assert "c.cb_mandate_type IS DISTINCT FROM 'calendar_only'" in insert

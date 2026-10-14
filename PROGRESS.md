@@ -139,3 +139,7 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] A. Shared top navigation with Calendar/Event Log menu and mobile collapse; amber/blue semantic tokens; desks otherwise untouched. Focused shell tests 3 passed; full suite 530 passed, 7 skipped.
 - [x] B. Seven lazy Overview panels: deterministic hero, active situations, 24h market news, eight-currency ranking, CB map, 28-pair map and upcoming high-impact events. Live local service reads completed; focused tests 26 passed, full suite 533 passed, 7 skipped.
 - [x] C. Overview panels use the desk cache with a 60-second TTL and render loading, empty, unavailable, pending and error states; 390 px CSS breakpoint. Focused tests 7 passed; full suite 534 passed, 7 skipped. Visual browser check unavailable because no browser was connected.
+
+## Step 11 — calendar
+- [x] A–C verification: container full suite 586 passed, 7 skipped. CN seeded into `countries` (was missing; ingestion failed on FK) and ingested: 9 mapped, 60 unmapped. `/calendar` defaults to today; last 30 days High loads 30 days progressively, 105 rows, 63 surprise chips.
+- [x] CN excluded from Macro State: `calendar_only` countries filtered from processed indicator metadata and observations; chain rebuilt successfully, 0 CN/CNY rows in metadata, observations, features, themes, stance and CB score. Regression tests in `tests/unit/test_p0_macro_inputs.py`.

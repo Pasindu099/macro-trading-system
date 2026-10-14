@@ -453,6 +453,7 @@ async def rebuild_indicator_metadata(session: AsyncSession) -> None:
             JOIN countries c ON c.code = i.country_code
             LEFT JOIN release_stats rs ON rs.indicator_id = i.id
             LEFT JOIN exact_dupes ed ON ed.indicator_id = i.id
+            WHERE c.cb_mandate_type IS DISTINCT FROM 'calendar_only'
             ORDER BY i.country_code, i.canonical_name
             """
         )
@@ -569,6 +570,7 @@ async def rebuild_macro_observations(session: AsyncSession) -> None:
             LEFT JOIN actual_stats s ON s.indicator_id = r.indicator_id
             WHERE r.exact_duplicate_rank = 1
               AND r.actual IS NOT NULL
+              AND c.cb_mandate_type IS DISTINCT FROM 'calendar_only'
             ORDER BY (r.released_at AT TIME ZONE 'UTC')::date, i.country_code, i.canonical_name
             """
         )

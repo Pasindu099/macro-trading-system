@@ -5,7 +5,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from app.auth import require_role
-from app.services import cb_tracking, ecb_projections, ecb_regime, ecb_tracking, fed_projections, fed_regime
+from app.services import cb_summary, cb_tracking, ecb_projections, ecb_regime, ecb_tracking, fed_projections, fed_regime
 from app.settings import get_settings
 
 SUPPORTED = {"FED", "ECB"}
@@ -33,6 +33,14 @@ def _round_date(round_: str | None) -> date | None:
         return date.fromisoformat(round_)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail="round must be 'latest' or YYYY-MM-DD") from exc
+
+
+@router.get("/{bank}/summary")
+async def summary(bank: str) -> dict:
+    try:
+        return await cb_summary.get_summary(bank)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.get("/{bank}/projections")

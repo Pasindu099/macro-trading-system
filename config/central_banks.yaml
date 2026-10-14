@@ -1,6 +1,7 @@
 # Per-central-bank reference config (Step 8 Part A).
-# Fed is filled from primary sources; others from public knowledge and marked
-# verify: true until checked against each bank's own documentation.
+# Step 12 Part A: all eight banks checked against official sources (verify: false).
+# Unverifiable items are commented inline; blackout.verified marks unconfirmed rules.
+# blackout.start: anchor first_day|decision with days_before | business_days_before | weekday+nth.
 #
 # rate_path_type: dots (participants' rate projections) | own_track (published policy-rate path) | none
 # conditioning:   own_views (each participant's appropriate policy) | market_path | market_curve
@@ -29,12 +30,18 @@ banks:
       decision: majority vote, dissents published
     meetings:
       per_year: 8
+      meeting_days: 2
       calendar: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
       statement: "https://www.federalreserve.gov/newsevents/pressreleases/monetary{yyyymmdd}a.htm"
     minutes:
       lag_days: 21
       source: "https://www.federalreserve.gov/monetarypolicy/files/fomcminutes{yyyymmdd}.pdf"
     policy_rate: {name: federal funds target range (upper bound), indicator: fed_interest_rate_decision}
+    blackout:
+      start: {anchor: first_day, weekday: sat, nth: 2}   # second Saturday before the meeting begins
+      end: {days_after_decision: 1}       # midnight ET the day after the meeting
+      verified: true
+      source: "https://www.federalreserve.gov/monetarypolicy/files/FOMC_ExtCommunicationParticipants.pdf"
     verify: false
 
   ECB:
@@ -46,9 +53,14 @@ banks:
     rate_path_type: none
     conditioning: market_curve          # technical assumption: market-implied rates
     voting: {body: Governing Council, participants: 27, voters: 21, decision: consensus or majority, votes not published}
-    meetings: {per_year: 8, calendar: "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"}
+    meetings: {per_year: 8, meeting_days: 2, calendar: "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"}
     minutes: {name: monetary policy accounts, lag_days: 28}
     policy_rate: {name: deposit facility rate}
+    blackout:
+      start: {anchor: decision, days_before: 7}   # quiet period one week before the meeting
+      end: {days_after_decision: 0}       # ends with the press conference
+      verified: true
+      source: "https://www.ecb.europa.eu/ecb/orga/transparency/html/index.en.html"
     verify: false
 
   BOE:
@@ -56,14 +68,20 @@ banks:
     currency: GBP
     mandate: single_price_stability     # secondary objective: support government economic policy
     inflation_target: {value: 2.0, measure: CPI, basis: yoy, form: point}
-    projections: {name: Monetary Policy Report, cadence: quarterly, months: [2, 5, 8, 11]}
+    projections: {name: Monetary Policy Report, cadence: quarterly, months: [2, 4, 7, 11]}   # 2026-27 confirmed schedule
     rate_path_type: none
     conditioning: market_curve          # market-implied Bank Rate path
     voting: {body: Monetary Policy Committee, participants: 9, voters: 9, decision: majority, individual votes published}
-    meetings: {per_year: 8}
+    meetings: {per_year: 8, meeting_days: 1, calendar: "https://www.bankofengland.co.uk/monetary-policy/upcoming-mpc-dates"}
     minutes: {name: Monetary Policy Summary and minutes, lag_days: 0}
     policy_rate: {name: Bank Rate}
-    verify: true
+    blackout:
+      start: {anchor: decision, days_before: 8}   # "usually 8 or 9 days before the decision"
+      end: {days_after_decision: 0}
+      verified: true
+      approx: true
+      source: "https://www.bankofengland.co.uk/about/governance-and-funding/mpc-external-communications-code"
+    verify: false
 
   BOJ:
     name: Bank of Japan
@@ -72,12 +90,17 @@ banks:
     inflation_target: {value: 2.0, measure: CPI, basis: yoy, form: point}
     projections: {name: Outlook for Economic Activity and Prices, cadence: quarterly, months: [1, 4, 7, 10]}
     rate_path_type: none
-    conditioning: board_median          # median of Policy Board members' forecasts
+    conditioning: board_median          # median of Policy Board members' forecasts; rate assumption not confirmed
     voting: {body: Policy Board, participants: 9, voters: 9, decision: majority, dissents published}
-    meetings: {per_year: 8}
+    meetings: {per_year: 8, meeting_days: 2, calendar: "https://www.boj.or.jp/en/mopo/mpmsche_minu/index.htm"}
     minutes: {name: Summary of Opinions (minutes after the next meeting), lag_days: 8}
     policy_rate: {name: uncollateralized overnight call rate target}
-    verify: true
+    blackout:
+      start: {anchor: first_day, business_days_before: 2}
+      end: {days_after_decision: 0}       # Outlook meetings: until the report is released
+      verified: false                     # only a 2001 BoJ notice found
+      source: "https://www.boj.or.jp/en/mopo/mpmsche_minu/m_ref/mpm0104a.htm"
+    verify: false
 
   RBA:
     name: Reserve Bank of Australia
@@ -88,10 +111,15 @@ banks:
     rate_path_type: none
     conditioning: market_path           # market-implied cash-rate path
     voting: {body: Monetary Policy Board, participants: 9, voters: 9, decision: consensus or majority, unattributed votes published}
-    meetings: {per_year: 8}
+    meetings: {per_year: 8, meeting_days: 2, calendar: "https://www.rba.gov.au/schedules-events/board-meeting-schedules.html"}
     minutes: {lag_days: 14}
     policy_rate: {name: cash rate target}
-    verify: true
+    blackout:
+      start: {anchor: first_day, weekday: wed, nth: 1}   # Policy Discussion, 2 pm Wednesday before the meeting
+      end: {days_after_decision: 0}       # external members: until minutes (two weeks)
+      verified: true
+      source: "https://www.rba.gov.au/media/guidelines.html"
+    verify: false
 
   BOC:
     name: Bank of Canada
@@ -101,25 +129,34 @@ banks:
     projections: {name: Monetary Policy Report, cadence: quarterly, months: [1, 4, 7, 10]}
     rate_path_type: none
     conditioning: own_views             # internal policy-rate assumption, not published
-    voting: {body: Governing Council, participants: 6, voters: 6, decision: consensus}
-    meetings: {per_year: 8}
-    minutes: {name: summary of deliberations, lag_days: 14}
+    voting: {body: Governing Council, participants: 7, voters: 7, decision: consensus}   # 7 incl. external deputy governors since end-2024
+    meetings: {per_year: 8, meeting_days: 1, calendar: "https://www.bankofcanada.ca/press/upcoming-events/"}
+    minutes: {name: summary of deliberations, lag_days: 13}
     policy_rate: {name: target for the overnight rate}
-    verify: true
+    blackout:
+      start: {anchor: decision, days_before: 7, days_before_projection: 8}   # Tue 8 days before in MPR months, else Wed 7 days
+      end: {days_after_decision: 0}
+      verified: true
+      source: "https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/blackout-guidelines/"
+    verify: false
 
   RBNZ:
     name: Reserve Bank of New Zealand
     currency: NZD
     mandate: single_price_stability
     inflation_target: {value: 2.0, range: [1.0, 3.0], measure: CPI, basis: yoy, form: band_midpoint}
-    projections: {name: Monetary Policy Statement, cadence: quarterly, months: [2, 5, 8, 11]}
+    projections: {name: Monetary Policy Statement, cadence: quarterly, months: [2, 5, 9, 12]}   # 2026 MPS months; 2027 Mar/Jun announced
     rate_path_type: own_track           # published OCR track
     conditioning: own_views
-    voting: {body: Monetary Policy Committee, participants: 7, voters: 7, decision: consensus}
-    meetings: {per_year: 7}
+    voting: {body: Monetary Policy Committee, participants: 6, voters: 6, decision: consensus or majority, record of meeting}   # 3 internal + 3 external (2026)
+    meetings: {per_year: 8, meeting_days: 1, calendar: "https://www.rbnz.govt.nz/monetary-policy/official-cash-rate-decisions"}
     minutes: {name: record of meeting, lag_days: 0}
     policy_rate: {name: Official Cash Rate}
-    verify: true
+    blackout:
+      start: null
+      end: null
+      verified: false                     # no published rule found
+    verify: false
 
   SNB:
     name: Swiss National Bank
@@ -130,7 +167,11 @@ banks:
     rate_path_type: none
     conditioning: constant_rate         # policy rate held constant over the forecast horizon
     voting: {body: Governing Board, participants: 3, voters: 3, decision: consensus}
-    meetings: {per_year: 4}
-    minutes: {name: summary of deliberations, lag_days: 14}
+    meetings: {per_year: 4, meeting_days: 2, calendar: "https://www.snb.ch/en/services-events/digital-services/event-schedule"}
+    minutes: {name: summary of monetary policy discussions, lag_days: 28}
     policy_rate: {name: SNB policy rate}
-    verify: true
+    blackout:
+      start: null
+      end: null
+      verified: false                     # no published rule found
+    verify: false

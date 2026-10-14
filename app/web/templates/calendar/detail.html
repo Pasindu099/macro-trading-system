@@ -49,7 +49,8 @@
 
   <div role="tabpanel" data-panel="reactions" hidden>
     <h3>Release-day move (daily close, not intraday)</h3>
-    {% if reactions.pairs %}
+    {% if headline.indicator_id is none %}<p class="detail-empty">No reaction history for an unmapped event.</p>
+    {% elif reactions.pairs %}
     <table class="detail-table">
       <thead><tr><th>Pair</th><th>Avg |move|</th><th>Beat &gt;1σ</th><th>Miss &lt;−1σ</th><th>Hit rate</th><th>This release</th><th>Sample</th></tr></thead>
       <tbody>{% for row in reactions.summary %}

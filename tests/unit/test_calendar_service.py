@@ -35,6 +35,16 @@ def test_china_calendar_only_and_unmapped():
     assert events[0]["components"][0]["mapped"] is False
 
 
+def test_bundle_headline_is_top_weighted_member_not_largest_surprise():
+    bundle = dict(bundle_id=7, bundle_key="US_NFP_DAY", importance=1)
+    events = _shape([row(id=1, canonical_name="participation_rate", display_name="Participation Rate",
+                         actual=61.8, surprise_normalized=2.5, **bundle),
+                     row(id=2, canonical_name="nfp", display_name="Non Farm Payrolls",
+                         actual=150, surprise_normalized=-0.4, **bundle)], None, 3, False)
+    assert events[0]["components"][0]["canonical_name"] == "nfp"
+    assert events[0]["actual"] == 150 and events[0]["surprise_sigma"] == -0.4
+
+
 def test_china_trade_bundle_groups_exports_and_imports():
     cn = dict(country_code="CN", currency_code="CNY", country_name="China", surprise_normalized=None)
     rows = [

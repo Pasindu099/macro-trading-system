@@ -11,11 +11,16 @@ import yaml
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.processing.event_innovation import load_config
+
 
 _OVERRIDES = yaml.safe_load(Path("config/calendar_overrides.yaml").read_text(encoding="utf-8"))
 _HIGH = tuple(re.compile(pattern, re.I) for pattern in _OVERRIDES["high_impact_patterns"])
 _CAL_BUNDLES = {(member, spec["country"]): spec
                 for spec in _OVERRIDES.get("calendar_bundles", []) for member in spec["members"]}
+# Event Innovation bundles: the highest-weighted member is the headline (e.g. payrolls on NFP day).
+_BUNDLE_HEADLINES = {spec.bundle_key: max(spec.members, key=lambda m: m.weight).canonical_name
+                     for spec in load_config().bundles}
 
 _DAY_SQL = text("""
 SELECT r.id, r.indicator_id, r.released_at, r.period, r.actual, r.estimate,
@@ -84,7 +89,10 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
             "surprise_sigma": score, "unit": row["unit"],
             "source_status": "confirmed" if row["actual"] is not None else "scheduled",
             "mapped": row["indicator_id"] is not None,
-            "headline": bool(cal_bundle and cal_bundle["headline"] == row["canonical_name"]),
+            "headline": bool((cal_bundle and cal_bundle["headline"] == row["canonical_name"])
+                             or (row["bundle_key"] and _BUNDLE_HEADLINES.get(row["bundle_key"])
+                                 == row["canonical_name"])),
+            "impact": impact,
         }
         group = groups.setdefault(key, {
             "id": str(row["bundle_id"] or row["id"]), "released_at": stamp,
@@ -98,7 +106,7 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
         group["components"].append(member)
     result = list(groups.values())
     for group in result:
-        group["components"].sort(key=lambda item: (not item["headline"],
+        group["components"].sort(key=lambda item: (not item["headline"], item["impact"],
                                                    item["surprise_sigma"] is None,
                                                    -(abs(item["surprise_sigma"] or 0))))
         group.update({key: group["components"][0][key] for key in

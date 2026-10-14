@@ -40,7 +40,7 @@
       animation: false, grid: { left: 42, right: 10, top: 24, bottom: 24 }, tooltip: { trigger: 'axis' },
       legend: { textStyle: text, top: 0 }, xAxis: axis, yAxis: { type: 'value', axisLabel: text, splitLine: { lineStyle: { color: css('--line') } } },
       series: [
-        { name: version === 'actual' ? 'Actual (revised)' : 'Actual (first print)', type: 'bar', data: data[version], itemStyle: { color: css('--accent') } },
+        { name: version === 'actual' ? 'Actual (revised)' : 'Actual (first print)', type: 'bar', data: data[version], itemStyle: { color: css('--chart-actual') } },
         { name: 'Consensus', type: 'line', data: data.consensus, symbolSize: 4, lineStyle: { color: css('--text') }, itemStyle: { color: css('--text') } },
       ],
     }, true);

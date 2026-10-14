@@ -107,10 +107,11 @@ async def test_event_detail_header_components_and_links(monkeypatch):
     monkeypatch.setattr(calendar_detail, "find_event", fake_find)
     detail = await calendar_detail.event_detail(Session(), 12, tracking={"USD": "inflation near target"})
     assert detail["upcoming"] is True
-    assert detail["event"]["revised_from"] == 110.0 and detail["event"]["consensus"] == 150.0
+    assert detail["event"]["name"] == "Unemployment Rate"
+    assert detail["event"]["revised_from"] is None and detail["event"]["consensus"] == 4.1
     assert detail["single_indicator"] is False and len(detail["event"]["components"]) == 2
     assert detail["history"][0]["first_print"] == 135.0
     assert detail["links"]["desk"] == "/desks/USD"
-    assert detail["links"]["event_log"] == "/calendar/event-log/new?release_id=11"
+    assert detail["links"]["event_log"] == "/calendar/event-log/new?release_id=12"
     assert [pair["pair"] for pair in detail["links"]["pairs"]] == ["EUR/USD", "USD/JPY", "GBP/USD"]
     assert await calendar_detail.event_detail(Session(), 99) is None

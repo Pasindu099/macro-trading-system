@@ -109,7 +109,10 @@ async def event_detail(session: AsyncSession, release_id: int,
     event = await find_event(session, release_id)
     if event is None:
         return None
-    headline = event["components"][0]
+    headline = next(c for c in event["components"] if c["release_id"] == release_id)
+    event = event | {key: headline[key] for key in
+                     ("name", "actual", "consensus", "previous", "revised_from",
+                      "surprise_sigma", "source_status")}
     currency = event["currency_code"]
     indicator_id = headline["indicator_id"]
     upcoming = event["actual"] is None and event["released_at"] > datetime.now(timezone.utc)

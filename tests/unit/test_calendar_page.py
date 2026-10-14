@@ -55,3 +55,31 @@ def test_day_fragment_progresses_one_day(monkeypatch):
         "/calendar/day?preset=custom&start=2020-01-01&end=2020-01-01&day=2020-01-01&impact=all")
     assert all_response.status_code == 200
     assert calls[0][3] == 3
+
+
+def test_day_fragment_shows_each_bundle_component_with_own_values(monkeypatch):
+    monkeypatch.setattr(auth, "get_settings", lambda: SimpleNamespace(auth_enabled=False))
+    class Session:
+        async def __aenter__(self): return self
+        async def __aexit__(self, *_): return None
+    components = [
+        dict(release_id=11, name="Core Inflation Rate MoM", actual=0.3,
+             consensus=0.2, previous=0.2, revised_from=None,
+             surprise_sigma=None, source_status="confirmed"),
+        dict(release_id=12, name="Inflation Rate YoY", actual=3.4,
+             consensus=3.6, previous=3.6, revised_from=None,
+             surprise_sigma=None, source_status="confirmed"),
+    ]
+    async def fake_events(*_args, **_kwargs):
+        return [dict(id="11", released_at=datetime.fromisoformat("2026-10-14T12:30:00+00:00"),
+                     local_time="12:30", currency_code="USD", country_name="United States",
+                     impact=1, components=components)]
+    monkeypatch.setattr(calendar, "get_sessionmaker", lambda: lambda: Session())
+    monkeypatch.setattr(calendar, "list_events", fake_events)
+    response = TestClient(app).get(
+        "/calendar/day?preset=custom&start=2026-10-14&end=2026-10-14&day=2026-10-14")
+    assert response.status_code == 200
+    assert response.text.count('class="calendar-row"') == 2
+    assert "Core Inflation Rate MoM" in response.text
+    assert "Inflation Rate YoY" in response.text
+    assert "/calendar/event/11" in response.text and "/calendar/event/12" in response.text

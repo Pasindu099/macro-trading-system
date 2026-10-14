@@ -293,6 +293,17 @@ class Scheduler:
             )
             logger.info("  Registered job:fred_series daily at 16:15 UTC")
 
+        # BoE/BoC/RBNZ/SNB projection rounds published in the last 120 days (Step 12 Part B).
+        self._scheduler.add_job(
+            _run_cb_projections,
+            trigger=CronTrigger(hour=7, minute=30, timezone="UTC"),
+            id="cb_projections_daily",
+            name="CB projections (BoE/BoC/RBNZ/SNB)",
+            replace_existing=True,
+            misfire_grace_time=60 * 60,
+        )
+        logger.info("  Registered job:cb_projections daily at 07:30 UTC")
+
         # CFTC TFF positions: Friday release, Monday retry for holiday delays.
         for job_id, day, retry in (("cot_weekly", "fri", False), ("cot_weekly_retry", "mon", True)):
             self._scheduler.add_job(
@@ -703,6 +714,11 @@ async def _run_rp_scrape() -> None:
         logger.info("rateprobability.com scrape: %d/8 ok — %s", ok, statuses)
     except Exception:
         logger.exception("rateprobability.com scrape job failed.")
+
+
+async def _run_cb_projections() -> None:
+    from app.services.cb_projection_loaders import LOADED, load_projections
+    await load_projections(LOADED, since=date.today() - timedelta(days=120))
 
 
 async def _poll_cb_feeds() -> None:

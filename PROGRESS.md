@@ -149,3 +149,4 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 
 ## Step 12 — Central Bank Terminal
 - [x] A. All 8 banks verified in `central_banks.yaml` (blackout rules; BoJ/RBNZ/SNB unverified); meeting dates corrected and synced to DB; `/api/cb/{bank}/summary`. Full suite 616 passed, 7 skipped.
+- [x] B. BoE 17 / BoC 7 / RBNZ 24 / SNB 27 projection rounds; BoJ PDF-only and RBA 403 reported; revisions + reaction flags; migration 0032. Full suite 627 passed, 7 skipped.

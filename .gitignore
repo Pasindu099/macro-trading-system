@@ -62,3 +62,6 @@ data/knowledge_bank/visuals/
 .backfill_progress.json
 data/*_checkpoint.json
 data/calendar_gap_report*.json
+
+# Step 12: RBNZ MPS workbooks downloaded on the host (Cloudflare blocks the container)
+data/rbnz_mps/

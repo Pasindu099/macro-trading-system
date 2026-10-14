@@ -41,7 +41,7 @@ def test_ecb_endpoints_and_bad_round_422(monkeypatch):
         assert client.get(f"/api/cb/ECB/{path}").status_code == 200
     assert client.get("/api/cb/ECB/dots").json()["status"] == "unavailable"
     assert client.get("/api/cb/ECB/risk-balance").json()["status"] == "unavailable"
-    assert client.get("/api/cb/BOE/projections").status_code == 404
+    assert client.get("/api/cb/XYZ/projections").status_code == 404   # BOE/BOC/RBNZ/SNB served since Step 12
     assert client.get("/api/cb/FED/dots?round=junk").status_code == 422
     assert client.get("/api/cb/FED/projections?round=junk").status_code == 422
 

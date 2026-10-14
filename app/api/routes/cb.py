@@ -5,7 +5,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from app.auth import require_role
-from app.services import cb_summary, cb_tracking, ecb_projections, ecb_regime, ecb_tracking, fed_projections, fed_regime
+from app.services import cb_projection_loaders, cb_summary, cb_tracking, ecb_projections, ecb_regime, ecb_tracking, fed_projections, fed_regime
 from app.settings import get_settings
 
 SUPPORTED = {"FED", "ECB"}
@@ -43,8 +43,18 @@ async def summary(bank: str) -> dict:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
+@router.get("/{bank}/revisions")
+async def revisions(bank: str) -> dict:
+    code = bank.upper()
+    if code not in cb_projection_loaders.BANKS:
+        raise HTTPException(status_code=404, detail=f"Use /api/cb/{code}/tracking for FED/ECB revisions")
+    return await cb_projection_loaders.get_revisions(code)
+
+
 @router.get("/{bank}/projections")
 async def projections(bank: str, round: str = Query("latest", pattern=r"^(latest|all|\d{4}-\d{2}-\d{2})$")) -> dict:
+    if bank.upper() in cb_projection_loaders.BANKS:
+        return await cb_projection_loaders.get_projections(bank.upper(), round)
     return await (ecb_projections.get_projections(round) if _bank(bank) == "ECB"
                   else fed_projections.get_projections(round))
 

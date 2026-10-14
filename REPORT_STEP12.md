@@ -21,3 +21,21 @@
 
 - SNB: EODHD publishes every decision since Jun 2025 with a null actual (0% omitted), so the rate is the config fallback and regime is unavailable rather than inferred.
 - Tests: `test_cb_summary.py` (7), `test_central_banks_config.py` (4). Full suite: **616 passed, 7 skipped**.
+
+## Part B: projection loaders
+
+| Bank | Source (deterministic) | Rounds loaded | Not loaded | Conditioning |
+| --- | --- | --- | --- | --- |
+| BOE | MPR HTML central-projection table + annex Q4 CPI | 17 (May 2022 → Jul 2026) | 2020–21, Feb 2022 PDF only; Apr 2026 scenarios only | market path (Bank Rate stored) |
+| BOC | MPR `/projections/` HTML: annual + Q4/Q4 | 7 (Jul 2024 → Jul 2026) | pre-Jul 2024 PDF only; Apr/Jul 2025 scenario reports | own (not published) |
+| RBNZ | MPS data workbook, `Projections` sheet | 24 (2020 → Sep 2026) | May/Aug 2020 (unconstrained OCR −2.3/−2.1 fails bounds), Feb 2021 (no OCR column) | own OCR track → `policy_rate` |
+| SNB | data.snb.ch cube `snbiprogq` (CSV) | 27 (Mar 2020 → Sep 2026) | — | constant rate (stored as `stat=assumption`) |
+| BOJ | — | 0 | Outlook Report PDF only (skipped, no LLM) | board median |
+| RBA | — | 0 | rba.gov.au returns 403 to every scripted request (host and container) | market path |
+
+- Parsers `app/processing/cb_projection_parsers.py`; stdlib xlsx reader `app/processing/xlsx_reader.py` (no openpyxl); loader/revisions `app/services/cb_projection_loaders.py`; `scripts/load_cb_projections.py`; `job:cb_projections` daily 07:30 UTC (last 120 days).
+- Migration `0032`: `stat` also allows `point` and `assumption`. Horizons are `YYYY` or `YYYYQn`. Round date is the decision date in the publication month; first of month where no decision is stored (SNB 2020–22, RBNZ six files; listed in loader output).
+- **RBNZ blocks the container (Cloudflare 403 on python TLS)**; workbooks were downloaded on the host with curl into `data/rbnz_mps/` (gitignored) and loaded with `--rbnz-dir`. The daily job will log the 403 for RBNZ unless run from a host that passes.
+- Bounds: CPI −5…25, GDP −25…25, unemployment 0…30, policy rate −2…20. BoC rejects a page whose horizons do not match the round (old URLs redirect to Jul 2024).
+- Latest revisions (Fed rule; flag needs a policy path): BOE Feb→Jul 2026 CPI 2026Q4 +1.2 → **unavailable** (no common Bank Rate horizon); BOC Apr→Jul CPI 2026Q4 +0.2 → unavailable (no path); RBNZ May→Sep CPI 2026Q4 −0.2, OCR −0.03 → **none**; SNB Jun→Sep CPI 2026Q4 +0.4 → unavailable (constant rate).
+- API: `/api/cb/{BOE|BOC|RBNZ|SNB|BOJ|RBA}/projections` and `/revisions`. Tests: `test_cb_projection_parsers.py` (11, saved fixtures in `tests/fixtures/cb_projections/`). Full suite: **627 passed, 7 skipped**.

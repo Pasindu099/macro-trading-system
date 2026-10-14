@@ -61,6 +61,7 @@ from app.services.fx_spot import ingest_eodhd_fx_spot
 from app.services.meeting_calendar import SUPPORTED_BANKS
 from app.services.macro_state_jobs import run_macro_state_chain
 from app.services.event_innovation_jobs import run_incremental_event_innovation
+from app.services.calendar_service import list_events
 from app.services.news_monitor import run_news_monitor
 from app.services.rate_fetchers import fetch_all, should_fetch_on_startup
 from app.services.rate_probability import save_snapshot
@@ -83,6 +84,14 @@ POST_RELEASE_LOOKBACK_DAYS = 7
 
 # Forward fetch window so the calendar can show upcoming releases.
 CALENDAR_FORWARD_DAYS = 14
+
+
+def fast_poll_pending(events: list[dict[str, Any]], now: datetime) -> list[dict[str, Any]]:
+    """Only unconfirmed High-impact releases within the ten-minute window."""
+    return [event for event in events
+            if event["impact"] == 1
+            and timedelta(0) <= now - event["released_at"] < timedelta(minutes=10)
+            and event["source_status"] == "scheduled"]
 
 # UTC times for the 3 daily runs.
 SCHEDULED_SESSIONS: dict[str, str] = {
@@ -129,6 +138,17 @@ class Scheduler:
                 misfire_grace_time=60 * 60,
             )
             logger.info("  Registered %s at %s UTC", session_name, hhmm)
+
+        self._scheduler.add_job(
+            self._run_fast_actuals,
+            trigger=IntervalTrigger(seconds=60, timezone="UTC"),
+            id="calendar_fast_actuals",
+            name="High-impact calendar actuals",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True,
+            misfire_grace_time=60,
+        )
 
         # 2. Register post-release triggers from YAML
         triggers_added = self._register_post_release_triggers()
@@ -364,6 +384,43 @@ class Scheduler:
 
             if score:
                 await run_incremental_event_innovation()
+
+    async def _run_fast_actuals(self) -> None:
+        """Poll pending high-impact releases during their first ten minutes."""
+        async with job_lock("calendar_fast_actuals") as acquired:
+            if not acquired:
+                return
+            now = datetime.now(UTC)
+            async with session_scope() as session:
+                recent = await list_events(session, (now - timedelta(minutes=10)).date(),
+                                           now.date(), min_impact=1)
+            pending = fast_poll_pending(recent, now)
+            if not pending:
+                return
+            assert self._ingest_service is not None
+            countries = sorted({event["country_code"] for event in pending})
+            async with run_logger("calendar_fast_actuals", countries=countries) as run:
+                async with EODHDClient() as client:
+                    for country in countries:
+                        try:
+                            events = await client.fetch_economic_events(
+                                country=country, from_date=now.date(), to_date=now.date())
+                            run.record_api_call(1)
+                        except EODHDError as exc:
+                            run.errors.append(f"{country}: {exc}")
+                            continue
+                        async with session_scope() as session:
+                            stats = await self._ingest_service.ingest_events(session, events)
+                        run.record_stats(stats)
+                async with session_scope() as session:
+                    refreshed = await list_events(session, (now - timedelta(minutes=10)).date(),
+                                                  now.date(), min_impact=1)
+                pending_keys = {(event["country_code"], event["released_at"], event["name"])
+                                for event in pending}
+                if any((event["country_code"], event["released_at"], event["name"])
+                       in pending_keys and event["source_status"] == "confirmed"
+                       for event in refreshed):
+                    await run_incremental_event_innovation()
 
     async def _catch_up_after_restart(self) -> None:
         """Replay missed daily sources before rebuilding dependent tables."""

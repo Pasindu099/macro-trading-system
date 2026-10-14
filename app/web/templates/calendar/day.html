@@ -1,0 +1,16 @@
+<div class="calendar-day" aria-label="{{ day.strftime('%A %d %B %Y') }}">
+  <h2 class="calendar-day-header">{{ day.strftime('%A %d %B %Y') }}</h2>
+  {% for event in events %}
+  <div class="calendar-row" data-event-id="{{ event.id }}">
+    <time datetime="{{ event.released_at.isoformat() }}">{{ event.local_time }}</time>
+    <strong>{{ event.currency_code }}</strong>
+    <span class="calendar-event-name">{{ event.name.replace('_', ' ').title() }}<small>{{ event.country_name }} · {{ event.source_status }}{% if event.components|length > 1 %} · {{ event.components|length }} components{% endif %}</small></span>
+    <span class="impact impact-{{ event.impact }}">{{ {1:'High', 2:'Med', 3:'Low'}[event.impact] }}</span>
+    <span class="number">{{ event.actual if event.actual is not none else '—' }}</span>
+    <span class="number">{{ event.consensus if event.consensus is not none else '—' }}</span>
+    <span class="number" title="{% if event.revised_from is not none %}Revised from {{ event.revised_from }}{% endif %}">{{ event.previous if event.previous is not none else '—' }}{% if event.revised_from is not none %}<small>rev. {{ event.revised_from }}</small>{% endif %}</span>
+    <span class="number">{% if event.surprise_sigma is not none %}<b class="surprise{% if event.surprise_sigma < 0 %} miss{% endif %}">{{ '%+.1f'|format(event.surprise_sigma) }}σ</b>{% else %}—{% endif %}</span>
+  </div>
+  {% else %}<p class="calendar-empty">No matching releases.</p>{% endfor %}
+</div>
+{% if next_url %}<div hx-get="{{ next_url }}" hx-trigger="revealed" hx-swap="outerHTML" class="calendar-loading">Loading next day…</div>{% endif %}

@@ -112,6 +112,8 @@ app.add_middleware(AuthMiddleware)
 app.mount("/static", StaticFiles(directory="app/web/static"), name="static")
 app.include_router(auth.router)
 app.include_router(shell.router)
+from app.api.routes import calendar
+app.include_router(calendar.router)
 app.include_router(admin.router)
 app.include_router(public.router)
 app.include_router(research.router)

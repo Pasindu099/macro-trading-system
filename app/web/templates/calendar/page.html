@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/calendar.css') }}">
+<script src="{{ url_for('static', path='vendor/htmx-1.9.12.min.js') }}" defer></script>
+<script src="{{ url_for('static', path='js/calendar.js') }}" defer></script>
+{% endblock %}
+{% block body %}
+<main class="calendar-layout">
+  <section class="calendar-list" aria-label="Economic calendar">
+    <div class="calendar-heading"><div><p class="eyebrow">Economic calendar</p><h1>Calendar</h1></div>
+      <div class="timezone-toggle" role="group" aria-label="Timezone">
+        <button type="button" data-zone="utc">UTC</button><button type="button" data-zone="local">Local</button>
+      </div>
+    </div>
+    <form id="calendar-filters" method="get" action="/calendar">
+      <div class="calendar-presets" role="group" aria-label="Date range">
+        {% for value in presets %}<button type="button" class="preset{% if filters.preset == value %} selected{% endif %}" data-preset="{{ value }}">{{ value.replace('_', ' ').title() }}</button>{% endfor %}
+      </div>
+      <input type="hidden" name="preset" id="calendar-preset" value="{{ filters.preset }}">
+      <div class="calendar-custom"><label>Start <input type="date" name="start" value="{{ filters.start.isoformat() }}"></label>
+        <label>End <input type="date" name="end" value="{{ filters.end.isoformat() }}"></label></div>
+      <div class="calendar-controls"><fieldset><legend>Currencies</legend>
+        {% for currency in currencies %}<label class="currency-choice"><input type="checkbox" name="currency" value="{{ currency }}"{% if currency in filters.currencies %} checked{% endif %}>{{ currency }}</label>{% endfor %}
+      </fieldset><fieldset><legend>Impact</legend>
+        <label><input type="radio" name="impact" value="high"{% if filters.impact == 'high' %} checked{% endif %}>High</label>
+        <label><input type="radio" name="impact" value="medium"{% if filters.impact == 'medium' %} checked{% endif %}>Medium+</label>
+        <label><input type="radio" name="impact" value="all"{% if filters.impact == 'all' %} checked{% endif %}>All</label>
+      </fieldset></div>
+      <label class="surprise-filter"><input type="checkbox" name="surprise" value="1"{% if filters.surprise_only %} checked{% endif %}>Only surprise over 1σ</label>
+      <button type="submit" class="apply-filters">Apply filters</button>
+    </form>
+    <p class="calendar-range">{{ filters.start.strftime('%d %b %Y') }}{% if filters.end != filters.start %} – {{ filters.end.strftime('%d %b %Y') }}{% endif %} · {{ filters.zone_name }}</p>
+    <div class="calendar-table-heading"><span>Time</span><span>Ccy</span><span>Event · source</span><span>Impact</span><span>Actual</span><span>Cons.</span><span>Prev.</span><span>Surprise</span></div>
+    <div id="calendar-days"><div hx-get="{{ first_url }}" hx-trigger="load" hx-swap="outerHTML" class="calendar-loading">Loading day…</div></div>
+  </section>
+  <aside class="calendar-detail-pending" aria-label="Event detail"><h2>Event detail</h2><p>Select a release to inspect its history and reactions.</p></aside>
+</main>
+{% endblock %}

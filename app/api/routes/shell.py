@@ -78,7 +78,6 @@ async def overview_panel(request: Request, panel_id: str) -> HTMLResponse:
 
 @router.get("/desks", response_class=HTMLResponse)
 @router.get("/pairs", response_class=HTMLResponse)
-@router.get("/calendar", response_class=HTMLResponse)
 @router.get("/event-log", response_class=HTMLResponse)
 @router.get("/news", response_class=HTMLResponse)
 @router.get("/positioning", response_class=HTMLResponse)

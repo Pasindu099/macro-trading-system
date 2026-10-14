@@ -120,3 +120,7 @@
 .checklists{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:12px}
 .cond{display:grid;grid-template-columns:14px minmax(0,1fr);gap:8px;font-size:12px}
 .chart-dots{height:280px}
+
+/* Step 12 Part H: committee balance mini bars (amber/blue = hawkish/dovish) and speaker focus mix (neutral). */
+.cb-mini{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;height:60px}.cb-mini span{display:flex;flex-direction:column;background:#0e1218;border-radius:3px;overflow:hidden}.cb-mini i.h{background:#f2a33a}.cb-mini i.n{background:#4a5568}.cb-mini i.d{background:#5aa9ff}
+.focusbar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:#0e1218}.fm-inflation{background:#d8c9a3}.fm-labor{background:#9fb4c7}.fm-growth{background:#7c8698}.fm-financial-conditions{background:#a99bc7}.fm-FX{background:#6fbfb0}.fm-other{background:#3a4352}

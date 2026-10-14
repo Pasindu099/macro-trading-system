@@ -1,26 +1,25 @@
 {% from "desk/_macros.html" import state, head %}
 <section id="fedview" class="panel wide" aria-label="What the {{ desk.cb_short }} thinks">
-  {{ head('3 · What does the ' ~ desk.cb_short ~ ' think?', 'CB policy documents · tone' ~ ((' · latest ' ~ ctx.latest_date) if ctx.latest_date else '')) }}
+  {{ head('3 · What does the ' ~ desk.cb_short ~ ' think?', 'Statement tracker · committee balance' ~ ((' · latest statement ' ~ ctx.latest_date.strftime('%d %b %Y')) if ctx.latest_date else '')) }}
   <div class="split">
     <div class="stack">
-      <h3 class="eyebrow-h">How the {{ desk.cb_short }} sees the economy</h3>
+      <h3 class="eyebrow-h">Statement language tracker</h3>
       {% if ctx.state == 'ok' %}
-        <div class="banner">
-          <span class="chip" style="color: {{ ctx.tone_color }}">Tone {{ ctx.tone }}</span>
-          {% if ctx.tone_change %}<span class="text-2">Change vs prior: {{ ctx.tone_change }}</span>{% endif %}
-        </div>
-        {% for a in ctx.assess %}
-          <div class="tile"><span class="strong">{{ a.theme }}</span><p class="text-2 small">{{ a.view }}</p></div>
+        <div class="banner"><span class="chip">{{ ctx.changed_count }} changed sentences</span>
+          <span class="text-2 small">{{ ctx.previous_date.strftime('%d %b') }} → {{ ctx.latest_date.strftime('%d %b %Y') }} · {% for topic, n in ctx.by_topic.items() %}{{ topic }} {{ n }}{{ ', ' if not loop.last }}{% endfor %}</span></div>
+        {% for c in ctx.changes %}
+          <div class="tile"><span class="muted small">{{ c.topic }} · {{ c.kind }}</span>
+            {% if c.old %}<p class="small muted"><del>{{ c.old }}</del></p>{% endif %}
+            {% if c.new %}<p class="small">{{ c.new }}</p>{% endif %}</div>
         {% endfor %}
+        <p class="note">Sentence diff of the last two policy statements; topics by keyword, no hawkish/dovish tagging. <a href="/central-banks?bank={{ desk.cb }}">Full tracker →</a></p>
       {% else %}{{ state(ctx) }}{% endif %}
     </div>
     <div class="stack">
-      <h3 class="eyebrow-h">Latest policy documents</h3>
-      {% if ctx.state == 'ok' %}
-        {% for d in ctx.documents %}
-          <div class="tile row-between"><span>{{ d.date }} · {{ d.doc_type }}</span><span class="muted">tone {{ '%+.2f' | format(d.tone_score) if d.tone_score is not none else '—' }}</span></div>
-        {% endfor %}
-      {% else %}<p class="note">Documents appear here once {{ desk.cb_short }} statements are analysed.</p>{% endif %}
+      <h3 class="eyebrow-h">Latest policy statements</h3>
+      {% for s in ctx.statements %}
+        <div class="tile row-between"><span>{{ s.date.strftime('%d %b %Y') }}</span>{% if s.url and s.url.startswith('http') %}<a class="small" href="{{ s.url }}" target="_blank" rel="noopener noreferrer">source →</a>{% endif %}</div>
+      {% else %}<p class="note">No {{ desk.cb_short }} statements stored yet.</p>{% endfor %}
     </div>
   </div>
   <div class="stack divider-top">
@@ -66,7 +65,17 @@
     {% elif pj %}{{ state(pj) }}{% endif %}
   </div>
   <div class="stack divider-top">
-    <h3 class="eyebrow-h">Committee balance · last 30 days</h3>
-    {% if ctx.speakers %}{{ state(ctx.speakers) }}{% endif %}
+    {% set bal = ctx.balance %}{% set fm = ctx.focus %}
+    <div class="row-between"><h3 class="eyebrow-h">Committee balance · 12 weeks</h3><span class="muted small">{{ bal.label if bal else '' }}</span></div>
+    {% if bal and bal.tone_status == 'available' %}
+      <div class="cb-mini">{% for w in bal.weeks %}<span title="{{ w.week.strftime('%d %b') }} · {{ w.active }} active">{% if w.shares %}<i class="h" style="flex: {{ w.shares.hawkish }}"></i><i class="n" style="flex: {{ w.shares.neutral }}"></i><i class="d" style="flex: {{ w.shares.dovish }}"></i>{% endif %}</span>{% endfor %}</div>
+    {% elif bal %}
+      <p class="note">Tone: pending AI layer. Officials speaking per week (last 12): {% for w in bal.weeks %}{{ w.active }}{{ ' · ' if not loop.last }}{% endfor %}.</p>
+    {% endif %}
+    <div class="row-between"><span class="eyebrow-sm">Speaker focus mix · last {{ fm.days }} days · v1</span><span class="muted small">{{ fm.points }} points · {{ fm.speakers }} officials</span></div>
+    {% if fm.shares %}
+      <div class="focusbar" role="img" aria-label="Speaker focus mix">{% for theme, share in fm.shares.items() %}<span class="fm-{{ theme | replace(' ', '-') }}" style="width: {{ (share * 100) | round(1) }}%" title="{{ theme }} {{ (share * 100) | round | int }}%"></span>{% endfor %}</div>
+      <div class="row-between muted small">{% for theme, share in fm.shares.items() %}<span>{{ theme }} {{ (share * 100) | round | int }}%</span>{% endfor %}</div>
+    {% else %}<p class="note">No attributed speeches or comments in the last {{ fm.days }} days.</p>{% endif %}
   </div>
 </section>

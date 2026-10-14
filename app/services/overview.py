@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 import re
@@ -37,6 +38,8 @@ MANDATES = {"USD": "Fed dual mandate", "EUR": "ECB price stability", "GBP": "BoE
             "NZD": "RBNZ price stability", "CAD": "BoC price stability", "CHF": "SNB price stability"}
 DOMINANCE_CONFIG = Path("config/dominance.yaml")
 HIERARCHY = tuple(yaml.safe_load(DOMINANCE_CONFIG.read_text(encoding="utf-8"))["tiers"])
+
+logger = logging.getLogger(__name__)
 
 
 async def _board() -> dict:
@@ -419,11 +422,26 @@ async def central_bank_map() -> dict:
             pricing = await get_rate_probability_view(bank, session)
         rows.append({"currency": currency, "bank": bank, "regime": regime,
                      "meeting": datetime.fromisoformat(meetings[0]["meeting_dt"]) if meetings else None,
-                     "guidance": _gap_label(currency, views[currency]) if currency in views else "—",
+                     "guidance": await _guidance(bank, _gap_label(currency, views[currency]) if currency in views else None),
                      "priced_move": _priced_move(pricing, currency, datetime.now(UTC).date()),
                      "ladder": ("qe", "near_zero", "cutting", "holding", "hiking"),
                      "state": "ok" if regime and regime.get("regime") != "unavailable" else "pending"})
     return {"state": "ok", "rows": rows}
+
+
+async def _guidance(bank: str, base: str | None) -> str:
+    """Step 12 Part H: statement-diff presence only (no tone) is appended to the existing guidance."""
+    from app.services.cb_statement_diff import get_statement_diff
+    try:
+        diff = await get_statement_diff(bank)
+    except Exception:                       # the map must not fail on the optional statement note
+        logger.exception("Statement diff for %s unavailable", bank)
+        return base or "—"
+    if diff["status"] != "available":
+        return base or "—"
+    note = (f"statement changed {diff['latest']['date']:%d %b} ({diff['changed_count']} sentences)"
+            if diff["changed_count"] else f"statement unchanged {diff['latest']['date']:%d %b}")
+    return f"{base} · {note}" if base else note
 
 
 def _priced_move(pricing: dict, currency: str, today: date) -> str:

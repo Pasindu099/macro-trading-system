@@ -54,9 +54,7 @@ def _data_sources(monkeypatch):
         "cpi_headline_yoy": [(d, 3.0 + i * 0.05) for i, d in enumerate(monthly)],
         "ism_manufacturing_pmi": [(d, 49 + i * 0.2) for i, d in enumerate(monthly)],
         "nfp": [(d, 150 - i) for i, d in enumerate(monthly)]}))
-    monkeypatch.setattr(dp, "get_cb_policy_data", _stub({"banks": [{"bank": "FED", "reports": [
-        {"date": TODAY, "doc_type": "statement", "tone_score": 0.4, "tone_change": "more hawkish",
-         "inflation_outlook": "Elevated", "growth_outlook": "Solid", "labor_outlook": "Balanced"}]}]}))
+    _step12_sources(monkeypatch, with_data=True)
     meeting = {"meeting_at": datetime.now(UTC) + timedelta(days=20), "cut_prob": 0.1, "hold_prob": 0.7,
                "hike_prob": 0.2, "implied_rate": 3.8, "market_data_available": True, "data_state": "live"}
     monkeypatch.setattr(dp, "get_rate_probability_view", _stub({
@@ -128,12 +126,31 @@ def _empty_sources(monkeypatch):
     monkeypatch.setattr(dp, "get_macro_state_board", _stub({"source": "currency_stance", "rows": []}))
     monkeypatch.setattr(dp, "build_event_innovation_feed", _stub({"rows": []}))
     monkeypatch.setattr(dp, "indicator_history", _stub({}))
-    monkeypatch.setattr(dp, "get_cb_policy_data", _stub({"banks": []}))
+    _step12_sources(monkeypatch, with_data=False)
     monkeypatch.setattr(dp, "get_rate_probability_view", _stub({"meetings": [], "market_data": {}}))
     monkeypatch.setattr(dp.positioning_service, "get_crowding", _stub({"currencies": []}))
     monkeypatch.setattr(dp.positioning_service, "get_squeeze", _stub({"currencies": []}))
     monkeypatch.setattr(dp, "upcoming_events", _stub([]))
     monkeypatch.setattr(dp, "news_alerts", _stub([]))
+
+
+def _step12_sources(monkeypatch, with_data: bool) -> None:
+    """Statement tracker, committee balance and focus mix used by the CB view (Step 12 Part H)."""
+    from app.services import cb_statement_diff, cb_tone
+    diff = ({"status": "available", "latest": {"date": TODAY}, "previous": {"date": TODAY - timedelta(days=42)},
+             "changed_count": 2, "by_topic": {"policy stance": 2},
+             "changes": [{"kind": "changed", "old": "The Committee decided to maintain the target range.",
+                          "new": "The Committee decided to raise the target range.", "topic": "policy stance"}]}
+            if with_data else {"status": "unavailable", "reason": "Fewer than two statements stored"})
+    weeks = [{"week": TODAY - timedelta(weeks=11 - k), "active": k % 3, "shares": None} for k in range(12)]
+    monkeypatch.setattr(cb_statement_diff, "get_statement_diff", _stub(diff))
+    monkeypatch.setattr(cb_statement_diff, "latest_statements",
+                        _stub([SimpleNamespace(doc_date=TODAY, file_path="https://example.com/s")] if with_data else []))
+    monkeypatch.setattr(cb_tone, "get_committee_balance", _stub({
+        "weeks": weeks, "tone_status": "pending", "tone_method": None, "label": "Tone: pending AI layer"}))
+    monkeypatch.setattr(cb_tone, "committee_focus", _stub({
+        "days": 30, "points": 40 if with_data else 0, "speakers": 5 if with_data else 0,
+        "shares": {"inflation": 0.5, "labor": 0.25, "growth": 0.25} if with_data else {}}))
 
 
 @pytest.fixture(autouse=True)
@@ -252,7 +269,8 @@ def test_step8_panels_render_projections_regime_and_gap(monkeypatch):
     assert "Running cold" in direction and "On track" in direction and "Available after step" not in direction
     fedview = client.get("/desks/USD/panels/fedview").text
     assert "Reaction function: tolerance" in fedview and "Risk diffusion +0.78" in fedview
-    assert "Needs the speaker pipeline" not in fedview and "speaker pipeline" in fedview
+    assert "speaker pipeline" not in fedview and "Tone: pending AI layer" in fedview
+    assert "decided to raise the target range" in fedview and "Speaker focus mix" in fedview and "inflation 50%" in fedview
     fedpath = client.get("/desks/USD/panels/fedpath").text
     assert 'class="rung active"' in fedpath and "1 of 3 met · 1 unavailable" in fedpath
     gap = client.get("/desks/USD/panels/gap").text

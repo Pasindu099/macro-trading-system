@@ -20,7 +20,6 @@ from sqlalchemy import text
 from app.db.session import get_sessionmaker
 from app.services import cb_tracking, ecb_regime, ecb_tracking, fed_projections, fed_regime
 from app.services import positioning as positioning_service
-from app.services.central_banks import get_cb_policy_data
 from app.services.curve_metrics import get_curve
 from app.services.dxy import DXY_PAIR
 from app.services.event_innovation_feed import FeedFilters, build_event_innovation_feed
@@ -443,20 +442,19 @@ async def _projection_block(desk: dict) -> dict[str, Any]:
 
 
 async def panel_fedview(desk: dict, params: dict) -> dict[str, Any]:
-    async with get_sessionmaker()() as session:
-        data = await get_cb_policy_data(session)
-    bank = next((b for b in data.get("banks", []) if str(b["bank"]).upper() == desk["cb"]), None)
-    base = {"projections": await _projection_block(desk),
-            "speakers": unavailable("Committee balance needs the speaker pipeline (not built yet).")}
-    if bank is None or not bank.get("reports"):
-        return unavailable(f"No analysed {desk['cb_name']} policy documents in the database.", **base)
-    latest = bank["reports"][0]
-    tone = latest.get("tone_score")
-    assess = [{"theme": t, "view": latest.get(f"{t.lower()}_outlook") or "No assessment in the latest document."}
-              for t in THEMES]
-    return {"state": "ok", **base, "latest_date": latest["date"], "doc_type": latest["doc_type"],
-            "tone": signed(tone, 2), "tone_color": tone_color(tone), "tone_change": latest.get("tone_change"),
-            "assess": assess, "documents": bank["reports"][:5]}
+    """Step 12 Part H: statement tracker (C), committee balance and speaker focus mix (F), projections."""
+    from app.services import cb_statement_diff, cb_tone
+    bank = desk["cb"]
+    diff = await cb_statement_diff.get_statement_diff(bank)
+    statements = await cb_statement_diff.latest_statements(bank, limit=5)
+    balance = await cb_tone.get_committee_balance(bank)
+    focus = await cb_tone.committee_focus(bank)
+    base = {"projections": await _projection_block(desk), "balance": balance, "focus": focus,
+            "statements": [{"date": s.doc_date, "url": s.file_path} for s in statements]}
+    if diff["status"] != "available":
+        return unavailable(diff["reason"], **base)
+    return {"state": "ok", **base, "latest_date": diff["latest"]["date"], "previous_date": diff["previous"]["date"],
+            "changed_count": diff["changed_count"], "by_topic": diff["by_topic"], "changes": diff["changes"][:5]}
 
 
 REGIME_LABEL = {"qe": "QE", "near_zero": "Near zero", "cutting": "Cutting", "holding": "Holding", "hiking": "Hiking"}

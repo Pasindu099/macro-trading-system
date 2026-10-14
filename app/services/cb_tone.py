@@ -179,3 +179,19 @@ async def get_committee_balance(bank: str, today: date | None = None) -> dict[st
                               voter_of=lambda s, y: is_voter(bank, s, y))
     return {"bank": bank, "as_of": today, **_gate_block(method, gate), "weeks": weeks,
             "status": "available" if any(w["active"] for w in weeks) else "empty"}
+
+
+async def committee_focus(bank: str, today: date | None = None, days: int = TONE_DAYS) -> dict[str, Any]:
+    """Share of extracted points by theme across all attributed officials (keyword themes, not tone)."""
+    today = today or date.today()
+    async with get_sessionmaker()() as session:
+        rows = (await session.execute(text("""SELECT theme, count(*) AS n, count(DISTINCT speaker_id) AS speakers
+            FROM cb_speech_sentences WHERE bank = :b AND speaker_id IS NOT NULL AND sentence_date > :since
+            GROUP BY theme"""), {"b": bank, "since": today - timedelta(days=days)})).all()
+        speakers = (await session.execute(text("""SELECT count(DISTINCT speaker_id) FROM cb_speech_sentences
+            WHERE bank = :b AND speaker_id IS NOT NULL AND sentence_date > :since"""),
+            {"b": bank, "since": today - timedelta(days=days)})).scalar_one()
+    total = sum(r.n for r in rows)
+    shares = {r.theme: round(r.n / total, 3) for r in rows} if total else {}
+    return {"bank": bank, "days": days, "points": total, "speakers": speakers, "label": "speaker focus mix · v1",
+            "shares": {name: shares[name] for name in [*THEMES, "other"] if name in shares}}

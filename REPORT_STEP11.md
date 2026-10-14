@@ -24,7 +24,7 @@
 | Playwright 1440 / 390 px | No horizontal overflow on calendar, sheet, log or form; sheet fills viewport; no JS errors |
 
 ## Where
-- CN trade bundle: `config/calendar_overrides.yaml` (`calendar_bundles`), `app/services/calendar_service.py:19`; mappings in `config/indicator_mapping.yaml:51`.
+- CN trade bundle: `config/calendar_overrides.yaml` (`calendar_bundles`), `app/services/calendar_service.py:19`; mappings in `config/indicator_mapping.yaml:52`.
 - Bundle headline = top-weighted Event Innovation member: `app/services/calendar_service.py:22`.
 - Panel: `app/services/calendar_detail.py:107`, route `app/api/routes/calendar.py` (`/calendar/event/{release_id}`), template `app/web/templates/calendar/detail.html`.
 - Reactions: `app/services/event_reactions.py:55` (signed pips), `:62` (stats), `:96` (job); pairs in `config/pairs.yaml` (`event_reaction_pairs`); 00:20 UTC job `app/ingestion/scheduler.py:196`; migration 0030.

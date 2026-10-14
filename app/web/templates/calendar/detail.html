@@ -74,7 +74,7 @@
     {% endif %}
     {% else %}<p class="detail-empty">No related pairs configured.</p>{% endif %}
     <h3>Event Log reactions</h3>
-    {% for note in notes %}<article class="detail-note"><small>{{ note.created_at.strftime('%Y-%m-%d') }}</small><p>{{ note.manual_notes or note.ai_interpretation or 'No notes.' }}</p></article>
+    {% for note in notes %}<article class="detail-note"><small>{{ note.created_at.strftime('%Y-%m-%d') }}</small><p>{{ note.outcome_after or note.manual_notes or note.ai_note_final or 'No notes.' }}</p> <a href="/calendar/event-log/{{ note.id }}/edit">Open →</a></article>
     {% else %}<p class="detail-empty">No Event Log entries for this release.</p>{% endfor %}
   </div>
 

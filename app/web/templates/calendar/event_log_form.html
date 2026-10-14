@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% macro val(field) %}{{ note[field] if note and note[field] is not none else '' }}{% endmacro %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/calendar.css') }}">
+<script src="{{ url_for('static', path='vendor/htmx-1.9.12.min.js') }}" defer></script>
+<script src="{{ url_for('static', path='js/calendar.js') }}" defer></script>
+{% endblock %}
+{% block body %}
+<main class="calendar-layout event-log-layout">
+  <section class="calendar-list" aria-label="Event Log entry">
+    <div class="calendar-heading"><div><p class="eyebrow"><a href="/calendar/event-log">Event Log</a></p><h1>{{ 'Edit entry' if note else 'New entry' }}</h1></div></div>
+    {% if saved %}<p class="form-status ok" role="status">Saved.</p>{% endif %}
+    {% if error %}<p class="form-status error" role="alert">{{ error }}</p>{% endif %}
+    <form class="event-log-form" method="post" action="{{ '/calendar/event-log/' ~ note.id if note else '/calendar/event-log/new' }}">
+      <fieldset><legend>Event</legend>
+        {% if release %}
+          <p class="linked-event">Linked: <strong>{{ release.currency_code }} · {{ release.display_name or 'Unmapped event' }}</strong> {{ release.released_at.strftime('%Y-%m-%d %H:%M') }} UTC</p>
+          <input type="hidden" name="release_id" value="{{ release.id }}">
+        {% elif not note %}
+          <label>Calendar event <input type="search" name="q" placeholder="Search e.g. CPI or USD" autocomplete="off"
+            hx-get="/calendar/event-log/search" hx-trigger="keyup changed delay:300ms" hx-target="#event-picker-results"></label>
+          <div id="event-picker-results" class="event-picker" aria-live="polite"></div>
+          <input type="hidden" name="release_id" value="" data-release-input>
+          <p class="linked-event" data-picked-label hidden></p>
+          <label>or free-text event <input type="text" name="event_title" value="" data-free-title></label>
+        {% else %}
+          <label>Event <input type="text" name="event_title" value="{{ val('event_title') }}" required></label>
+        {% endif %}
+        <div class="form-grid">
+          <label>Date <input type="date" name="event_date" value="{{ note.event_date.isoformat() if note and note.event_date else (release.released_at.strftime('%Y-%m-%d') if release else '') }}"></label>
+          <label>Currency <select name="currency"><option value="">—</option>
+            {% for currency in currencies %}<option{% if (note and note.currency == currency) or (not note and release and release.currency_code == currency) %} selected{% endif %}>{{ currency }}</option>{% endfor %}</select></label>
+          <label>Event type <select name="event_type"><option value="">Auto</option>
+            {% for kind in event_types %}<option{% if note and note.event_type == kind %} selected{% endif %}>{{ kind }}</option>{% endfor %}</select></label>
+        </div>
+        <fieldset class="pair-choices"><legend>Pairs</legend>
+          {% for pair in all_pairs %}<label><input type="checkbox" name="pairs" value="{{ pair }}"{% if pair in selected_pairs %} checked{% endif %}>{{ pair }}</label>{% endfor %}
+        </fieldset>
+      </fieldset>
+
+      {% if reactions %}
+      <fieldset><legend>Release-day move (daily close, auto-filled)</legend>
+        <table class="detail-table"><thead><tr><th>Pair</th><th>Move (pips, {{ release.currency_code if release.currency_code != 'CNY' else 'AUD/NZD' }} up = ▲)</th></tr></thead>
+          <tbody>{% for r in reactions %}<tr><td>{{ r.pair }}</td><td>{% if r.move_pips > 0 %}<span class="move up">▲ {{ r.move_pips }}</span>{% elif r.move_pips < 0 %}<span class="move down">▼ {{ -r.move_pips }}</span>{% else %}0.0{% endif %}</td></tr>{% endfor %}</tbody></table>
+      </fieldset>
+      {% endif %}
+
+      <fieldset><legend>Notes</legend>
+        <label>Expectation before <textarea name="expectation_before" rows="3">{{ val('expectation_before') }}</textarea></label>
+        <label>Outcome after <textarea name="outcome_after" rows="3">{{ val('outcome_after') }}</textarea></label>
+        <label>Notes <textarea name="manual_notes" rows="3">{{ val('manual_notes') }}</textarea></label>
+      </fieldset>
+
+      <fieldset><legend>Trade (optional)</legend>
+        <label class="inline"><input type="checkbox" name="traded" value="yes"{% if note and note.traded %} checked{% endif %}> Traded</label>
+        <div class="form-grid">
+          <label>Direction <select name="direction"><option value="">—</option>
+            <option value="long"{% if note and note.direction == 'long' %} selected{% endif %}>Long</option>
+            <option value="short"{% if note and note.direction == 'short' %} selected{% endif %}>Short</option></select></label>
+          <label>Entry <input type="text" inputmode="decimal" name="entry_price" value="{{ val('entry_price') }}"></label>
+          <label>Exit <input type="text" inputmode="decimal" name="exit_price" value="{{ val('exit_price') }}"></label>
+          <label>Size <input type="text" inputmode="decimal" name="size" value="{{ val('size') }}"></label>
+          <label>P&amp;L pips <input type="text" inputmode="decimal" name="pnl_pips" value="{{ val('pnl_pips') }}"></label>
+          <label>P&amp;L amount <input type="text" inputmode="decimal" name="pnl_amount" value="{{ val('pnl_amount') }}"></label>
+        </div>
+      </fieldset>
+
+      {% if note %}
+      <fieldset><legend>AI note</legend>
+        {% if note.ai_note_raw %}
+          <label>Final note (editable) <textarea name="ai_note_final" rows="4">{{ val('ai_note_final') }}</textarea></label>
+          <details><summary>Original AI output (read-only)</summary><p class="ai-raw">{{ note.ai_note_raw }}</p></details>
+        {% else %}
+          <input type="hidden" name="ai_note_final" value="{{ val('ai_note_final') }}">
+          <p class="detail-muted">No AI note yet. It is generated only when you click the button below.</p>
+        {% endif %}
+        {% if ai_error %}<p class="form-status error" role="alert">AI note failed: {{ ai_error }}</p>{% endif %}
+      </fieldset>
+      {% endif %}
+
+      <div class="form-actions"><button type="submit" class="primary">Save</button><a href="/calendar/event-log">Cancel</a></div>
+    </form>
+    {% if note %}
+    <div class="form-actions secondary">
+      {% if not note.ai_note_raw %}<form method="post" action="/calendar/event-log/{{ note.id }}/ai"><button type="submit">Generate AI note</button></form>{% endif %}
+      <form method="post" action="/calendar/event-log/{{ note.id }}/delete" data-confirm="Delete this Event Log entry? This cannot be undone.">
+        <input type="hidden" name="confirm" value="">
+        <button type="submit" class="danger">Delete</button>
+      </form>
+    </div>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}

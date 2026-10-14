@@ -70,3 +70,20 @@
   });
   document.addEventListener('keyup', event => { if (event.key === 'Escape') close(); });
 })();
+
+(function () {
+  document.addEventListener('click', event => {
+    const pick = event.target.closest('.event-pick');
+    if (!pick) return;
+    const form = pick.closest('form');
+    form.querySelector('[data-release-input]').value = pick.dataset.releaseId;
+    const label = form.querySelector('[data-picked-label]');
+    label.textContent = 'Linked: ' + pick.dataset.label;
+    label.hidden = false;
+    document.getElementById('event-picker-results').innerHTML = '';
+  });
+  document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventListener('submit', event => {
+    if (!window.confirm(form.dataset.confirm)) { event.preventDefault(); return; }
+    form.querySelector('[name=confirm]').value = 'yes';
+  }));
+})();

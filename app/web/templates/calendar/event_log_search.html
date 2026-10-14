@@ -1,0 +1,2 @@
+{% for result in results %}<button type="button" class="event-pick" data-release-id="{{ result.id }}" data-label="{{ result.currency_code }} · {{ result.display_name }} · {{ result.released_at.strftime('%Y-%m-%d %H:%M') }} UTC">{{ result.currency_code }} · {{ result.display_name }} <small>{{ result.released_at.strftime('%Y-%m-%d %H:%M') }} UTC</small></button>
+{% else %}<p class="calendar-empty">Type at least two letters of an indicator or a currency code.</p>{% endfor %}

@@ -32,7 +32,7 @@ LIMIT :limit
 """)
 
 _NOTES_SQL = text("""
-SELECT n.id, n.manual_notes, n.ai_interpretation, n.created_at
+SELECT n.id, n.manual_notes, n.outcome_after, n.ai_note_final, n.created_at
 FROM event_reaction_notes n
 WHERE n.indicator_release_id = ANY(:ids)
 ORDER BY n.created_at DESC

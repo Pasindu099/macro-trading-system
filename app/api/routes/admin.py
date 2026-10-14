@@ -668,11 +668,11 @@ async def generate_event_log_ai(
         note = await event_reaction_log.generate_ai_interpretation(session, note_id)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
-    await session.commit()
-    if note.ai_interpretation is None:
+    except event_reaction_log.AINoteError as exc:
         raise HTTPException(
             status_code=502, detail="AI interpretation generation failed."
-        )
+        ) from exc
+    await session.commit()
     return _note_to_dict(note)
 
 

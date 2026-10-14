@@ -14,7 +14,7 @@ from decimal import Decimal
 from typing import Any
 
 import httpx
-from sqlalchemy import and_, desc, select
+from sqlalchemy import and_, desc, select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -174,11 +174,14 @@ async def update_note_values(
     return note
 
 
-async def _call_openai_interpretation(prompt: str) -> str | None:
+class AINoteError(RuntimeError):
+    """The model call failed; the message is shown to the user."""
+
+
+async def _call_openai_interpretation(prompt: str) -> str:
     settings = get_settings()
     if not settings.openai_api_key:
-        logger.error("OPENAI_API_KEY not set — skipping AI interpretation")
-        return None
+        raise AINoteError("OPENAI_API_KEY is not set.")
     try:
         async with httpx.AsyncClient(timeout=45.0) as client:
             resp = await client.post(
@@ -198,16 +201,26 @@ async def _call_openai_interpretation(prompt: str) -> str | None:
                 },
             )
             resp.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        logger.error("OpenAI request failed: %s", exc)
+        try:
+            detail = exc.response.json().get("error", {}).get("message")
+        except ValueError:
+            detail = None
+        raise AINoteError(f"OpenAI returned {exc.response.status_code}: {detail or 'request failed'}") from exc
     except httpx.HTTPError as exc:
         logger.error("OpenAI request failed: %s", exc)
-        return None
+        raise AINoteError(f"OpenAI request failed: {exc.__class__.__name__}") from exc
 
-    return (
+    content = (
         resp.json().get("choices", [{}])[0]
         .get("message", {})
         .get("content", "")
         .strip()
-    ) or None
+    )
+    if not content:
+        raise AINoteError("OpenAI returned an empty note.")
+    return content
 
 
 def _build_interpretation_prompt(
@@ -227,29 +240,36 @@ def _build_interpretation_prompt(
 
 
 async def generate_ai_interpretation(session: AsyncSession, note_id: int) -> EventReactionNote:
+    """Fill ai_note_raw once; ai_note_final starts as a copy and is the only editable text."""
     note = await session.get(EventReactionNote, note_id)
     if note is None:
         raise ValueError(f"event note {note_id} not found")
+    if note.ai_note_raw is not None:
+        raise AINoteError("An AI note already exists; edit the final note instead.")
 
-    release = await session.get(IndicatorRelease, note.indicator_release_id)
-    indicator = await session.get(Indicator, release.indicator_id) if release else None
+    release = await session.get(IndicatorRelease, note.indicator_release_id) if note.indicator_release_id else None
+    indicator = await session.get(Indicator, release.indicator_id) if release and release.indicator_id else None
     country = await session.get(Country, indicator.country_code) if indicator else None
 
     prompt = _build_interpretation_prompt(
-        indicator_name=indicator.display_name if indicator else "Unknown indicator",
+        indicator_name=indicator.display_name if indicator else (note.event_title or "Unknown indicator"),
         country_name=country.name if country else "Unknown",
-        currency_code=country.currency_code if country else "?",
+        currency_code=country.currency_code if country else (note.currency or "?"),
         actual=note.actual_value,
         forecast=note.forecast_value,
         previous=note.previous_value,
     )
+    if note.expectation_before or note.outcome_after:
+        prompt += (f"\nExpectation before: {note.expectation_before or 'n/a'}"
+                   f"\nOutcome after: {note.outcome_after or 'n/a'}")
 
     interpretation = await _call_openai_interpretation(prompt)
-    if interpretation:
-        note.ai_interpretation = interpretation
-        note.ai_generated_at = _now()
-        note.updated_at = _now()
-        await session.flush()
+    note.ai_note_raw = interpretation
+    if note.ai_note_final is None:
+        note.ai_note_final = interpretation
+    note.ai_generated_at = _now()
+    note.updated_at = _now()
+    await session.flush()
     return note
 
 
@@ -333,8 +353,8 @@ async def get_event_detail(session: AsyncSession, note_id: int) -> dict[str, Any
     if note is None:
         return None
 
-    release = await session.get(IndicatorRelease, note.indicator_release_id)
-    indicator = await session.get(Indicator, release.indicator_id) if release else None
+    release = await session.get(IndicatorRelease, note.indicator_release_id) if note.indicator_release_id else None
+    indicator = await session.get(Indicator, release.indicator_id) if release and release.indicator_id else None
     country = await session.get(Country, indicator.country_code) if indicator else None
 
     reactions_result = await session.execute(
@@ -412,3 +432,141 @@ async def list_events(
             }
         )
     return events
+
+
+# ── Event Log page (/calendar/event-log) ────────────────────────────────────
+
+EVENT_TYPES = ["Policy decision", "CPI", "Employment", "GDP", "Retail sales", "PMI", "Trade", "Other"]
+ENTRY_FIELDS = {
+    "event_title", "event_date", "currency", "event_type", "pairs", "expectation_before",
+    "outcome_after", "manual_notes", "traded", "direction", "entry_price", "exit_price",
+    "size", "pnl_pips", "pnl_amount", "forecast_value", "actual_value", "previous_value",
+    "ai_note_final",
+}
+
+
+async def list_entries(
+    session: AsyncSession, *, currency: str | None = None, start: date | None = None,
+    end: date | None = None, event_type: str | None = None, traded: bool | None = None,
+    limit: int = 200,
+) -> list[dict[str, Any]]:
+    """Newest first; linked and free-text entries alike."""
+    clauses, params = [], {"limit": limit}
+    for clause, key, value in (("n.currency = :currency", "currency", currency),
+                               ("n.event_type = :event_type", "event_type", event_type),
+                               ("n.traded = :traded", "traded", traded),
+                               ("n.event_date >= :start", "start", start),
+                               ("n.event_date <= :end", "end", end)):
+        if value is not None:
+            clauses.append(clause)
+            params[key] = value
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    rows = await session.execute(text(f"""
+        SELECT n.*, COALESCE(n.event_title, i.display_name) AS title, r.released_at
+        FROM event_reaction_notes n
+        LEFT JOIN indicator_releases r ON r.id = n.indicator_release_id
+        LEFT JOIN indicators i ON i.id = r.indicator_id
+        {where}
+        ORDER BY n.event_date DESC NULLS LAST, r.released_at DESC NULLS LAST, n.id DESC
+        LIMIT :limit
+    """), params)
+    return [dict(row) for row in rows.mappings().all()]
+
+
+async def _release_context(session: AsyncSession, release_id: int) -> dict[str, Any] | None:
+    row = (await session.execute(text("""
+        SELECT r.id, r.indicator_id, r.released_at, r.actual, r.estimate, r.previous,
+               i.display_name, i.canonical_name, c.currency_code
+        FROM indicator_releases r
+        LEFT JOIN indicators i ON i.id = r.indicator_id
+        LEFT JOIN countries c ON c.code = COALESCE(i.country_code, r.raw_payload->>'country')
+        WHERE r.id = :id
+    """), {"id": release_id})).mappings().one_or_none()
+    return dict(row) if row else None
+
+
+def _event_type_for(context: dict[str, Any]) -> str:
+    from app.services.overview import event_family
+    family = event_family([{"canonical_name": context["canonical_name"] or "",
+                            "display_name": context["display_name"] or ""}])
+    if "trade" in (context["canonical_name"] or "") or "export" in (context["canonical_name"] or ""):
+        return "Trade"
+    return family if family in EVENT_TYPES else "Other"
+
+
+async def save_entry(
+    session: AsyncSession, note_id: int | None, data: dict[str, Any],
+    release_id: int | None = None,
+) -> EventReactionNote:
+    """Create or update an entry. ai_note_raw is never accepted from user input."""
+    if data.get("direction") not in (None, "long", "short"):
+        raise ValueError("Direction must be long or short")
+    if note_id is not None:
+        note = await session.get(EventReactionNote, note_id)
+        if note is None:
+            raise ValueError(f"event note {note_id} not found")
+        release_id = note.indicator_release_id
+    elif release_id is not None:
+        note = await get_or_create_note(session, release_id)
+    elif data.get("event_title"):
+        note = EventReactionNote()
+        session.add(note)
+    else:
+        raise ValueError("Link a calendar event or enter an event title")
+
+    for field, value in data.items():
+        if field in ENTRY_FIELDS:
+            setattr(note, field, value)
+    if release_id is not None:
+        context = await _release_context(session, release_id)
+        if context:
+            note.event_date = note.event_date or context["released_at"].astimezone(timezone.utc).date()
+            note.currency = note.currency or context["currency_code"]
+            note.event_type = note.event_type or _event_type_for(context)
+            for field, key in (("forecast_value", "estimate"), ("actual_value", "actual"),
+                               ("previous_value", "previous")):
+                if getattr(note, field) is None:
+                    setattr(note, field, context[key])
+    if not note.event_date:
+        raise ValueError("Event date is required")
+    note.updated_at = _now()
+    await session.flush()
+    return note
+
+
+async def delete_entry(session: AsyncSession, note_id: int) -> bool:
+    note = await session.get(EventReactionNote, note_id)
+    if note is None:
+        return False
+    await session.delete(note)
+    await session.flush()
+    return True
+
+
+async def search_releases(session: AsyncSession, query: str, limit: int = 20) -> list[dict[str, Any]]:
+    """Calendar event picker: mapped releases nearest to today first."""
+    if len(query.strip()) < 2:
+        return []
+    rows = await session.execute(text("""
+        SELECT r.id, r.released_at, i.display_name, c.currency_code
+        FROM indicator_releases r
+        JOIN indicators i ON i.id = r.indicator_id
+        JOIN countries c ON c.code = i.country_code
+        WHERE r.is_latest AND (i.display_name ILIKE :q OR c.currency_code ILIKE :exact)
+        ORDER BY abs(extract(epoch FROM r.released_at - now()))
+        LIMIT :limit
+    """), {"q": f"%{query.strip()}%", "exact": query.strip(), "limit": limit})
+    return [dict(row) for row in rows.mappings().all()]
+
+
+async def linked_reactions(session: AsyncSession, release_id: int | None) -> list[dict[str, Any]]:
+    """Release-day close-to-close moves for a linked entry (Part D data)."""
+    from app.services.event_reactions import pairs_for, release_moves
+    if release_id is None:
+        return []
+    context = await _release_context(session, release_id)
+    if not context or context["indicator_id"] is None or not context["currency_code"]:
+        return []
+    moves = await release_moves(session, [context["indicator_id"]], context["currency_code"],
+                                pairs_for(context["currency_code"]))
+    return [move for move in moves if move["release_id"] == release_id]

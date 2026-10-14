@@ -778,17 +778,35 @@ class EventReactionNote(Base):
     __tablename__ = "event_reaction_notes"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    indicator_release_id: Mapped[int] = mapped_column(
+    indicator_release_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("indicator_releases.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         unique=True,
     )
     forecast_value: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
     actual_value: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
     previous_value: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
     manual_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    ai_interpretation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    event_title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    event_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
+    event_type: Mapped[str | None] = mapped_column(Text, nullable=True)
+    pairs: Mapped[list[str]] = mapped_column(
+        ARRAY(String(7)), nullable=False, server_default=text("'{}'")
+    )
+    expectation_before: Mapped[str | None] = mapped_column(Text, nullable=True)
+    outcome_after: Mapped[str | None] = mapped_column(Text, nullable=True)
+    traded: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
+    direction: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    entry_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 6), nullable=True)
+    exit_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 6), nullable=True)
+    size: Mapped[Decimal | None] = mapped_column(Numeric(16, 2), nullable=True)
+    pnl_pips: Mapped[Decimal | None] = mapped_column(Numeric(10, 1), nullable=True)
+    pnl_amount: Mapped[Decimal | None] = mapped_column(Numeric(16, 2), nullable=True)
+    # The model's output is kept verbatim in ai_note_raw; edits only touch ai_note_final.
+    ai_note_raw: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ai_note_final: Mapped[str | None] = mapped_column(Text, nullable=True)
     ai_generated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -806,6 +824,15 @@ class EventReactionNote(Base):
         back_populates="event",
         cascade="all, delete-orphan",
     )
+
+    @property
+    def ai_interpretation(self) -> str | None:
+        """Admin API name for the editable note; never exposes or changes ai_note_raw."""
+        return self.ai_note_final
+
+    @ai_interpretation.setter
+    def ai_interpretation(self, value: str | None) -> None:
+        self.ai_note_final = value
 
     def __repr__(self) -> str:
         return f"<EventReactionNote id={self.id} release_id={self.indicator_release_id}>"

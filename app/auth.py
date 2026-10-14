@@ -184,6 +184,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         self.analyst_write_prefixes = (
             "/api/cb/analysis",
             "/api/news/sentiment",
+            "/calendar/event-log",
         )
 
     async def dispatch(self, request: Request, call_next) -> Response:

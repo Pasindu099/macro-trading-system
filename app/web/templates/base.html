@@ -29,9 +29,9 @@
           <a href="/pairs" class="{% if request.url.path == '/pairs' %}active{% endif %}"{% if request.url.path == '/pairs' %} aria-current="page"{% endif %}>Pairs</a>
           <a href="/central-banks" class="{% if request.url.path == '/central-banks' %}active{% endif %}"{% if request.url.path == '/central-banks' %} aria-current="page"{% endif %}>Central Banks</a>
           <a href="/news" class="{% if request.url.path == '/news' %}active{% endif %}"{% if request.url.path == '/news' %} aria-current="page"{% endif %}>News</a>
-          <details class="nav-group"><summary class="{% if request.url.path in ['/calendar', '/event-log'] %}active{% endif %}">Calendar</summary><div class="nav-dropdown">
+          <details class="nav-group"><summary class="{% if request.url.path.startswith('/calendar') or request.url.path == '/event-log' %}active{% endif %}">Calendar</summary><div class="nav-dropdown">
             <a href="/calendar"{% if request.url.path == '/calendar' %} class="active" aria-current="page"{% endif %}>Calendar</a>
-            <a href="/event-log"{% if request.url.path == '/event-log' %} class="active" aria-current="page"{% endif %}>Event Log</a>
+            <a href="/calendar/event-log"{% if request.url.path.startswith('/calendar/event-log') %} class="active" aria-current="page"{% endif %}>Event Log</a>
           </div></details>
           <a href="/positioning" class="{% if request.url.path == '/positioning' %}active{% endif %}"{% if request.url.path == '/positioning' %} aria-current="page"{% endif %}>Positioning</a>
           <a href="/data" class="{% if request.url.path == '/data' %}active{% endif %}"{% if request.url.path == '/data' %} aria-current="page"{% endif %}>Data</a>

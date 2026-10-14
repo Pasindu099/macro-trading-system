@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app.db.session import get_sessionmaker
@@ -78,7 +78,6 @@ async def overview_panel(request: Request, panel_id: str) -> HTMLResponse:
 
 @router.get("/desks", response_class=HTMLResponse)
 @router.get("/pairs", response_class=HTMLResponse)
-@router.get("/event-log", response_class=HTMLResponse)
 @router.get("/news", response_class=HTMLResponse)
 @router.get("/positioning", response_class=HTMLResponse)
 @router.get("/central-banks", response_class=HTMLResponse)
@@ -98,3 +97,9 @@ async def section_page(request: Request) -> HTMLResponse:
         "page_title": f"{title} | ForexCompass", "section_title": title,
         "description": description, "desks": desks,
     })
+
+
+@router.get("/event-log", include_in_schema=False)
+async def event_log_redirect() -> RedirectResponse:
+    """The Event Log page moved under the calendar."""
+    return RedirectResponse("/calendar/event-log", status_code=307)

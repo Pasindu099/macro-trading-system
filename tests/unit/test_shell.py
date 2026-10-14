@@ -9,6 +9,7 @@ from app.main import app
 import app.auth as auth
 from app.api.routes import auth as auth_routes
 from app.api.routes import shell
+from app.services import event_reaction_log
 from starlette.requests import Request
 
 
@@ -22,7 +23,7 @@ def test_placeholder_sections_and_event_log_navigation(monkeypatch):
     monkeypatch.setattr(shell, "get_macro_state_board", board)
     client = TestClient(app)
     for path, title in (("/desks", "Desks"), ("/pairs", "Pairs"),
-                        ("/calendar", "Calendar"), ("/event-log", "Event Log"),
+                        ("/calendar", "Calendar"),
                         ("/news", "News"), ("/positioning", "Positioning"),
                         ("/central-banks", "Central Banks"), ("/data", "Data")):
         response = client.get(path)
@@ -35,7 +36,9 @@ def test_placeholder_sections_and_event_log_navigation(monkeypatch):
     assert 'class="mobile-menu-toggle"' in overview
     assert overview.index('>Overview</a>') < overview.index('>Desks</summary>') < overview.index('>Pairs</a>')
     assert overview.index('>Central Banks</a>') < overview.index('>News</a>') < overview.index('>Calendar</summary>')
-    assert 'href="/event-log"' in overview
+    assert 'href="/calendar/event-log"' in overview
+    moved = client.get("/event-log", follow_redirects=False)
+    assert moved.status_code == 307 and moved.headers["location"] == "/calendar/event-log"
     for path in ("/desks",):
         page = client.get(path).text
         assert 'href="/desks/USD"' in page and 'href="/desks/EUR"' in page
@@ -56,14 +59,17 @@ def test_login_template_uses_new_tokens():
     ("/", "Overview"), ("/desks", "Desks"), ("/desks/USD", "Desks"),
     ("/desks/EUR", "Desks"), ("/pairs", "Pairs"),
     ("/central-banks", "Central Banks"), ("/news", "News"),
-    ("/calendar", "Calendar"), ("/event-log", "Calendar"),
+    ("/calendar", "Calendar"), ("/calendar/event-log", "Calendar"),
     ("/positioning", "Positioning"), ("/data", "Data"),
 ])
 def test_top_navigation_on_dashboard_pages(monkeypatch, path, active):
     monkeypatch.setattr(auth, "get_settings", lambda: SimpleNamespace(auth_enabled=False))
     async def board(_session):
         return {"rows": []}
+    async def no_entries(_session, **_filters):
+        return []
     monkeypatch.setattr(shell, "get_macro_state_board", board)
+    monkeypatch.setattr(event_reaction_log, "list_entries", no_entries)
     response = TestClient(app).get(path)
     assert response.status_code == 200
     soup = BeautifulSoup(response.text, "html.parser")

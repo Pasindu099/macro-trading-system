@@ -1,7 +1,11 @@
-# Step 12 Part F — lexicon_v1 quality sample (manual review)
+# Step 12 — tone quality samples (manual review)
 
-Reproducible sample (ordered by md5(id || '12')): 20 non-zero and 10 zero-score sentences.
-Review column left blank for the reviewer: ✓ agree / ✗ disagree.
+Label each row's **Review** cell with ✓ (sign and policy relevance correct) or ✗. Precision on non-zero
+scores per method gates whether tone is displayed (config/tone_lexicon.yaml `display_gate`).
+
+## lexicon_v1 sample
+
+20 non-zero and 10 zero-score sentences (seed '12').
 
 | # | Bank | Speaker | Date | Src | Theme | Score | Phrases hit | Sentence | Review |
 | ---: | --- | --- | --- | --- | --- | ---: | --- | --- | --- |
@@ -35,3 +39,40 @@ Review column left blank for the reviewer: ✓ agree / ✗ disagree.
 | 28 | BOJ | noguchi | 2025-11-27 | speech | inflation | +0.00 | — | For example, many automakers have lowered their export prices to avoid an increase in selling prices in the United States -- meaning that the exporting side has absorbed the tariff costs. | |
 | 29 | FED | warsh | 2026-08-28 | speech | other | +0.00 | — | In other words, we must interrogate reality to make sure we are not setting forward-looking policy based on stale or inaccurate data. | |
 | 30 | BOE | pill | 2026-09-03 | speech | inflation | +0.00 | — | Of course, market prices can give some guide to the outlook for energy prices. | |
+
+## lexicon_v2 sample
+
+30 non-zero lexicon_v2 sentences (seed 'v2'); phrases dropped by the context gates are not shown.
+
+| # | Bank | Speaker | Date | Src | Theme | Score | Phrases hit | Sentence | Review |
+| ---: | --- | --- | --- | --- | --- | ---: | --- | --- | --- |
+| 1 | BOJ | tamura | 2026-02-13 | speech | other | +1.50 | rate hike +1.5 | Interest rate hikes will also have an impact on the government. | |
+| 2 | FED | waller | 2026-05-22 | speech | inflation | +0.50 | patient +0.5 | I am prepared to be patient in holding policy at its current restrictive setting as we watch how the conflict evolves and what impact there is on inflation and inflation expectations. | |
+| 3 | BOJ | masu | 2026-09-10 | speech | financial conditions | +1.50 | rate hike +1.5 | In particular, since policy interest rate hikes over the past two years have brought the rate close to the estimated range of the neutral interest rate, the Bank will need to more thoroughly examine factors such as prices, employment, and financial conditions in considering further rate hikes. | |
+| 4 | ECB | lane | 2026-03-23 | speech | financial conditions | +0.50 | tightening +0.5 | The capital intensity of AI production and AI adoption means that a tightening in financial conditions would also have an adverse impact on AI-producing and AI-using sectors. | |
+| 5 | ECB | lane | 2025-10-21 | speech | inflation | -0.50 | easing -0.5 | That a stronger recovery in the manufacturing sector has so far not materialised helps explain a weaker pass‑through of monetary easing via the cost channel than would normally be expected. | |
+| 6 | BOJ | takata | 2026-02-26 | speech | financial conditions | +1.50 | rate hike +1.5 | I recognize that it is necessary to conduct further rate hikes in a gradual manner, rather than aiming to reach the expected neutral interest rate, after thoroughly gauging the degree of accommodation, informed not only by developments overseas but also by a broad set of data and information on dome | |
+| 7 | FED | waller | 2026-05-22 | speech | inflation | +1.50 | rate hike +1.5 | But I can no longer rule out rate hikes further down the road if inflation does not abate soon, and that is especially true if measures of inflation expectations, some of which have risen lately, show signs of becoming unanchored. | |
+| 8 | BOJ | himino | 2026-03-02 | speech | growth | +1.00 | overheating +1 | The arrow pointing from the GDP gap signifies that, if the economy is overheating, it will likely exert upward pressure on prices, whereas if the economy is stagnant, it will exert downward pressure. | |
+| 9 | BOJ | takata | 2026-02-26 | speech | financial conditions | -0.50 | easing -0.5 | For more details, see "Assessment for Further Effective and Sustainable Monetary Easing," Bank of Japan, March 19, 2021. | |
+| 10 | BOE | bailey | 2026-05-29 | speech | inflation | +0.50 | second-round effects +0.5 | Uncertainty about the strength of second-round effects means that monetary policy needs to balance the costs of leaning too little against these effects against the costs of responding too much, and the right balance is likely to change depending on how events unfold and how the economy reacts. | |
+| 11 | FED | logan | 2025-11-21 | speech | inflation | -2.00 | rate cut -1.5; cut rates -1.5 | And with two rate cuts now in place, I’d find it difficult to cut rates again in December unless there is clear evidence that inflation will fall faster than expected or that the labor market will cool more rapidly. | |
+| 12 | FED | cook | 2026-03-26 | speech | financial conditions | +0.50 | tightening +0.5 | One way to see the work of financial stability is as the quest to understand how much, or how rapidly, that tightening would occur. | |
+| 13 | ECB | schnabel | 2026-06-01 | speech | financial conditions | -0.25 | easing (hedge) -0.25 | If stablecoin issuance prompts banks to rebuild their liquidity buffers by buying government securities, this could reinforce the easing in financial conditions.[22] However, the general reallocation towards government debt could also result in a crowding out of private borrowers. | |
+| 14 | BOJ | ueda | 2025-12-01 | speech | financial conditions | -1.00 | accommodative -1 | In other words, even if the policy interest rate is raised, accommodative financial conditions will be maintained. | |
+| 15 | FED | waller | 2026-05-22 | speech | other | -2.00 | easing -0.5; rate cut -1.5 | Based on this recent data, I would support removing the "easing bias" language in our policy statement to make it clear that a rate cut is no more likely in the future than a rate increase. | |
+| 16 | ECB | cipollone | 2026-05-06 | speech | growth | +0.50 | tightening +0.5 | Meanwhile, the impact on economic activity could be compounded by the endogenous tightening of financing conditions, as banks become increasingly concerned about the economic risks facing their customers. | |
+| 17 | BOJ | tamura | 2026-02-13 | speech | growth | -0.50 | easing -0.5 | Amid sluggish economic growth and mounting financial instability in the wake of the bubble's collapse, I think that monetary easing was indeed effective to some extent in supporting the economy in the course of moving into the state without meaningful interest rates. | |
+| 18 | FED | waller | 2026-04-17 | speech | labor | -1.00 | recession -1 | I am going to have to get used to payroll numbers that are lower than I am accustomed to seeing in a growing economy as well as the possibility that even several months of negative payrolls may not be the warning sign of a recession that it often has been in the past. | |
+| 19 | BOJ | takata | 2025-10-20 | speech | financial conditions | -0.50 | easing -0.5 | This suggests that the Bank's monetary easing, by influencing the markets, is likely to have contributed to the shift away from asset deflation and the so-called six headwinds -- including the headwind of the yen's appreciation -- both of which had prompted changes in corporate behavior in the post- | |
+| 20 | FED | jefferson | 2026-07-16 | speech | inflation | +0.50 | tightening +0.5 | Thus, we could face a tradeoff, where tightening helps price stability but hurts employment. | |
+| 21 | BOJ | tamura | 2026-02-13 | speech | inflation | +1.00 | persistent inflation +1 | At the same time, persistent inflation that cannot be described as moderate must also be avoided. | |
+| 22 | BOJ | himino | 2026-03-02 | speech | other | +1.50 | rate hike +1.5 | Similarly, this makes it difficult to judge when the next rate hike would be appropriate. | |
+| 23 | FED | jefferson | 2026-07-16 | speech | inflation | -0.50 | below target -0.5 | Conversely, we may have a negative output gap, with employment below its maximum sustainable level and inflation below target. | |
+| 24 | FED | logan | 2026-07-16 | speech | inflation | +0.50 | price pressures +0.5 | Even if commodity shipments resume soon, business contacts tell me consumer price pressures could last longer. | |
+| 25 | FED | logan | 2026-07-31 | comment | inflation | +1.50 | rate hike +1.5 | Favors a rate hike as inflation is not on a sustainable course | |
+| 26 | FED | cook | 2026-02-04 | speech | other | +0.50 | vigilant +0.5 | This is why I will remain vigilant in studying a wide range of incoming information so that I can pursue the best policy to achieve our dual-mandate goals. | |
+| 27 | BOJ | tamura | 2026-02-13 | speech | inflation | -0.50 | easing -0.5 | As another topic of relevance, the Bank should carefully follow whether prolonged monetary easing gives rise to problems; for example, how the excessive depreciation of the yen, continued high inflation, and a rise in real estate prices affect the economy and people's livelihoods. | |
+| 28 | BOJ | masu | 2026-02-06 | speech | other | +1.50 | rate hike +1.5 | I am convinced that continuing with further policy interest rate hikes will be needed to complete the normalization of monetary policy in Japan. | |
+| 29 | ECB | lagarde | 2026-05-28 | speech | inflation | +1.00 | persistent inflation +1 | But the empirical work that followed pointed to one clear and robust finding: countries with less independent central banks experienced higher and more persistent inflation.[2] This evidence underscored the need to shield monetary policy decisions from the electoral cycle. | |
+| 30 | BOE | pill | 2026-09-03 | speech | inflation | +0.50 | second-round effects +0.5 | On my reading, the MPC broadly agrees that, other things equal, a stronger direct inflationary impulse from energy prices is likely to strengthen second-round effects. | |

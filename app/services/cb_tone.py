@@ -1,6 +1,6 @@
 """Speaker tone, shift, lean, focus mix and committee balance from word-list scores (Step 12 Part F).
 
-All outputs are labelled "word-list tone, v1" (method lexicon_v1). Tone-bearing sentences are
+Tone is shown only for a method that passes the labelled-precision gate (cb_tone_gate). Tone-bearing sentences are
 those with a non-zero score; neutral sentences count only in the focus mix.
 """
 
@@ -17,10 +17,9 @@ from sqlalchemy import text
 from app.db.session import get_sessionmaker, session_scope
 from app.ingestion.run_logger import run_logger
 from app.processing.cb_officials import THEMES, is_voter, official
-from app.processing.tone_lexicon import lexicon, score_sentence
+from app.processing.tone_lexicon import SCORERS, lexicon, v2_rules
+from app.services.cb_tone_gate import display_method
 
-METHOD = "lexicon_v1"
-LABEL = "word-list tone, v1"
 TONE_DAYS, BASELINE_DAYS = 30, 180
 SHIFT_THRESHOLD, LEAN_THRESHOLD = 0.4, 0.5
 MIN_SENTENCES = 3
@@ -84,58 +83,80 @@ def committee_balance(points: list[tuple[str, date, float]], today: date, voter_
 
 # ── Scoring job ───────────────────────────────────────────────────────
 
-async def score_pending(rescore: bool = False) -> int:
-    """Score every extracted sentence without a lexicon_v1 score (or all, with rescore)."""
+METHODS = tuple(SCORERS)
+PENDING_LABEL = "Tone: pending AI layer"
+
+
+async def score_pending(rescore: bool = False, methods: tuple[str, ...] = METHODS) -> dict[str, int]:
+    """Score every extracted sentence lacking a score for each method (or all, with rescore)."""
     lexicon.cache_clear()
+    v2_rules.cache_clear()
+    written: dict[str, int] = {}
     async with run_logger(JOB_NAME) as run:
-        async with get_sessionmaker()() as session:
-            rows = (await session.execute(text("""SELECT s.id, s.sentence FROM cb_speech_sentences s
-                LEFT JOIN cb_sentence_scores c ON c.sentence_id = s.id AND c.method = :m
-                WHERE c.sentence_id IS NULL OR :all"""), {"m": METHOD, "all": rescore})).all()
-        values = []
-        for row in rows:
-            result = score_sentence(row.sentence)
-            values.append({"i": row.id, "m": METHOD, "s": result["score"], "r": result["raw"],
-                           "h": json.dumps([{k: v for k, v in h.items() if k != "start"} for h in result["hits"]])})
-        for offset in range(0, len(values), 2000):
-            async with session_scope() as session:
-                await session.execute(text("""INSERT INTO cb_sentence_scores (sentence_id, method, score, raw_score, hits)
-                    VALUES (:i, :m, :s, :r, CAST(:h AS jsonb))
-                    ON CONFLICT (sentence_id, method) DO UPDATE SET score = EXCLUDED.score,
-                        raw_score = EXCLUDED.raw_score, hits = EXCLUDED.hits, scored_at = now()"""),
-                                      values[offset:offset + 2000])
-        run.record_rows(len(values))
-    return len(values)
+        for method in methods:
+            async with get_sessionmaker()() as session:
+                rows = (await session.execute(text("""SELECT s.id, s.sentence FROM cb_speech_sentences s
+                    LEFT JOIN cb_sentence_scores c ON c.sentence_id = s.id AND c.method = :m
+                    WHERE c.sentence_id IS NULL OR :all"""), {"m": method, "all": rescore})).all()
+            values = []
+            for row in rows:
+                result = SCORERS[method](row.sentence)
+                hits = [{k: v for k, v in h.items() if k != "start"} for h in result["hits"] + result.get("dropped", [])]
+                values.append({"i": row.id, "m": method, "s": result["score"], "r": result["raw"], "h": json.dumps(hits)})
+            for offset in range(0, len(values), 2000):
+                async with session_scope() as session:
+                    await session.execute(text("""INSERT INTO cb_sentence_scores (sentence_id, method, score, raw_score, hits)
+                        VALUES (:i, :m, :s, :r, CAST(:h AS jsonb))
+                        ON CONFLICT (sentence_id, method) DO UPDATE SET score = EXCLUDED.score,
+                            raw_score = EXCLUDED.raw_score, hits = EXCLUDED.hits, scored_at = now()"""),
+                                          values[offset:offset + 2000])
+            written[method] = len(values)
+        run.record_rows(sum(written.values()))
+    return written
 
 
-# ── Read side ─────────────────────────────────────────────────────────
+# ── Read side (gated) ─────────────────────────────────────────────────
 
-async def _points(bank: str, since: date) -> list[Any]:
+async def _points(bank: str, since: date, method: str | None) -> list[Any]:
     async with get_sessionmaker()() as session:
-        return (await session.execute(text("""SELECT s.speaker_id, s.sentence_date AS d, s.theme,
-                COALESCE(c.score, 0)::float AS score, s.source_type
+        return (await session.execute(text("""SELECT s.speaker_id, s.sentence_date AS d, s.theme, s.source_type,
+                s.source_id, COALESCE(c.score, 0)::float AS score
             FROM cb_speech_sentences s
             LEFT JOIN cb_sentence_scores c ON c.sentence_id = s.id AND c.method = :m
             WHERE s.bank = :b AND s.speaker_id IS NOT NULL AND s.sentence_date >= :since"""),
-                                        {"b": bank, "m": METHOD, "since": since})).all()
+                                        {"b": bank, "m": method or "", "since": since})).all()
+
+
+def _gate_block(method: str | None, gate: dict[str, Any]) -> dict[str, Any]:
+    return {"tone_method": method, "label": f"word-list tone, {method.split('_')[-1]}" if method else PENDING_LABEL,
+            "tone_status": "available" if method else "pending", "tone_gate": gate}
 
 
 async def get_speakers(bank: str, today: date | None = None) -> dict[str, Any]:
     today = today or date.today()
-    rows = await _points(bank, today - timedelta(days=BASELINE_DAYS))
+    method, gate = display_method()
+    rows = await _points(bank, today - timedelta(days=BASELINE_DAYS), method)
     by_speaker: dict[str, list[tuple[date, float, str]]] = defaultdict(list)
-    sources: dict[str, Counter] = defaultdict(Counter)
+    items: dict[str, dict[str, set]] = defaultdict(lambda: {"speech": set(), "comment": set()})
+    recent: dict[str, dict[str, set]] = defaultdict(lambda: {"speech": set(), "comment": set()})
     for row in rows:
         by_speaker[row.speaker_id].append((row.d, row.score, row.theme))
-        sources[row.speaker_id][row.source_type] += 1
+        items[row.speaker_id][row.source_type].add(row.source_id)
+        if row.d > today - timedelta(days=TONE_DAYS):
+            recent[row.speaker_id][row.source_type].add(row.source_id)
     speakers = []
     for speaker_id, points in by_speaker.items():
         person = official(bank, speaker_id) or {}
+        profile = speaker_profile(points, today)
+        if method is None:          # gate closed: keep focus mix and counts, hide tone
+            profile = {"focus_mix": profile["focus_mix"]}
         speakers.append({"speaker_id": speaker_id, "name": person.get("name", speaker_id), "role": person.get("role"),
                          "voter": is_voter(bank, speaker_id, today.year), "last_seen": max(d for d, _, _ in points),
-                         "sentences_by_source": dict(sources[speaker_id]), **speaker_profile(points, today)})
+                         "speeches_6m": len(items[speaker_id]["speech"]), "comments_6m": len(items[speaker_id]["comment"]),
+                         "speeches_30d": len(recent[speaker_id]["speech"]),
+                         "comments_30d": len(recent[speaker_id]["comment"]), **profile})
     speakers.sort(key=lambda s: s["last_seen"], reverse=True)
-    return {"bank": bank, "method": METHOD, "label": LABEL, "as_of": today,
+    return {"bank": bank, "as_of": today, **_gate_block(method, gate),
             "rules": {"tone_days": TONE_DAYS, "baseline_days": BASELINE_DAYS, "shift_threshold": SHIFT_THRESHOLD,
                       "lean_threshold": LEAN_THRESHOLD, "min_sentences": MIN_SENTENCES},
             "status": "available" if speakers else "empty", "speakers": speakers}
@@ -143,8 +164,18 @@ async def get_speakers(bank: str, today: date | None = None) -> dict[str, Any]:
 
 async def get_committee_balance(bank: str, today: date | None = None) -> dict[str, Any]:
     today = today or date.today()
-    rows = await _points(bank, week_start(today) - timedelta(weeks=WEEKS))
+    method, gate = display_method()
+    rows = await _points(bank, week_start(today) - timedelta(weeks=WEEKS), method)
+    if method is None:
+        weekly: dict[date, set] = defaultdict(set)
+        for row in rows:
+            if row.d >= week_start(today) - timedelta(weeks=WEEKS - 1):
+                weekly[week_start(row.d)].add(row.speaker_id)
+        first = week_start(today) - timedelta(weeks=WEEKS - 1)
+        weeks = [{"week": first + timedelta(weeks=k), "active": len(weekly.get(first + timedelta(weeks=k), ())),
+                  "shares": None} for k in range(WEEKS)]
+        return {"bank": bank, "as_of": today, **_gate_block(None, gate), "weeks": weeks, "status": "pending"}
     weeks = committee_balance([(r.speaker_id, r.d, r.score) for r in rows], today,
                               voter_of=lambda s, y: is_voter(bank, s, y))
-    return {"bank": bank, "method": METHOD, "label": LABEL, "as_of": today, "weeks": weeks,
+    return {"bank": bank, "as_of": today, **_gate_block(method, gate), "weeks": weeks,
             "status": "available" if any(w["active"] for w in weeks) else "empty"}

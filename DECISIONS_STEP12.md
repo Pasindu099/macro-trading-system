@@ -82,3 +82,25 @@ DECISION — blocked / PDF-only sources
 Then continue with Parts E and F; stop after F with a ≤10-line status
 including speeches ingested per bank and the 30-sentence quality sample
 location.
+
+DECISIONS — RBNZ data, lexicon_v2, quality gate
+1. RBNZ: delete the 24 projection rounds and 7 statements loaded from
+   browser-UA downloads (keep the parsers). I will re-import via
+   /admin/cb-imports. Report rows deleted.
+2. Tone lexicon_v2 (keep lexicon_v1 scores stored, don't delete):
+   - Score a phrase only in forward-looking / normative context: modal or
+     intent verbs (should, need to, appropriate, will, intend, prepared to,
+     support, favour) or first-person policy statements (we/I + view verb).
+   - Ignore past-tense and descriptive mentions (e.g. "the tightening
+     cycle", "rates were raised"), quotes of market pricing, and questions.
+   - Keep negation/hedging handling.
+3. Quality gate: when REPORT_STEP12_TONE_SAMPLE.md has my labels, compute
+   precision of v1 and v2 on non-zero scores. Tone (lean, shift, committee
+   balance) is displayed only if precision ≥ 75%; otherwise panels show
+   focus mix + speech counts and "Tone: pending AI layer". Make the gate a
+   config value.
+4. Add a fresh 30-sentence sample (v2 non-zero scores) to the same file
+   for my labelling.
+
+Then continue with Parts G and H. Final ≤10-line status incl. v1/v2
+precision if labels exist, else "awaiting labels".

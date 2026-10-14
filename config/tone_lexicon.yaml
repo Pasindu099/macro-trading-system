@@ -100,3 +100,38 @@ dovish:
   "spare capacity": -0.5
   "slack": -0.5
   "recession": -1.0
+
+# ── lexicon_v2 (Step 12 decision): same phrases, weights, negation and hedging as v1, plus context gates.
+# v1 scores stay stored; v2 is stored alongside as method lexicon_v2.
+v2:
+  method: lexicon_v2
+  # A hit counts only when the sentence is forward-looking / normative: one of these markers, or a
+  # first-person policy statement (we/I/our/my + view verb within 3 words), or the phrase is itself normative.
+  forward_markers: [should, could, may, might, "need to", "needs to", "needed to", appropriate, warranted, will, would, intend, intends,
+                    "prepared to", "ready to", support, supports, favour, favours, favor, favors, "plan to",
+                    "likely to", must, "going forward", "coming months", "coming meetings", "next meeting",
+                    "at this meeting", "further", "continue to"]
+  first_person: [we, i, our, my]
+  view_verbs: [think, believe, see, judge, expect, consider, anticipate, favour, favor, support, prefer, want,
+               remain, intend, need, will, would, am, are]
+  self_normative: ["premature to cut", "too early to cut", "no rush to cut", "in no hurry", "not yet confident",
+                   "not confident", "not convinced", "room to cut", "appropriate to cut", "scope to ease",
+                   "ready to act", "keep policy restrictive", "higher for longer", "further tightening may be appropriate"]
+  # Descriptive / past mentions are dropped: a past marker within 3 words before the phrase, or the phrase
+  # followed by a descriptive noun ("the tightening cycle") or by "of" after "the" ("the tightening of credit").
+  past_markers: [was, were, had, "has been", "have been", since, during, after, previous, past, last, earlier, until,
+                 ago, began, started, recent]
+  descriptive_after: [cycle, cycles, campaign, phase, period, episode, episodes]
+  # Whole sentence ignored: questions, quotes of market pricing, other banks' / countries' actions.
+  market_pricing: ["market pricing", "markets price", "markets are pricing", "priced in", "market participants expect",
+                   "investors expect", "markets expect", "futures", "market-implied", "according to market"]
+  third_party: ["other central banks", "many central banks", "central banks in many", "central banks around the world",
+                "countries around the world", "other countries", "other economies"]
+
+# Display gate: tone (lean, shift, committee balance) is shown only for a method whose labelled precision on
+# non-zero scores in sample_path reaches min_precision with at least min_labels labels; otherwise panels show
+# focus mix + speech counts and "Tone: pending AI layer".
+display_gate:
+  min_precision: 0.75
+  min_labels: 15
+  sample_path: REPORT_STEP12_TONE_SAMPLE.md

@@ -35,23 +35,21 @@
 - Honest UA `ForexCompass/1.0 (research dashboard)` (no `CONTACT_EMAIL` set; new setting), robots.txt checked, 10 s spacing: **RBA** first request 200, next three 403 → blocked; **RBNZ** robots.txt 403 → no page request. All fetchers now use this UA (browser-spoof UA removed; FED/ECB/BoE/BoJ/BoC/SNB still 200). Host-curl and RBNZ sitemap paths removed.
 - `/admin/cb-imports` (admin): upload RBNZ xlsx / BoE·BoC HTML projections or any statement (HTML/PDF/TXT) through the existing parsers; manual projection entry with loader bounds and `YYYY`/`YYYYQn` horizons. Audit table `cb_manual_imports` (migration 0033).
 - Manual sources in `central_banks.yaml` (`manual_import`): BoJ projections; RBA and RBNZ projections/statements/speeches. Their jobs log status `manual_import` (`job:cb_*:{BANK}`); freshness rows read "manual import — last updated {date}".
-- **Open:** RBNZ's 24 projection rounds and 7 statements stored earlier came from host curl with a browser UA (now disallowed).
+- RBNZ browser-UA data deleted: **1,248 projection values (24 rounds) and 7 statements**; parsers kept, re-import via `/admin/cb-imports`.
 ## E: speeches (`cb_officials.yaml`, `cb_officials.py`, `cb_speeches.py`, migration 0034, daily 06:30 UTC)
 - Rosters from official pages (Fed, ECB, BoE, BoJ, BoC; SNB/RBA/RBNZ via search), departures dated for attribution; BoC council corrected to 6. Ambiguous surnames (Williams, Taylor, Lane…) need bank context.
-| Bank | Source | Speeches (12 m) | Attributed | Comments (investingLive) |
-| --- | --- | ---: | ---: | ---: |
-| FED | Board yearly index + Dallas Fed RSS (other regional sites: no feed) | 111 | 106 | 82 |
-| ECB | official speeches dataset CSV (monthly; to 30 Sep) | 86 (38 empty texts skipped) | 86 | 19 |
-| BOE | RSS (50 items, from Jan 2026 only) | 50 | 30 (rest non-MPC) | 10 |
-| BOJ | yearly speech index | 26 | 23 | 12 |
-| BOC | RSS 1.0 feed (10 items only) | 10 | 10 | — |
-| SNB | RSS + speeches page | 9 (9 short/PDF failed) | 9 | 2 |
-| RBA / RBNZ | manual_import (blocked) | 0 | — | 17 / 1 |
+- Speeches (12 m; attributed / investingLive comments): FED 111 (106 / 82; Board index + Dallas RSS only), ECB 86 (dataset CSV, monthly), BOE 50 (RSS since Jan), BOJ 26 (23 / 12), BOC 10 (feed holds 10), SNB 9 (9 PDF failed), RBA/RBNZ 0 (manual import; 17 / 1 comments).
 - 16,853 policy sentences extracted (keyword filter; themes inflation/labor/growth/financial conditions/FX/other).
 ## F: word-list tone (`tone_lexicon.yaml`, `tone_lexicon.py`, `cb_tone.py`, migration 0035, `/speakers`, `/committee-balance`)
 - `lexicon_v1`: weighted phrases, longest first, 3-word negation flip, hedge ×0.5, clause-scope negators ("not yet confident…"), clip ±2; stored per (sentence, method). 30-day tone, 180-day baseline (excl. last 30), shift ≥ 0.4, lean ±0.5, ≥ 3 tone-bearing sentences; weekly committee shares over 12 weeks with voter flags.
 - Coverage: only 3–10% of sentences carry tone (FED 5.5%, ECB 4.6%, BOJ 10.4%). Live e.g. FED Waller +0.80 (baseline +0.34, shifting hawkish), Hammack +1.17, Bowman −0.50; FED week of 12 Oct: 3 active, ⅔ hawkish.
-- Quality sample: **`REPORT_STEP12_TONE_SAMPLE.md`** (30 rows, review column blank). On my read ~11 of 20 non-zero rows are questionable.
+- `lexicon_v2` (decision): v1 phrases kept only with modal/intent markers or we/I + view verb (or self-normative phrases); drops past/descriptive mentions, market-pricing quotes, other banks/countries, questions; negation/hedging kept. Non-zero: v1 1,015 → v2 375 of 16,853; both stored.
+- Display gate (`tone_lexicon.yaml` `display_gate`: ≥ 75% precision, ≥ 15 labels): samples in **`REPORT_STEP12_TONE_SAMPLE.md`** (v1 30 rows unchanged + v2 30 non-zero) — **awaiting labels**, so all panels show focus mix + counts and "Tone: pending AI layer".
 - Weak spots: descriptive/historical uses ("the tightening cycle"), other banks' actions ("countries tilt toward rate hikes"), non-policy "easing/tightening" (wages, credit), negation by verbs or inside phrases ("downside risks… dissipated", "hasn't eased"), hold signals without keywords ("prudent to give more time"), "no recession" read as hawkish.
+## G: `/central-banks` (`cb_terminal.py` service + routes, `cb/page.html`, `cb/panel.html`, `cb.css`)
+- 8 bank tabs × Overview (summary, committee balance, statement tracker, speakers, profile, upcoming, headlines, library "Phase 3 — pending") / Projections (revisions with median·CT·range for FED, dots vs futures, risk balance, CB Tracking, vintages, formats). HTMX lazy panels, 60 s cache, per-panel freshness incl. manual-import rows, loading/empty/unavailable/pending/error states.
+- All 14 panels render for all 8 banks without error; Playwright 1440 and 390 px: no horizontal overflow, no JS errors (`data/screenshots/cb_*`).
+## H: desks + Overview
+- USD/EUR "What does the Fed/ECB think?": statement tracker + latest statements, committee balance (gated), speaker focus mix bar (v1) replace the empty LLM-document block. Overview CB map guidance appends statement-change presence only.
 ## Tests
-- New: summary 7, config 4, projection parsers 11, statements 7, upcoming 4, manual imports 5, speeches 7, tone 14. Full suite after F: **664 passed, 7 skipped**.
+- New: summary 7, config 4, projection parsers 11, statements 7, upcoming 4, manual imports 5, speeches 7, tone 27, terminal 5. Full suite after H: **683 passed, 7 skipped**.

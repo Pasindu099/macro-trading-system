@@ -160,3 +160,4 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] G. /central-banks terminal (8 banks, Overview + Projections, 14 panels, states, 60 s cache, 390 px).
 - [x] H. USD/EUR CB view: statement tracker, committee balance, focus mix; Overview guidance notes statement changes. Full suite 683 passed, 7 skipped.
 - [x] Release v2.3-cb-terminal: runbook section (migrations 0032-0036, meeting sync, backfills, scoring, smoke, manual imports); CONTACT_EMAIL passed to app; browser-UA folders excluded from the image. Full suite 683 passed, 7 skipped.
+- [x] Event Log: no default instruments (ticking adds/removes move rows), form markup repaired, average moves per event (all / actual above / below forecast) on /calendar/event-log/averages and in the form.

@@ -603,3 +603,72 @@ async def linked_reactions(session: AsyncSession, release_id: int | None) -> lis
     moves = await release_moves(session, [context["indicator_id"]], context["currency_code"],
                                 pairs_for(context["currency_code"]))
     return [move for move in moves if move["release_id"] == release_id]
+
+
+# ── Average price moves per event (Event Log purpose: typical reaction once enough entries exist) ──
+
+MIN_ENTRIES = 5          # below this, averages are shown as indicative only
+SURPRISE_GROUPS = ("all", "above", "below", "inline")
+
+
+def surprise_group(actual: Decimal | None, forecast: Decimal | None) -> str | None:
+    """Actual vs forecast for the entry, when both are known (no judgement of good/bad for the currency)."""
+    if actual is None or forecast is None:
+        return None
+    return "above" if actual > forecast else "below" if actual < forecast else "inline"
+
+
+def aggregate_moves(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """rows: {key, event, currency, note_id, actual, forecast, instrument, horizon, move} → per event stats."""
+    events: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        event = events.setdefault(row["key"], {"key": row["key"], "event": row["event"], "currency": row["currency"],
+                                               "notes": set(), "instruments": {}})
+        event["notes"].add(row["note_id"])
+        groups = ["all"] + ([g] if (g := surprise_group(row["actual"], row["forecast"])) else [])
+        for group in groups:
+            cell = (event["instruments"].setdefault(row["instrument"], {}).setdefault(group, {})
+                    .setdefault(row["horizon"], []))
+            cell.append(float(row["move"]))
+    out = []
+    for event in events.values():
+        instruments = {}
+        for instrument, groups in sorted(event["instruments"].items()):
+            instruments[instrument] = {
+                group: {h: {"n": len(v), "mean": round(sum(v) / len(v), 1),
+                            "mean_abs": round(sum(abs(x) for x in v) / len(v), 1),
+                            "min": min(v), "max": max(v)} for h, v in by_h.items()}
+                for group, by_h in groups.items()}
+        out.append({"key": event["key"], "event": event["event"], "currency": event["currency"],
+                    "entries": len(event["notes"]), "indicative": len(event["notes"]) < MIN_ENTRIES,
+                    "instruments": instruments})
+    out.sort(key=lambda e: (-e["entries"], e["event"] or ""))
+    return {"events": out, "min_entries": MIN_ENTRIES}
+
+
+async def move_averages(session: AsyncSession, *, key: str | None = None,
+                        exclude_note: int | None = None) -> dict[str, Any]:
+    """Averages over all Event Log entries; optionally one event (key 'i:<indicator_id>' or 't:<title>')."""
+    rows = await session.execute(text("""
+        SELECT * FROM (
+            SELECT CASE WHEN r.indicator_id IS NOT NULL THEN 'i:' || r.indicator_id
+                        ELSE 't:' || lower(trim(n.event_title)) END AS key,
+                   COALESCE(i.display_name, n.event_title, 'Untitled') AS event, n.currency, n.id AS note_id,
+                   n.actual_value AS actual, n.forecast_value AS forecast, m.instrument, m.horizon, m.move
+            FROM event_log_moves m
+            JOIN event_reaction_notes n ON n.id = m.note_id
+            LEFT JOIN indicator_releases r ON r.id = n.indicator_release_id
+            LEFT JOIN indicators i ON i.id = r.indicator_id
+            WHERE (CAST(:exclude AS bigint) IS NULL OR n.id <> :exclude)
+        ) x WHERE CAST(:key AS text) IS NULL OR x.key = :key
+    """), {"key": key, "exclude": exclude_note})
+    return aggregate_moves([dict(r) for r in rows.mappings().all()])
+
+
+async def event_key(session: AsyncSession, release_id: int | None, title: str | None) -> str | None:
+    if release_id:
+        indicator = (await session.execute(text("SELECT indicator_id FROM indicator_releases WHERE id = :r"),
+                                           {"r": release_id})).scalar_one_or_none()
+        if indicator is not None:
+            return f"i:{indicator}"
+    return f"t:{title.strip().lower()}" if title and title.strip() else None

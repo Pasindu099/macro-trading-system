@@ -7,7 +7,7 @@
 <main class="calendar-layout event-log-layout">
   <section class="calendar-list" aria-label="Event Log">
     <div class="calendar-heading"><div><p class="eyebrow">Calendar</p><h1>Event Log</h1></div>
-      <a class="event-log-new" href="/calendar/event-log/new">New entry</a></div>
+      <span class="event-log-actions"><a class="event-log-new" href="/calendar/event-log/averages">Average moves</a> <a class="event-log-new" href="/calendar/event-log/new">New entry</a></span></div>
     <form class="event-log-filters" method="get" action="/calendar/event-log">
       <label>Currency <select name="currency"><option value="">All</option>
         {% for currency in currencies %}<option{% if filters.currency == currency %} selected{% endif %}>{{ currency }}</option>{% endfor %}</select></label>

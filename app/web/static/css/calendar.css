@@ -41,3 +41,4 @@
 
 /* Event Log price moves (pips / USD / points by horizon) */
 .event-moves-wrap{overflow-x:auto;max-width:100%}.event-moves{min-width:520px}.event-moves th small{color:var(--muted);font-weight:400}.event-moves input{width:72px;max-width:100%;text-align:right;font-family:var(--font-mono)}.event-log-moves{display:flex;flex-direction:column;gap:2px}
+.event-averages{min-width:620px}.event-averages td.num,.event-averages th.num{text-align:right;white-space:nowrap}.event-averages small{color:var(--muted)}.event-averages .avg-abs{display:block;font-size:10px}.event-averages tr.group-sub td{font-size:11px;color:var(--muted)}.event-average{border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:8px 0}.event-average summary{cursor:pointer}.event-log-actions{display:flex;gap:8px;flex-wrap:wrap}

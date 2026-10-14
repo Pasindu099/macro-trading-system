@@ -1,0 +1,21 @@
+{# Average signed move (n) per instrument and horizon; |avg| below. Rows: all entries, then actual above / below forecast. #}
+{% set labels = {'all': 'All entries', 'above': 'Actual above forecast', 'below': 'Actual below forecast', 'inline': 'In line'} %}
+<div class="event-moves-wrap">
+<table class="detail-table event-averages">
+  <thead><tr><th>Instrument</th><th>Group</th>{% for h in horizons %}<th class="num">{{ h }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for instrument, groups in event.instruments.items() %}
+    {% for group in ['all', 'above', 'below', 'inline'] if group in groups %}
+    <tr class="{{ 'group-all' if group == 'all' else 'group-sub' }}">
+      {% if loop.first %}<th scope="row" rowspan="{{ loop.length }}">{{ instrument }} <small>{{ move_units.get(instrument, 'pips') }}</small></th>{% endif %}
+      <td>{{ labels[group] }}</td>
+      {% for h in horizons %}{% set s = groups[group].get(h) %}
+      <td class="num">{% if s %}<span class="move {{ 'up' if s.mean > 0 else 'down' if s.mean < 0 else '' }}">{{ '▲' if s.mean > 0 else '▼' if s.mean < 0 else '' }} {{ s.mean|abs }}</span> <small>({{ s.n }})</small><small class="avg-abs">|avg| {{ s.mean_abs }}</small>{% else %}—{% endif %}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="detail-muted">Signed average from the release time (▲ up, ▼ down for the instrument), entries in brackets; |avg| is the average size ignoring direction.{% if event.indicative %} Only {{ event.entries }} {{ 'entry' if event.entries == 1 else 'entries' }} so far: indicative until {{ min_entries }}.{% endif %}</p>

@@ -153,3 +153,28 @@ def test_admin_note_shape_unchanged():
     assert set(payload) == {"id", "indicator_release_id", "forecast_value", "actual_value",
                             "previous_value", "manual_notes", "ai_interpretation", "ai_generated_at"}
     assert payload["ai_interpretation"] == "final"
+
+
+def test_move_averages_by_event_instrument_horizon_and_surprise():
+    from app.services.event_reaction_log import aggregate_moves, surprise_group
+    assert (surprise_group(Decimal("3.1"), Decimal("3.0")), surprise_group(Decimal("2.9"), Decimal("3.0")),
+            surprise_group(None, Decimal("3.0"))) == ("above", "below", None)
+    rows = [{"key": "i:7", "event": "CPI", "currency": "USD", "note_id": n, "actual": a, "forecast": Decimal("3.0"),
+             "instrument": "EUR/USD", "horizon": "1h", "move": Decimal(m)}
+            for n, a, m in ((1, Decimal("3.2"), "-20"), (2, Decimal("3.3"), "-30"), (3, Decimal("2.8"), "15"))]
+    rows.append({"key": "i:7", "event": "CPI", "currency": "USD", "note_id": 3, "actual": Decimal("2.8"),
+                 "forecast": Decimal("3.0"), "instrument": "XAU/USD", "horizon": "5m", "move": Decimal("4.5")})
+    event = aggregate_moves(rows)["events"][0]
+    cell = event["instruments"]["EUR/USD"]
+    assert event["entries"] == 3 and event["indicative"] is True
+    assert cell["all"]["1h"] == {"n": 3, "mean": -11.7, "mean_abs": 21.7, "min": -30.0, "max": 15.0}
+    assert cell["above"]["1h"]["mean"] == -25.0 and cell["below"]["1h"]["n"] == 1
+    assert event["instruments"]["XAU/USD"]["all"]["5m"]["mean"] == 4.5
+
+
+def test_form_template_markup_is_balanced_and_has_no_default_instruments():
+    from pathlib import Path
+    from app.api.routes import event_log as routes
+    source = Path("app/web/templates/calendar/event_log_form.html").read_text(encoding="utf-8")
+    assert source.count("<fieldset") == source.count("</fieldset>") and "\niv>" not in source
+    assert "default_pairs" not in Path(routes.__file__).read_text(encoding="utf-8")

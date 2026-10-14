@@ -84,13 +84,18 @@
     label.hidden = false;
     document.getElementById('event-picker-results').innerHTML = '';
   });
-  // Event Log: ticking an instrument shows its price-move row; rows with values stay visible.
-  document.querySelectorAll('[data-move-toggle]').forEach(box => box.addEventListener('change', () => {
-    const row = document.querySelector(`[data-move-row="${box.value}"]`);
-    if (!row) return;
-    const filled = [...row.querySelectorAll('input')].some(input => input.value.trim());
-    row.hidden = !box.checked && !filled;
-  }));
+  // Event Log: ticking an instrument adds its price-move row; unticking removes it (only ticked rows are saved).
+  const syncMoveRows = () => {
+    const boxes = [...document.querySelectorAll('[data-move-toggle]')];
+    boxes.forEach(box => {
+      const row = document.querySelector(`[data-move-row="${box.value}"]`);
+      if (row) row.hidden = !box.checked;
+    });
+    const any = boxes.some(box => box.checked);
+    document.querySelectorAll('[data-moves-table]').forEach(table => { table.hidden = !any; });
+    document.querySelectorAll('[data-moves-empty]').forEach(note => { note.hidden = any; });
+  };
+  document.querySelectorAll('[data-move-toggle]').forEach(box => box.addEventListener('change', syncMoveRows));
   document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventListener('submit', event => {
     if (!window.confirm(form.dataset.confirm)) { event.preventDefault(); return; }
     form.querySelector('[name=confirm]').value = 'yes';

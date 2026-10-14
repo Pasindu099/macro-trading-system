@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/calendar.css') }}">
+{% endblock %}
+{% block body %}
+<main class="calendar-layout event-log-layout">
+  <section class="calendar-list" aria-label="Event Log average moves">
+    <div class="calendar-heading"><div><p class="eyebrow"><a href="/calendar/event-log">Event Log</a></p><h1>Average moves</h1></div></div>
+    <p class="detail-muted">Built from the price moves you record in Event Log entries, grouped by calendar event (or by title for free-text entries). Averages become meaningful from {{ min_entries }} entries per event.</p>
+    {% for event in events %}
+    <details class="event-average"{% if loop.first %} open{% endif %}>
+      <summary><strong>{{ event.currency or '—' }} · {{ event.event }}</strong> <small>{{ event.entries }} {{ 'entry' if event.entries == 1 else 'entries' }}{% if event.indicative %} · indicative{% endif %}</small></summary>
+      {% include "calendar/_move_averages.html" %}
+    </details>
+    {% else %}
+    <p class="calendar-empty">No price moves recorded yet. Add them in an Event Log entry under "Price moves after the release".</p>
+    {% endfor %}
+  </section>
+</main>
+{% endblock %}

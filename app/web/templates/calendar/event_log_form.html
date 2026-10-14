@@ -48,14 +48,23 @@
       <fieldset><legend>Notes</legend>
         <label>Expectation before <textarea name="expectation_before" rows="3">{{ val('expectation_before') }}</textarea></label>
         <label>Outcome after <textarea name="outcome_after" rows="3">{{ val('outcome_after') }}</textarea></label>
-        <label>Notes <textarea name="manual_notes" rows="3">{{ val('manual_notes') }}</textarea></lab      <fieldset><legend>Price moves after the release</legend>
-        <p class="detail-muted">Signed move from the release time: pips for FX pairs, USD for gold, points for indices. Leave blank if not recorded. Tick an instrument above to add its row.</p>
+        <label>Notes <textarea name="manual_notes" rows="3">{{ val('manual_notes') }}</textarea></label>
+      </fieldset>
+
+      <fieldset><legend>Price moves after the release</legend>
+        <p class="detail-muted">Signed move measured from the release time: pips for FX pairs, USD for gold, points for indices. Tick an instrument above to add its row; leave a cell blank if not recorded. Entries feed the average moves per event.</p>
+        {% if past_averages %}
+        <details class="event-average" open><summary><strong>Past entries for this event</strong> <small>{{ past_averages.entries }} {{ 'entry' if past_averages.entries == 1 else 'entries' }} · <a href="/calendar/event-log/averages">all averages →</a></small></summary>
+          {% with event=past_averages %}{% include "calendar/_move_averages.html" %}{% endwith %}
+        </details>
+        {% endif %}
+        <p class="detail-muted" data-moves-empty{% if selected_pairs %} hidden{% endif %}>No instruments selected yet.</p>
         <div class="event-moves-wrap">
-        <table class="detail-table event-moves">
+        <table class="detail-table event-moves" data-moves-table{% if not selected_pairs %} hidden{% endif %}>
           <thead><tr><th>Instrument</th>{% for h in horizons %}<th>{{ h }}</th>{% endfor %}</tr></thead>
           <tbody>
           {% for pair in all_pairs %}
-            <tr data-move-row="{{ pair }}"{% if pair not in selected_pairs and pair not in moves %} hidden{% endif %}>
+            <tr data-move-row="{{ pair }}"{% if pair not in selected_pairs %} hidden{% endif %}>
               <th scope="row">{{ pair }} <small>{{ move_units.get(pair, 'pips') }}</small></th>
               {% for h in horizons %}{% set value = moves.get(pair, {}).get(h) %}
               <td><input type="text" inputmode="decimal" name="move__{{ pair }}__{{ h }}" value="{{ value if value is not none else '' }}" aria-label="{{ pair }} move after {{ h }}" placeholder="±"></td>
@@ -65,9 +74,6 @@
           </tbody>
         </table>
         </div>
-      </fieldset>
-
-iv>
       </fieldset>
 
       {% if note %}

@@ -13,7 +13,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.db.session import get_sessionmaker
 from app.services import event_reaction_log as log
-from app.services.event_reactions import REACTION_PAIRS, pairs_for
+from app.services.event_reactions import REACTION_PAIRS
 
 router = APIRouter(tags=["event-log"])
 templates = Jinja2Templates(directory=str(Path("app/web/templates")))
@@ -75,14 +75,17 @@ async def _form_context(session, note=None, release_id: int | None = None, **ext
     release_id = release_id or (note.indicator_release_id if note else None)
     release = await log._release_context(session, release_id) if release_id else None
     reactions = await log.linked_reactions(session, release_id)
-    default_pairs = pairs_for(release["currency_code"]) if release and release["currency_code"] else []
     moves = extra.pop("moves", None)
     if moves is None:
         moves = await log.load_moves(session, note.id) if note else {}
+    key = await log.event_key(session, release_id, note.event_title if note else None)
+    past = (await log.move_averages(session, key=key, exclude_note=note.id if note else None))["events"] if key else []
     return {"note": note, "release": release, "reactions": reactions, "currencies": CURRENCIES,
             "all_pairs": INSTRUMENTS, "event_types": log.EVENT_TYPES, "horizons": log.MOVE_HORIZONS,
-            "move_units": MOVE_UNITS, "moves": moves,
-            "selected_pairs": extra.pop("selected", None) or (note.pairs if note else None) or default_pairs,
+            "move_units": MOVE_UNITS, "moves": moves, "past_averages": past[0] if past else None,
+            "min_entries": log.MIN_ENTRIES,
+            # No default instruments: the user ticks what they recorded.
+            "selected_pairs": extra.pop("selected", None) or (note.pairs if note else None) or [],
             **extra}
 
 
@@ -104,6 +107,15 @@ async def event_log_page(request: Request) -> HTMLResponse:
         "horizons": log.MOVE_HORIZONS,
         "filters": {"currency": currency, "start": start, "end": end, "event_type": event_type},
     })
+
+
+@router.get("/calendar/event-log/averages", response_class=HTMLResponse)
+async def event_log_averages(request: Request) -> HTMLResponse:
+    async with get_sessionmaker()() as session:
+        data = await log.move_averages(session)
+    return templates.TemplateResponse(request, "calendar/event_log_averages.html", {
+        "page_title": "Event Log averages | ForexCompass", "events": data["events"], "horizons": log.MOVE_HORIZONS,
+        "min_entries": data["min_entries"], "move_units": MOVE_UNITS})
 
 
 @router.get("/calendar/event-log/search", response_class=HTMLResponse)

@@ -39,3 +39,24 @@
 - Bounds: CPI −5…25, GDP −25…25, unemployment 0…30, policy rate −2…20. BoC rejects a page whose horizons do not match the round (old URLs redirect to Jul 2024).
 - Latest revisions (Fed rule; flag needs a policy path): BOE Feb→Jul 2026 CPI 2026Q4 +1.2 → **unavailable** (no common Bank Rate horizon); BOC Apr→Jul CPI 2026Q4 +0.2 → unavailable (no path); RBNZ May→Sep CPI 2026Q4 −0.2, OCR −0.03 → **none**; SNB Jun→Sep CPI 2026Q4 +0.4 → unavailable (constant rate).
 - API: `/api/cb/{BOE|BOC|RBNZ|SNB|BOJ|RBA}/projections` and `/revisions`. Tests: `test_cb_projection_parsers.py` (11, saved fixtures in `tests/fixtures/cb_projections/`). Full suite: **627 passed, 7 skipped**.
+
+## Part C: statements and diff
+
+- `app/processing/cb_statements.py` (no LLM): HTML via bs4 (BoJ 2026 PDFs via existing `pypdf`), stored in `cb_policy_documents` as `doc_type='policy_statement'` (the older PDF/LLM ingester rewrites `statement` rows unless analysed, so a separate type avoids two writers). Dates = stored decisions ∪ official config meetings (history has gaps, e.g. FED 29 Jul, BoJ 28 Apr 2026). The old `scrape_bank` returned 0 for 6 banks (site changes) and wrong dates for BoC, so it is not used.
+- 13-month backfill (`scripts/load_cb_statements.py`): FED 9, ECB 8 (press-conference statement, Q&A cut), BOE 9 (Monetary Policy Summary only), BOJ 9 (4 HTML + 5 PDF), BOC 9, RBNZ 7 (host-downloaded, `--local-dir`; Cloudflare), SNB 5. **RBA 0** (403). Re-run: unchanged rows are not rewritten.
+- Schedule: one run 30 min and one 3 h after each decision in `cb_meetings.yaml` for the 7 reachable banks (60-day window). RBNZ runs will log the Cloudflare 403 in-container.
+- RBNZ 28 Oct and 9 Dec 2026 confirmed on RBNZ event pages → `official: true` (synced).
+- `app/services/cb_statement_diff.py` + `GET /api/cb/{bank}/statement-diff`: line-aware sentence split, dates masked in the comparison key, difflib opcodes → changed (old/new, similarity ≥ 0.4) / added / removed; topic by word-start keywords. No hawkish/dovish tags.
+
+| Bank | Previous → latest | Changed sentences | Largest topics |
+| --- | --- | ---: | --- |
+| FED | 29 Jul → 16 Sep 2026 | 11 | growth 4, policy 3 (vote 9–3 → 12–0; maintain → raise) |
+| ECB | 23 Jul → 10 Sep | 102 | inflation 35, growth 28 |
+| BOE | 30 Jul → 17 Sep | 18 | inflation 8, policy 4 |
+| BOJ | 31 Jul → 18 Sep | 91 | growth 21, inflation 18 (PDF text; 35 "other") |
+| BOC | 15 Jul → 2 Sep | 79 | growth 28, inflation 19 |
+| RBNZ | 8 Jul → 2 Sep | 218 | inflation 78 (release includes the record of meeting) |
+| SNB | 18 Jun → 24 Sep | 68 | inflation 31, growth 22 |
+
+- Weak spots: long statements (ECB, RBNZ) rewrite most sentences, so counts are high; PDF extraction adds spacing artefacts (BoJ "202 6") and table/footnote lines classed "other".
+- Tests: `test_cb_statements.py` (7, FED fixtures in `tests/fixtures/cb_statements/`). Full suite: **634 passed, 7 skipped**.

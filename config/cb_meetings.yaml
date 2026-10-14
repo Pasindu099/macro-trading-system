@@ -225,7 +225,7 @@ RBNZ:
   step_bps: 25
   rate_basis_adj: 0.0
   low_liquidity_curve: false
-  # Step 12 Part A — 2026 to Sep from the official OCR timeline; Oct/Dec 2026 and May-Sep 2027 from secondary calendars (official: false)
+  # Step 12 Part A — 2026 from the official OCR timeline and RBNZ event pages; May-Sep 2027 from secondary calendars (official: false)
   meetings:
     - dt: "2026-02-18T14:00:00+13:00"
       official: true
@@ -238,9 +238,9 @@ RBNZ:
     - dt: "2026-09-02T14:00:00+12:00"
       official: true
     - dt: "2026-10-28T14:00:00+13:00"
-      official: false
+      official: true
     - dt: "2026-12-09T14:00:00+13:00"
-      official: false
+      official: true
     - dt: "2027-02-10T14:00:00+13:00"
       official: true
     - dt: "2027-03-17T14:00:00+13:00"

@@ -281,6 +281,24 @@ class Scheduler:
             )
         logger.info("  Registered %d CB document runs (FED/ECB statements and minutes)", len(doc_runs))
 
+        # Step 12 Part C: policy statements for all 8 banks, 30 min and 3 h after each decision (no LLM).
+        statement_runs = [(bank, at + delay) for bank, kind, at in document_run_times(
+            load_meetings_config(), banks=STATEMENT_BANKS, after=datetime.now(UTC) - timedelta(hours=3))
+            if kind == "statement" for delay in (timedelta(0), timedelta(hours=2, minutes=30))]
+        for bank, run_at in statement_runs:
+            if run_at <= datetime.now(UTC):
+                continue
+            self._scheduler.add_job(
+                _run_cb_statements,
+                trigger=DateTrigger(run_date=run_at),
+                args=[bank],
+                id=f"cb_statements_{bank}_{run_at:%Y%m%d%H%M}",
+                name=f"CB policy statement {bank}",
+                replace_existing=True,
+                misfire_grace_time=6 * 60 * 60,
+            )
+        logger.info("  Registered %d CB policy-statement runs (8 banks)", len(statement_runs))
+
         # FRED series for CB tracking and the regime model (two-year re-fetch picks up revisions).
         if settings.fred_api_key:
             self._scheduler.add_job(
@@ -714,6 +732,14 @@ async def _run_rp_scrape() -> None:
         logger.info("rateprobability.com scrape: %d/8 ok — %s", ok, statuses)
     except Exception:
         logger.exception("rateprobability.com scrape job failed.")
+
+
+STATEMENT_BANKS = ("FED", "ECB", "BOE", "BOJ", "BOC", "RBNZ", "SNB")   # RBA: 403 to scripted clients
+
+
+async def _run_cb_statements(bank: str) -> None:
+    from app.processing.cb_statements import ingest_statements
+    await ingest_statements((bank,), since=date.today() - timedelta(days=60))
 
 
 async def _run_cb_projections() -> None:

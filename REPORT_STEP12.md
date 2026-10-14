@@ -35,5 +35,11 @@
 | SNB | 10 Dec | unknown | every meeting | ~7 Jan | pending |
 - Fed calendar covers Board members only (no regional presidents). Speech calendars cached 1 h.
 
+## Decision: blocked / PDF-only sources
+- Honest UA `ForexCompass/1.0 (research dashboard)` (no `CONTACT_EMAIL` set; new setting), robots.txt checked, 10 s spacing: **RBA** first request 200, next three 403 → blocked; **RBNZ** robots.txt 403 → no page request. All fetchers now use this UA (browser-spoof UA removed; FED/ECB/BoE/BoJ/BoC/SNB still 200). Host-curl and RBNZ sitemap paths removed.
+- `/admin/cb-imports` (admin): upload RBNZ xlsx / BoE·BoC HTML projections or any statement (HTML/PDF/TXT) through the existing parsers; manual projection entry with loader bounds and `YYYY`/`YYYYQn` horizons. Audit table `cb_manual_imports` (migration 0033).
+- Manual sources in `central_banks.yaml` (`manual_import`): BoJ projections; RBA and RBNZ projections/statements/speeches. Their jobs log status `manual_import` (`job:cb_*:{BANK}`); freshness rows read "manual import — last updated {date}".
+- **Open:** RBNZ's 24 projection rounds and 7 statements stored earlier came from host curl with a browser UA (now disallowed).
+
 ## Tests
 - New: summary 7, config 4, projection parsers 11, statements 7, upcoming 4. Full suite after D: **638 passed, 7 skipped**.

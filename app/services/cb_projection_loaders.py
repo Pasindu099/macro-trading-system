@@ -10,26 +10,23 @@ from __future__ import annotations
 import json
 import re
 from datetime import date
-from pathlib import Path
 from typing import Any
 
 import httpx
 from sqlalchemy import text
 
+from app.services import source_identity
+
 from app.db.session import get_sessionmaker, session_scope
 from app.ingestion.run_logger import run_logger
 from app.processing import cb_projection_parsers as parsers
 from app.processing.xlsx_reader import read_sheet, sheet_names
+from app.services.cb_manual_imports import is_manual, manual_sources, mark_manual_run
 from app.services.cb_summary import DECISIONS, bank_config
 from app.services.cb_tracking import reaction_flag
 
 JOB_NAME = "job:cb_projections"
 BANKS = ("BOE", "BOJ", "RBA", "RBNZ", "BOC", "SNB")
-LOADED = ("BOE", "BOC", "RBNZ", "SNB")
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                         "Chrome/126.0 Safari/537.36", "Accept": "text/html,application/xhtml+xml,*/*;q=0.8"}
-UNAVAILABLE = {"BOJ": "Outlook Report forecasts are published only in PDF; skipped (no LLM/PDF parsing)",
-               "RBA": "rba.gov.au returns HTTP 403 to scripted clients; Statement on Monetary Policy tables not fetched"}
 MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october",
           "november", "december"]
 BOE_MONTHS_BEFORE_2026 = [2, 5, 8, 11]
@@ -133,31 +130,6 @@ def rbnz_rounds_from_files(files: dict[str, bytes], dates: list[date]) -> tuple[
     return rounds, skipped
 
 
-async def _rbnz_rounds(client: httpx.AsyncClient, since: date, summary: dict, files_dir: Path | None) -> list[list[dict]]:
-    dates = await decision_dates("RBNZ")
-    files: dict[str, bytes] = {}
-    if files_dir is not None:
-        files = {p.name: p.read_bytes() for p in files_dir.glob("*.xlsx")}
-    else:
-        sitemap = await client.get("https://www.rbnz.govt.nz/sitemap.xml")
-        if sitemap.status_code != 200:
-            summary["skipped"]["all"] = f"rbnz.govt.nz HTTP {sitemap.status_code} (Cloudflare); load with --rbnz-dir"
-            return []
-        pages = sorted(set(re.findall(r"<loc>([^<]*/monetary-policy-statements/20\d\d/[^<]*/monetary-policy-statement-"
-                                      r"[^<]*?)</loc>", sitemap.text)))
-        for page in pages:
-            if page.endswith("web-version") or page.count("/") > 9:
-                continue
-            html = (await client.get(page)).text
-            link = re.search(r'href="([^"]+(?:mps[a-z]{3}\d{2}|monetary-policy-statement)-data\.xlsx)"', html)
-            if link:
-                content = (await client.get(httpx.URL("https://www.rbnz.govt.nz").join(link.group(1)))).content
-                files[link.group(1).rsplit("/", 1)[-1]] = content
-    rounds, skipped = rbnz_rounds_from_files(files, dates)
-    summary["skipped"].update(skipped)
-    return [r for r in rounds if r[0]["release_date"] >= since]
-
-
 async def _snb_rounds(client: httpx.AsyncClient, since: date, summary: dict) -> list[list[dict]]:
     dates = await decision_dates("SNB")
     payload = (await client.get(f"{SNB_CUBE}/data/csv/en")).text
@@ -174,24 +146,21 @@ async def _snb_rounds(client: httpx.AsyncClient, since: date, summary: dict) -> 
     return list(parsers.parse_snb_cube(payload, labels, releases, since).values())
 
 
-async def load_projections(banks: tuple[str, ...] = LOADED, since: date = date(2020, 1, 1),
-                           rbnz_dir: Path | None = None) -> dict[str, Any]:
+async def load_projections(banks: tuple[str, ...] = BANKS, since: date = date(2020, 1, 1)) -> dict[str, Any]:
     """Idempotent: each parsed round replaces that bank's rows for its release date."""
     result: dict[str, Any] = {}
     async with run_logger(JOB_NAME) as run, httpx.AsyncClient(timeout=60, follow_redirects=True,
-                                                                headers=HEADERS) as client:
+                                                                headers=source_identity.headers()) as client:
         for bank in banks:
             summary: dict[str, Any] = {"rounds": 0, "rows": 0, "skipped": {}, "errors": {}}
-            if bank in UNAVAILABLE:
-                result[bank] = {"status": "unavailable", "reason": UNAVAILABLE[bank]}
+            if is_manual(bank, "projections"):        # blocked / PDF-only: filled via /admin/cb-imports
+                result[bank] = await mark_manual_run(JOB_NAME, bank, "projections")
                 continue
             try:
                 if bank == "BOE":
                     rounds = await _boe_rounds(client, since, summary)
                 elif bank == "BOC":
                     rounds = await _boc_rounds(client, since, summary)
-                elif bank == "RBNZ":
-                    rounds = await _rbnz_rounds(client, since, summary, rbnz_dir)
                 else:
                     rounds = await _snb_rounds(client, since, summary)
             except (httpx.HTTPError, ValueError) as exc:
@@ -248,7 +217,8 @@ def compute_revisions(bank: str, now: dict, before: dict, latest: date) -> dict[
 async def get_revisions(bank: str) -> dict[str, Any]:
     dates = await rounds(bank)
     if len(dates) < 2:
-        return {"bank": bank, "status": "unavailable", "reason": UNAVAILABLE.get(bank, "Fewer than two rounds stored")}
+        return {"bank": bank, "status": "unavailable",
+                "reason": manual_sources(bank).get("projections", "Fewer than two rounds stored")}
     latest, previous = dates[-1], dates[-2]
     result = compute_revisions(bank, await round_values(bank, latest), await round_values(bank, previous), latest)
     return {"bank": bank, "status": "available", "round": latest, "previous_round": previous, **result}
@@ -260,7 +230,8 @@ async def get_projections(bank: str, round_: str = "latest") -> dict[str, Any]:
     meta = {"bank": bank, "publication": cfg["projections"]["name"], "conditioning": cfg["conditioning"],
             "rate_path_type": cfg["rate_path_type"], "round_date_method": "decision date in publication month"}
     if not dates:
-        return {**meta, "status": "unavailable", "reason": UNAVAILABLE.get(bank, "No projections stored")}
+        return {**meta, "status": "manual_import" if is_manual(bank, "projections") else "unavailable",
+                "reason": manual_sources(bank).get("projections", "No projections stored")}
     wanted = dates if round_ == "all" else [dates[-1]] if round_ == "latest" else [date.fromisoformat(round_)]
     out = []
     for day in wanted:

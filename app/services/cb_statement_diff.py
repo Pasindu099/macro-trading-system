@@ -123,9 +123,11 @@ async def get_statement_diff(bank: str) -> dict[str, Any]:
     bank = bank.upper()
     rows = await latest_statements(bank)
     if len(rows) < 2:
-        from app.processing.cb_statements import BLOCKED
-        return {"bank": bank, "status": "unavailable",
-                "reason": BLOCKED.get(bank, "Fewer than two statements stored")}
+        from app.services.cb_manual_imports import manual_sources
+        reason = manual_sources(bank).get("statements")
+        return {"bank": bank, "status": "manual_import" if reason else "unavailable",
+                "reason": f"{reason}; upload statements at /admin/cb-imports" if reason
+                else "Fewer than two statements stored"}
     latest, previous = rows
     changes = diff_statements(previous.raw_text, latest.raw_text)
     by_topic: dict[str, int] = {}

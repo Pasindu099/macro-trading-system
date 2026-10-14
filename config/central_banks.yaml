@@ -1,6 +1,7 @@
 # Per-central-bank reference config (Step 8 Part A).
 # Step 12 Part A: all eight banks checked against official sources (verify: false).
 # Unverifiable items are commented inline; blackout.verified marks unconfirmed rules.
+# manual_import: sources blocked or PDF-only; filled via /admin/cb-imports (Step 12 decision).
 # blackout.start: anchor first_day|decision with days_before | business_days_before | weekday+nth.
 #
 # rate_path_type: dots (participants' rate projections) | own_track (published policy-rate path) | none
@@ -100,6 +101,7 @@ banks:
       end: {days_after_decision: 0}       # Outlook meetings: until the report is released
       verified: false                     # only a 2001 BoJ notice found
       source: "https://www.boj.or.jp/en/mopo/mpmsche_minu/m_ref/mpm0104a.htm"
+    manual_import: {projections: "Outlook Report forecasts are PDF only"}
     verify: false
 
   RBA:
@@ -119,6 +121,7 @@ banks:
       end: {days_after_decision: 0}       # external members: until minutes (two weeks)
       verified: true
       source: "https://www.rba.gov.au/media/guidelines.html"
+    manual_import: {projections: "rba.gov.au 403 to the identified client", statements: "rba.gov.au 403 to the identified client", speeches: "rba.gov.au 403 to the identified client"}
     verify: false
 
   BOC:
@@ -156,6 +159,7 @@ banks:
       start: null
       end: null
       verified: false                     # no published rule found
+    manual_import: {projections: "rbnz.govt.nz robots.txt 403 (Cloudflare)", statements: "rbnz.govt.nz robots.txt 403 (Cloudflare)", speeches: "rbnz.govt.nz robots.txt 403 (Cloudflare)"}
     verify: false
 
   SNB:

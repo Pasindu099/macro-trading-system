@@ -63,3 +63,22 @@ Config validation; blackout windows; each projection parser on saved fixtures; s
 
 DELIVER
 REPORT_STEP12.md (≤60 lines) + ≤10-line status after each STOP and at the end.
+
+DECISION — blocked / PDF-only sources
+1. RBA and RBNZ: try ONE request each with an honest identifying
+   User-Agent ("ForexCompass/1.0 (research dashboard; <contact email from
+   settings>)"), respecting robots.txt, ≥ 10 s between requests. No
+   browser spoofing, no Cloudflare workarounds. Report the result.
+2. Where still blocked (and for BoJ projections, PDF-only): add an admin
+   page /admin/cb-imports to (a) upload the official file (RBNZ/RBA data
+   files, statement HTML/PDF text) and run the existing parser on it, and
+   (b) manually enter projection values (bank, round date, variable,
+   horizon, value) with the same validation rules as the loaders.
+3. Jobs for blocked sources log status "manual_import" (not error) and the
+   freshness indicator shows "manual import — last updated {date}".
+4. Speech pipeline (Part E): same rule — skip blocked sites gracefully,
+   rely on investingLive comments for those banks, report coverage per bank.
+
+Then continue with Parts E and F; stop after F with a ≤10-line status
+including speeches ingested per bank and the 30-sentence quality sample
+location.

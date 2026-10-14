@@ -217,3 +217,20 @@ def panel_rows(statuses: dict[str, dict], sources: tuple[str, ...]) -> list[dict
 
 def situation_is_fresh(situation_id: str, statuses: dict[str, dict]) -> bool:
     return all(not statuses[source]["stale"] for source in SITUATION_SOURCES[situation_id])
+
+
+async def manual_import_rows(session: AsyncSession, bank: str | None = None) -> list[dict]:
+    """Freshness rows for manual-import CB sources (Step 12): never 'stale', labelled with the last import date."""
+    from app.services.cb_manual_imports import manual_sources
+    from app.services.cb_summary import bank_config
+    stamps = {(r.bank, r.kind): r.at for r in (await session.execute(text(
+        "SELECT bank, kind, max(imported_at) AS at FROM cb_manual_imports GROUP BY bank, kind"))).all()}
+    rows = []
+    for code in ([bank] if bank else list(bank_config())):
+        for kind in manual_sources(code):
+            at = stamps.get((code, kind))
+            rows.append({"source": f"cb_manual:{code}:{kind}", "label": f"{code} {kind}", "manual": True,
+                         "stale": False, "reason": None, "as_of": at.date().isoformat() if at else None,
+                         "as_of_label": at.strftime("%d %b %Y") if at else None,
+                         "text": f"manual import — last updated {at:%d %b %Y}" if at else "manual import — never imported"})
+    return rows

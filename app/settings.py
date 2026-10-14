@@ -137,6 +137,11 @@ class Settings(BaseSettings):
         alias="FRED_API_KEY",
         description="FRED API key for CB tracking series (PCE, unemployment, GDP, HY spread)",
     )
+    contact_email: str | None = Field(
+        default=None,
+        alias="CONTACT_EMAIL",
+        description="Contact address in the identifying User-Agent sent to central-bank websites",
+    )
     rateprobability_scraper_enabled: bool = Field(
         default=False,
         alias="RATEPROBABILITY_SCRAPER_ENABLED",

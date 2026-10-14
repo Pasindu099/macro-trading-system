@@ -18,6 +18,8 @@ import httpx
 from bs4 import BeautifulSoup
 from sqlalchemy import text
 
+from app.services import source_identity
+
 from app.db.session import session_scope
 from app.ingestion.run_logger import run_logger
 
@@ -27,11 +29,8 @@ JOB_NAME = "job:cb_statements"
 DOC_TYPE = "policy_statement"
 BANKS = ("FED", "ECB", "BOE", "BOJ", "RBA", "BOC", "RBNZ", "SNB")
 LOOKBACK_DAYS = 396                  # 13 months
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                         "Chrome/126.0 Safari/537.36", "Accept": "text/html,application/xhtml+xml,*/*;q=0.8"}
 MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october",
           "november", "december"]
-BLOCKED = {"RBA": "rba.gov.au returns HTTP 403 to scripted clients"}
 SELECTORS = {"FED": "#article", "ECB": "main .section", "BOC": "article, main", "SNB": "main",
              "BOE": "main, #main-content", "BOJ": "#contents, main"}
 ECB_END = "We are now ready to take your questions"
@@ -113,10 +112,6 @@ async def discover(client: httpx.AsyncClient, bank: str, since: date) -> list[tu
                     by_day[day] = ("https://www.boj.or.jp" + href, "html" if ext == "htm" else "pdf")
             found += [(day, url, kind) for day, (url, kind) in by_day.items()]
         return sorted(found)
-    if bank == "RBNZ":
-        sitemap = await client.get("https://www.rbnz.govt.nz/sitemap.xml")
-        sitemap.raise_for_status()
-        return rbnz_links(sitemap.text, days)
     return []
 
 
@@ -146,25 +141,20 @@ async def store(bank: str, day: date, url: str, body: str) -> bool:
         return bool(result.rowcount)
 
 
-async def ingest_statements(banks: tuple[str, ...] = BANKS, since: date | None = None,
-                            local_dir: Path | None = None) -> dict[str, Any]:
-    """Fetch and store statements; local_dir/<BANK>/<YYYY-MM-DD>.html is used instead of fetching when present."""
+async def ingest_statements(banks: tuple[str, ...] = BANKS, since: date | None = None) -> dict[str, Any]:
+    """Fetch and store statements; blocked banks log manual_import (statements arrive via /admin/cb-imports)."""
+    from app.services.cb_manual_imports import is_manual, mark_manual_run
     since = since or date.today() - timedelta(days=LOOKBACK_DAYS)
     result: dict[str, Any] = {}
     async with run_logger(JOB_NAME) as run, httpx.AsyncClient(timeout=60, follow_redirects=True,
-                                                                headers=HEADERS) as client:
+                                                                headers=source_identity.headers()) as client:
         for bank in banks:
             summary: dict[str, Any] = {"listed": 0, "stored": 0, "unchanged": 0, "failed": {}}
-            if bank in BLOCKED:
-                result[bank] = {"status": "unavailable", "reason": BLOCKED[bank]}
+            if is_manual(bank, "statements"):
+                result[bank] = await mark_manual_run(JOB_NAME, bank, "statements")
                 continue
-            local = local_dir / bank if local_dir else None
             try:
-                if local and local.exists():
-                    days = await decision_dates(bank, since)
-                    links = [(d, f"file:{local / f'{d}.html'}", "file") for d in days if (local / f"{d}.html").exists()]
-                else:
-                    links = await discover(client, bank, since)
+                links = await discover(client, bank, since)
             except httpx.HTTPError as exc:
                 summary["failed"]["discovery"] = str(exc)
                 run.errors.append(f"{bank}: {exc}")
@@ -172,12 +162,9 @@ async def ingest_statements(banks: tuple[str, ...] = BANKS, since: date | None =
             for day, url, kind in links:
                 summary["listed"] += 1
                 try:
-                    if kind == "file":
-                        body = html_text(Path(url[5:]).read_text(encoding="utf-8", errors="ignore"), bank)
-                    else:
-                        response = await client.get(url)
-                        response.raise_for_status()
-                        body = pdf_text(response.content) if kind == "pdf" else html_text(response.text, bank)
+                    response = await client.get(url)
+                    response.raise_for_status()
+                    body = pdf_text(response.content) if kind == "pdf" else html_text(response.text, bank)
                     if len(body) < 300:
                         raise ValueError(f"statement text too short ({len(body)} chars)")
                 except (httpx.HTTPError, ValueError, OSError) as exc:

@@ -25,6 +25,7 @@ from app.api.routes import (
     admin,
     auth,
     cb,
+    cb_imports,
     desk_insights,
     desks,
     fixed_income,
@@ -128,6 +129,7 @@ app.include_router(positioning.router)
 app.include_router(desks.router)
 app.include_router(desk_insights.router)
 app.include_router(cb.router)
+app.include_router(cb_imports.router)
 
 
 # ══════════════════════════════════════════════════════════════════════

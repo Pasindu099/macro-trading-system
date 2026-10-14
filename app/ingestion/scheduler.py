@@ -734,7 +734,7 @@ async def _run_rp_scrape() -> None:
         logger.exception("rateprobability.com scrape job failed.")
 
 
-STATEMENT_BANKS = ("FED", "ECB", "BOE", "BOJ", "BOC", "RBNZ", "SNB")   # RBA: 403 to scripted clients
+STATEMENT_BANKS = ("FED", "ECB", "BOE", "BOJ", "RBA", "BOC", "RBNZ", "SNB")   # RBA/RBNZ log manual_import
 
 
 async def _run_cb_statements(bank: str) -> None:
@@ -743,8 +743,8 @@ async def _run_cb_statements(bank: str) -> None:
 
 
 async def _run_cb_projections() -> None:
-    from app.services.cb_projection_loaders import LOADED, load_projections
-    await load_projections(LOADED, since=date.today() - timedelta(days=120))
+    from app.services.cb_projection_loaders import load_projections
+    await load_projections(since=date.today() - timedelta(days=120))
 
 
 async def _poll_cb_feeds() -> None:

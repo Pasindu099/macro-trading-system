@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block body %}
+<main class="page">
+  <p class="eyebrow">ForexCompass / Admin</p>
+  <h1>Central-bank imports</h1>
+  <p class="intro">Sources that are PDF-only or block automated requests. Upload the official file (parsed by the same loader) or enter projection values; the same validation applies.</p>
+  {% if message %}<p class="auth-message">{{ message }}</p>{% endif %}
+  <div class="settings-grid">
+    <section class="settings-panel">
+      <p class="eyebrow">Manual-import sources</p>
+      <div class="auth-user-list">
+        {% for s in sources %}
+        <div class="auth-user-row"><div><strong>{{ s.bank }} · {{ s.kind }}</strong>
+          <small>{{ s.reason }} · manual import — last updated {{ s.last_import or "never" }}</small></div></div>
+        {% endfor %}
+      </div>
+    </section>
+    <section class="settings-panel">
+      <p class="eyebrow">Upload official file</p>
+      <form method="post" action="/admin/cb-imports/file" enctype="multipart/form-data" class="auth-form">
+        <label>Kind<select name="kind"><option value="projections">Projections (RBNZ .xlsx, BoE/BoC .html)</option><option value="statements">Statement (.html, .pdf, .txt)</option></select></label>
+        <label>Bank<select name="bank">{% for b in banks %}<option value="{{ b }}">{{ b }}</option>{% endfor %}</select></label>
+        <label>Round / decision date<input name="round_date" type="date" required></label>
+        <label>File<input name="upload" type="file" required></label>
+        <button class="btn primary" type="submit">Import</button>
+      </form>
+    </section>
+    <section class="settings-panel">
+      <p class="eyebrow">Enter projection values</p>
+      <form method="post" action="/admin/cb-imports/values" class="auth-form">
+        <label>Bank<select name="bank">{% for b in banks %}<option value="{{ b }}">{{ b }}</option>{% endfor %}</select></label>
+        <label>Round date<input name="round_date" type="date" required></label>
+        <label>Values — one per line: variable, horizon (YYYY or YYYYQn), value
+          <textarea name="values" rows="8" required placeholder="cpi_inflation, 2026, 2.8&#10;real_gdp, 2027, 0.9"></textarea></label>
+        <small>Variables: {{ variables | join(", ") }}</small>
+        <button class="btn primary" type="submit">Save values</button>
+      </form>
+    </section>
+    <section class="settings-panel">
+      <p class="eyebrow">Recent imports</p>
+      <div class="auth-user-list">
+        {% for r in recent %}
+        <div class="auth-user-row"><div><strong>{{ r.bank }} · {{ r.kind }} · {{ r.method }}</strong>
+          <small>{{ r.source or "manual entry" }} · round {{ r.round_date }} · {{ r.rows }} rows · {{ r.imported_by or "—" }} · {{ r.imported_at.strftime("%d %b %Y %H:%M") }}</small></div></div>
+        {% else %}<p class="intro">No imports yet.</p>{% endfor %}
+      </div>
+    </section>
+  </div>
+</main>
+{% endblock %}

@@ -18,6 +18,8 @@ import httpx
 import yaml
 from bs4 import BeautifulSoup
 
+from app.services import source_identity
+
 from app.services.cb_summary import bank_config, blackout_window
 from app.services.meeting_calendar import SUPPORTED_BANKS, get_upcoming_meetings
 
@@ -27,8 +29,6 @@ ECB_WEEKLY = "https://www.ecb.europa.eu/press/calendars/weekly/html/index.en.htm
 FED_SPEECH_TYPES = {"Speeches", "Testimony"}
 SPEECH_DAYS = 14
 CACHE_TTL = 60 * 60
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                         "Chrome/126.0 Safari/537.36"}
 # Minutes-type releases whose lag is exact by rule (same day / three weeks); others are approximate.
 EXACT_MINUTES = {"FED", "BOE", "RBNZ"}
 _cache: dict[str, tuple[float, Any]] = {}
@@ -117,7 +117,7 @@ async def scheduled_speeches(bank: str, today: date) -> dict[str, Any]:
         return cached[1]
     url = FED_CALENDAR if bank == "FED" else ECB_WEEKLY
     try:
-        async with httpx.AsyncClient(timeout=30, follow_redirects=True, headers=HEADERS) as client:
+        async with httpx.AsyncClient(timeout=30, follow_redirects=True, headers=source_identity.headers()) as client:
             response = await client.get(url)
             response.raise_for_status()
     except httpx.HTTPError as exc:

@@ -52,6 +52,11 @@ class RunTracker:
     def mark_skipped(self) -> None:
         self.status_override = "skipped"
 
+    def mark_manual_import(self, reason: str) -> None:
+        """Blocked / PDF-only source: data arrives via /admin/cb-imports, so this is not an error."""
+        self.status_override = "manual_import"
+        self.errors.append(reason)
+
     def record_stats(self, stats: IngestStats) -> None:
         """Accumulate stats from one ingest batch."""
         self.events_inserted += stats.inserted

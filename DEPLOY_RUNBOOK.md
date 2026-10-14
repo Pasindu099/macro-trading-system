@@ -228,3 +228,77 @@ export APP_IMAGE_TAG=pre-v2.2
 dc up -d --no-build app news_pipeline telegram_bot
 curl -fsS http://127.0.0.1:8000/health
 ```
+
+## v2.3-cb-terminal release (Step 12)
+
+Adds the Central Bank Terminal (`/central-banks`), BoE/BoC/SNB projection loaders, policy statements and statement diffs, the speech pipeline with investingLive attribution, word-list tone (v1 and v2) behind a precision gate, `/admin/cb-imports`, the desk Fed/ECB view changes and Event Log price moves. Expected Alembic path from `v2.2.x`: `0031_event_log_entries` → `0032_cb_projection_point_stats` → `0033_cb_manual_imports` → `0034_cb_speeches` → `0035_cb_sentence_scores` → `0036_event_log_moves`. Config changes: `cb_meetings.yaml` (corrected 2026–27 dates for BoE, RBA, BoC, SNB, RBNZ, Fed June 2027; BoJ Summary of Opinions dates; RBNZ MPS meetings), `central_banks.yaml` (all banks verified, blackout rules, `manual_import` sources), new `cb_officials.yaml` and `tone_lexicon.yaml`. New optional setting `CONTACT_EMAIL` goes into the identifying User-Agent (`ForexCompass/1.0 (research dashboard; <email>)`); add it to `.env` before building. No EODHD calls; official bank sites are fetched with ~1 s between requests.
+
+```bash
+set -e
+dc(){ docker compose -f docker-compose.prod.yml "$@"; }
+git status --short
+mkdir -p backups
+git rev-parse HEAD > backups/pre-v2.3-revision.txt
+docker image tag "$(docker inspect -f '{{.Image}}' macro_dashboard_app)" macro-dashboard:pre-v2.3
+bash scripts/backup_db.sh
+BACKUP=$(ls -1t backups/macro-dashboard-*.dump | head -1); test -s "$BACKUP" && du -h "$BACKUP"
+grep -q '^CONTACT_EMAIL=' .env || echo 'CONTACT_EMAIL=' >> .env   # fill in the address, or leave blank
+git fetch --tags origin
+git switch --detach v2.3-cb-terminal
+export APP_IMAGE_TAG=v2.3-cb-terminal
+dc build app
+dc stop app news_pipeline telegram_bot
+# 1. Migrations: current must be 0031_event_log_entries; head must be 0036_event_log_moves
+dc run --rm --no-deps app alembic current
+dc run --rm --no-deps app alembic upgrade head
+dc run --rm --no-deps app alembic current
+# 2. Meeting calendar: the startup seed only fills an empty table, so sync the corrected dates (rerun must print 0/0/0)
+dc run --rm --no-deps app python -m scripts.sync_cb_meetings --dry-run
+dc run --rm --no-deps app python -m scripts.sync_cb_meetings
+dc run --rm --no-deps app python -m scripts.sync_cb_meetings --dry-run
+# 3. Start services (registers cb_statements decision-day runs, cb_projections 07:30, cb_speeches 06:30 UTC)
+dc up -d --no-build app news_pipeline telegram_bot
+dc ps
+curl -fsS http://127.0.0.1:8000/health
+# 4. Projection rounds since 2020 (BoE, BoC, SNB; BoJ/RBA/RBNZ log manual_import) ~3 min
+dc exec -T app python -m scripts.load_cb_projections | tee backups/v2.3-projections.log
+# 5. Policy statements, 13 months (FED, ECB, BoE, BoJ, BoC, SNB; RBA/RBNZ log manual_import) ~2 min
+dc exec -T app python -m scripts.load_cb_statements | tee backups/v2.3-statements.log
+# 6. Speeches, 12 months, then investingLive comment attribution ~5-10 min
+dc exec -T app python -m scripts.load_cb_speeches | tee backups/v2.3-speeches.log
+# 7. First tone scoring run (lexicon_v1 and lexicon_v2; daily afterwards inside job:cb_speeches)
+dc exec -T app python -c 'import asyncio; from app.services.cb_tone import score_pending; print(asyncio.run(score_pending()))'
+```
+
+Checks (local reference counts in brackets): projections BOE 17 rounds, BOC 7, SNB 27 [same], BOJ/RBA/RBNZ `manual_import`; statements FED 9, ECB 8, BOE 9, BOJ 9, BOC 9, SNB 5; speeches FED ~111, ECB ~86, BOE 50, BOJ 26, BOC 10, SNB ~9, RBA/RBNZ `manual_import`; the `comments` line depends on how much investingLive history production holds (local 143). Scoring prints the same count for both methods (local 16,853). `/api/admin/jobs/status` shows `job:cb_projections:RBA`, `:RBNZ`, `:BOJ`, `job:cb_statements:RBA`/`:RBNZ` and `job:cb_speeches:RBA`/`:RBNZ` as `manual_import`, not failed. A rerun of steps 4-6 is idempotent (no duplicate rows).
+
+Smoke checks in an authenticated browser:
+
+| URL | Expected result |
+|---|---|
+| `/central-banks` | HTTP 200; FED tab: summary (rate 4.00%, regime, next meeting, blackout chip, priced move, 2Y − policy, gap), committee balance, statement tracker with struck/new sentences, speaker table, profile, upcoming, headlines, "Search and Ask — Phase 3, pending". No panel shows "could not load". |
+| `/central-banks?bank=FED&view=projections` | Revisions with median/CT/range, dots vs market, risk balance, CB Tracking, vintages, formats table. |
+| `/central-banks?bank=RBNZ` and `?bank=RBA` | Statement tracker and projections show "Manual import source … /admin/cb-imports"; freshness rows read "manual import — never imported". |
+| `/central-banks?bank=SNB&view=projections` | Point projections with "policy rate held at 0.0%". |
+| `/admin/cb-imports` | Admin only; lists BOJ projections and RBA/RBNZ projections, statements, speeches with "last updated never"; file upload and value-entry forms. |
+| `/desks/USD`, `/desks/EUR` (section 3) | "Statement language tracker", latest statements, "Committee balance · 12 weeks" with "Tone: pending AI layer", "Speaker focus mix · v1" bar. |
+| `/` Central bank regime map | Guidance column adds "statement changed <date> (n sentences)" where a diff exists. |
+| `/calendar/event-log/new` | No Trade section; "Price moves after the release" grid (1m/5m/30m/1h/4h); instruments include XAU/USD, US100, US30, US500. |
+
+Tone is hidden everywhere until the labelled sample passes the gate (`config/tone_lexicon.yaml` `display_gate`, ≥ 75 % precision on ≥ 15 labels). Labels live in `REPORT_STEP12_TONE_SAMPLE.md`, which ships in the image. Label, commit and release again to enable tone.
+
+**After deploy — manual imports (blocked or PDF-only sources).** RBA (403 to scripted clients), RBNZ (robots.txt 403, Cloudflare) and BoJ projections (PDF only) are filled by hand at `/admin/cb-imports`. Download the official files in a normal browser yourself:
+- RBNZ projections: each Monetary Policy Statement's data workbook (`mps<mon><yy>-data.xlsx`), uploaded with the MPS decision date. RBNZ statements: the OCR decision media release page saved as HTML, with the decision date.
+- RBA statements: the monetary policy decision media release (HTML or PDF). RBA and BoJ projections: enter values (`variable, horizon, value`; horizons `YYYY` or `YYYYQn`) from the SMP forecast table and the Outlook Report forecast table.
+- Speeches for RBA/RBNZ have no upload; those officials are covered by investingLive comment attribution.
+
+Rollback: stop services, restore the dump, then return to the saved revision and image. Do not rely on `alembic downgrade`: 0034-0036 drop the speech, score and Event Log price-move tables.
+
+```bash
+dc stop app news_pipeline telegram_bot
+bash scripts/restore_db.sh "$BACKUP"  # type the requested RESTORE confirmation
+git switch --detach "$(cat backups/pre-v2.3-revision.txt)"
+export APP_IMAGE_TAG=pre-v2.3
+dc up -d --no-build app news_pipeline telegram_bot
+curl -fsS http://127.0.0.1:8000/health
+```

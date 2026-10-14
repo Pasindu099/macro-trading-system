@@ -39,6 +39,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       EODHD_API_KEY: ${EODHD_API_KEY:-}
       FRED_API_KEY: ${FRED_API_KEY:-}
+      CONTACT_EMAIL: ${CONTACT_EMAIL:-}
       GOOGLE_DRIVE_API_KEY: ${GOOGLE_DRIVE_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}

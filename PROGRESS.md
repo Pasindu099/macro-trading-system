@@ -159,3 +159,4 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] Decision: RBNZ browser-UA rows deleted (1,248 projection values, 7 statements); lexicon_v2 + precision display gate (awaiting labels); v2 sample added.
 - [x] G. /central-banks terminal (8 banks, Overview + Projections, 14 panels, states, 60 s cache, 390 px).
 - [x] H. USD/EUR CB view: statement tracker, committee balance, focus mix; Overview guidance notes statement changes. Full suite 683 passed, 7 skipped.
+- [x] Release v2.3-cb-terminal: runbook section (migrations 0032-0036, meeting sync, backfills, scoring, smoke, manual imports); CONTACT_EMAIL passed to app; browser-UA folders excluded from the image. Full suite 683 passed, 7 skipped.

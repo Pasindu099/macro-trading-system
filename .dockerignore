@@ -11,3 +11,6 @@ data/indicator_correlations
 design
 PROJECT_AUDIT.md
 context.md
+# Step 12: files fetched with a browser user-agent before the honest-UA rule; never ship them
+data/rbnz_mps
+data/cb_statements

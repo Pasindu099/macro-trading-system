@@ -7,6 +7,7 @@ Friday release date. Spot on a report_date is the newest valid close on or befor
 from __future__ import annotations
 
 import bisect
+import statistics
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -407,6 +408,7 @@ async def get_pair_positioning(pair: str, lookback: str = "3y") -> dict[str, Any
 SCHEDULE_CONFIG = Path("config/cftc_release_schedule.yaml")
 SQUEEZE_RANK = {"high": 3, "medium": 2, "trend_confirming": 1, "none": 0}
 DIVERGENCE_HIGH, DIVERGENCE_LOW = 75.0, 25.0
+DIVERGENCE_MIN_STD = 0.5  # |4W net change| must be >= 0.5 x std of 4W changes over the lookback
 IMPLIED_BIAS, RETAIL_SIDE = 20.0, 60.0
 
 
@@ -492,15 +494,27 @@ def release_info(latest_report: date | None, now: datetime | None = None) -> dic
     }
 
 
-def divergence_flag(percentile: float | None, net_change_4w: int | None,
-                    price_move_4w: float | None) -> dict[str, Any]:
-    """'divergence' when the 4-week currency move and the leveraged-funds net change point opposite ways
-    while positioning is at or beyond the 75th / 25th percentile."""
-    if percentile is None or net_change_4w is None or price_move_4w is None:
-        return {"flag": "pending", "reason": "missing percentile, 4-week net change or price"}
+def change_4w_std(weeks: list[Week], years: int) -> float | None:
+    """Standard deviation of 4-week net changes ending inside the lookback window."""
+    if len(weeks) < 6:
+        return None
+    start = lookback_start(weeks[-1].report_date, years)
+    changes = [weeks[i].net - weeks[i - 4].net for i in range(4, len(weeks)) if weeks[i].report_date > start]
+    return statistics.stdev(changes) if len(changes) >= 2 else None
+
+
+def divergence_flag(percentile: float | None, net_change_4w: int | None, price_move_4w: float | None,
+                    change_std: float | None = None) -> dict[str, Any]:
+    """'divergence' when the 4-week currency move and the leveraged-funds net change point opposite ways,
+    the net change is material (>= 0.5 x std of 4-week changes) and positioning is >= 75th / <= 25th."""
+    if percentile is None or net_change_4w is None or price_move_4w is None or change_std is None:
+        return {"flag": "pending", "reason": "missing percentile, 4-week net change, its std or price"}
     disagree = (net_change_4w > 0 > price_move_4w) or (net_change_4w < 0 < price_move_4w)
+    material = abs(net_change_4w) >= DIVERGENCE_MIN_STD * change_std
     extreme = percentile >= DIVERGENCE_HIGH or percentile <= DIVERGENCE_LOW
-    return {"flag": "divergence" if disagree and extreme else "none", "disagree": disagree, "extreme": extreme}
+    return {"flag": "divergence" if disagree and material and extreme else "none",
+            "disagree": disagree, "material": material, "extreme": extreme,
+            "min_change": round(DIVERGENCE_MIN_STD * change_std)}
 
 
 async def get_divergence(lookback: str = "3y") -> dict[str, Any]:
@@ -519,9 +533,10 @@ async def get_divergence(lookback: str = "3y") -> dict[str, Any]:
         rows.append({"currency": ccy, "percentile": snap["percentile"], "net_change_4w": snap["change_4w"],
                      "price_move_4w_pct": round(move, 3) if move is not None else None,
                      "report_date": snap["report_date"],
-                     **divergence_flag(snap["percentile"], snap["change_4w"], move)})
+                     **divergence_flag(snap["percentile"], snap["change_4w"], move, change_4w_std(weeks, years))})
     return {"lookback": lookback, "window_weeks": 4,
-            "rule": "4W price direction vs 4W leveraged-funds net change disagree and percentile >= 75 or <= 25",
+            "rule": ("4W price direction vs 4W leveraged-funds net change disagree, |net change| >= 0.5 x std of "
+                     "4W changes over the lookback, and percentile >= 75 or <= 25"),
             "currencies": rows}
 
 

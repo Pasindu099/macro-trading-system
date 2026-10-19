@@ -45,3 +45,15 @@ Myfxbook client (login, session reuse, expiry, missing credentials); snapshot st
 
 ## DELIVER
 REPORT_STEP14.md (≤60 lines) + ≤10-line status after Part B and at the end.
+
+## Decisions after Part B (2026-10-19)
+1. Divergence flag: require |4-week change in LF net| >= 0.5 × std of
+   4-week changes over the selected lookback. Re-run; report flags.
+2. Retag non-releases currently typed Data (PBOC fixings and the other
+   non-release items) as "Flows & market". Parser target is measured on
+   real releases only (currently 98%).
+3. Myfxbook: I am adding the credentials (new password). After they are
+   set, run one snapshot and report pairs covered / missing.
+4. Run the full suite once before continuing.
+Then Parts C–D; final ≤10-line status. Add the S&P 500 EODHD backfill and
+the Myfxbook credentials to DEPLOY_RUNBOOK.md for the next deploy.

@@ -64,11 +64,20 @@ def test_release_info_current_and_next():
     (20.0, 3000, -0.8, "divergence"),    # short side, specs buying, currency down
     (82.0, 5000, 1.2, "none"),           # agree
     (50.0, -5000, 1.2, "none"),          # disagree but not extreme
-    (75.0, -1, 0.1, "divergence"),       # boundary percentile counts
+    (75.0, -2000, 0.1, "divergence"),    # boundary percentile and boundary size (0.5 x 4000) count
+    (82.0, -23, 1.2, "none"),            # disagree and extreme but immaterial change
     (82.0, None, 1.2, "pending"),
 ])
 def test_divergence_rule(pctl, change, move, flag):
-    assert p.divergence_flag(pctl, change, move)["flag"] == flag
+    assert p.divergence_flag(pctl, change, move, change_std=4000.0)["flag"] == flag
+
+
+def test_change_4w_std_uses_lookback_window():
+    from datetime import timedelta
+    weeks = [p.Week(date(2020, 1, 7) + timedelta(weeks=i), long=(i % 2) * 1000, short=0, open_interest=1)
+             for i in range(400)]
+    assert p.change_4w_std(weeks, 1) == 0.0  # alternating nets: every 4-week change is zero
+    assert p.change_4w_std(weeks[:5], 3) is None
 
 
 @pytest.mark.parametrize("implied,retail_long,signal", [

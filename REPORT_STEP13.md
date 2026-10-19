@@ -23,3 +23,30 @@
 - `app/services/news_context.py:1` returns a line only when supporting data exist: actual vs consensus and CB tracking, speaker role/voter/focus, situation evidence, or named commodity drivers. It omits unverified tone and generic filler.
 - `/news` shows the line below the headline when present; `app/services/news.py:1` gathers the underlying data through stored joins and existing CB/situation services.
 - Focused tests: 21 passed. Live local feed smoke returned contextual and empty-line cases. Full suite: 724 passed, 7 skipped.
+
+## Part F — episode links and cross-asset history
+
+- Migration `0042_news_episode_assets` applied locally. A 42,529,597-byte database backup was saved at `backups/news-step13-0042.dump` before the history backfill (after the schema migration).
+- `news_item_episodes` links a tagged item to every matching situation episode whose inclusive UTC date span contains publication; 797 historical links added. Daily situation refresh now preserves episode IDs for unchanged starts (`app/services/situations.py:328`).
+- `cross_asset_daily_snapshots` holds one row per UTC observation date and series, with value, source and provider series/symbol. Daily job refreshes seven days; the backfill loads FX and computed DXY from EODHD, FRED rates/commodities/index series, and EODHD metals (`app/services/news_assets.py:1`, `scripts/backfill_news_assets.py:1`).
+- Historical backfill finished successfully: 14 series, 90,652 daily observations. Coverage by series (first..last date, rows):
+
+| Series | Coverage | Rows |
+|---|---|---:|
+| XAU/USD | 2000-01-03..2026-10-18 | 7,401 |
+| XAG/USD | 2000-01-03..2026-10-18 | 7,953 |
+| Brent | 2000-01-04..2026-10-14 | 6,487 |
+| WTI | 2000-01-04..2026-10-14 | 6,338 |
+| Computed DXY | 2002-05-06..2026-10-18 | 6,354 |
+| USD/JPY | 2000-01-03..2026-10-19 | 7,230 |
+| USD/CHF | 2000-01-03..2026-10-19 | 7,056 |
+| EUR/USD | 2000-01-03..2026-10-18 | 7,244 |
+| VIX | 2000-01-03..2026-10-16 | 6,772 |
+| US 2Y | 2000-01-03..2026-10-15 | 6,700 |
+| US 10Y | 2000-01-03..2026-10-15 | 6,700 |
+| US real 10Y | 2003-01-02..2026-10-15 | 5,951 |
+| US 10Y breakeven | 2003-01-02..2026-10-16 | 5,952 |
+| S&P 500 | 2016-10-17..2026-10-16 | 2,514 |
+
+- Focused tests: 13 passed. Full suite: 726 passed, 7 skipped. SQLAlchemy emitted connection cleanup warnings after pytest, but all tests passed.
+- 48-hour collector overlap is still pending; `scripts/news_parity.py --hours 48` remains deferred and old collectors stay enabled. Stopped after F; Part G untouched.

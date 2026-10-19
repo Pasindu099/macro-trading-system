@@ -166,3 +166,7 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] A. `config/news_sources.yaml` (licensed_for_redistribution false, one show_unlicensed switch); app collector with honest UA + robots.txt per feed. investingLive 45 s (3 feeds), FXStreet news+analysis and ING Think 300 s connected; Kitco disabled pending official URL.
 - [x] B. One path: app collector -> raw_news (permanent); pages/desks/Overview/CB terminal read via `app/services/news.py`; migration 0038 (md5(url), FTS). Pipeline collectors stay on (`NEWS_PIPELINE_COLLECTORS`) until 48 h parity via `scripts/news_parity.py`.
 - [x] C. Rule-based relevance, cross-source dedupe (2 h), tags (currencies, type, speaker, situation, dominance tier, impact, gold drivers) in `news_items` / `news_raw_status` (migration 0039), 60 s job. Full suite 713 passed, 7 skipped, 1 pre-existing Event Log failure. STOP after C.
+- [x] C follow-up. Unlinked geopolitics retained and hidden by default; Event Log precision test corrected. Full suite 715 passed, 7 skipped.
+- [x] D. Newswire actual matching, provisional release versioning and EODHD confirmation audit (migration 0041). Full suite 720 passed, 7 skipped.
+- [x] E. Evidence-based "Why it matters" lines in the news feed. Full suite 724 passed, 7 skipped.
+- [x] F. Episode links and cross-asset daily observations (migration 0042); historical backfill and coverage in `REPORT_STEP13.md`. Full suite 726 passed, 7 skipped. STOP after F.

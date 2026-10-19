@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 FRED_OBSERVATIONS_URL = "https://api.stlouisfed.org/fred/series/observations"
 # PCE price indexes (levels), unemployment rate, real GDP (level, SAAR), ICE BofA US HY OAS (percent).
 TRACKING_SERIES = ("PCEPI", "PCEPILFE", "UNRATE", "GDPC1", "BAMLH0A0HYM2",
-                   "DCOILBRENTEU", "VIXCLS", "SP500")
+                   "DCOILBRENTEU", "DCOILWTICO", "VIXCLS", "SP500",
+                   "DGS2", "DGS10", "DFII10", "T10YIE")
 INCREMENTAL_LOOKBACK = timedelta(days=730)  # re-fetch two years so revisions land
 
 

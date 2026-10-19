@@ -330,12 +330,16 @@ async def run_situations_job() -> int:
                         continue
                     await session.execute(text("""
                         DELETE FROM situation_episodes WHERE situation_id = :s AND scope_key = :k
-                    """), {"s": result["situation_id"], "k": result["scope_key"]})
+                          AND NOT (started_at = ANY(CAST(:starts AS date[])))
+                    """), {"s": result["situation_id"], "k": result["scope_key"],
+                           "starts": [e["started_at"] for e in result["episodes"]]})
                 if rows:
                     await session.execute(text("""
                         INSERT INTO situation_episodes
                             (situation_id, scope, scope_key, started_at, ended_at, evidence)
                         VALUES (:situation_id, :scope, :scope_key, :started_at, :ended_at, CAST(:evidence AS jsonb))
+                        ON CONFLICT ON CONSTRAINT uq_situation_episode_start
+                        DO UPDATE SET ended_at = EXCLUDED.ended_at, evidence = EXCLUDED.evidence
                     """), rows)
             run.record_rows(len(rows))
             return len(rows)

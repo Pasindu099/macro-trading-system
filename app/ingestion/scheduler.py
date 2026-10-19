@@ -65,6 +65,7 @@ from app.services.calendar_service import list_events
 from app.services.news_collector import collect_source, enabled_sources
 from app.services.news_tagging import process_pending as process_news
 from app.services.news_actuals import process_pending as process_news_actuals
+from app.services.news_assets import link_news_episodes, run_daily_snapshot
 from app.services.news_monitor import run_news_monitor
 from app.services.rate_fetchers import fetch_all, should_fetch_on_startup
 from app.services.rate_probability import save_snapshot
@@ -389,6 +390,16 @@ class Scheduler:
             trigger=IntervalTrigger(seconds=60, timezone="UTC"),
             id="news_actuals", name="Newswire actuals to calendar",
             replace_existing=True, max_instances=1, coalesce=True, misfire_grace_time=60,
+        )
+        self._scheduler.add_job(
+            link_news_episodes, trigger=IntervalTrigger(minutes=5, timezone="UTC"),
+            id="news_episode_links", name="News episode links",
+            replace_existing=True, max_instances=1, coalesce=True,
+        )
+        self._scheduler.add_job(
+            run_daily_snapshot, trigger=CronTrigger(hour=23, minute=55, timezone="UTC"),
+            id="cross_asset_snapshot", name="Daily cross-asset snapshot",
+            replace_existing=True, max_instances=1, coalesce=True,
         )
 
         # News monitor = LLM headline scoring into news_alerts; paused unless NEWS_AI_ENABLED.

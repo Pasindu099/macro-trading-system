@@ -196,9 +196,28 @@ async def tagged_feed(*, show_no_fx_link: bool = False, limit: int = 100) -> lis
     """Latest deduplicated headlines; unlinked geopolitics is opt-in."""
     async with get_sessionmaker()() as session:
         rows = (await session.execute(text("""
-            SELECT id, published_at, title, url, source, news_type, impact, currencies, no_fx_link
-            FROM news_items
-            WHERE :show_no_fx_link OR NOT no_fx_link
-            ORDER BY published_at DESC, id DESC LIMIT :limit
+            SELECT n.id, n.published_at, n.title, n.url, n.source, n.news_type, n.impact,
+                   n.currencies, n.no_fx_link, n.speakers, n.situation_ids, n.drivers,
+                   a.actual, a.consensus
+            FROM news_items n LEFT JOIN newswire_actuals a ON a.news_item_id = n.id
+            WHERE :show_no_fx_link OR NOT n.no_fx_link
+            ORDER BY n.published_at DESC, n.id DESC LIMIT :limit
         """), {"show_no_fx_link": show_no_fx_link, "limit": limit})).mappings().all()
-    return [dict(row) for row in rows]
+    items = [dict(row) for row in rows]
+    from app.services.news_context import why_line
+    from app.services.calendar_detail import _event_tracking
+    from app.services.situations import get_situation_episodes
+    from app.services.cb_tone import get_speakers
+
+    tracking = await _event_tracking() if any(i["news_type"] == "Data" and i["actual"] is not None for i in items) else {}
+    episodes = {e["situation_id"]: e for e in await get_situation_episodes()} if any(i["situation_ids"] for i in items) else {}
+    focus = {}
+    banks = {s["bank"] for item in items for s in item["speakers"] if s.get("bank")}
+    for bank in banks:
+        for speaker in (await get_speakers(bank))["speakers"]:
+            mix = speaker.get("focus_mix") or {}
+            if mix:
+                focus[(bank, speaker["speaker_id"])] = max(mix, key=mix.get).replace("_", " ")
+    for item in items:
+        item["why"] = why_line(item, tracking=tracking, episodes=episodes, speaker_focus=focus)
+    return items

@@ -25,7 +25,7 @@
   {% elif request.url.path == '/news' %}
   <form method="get" action="/news"><label><input type="checkbox" name="show_geopolitics_without_fx_link" value="1"{% if show_no_fx_link %} checked{% endif %} onchange="this.form.submit()"> Show geopolitics without FX link</label></form>
   <section aria-label="News feed">
-    {% for item in news_items %}<article class="placeholder"><small>{{ item.published_at.strftime('%d %b %H:%M') }} UTC · {{ item.source }} · {{ item.news_type }} · {{ item.impact }}</small><p><a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.title }}</a></p></article>
+    {% for item in news_items %}<article class="placeholder"><small>{{ item.published_at.strftime('%d %b %H:%M') }} UTC · {{ item.source }} · {{ item.news_type }} · {{ item.impact }}</small><p><a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.title }}</a></p>{% if item.why %}<p>{{ item.why }}</p>{% endif %}</article>
     {% else %}<p>No matching headlines yet.</p>{% endfor %}
   </section>
   {% else %}

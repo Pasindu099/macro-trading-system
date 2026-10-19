@@ -17,3 +17,9 @@
 - A provisional actual is versioned with `source_status=newswire`; EODHD confirmation creates a new version even when its actual agrees. Disagreements stay in `newswire_actuals` as discrepancies. Scheduled EODHD polls cannot erase a provisional print (`app/ingestion/ingest_service.py:207`). Event Innovation reruns after provisional writes.
 - Last 30 days locally: 90 tagged investingLive data items; 5 parsed explicit values, all 5 matched (100% of parsed, 5.6% of all tagged data items). The remaining 85 need broader headline syntax support; they were left unfilled.
 - Focused tests: 15 passed. Full suite: 720 passed, 7 skipped.
+
+## Part E — “Why it matters”
+
+- `app/services/news_context.py:1` returns a line only when supporting data exist: actual vs consensus and CB tracking, speaker role/voter/focus, situation evidence, or named commodity drivers. It omits unverified tone and generic filler.
+- `/news` shows the line below the headline when present; `app/services/news.py:1` gathers the underlying data through stored joins and existing CB/situation services.
+- Focused tests: 21 passed. Live local feed smoke returned contextual and empty-line cases. Full suite: 724 passed, 7 skipped.

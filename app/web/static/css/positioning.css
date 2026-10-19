@@ -1,0 +1,82 @@
+/* Positioning page (Step 14 Part C). Amber/blue = long/short positioning and flows (not a price call);
+   green/red (--price-up/--price-down) only for price moves. */
+.pos-page{max-width:1440px;margin:0 auto;padding:24px 28px;box-sizing:border-box}
+.pos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:18px}
+.posp-summary,.posp-crowding,.posp-price{grid-column:1/-1}
+.pos-panel{min-width:0;font:12px var(--font-mono,monospace)}
+.pos-panel a{color:var(--blue-text,#8fc3ff)}
+.pos-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
+.pos-head h2{margin:0}
+.pos-note{color:var(--muted);font-size:11px;line-height:1.5}
+.pos-read{color:var(--text);font-size:12px;line-height:1.55;margin:8px 0 0}
+.pos-switch{display:flex;flex-wrap:wrap;gap:6px}
+.pos-switch a{min-height:32px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid var(--line);border-radius:999px;color:var(--text);text-decoration:none}
+.pos-switch a[aria-pressed=true]{background:var(--amber,#f2a33a);border-color:var(--amber,#f2a33a);color:#14100a}
+.pos-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:20px}
+.pos-summary h1{font:800 clamp(30px,4vw,44px) var(--font-head,Arial),sans-serif;margin:6px 0}
+.pos-lede{font-size:15px;line-height:1.6;margin:6px 0 0}
+.pos-summary-side{display:flex;flex-direction:column;gap:10px}
+.pos-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pos-stats div{display:flex;flex-direction:column;gap:2px;padding:12px;border:1px solid var(--line);border-radius:8px}
+.pos-stats span,.pos-stats small{color:var(--muted);font-size:11px}
+.pos-stats strong{font-size:15px;font-weight:500}
+.pos-scroll{overflow-x:auto}
+.pos-crowd{width:100%;min-width:860px;border-collapse:separate;border-spacing:0 4px}
+.pos-crowd th,.pos-table th{color:var(--muted);font-weight:400;text-align:left;padding:4px 8px}
+.pos-crowd td{padding:4px 8px}
+.num{text-align:right;white-space:nowrap}
+.pos-ccy{display:inline-flex;align-items:center;min-height:34px;padding:0 10px;border:1px solid var(--line);border-radius:6px;color:var(--text)!important;text-decoration:none;font-weight:700;font-size:14px}
+.pos-ccy.is-selected{border-color:var(--amber,#f2a33a)}
+.pct{display:block;padding:8px 10px;border-radius:6px;text-align:center;color:var(--text)}
+.pct-long{background:rgba(242,163,58,var(--a))}
+.pct-short{background:rgba(90,169,255,var(--a))}
+.pct.crowded-long{outline:1px solid var(--amber,#f2a33a);font-weight:600;color:#0b0e13}
+.pct.crowded-short{outline:1px solid var(--blue,#5aa9ff);font-weight:600;color:#0b0e13}
+.pos-long{color:var(--amber-text,#f6b65a)}
+.pos-short{color:var(--blue-text,#8fc3ff)}
+.price-up{color:var(--price-up,#4CC38A)}
+.price-down{color:var(--price-down,#F2706A)}
+.pos-flows{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.pos-flow{display:grid;grid-template-columns:44px minmax(0,1fr) 80px;gap:10px;align-items:center}
+.pos-track{position:relative;height:14px;border-radius:4px;background:var(--surface-2,#1b2230)}
+.pos-track .mid{position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--muted)}
+.pos-track b{position:absolute;top:0;bottom:0;border-radius:4px}
+.bar-long{background:var(--amber,#f2a33a)}
+.bar-short{background:var(--blue,#5aa9ff)}
+.pos-card{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;margin-bottom:10px}
+.pos-card-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center}
+.pos-card-head strong{font-size:16px;margin-right:8px}
+.pos-evidence{display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--muted)}
+.pos-evidence b{color:var(--text);font-weight:500}
+.chip{padding:3px 10px;border-radius:999px;font-size:11px;white-space:nowrap;background:var(--surface-2,#1b2230);color:var(--text)}
+.sq-high,.sig-opposite-sides{background:var(--amber-bg,#3a2a10);color:var(--amber-text,#f6b65a)}
+.sq-trend_confirming{background:var(--blue-bg,#13243a);color:var(--blue-text,#8fc3ff)}
+.sig-no-signal{color:var(--muted)}
+.pos-chart{display:grid;grid-template-columns:56px minmax(0,1fr) 56px;gap:6px}
+.pos-chart svg{display:block;width:100%;height:260px;border-radius:4px}
+.pos-chart .bg{fill:var(--surface,#0e1218)}
+.pos-chart .zero{stroke:var(--line)}
+.pos-chart .div-span{fill:rgba(143,195,255,.10)}
+.bars-long{fill:rgba(242,163,58,.55)}
+.bars-short{fill:rgba(90,169,255,.55)}
+.price-line{fill:none;stroke:var(--text);stroke-width:2}
+.axis{display:flex;flex-direction:column;justify-content:space-between;color:var(--muted);font-size:10px}
+.axis-l{text-align:right}
+.pos-dates{display:flex;justify-content:space-between;padding:0 62px;color:var(--muted);font-size:10px}
+.pos-legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:11px;margin-top:6px}
+.pos-legend span{display:flex;align-items:center;gap:6px}
+.pos-legend i{display:inline-block;width:12px;height:10px}
+.lg-long{background:rgba(242,163,58,.55)}.lg-short{background:rgba(90,169,255,.55)}
+.lg-price{height:3px!important;background:var(--text)}.lg-div{background:rgba(143,195,255,.3)}
+.pos-table{width:100%;border-collapse:collapse}
+.pos-table td{padding:8px;border-top:1px solid var(--line)}
+.pos-table tr.is-current td{background:var(--amber-bg,#3a2a10)}
+.spark{width:80px;height:20px;vertical-align:middle}
+.spark polyline{fill:none;stroke:var(--muted);stroke-width:1.5}
+@media (max-width:640px){
+  .pos-page{padding:16px}
+  .pos-stats{grid-template-columns:1fr}
+  .pos-chart{grid-template-columns:40px minmax(0,1fr) 40px}
+  .pos-chart svg{height:200px}
+  .pos-dates{padding:0 46px}
+}

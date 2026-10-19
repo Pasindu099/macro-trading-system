@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/overview.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/positioning.css') }}">
+<script src="{{ url_for('static', path='vendor/htmx-1.9.12.min.js') }}" defer></script>
+{% endblock %}
+{% block body %}
+<main class="pos-page" data-ccy="{{ p.ccy }}">
+  <div class="pos-grid">
+    {% for panel in panels %}
+    <section class="overview-panel pos-panel posp-{{ panel }}" aria-label="{{ titles[panel] }}" id="pos-{{ panel }}">
+      <div hx-get="/positioning/panels/{{ panel }}?lookback={{ p.lookback }}&ccy={{ p.ccy }}&window={{ p.window }}"
+           hx-trigger="{{ 'load' if loop.index <= 3 else 'revealed once' }}" hx-swap="innerHTML">
+        <h2>{{ titles[panel] }}</h2><p class="panel-state state-loading">Loading…</p>
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

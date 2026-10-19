@@ -24,12 +24,14 @@ def test_placeholder_sections_and_event_log_navigation(monkeypatch):
     client = TestClient(app)
     for path, title in (("/desks", "Desks"), ("/pairs", "Pairs"),
                         ("/calendar", "Calendar"),
-                        ("/news", "News"), ("/positioning", "Positioning"),
-                        ("/data", "Data")):
+                        ("/news", "News"), ("/data", "Data")):
         response = client.get(path)
         assert response.status_code == 200
         assert f"<h1>{title}</h1>" in response.text
         assert '<header class="site-header">' in response.text
+    positioning_page = client.get("/positioning?ccy=EUR")                    # Step 14: no longer a placeholder
+    assert positioning_page.status_code == 200 and '<header class="site-header">' in positioning_page.text
+    assert 'hx-get="/positioning/panels/summary?lookback=3y&ccy=EUR&window=1W"' in positioning_page.text
     terminal = client.get("/central-banks?bank=SNB&view=projections")       # Step 12: no longer a placeholder
     assert terminal.status_code == 200 and 'aria-label="Central banks"' in terminal.text
     assert 'hx-get="/central-banks/panels/proj-formats?bank=SNB"' in terminal.text

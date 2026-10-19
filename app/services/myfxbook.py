@@ -200,3 +200,16 @@ async def daily(pair: str, days: int = 90) -> list[dict[str, Any]]:
             ORDER BY day
         """), {"source": SOURCE, "pair": pair, "days": days})).mappings().all()
     return [dict(row) for row in rows]
+
+
+async def daily_all(days: int = 30) -> dict[str, list[dict[str, Any]]]:
+    """Last snapshot of each UTC day for every pair (one query), oldest first."""
+    async with session_scope() as session:
+        rows = (await session.execute(text("""
+            SELECT pair, day, long_pct FROM retail_sentiment_daily
+            WHERE source = :source AND day >= current_date - :days ORDER BY pair, day
+        """), {"source": SOURCE, "days": days})).mappings().all()
+    out: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        out.setdefault(row["pair"], []).append(dict(row))
+    return out

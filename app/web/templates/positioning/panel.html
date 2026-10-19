@@ -1,0 +1,109 @@
+{% macro url(lookback=p.lookback, ccy=p.ccy, window=p.window, anchor='') %}/positioning?lookback={{ lookback }}&ccy={{ ccy }}&window={{ window }}{{ '#' ~ anchor if anchor }}{% endmacro %}
+{% macro pctm(v, d=1) %}{% if v is none %}—{% else %}<span class="{{ 'price-up' if v > 0 else 'price-down' if v < 0 else '' }}">{{ ('%+.' ~ d ~ 'f') % v }}%</span>{% endif %}{% endmacro %}
+{% macro sw(items, current, key, anchor) %}<div class="pos-switch" role="group">{% for value, label in items %}<a href="{% if key == 'lookback' %}{{ url(lookback=value, anchor=anchor) }}{% elif key == 'ccy' %}{{ url(ccy=value, anchor=anchor) }}{% else %}{{ url(window=value, anchor=anchor) }}{% endif %}" aria-pressed="{{ 'true' if value == current else 'false' }}">{{ label }}</a>{% endfor %}</div>{% endmacro %}
+{% if panel_id != 'summary' %}
+<div class="pos-head"><h2>{{ titles[panel_id] }}{% if panel_id in ('price', 'extremes') %} · {{ p.ccy }}{% endif %}</h2>
+  {% if panel_id == 'crowding' %}{{ sw(lookbacks.items(), p.lookback, 'lookback', 'pos-crowding') }}
+  {% elif panel_id == 'flows' %}{{ sw([('1W', '1W'), ('4W', '4W')], p.window, 'window', 'pos-flows') }}
+  {% elif panel_id == 'price' %}{{ sw(currency_items, p.ccy, 'ccy', 'pos-price') }}
+  {% elif panel_id == 'squeeze' %}<span class="pos-note">Extreme positioning + price moving against it</span>
+  {% elif panel_id == 'extremes' %}<span class="pos-note">{{ p.ccy }} · leveraged funds · own history · 3-year percentile</span>
+  {% elif panel_id == 'retail' %}<span class="pos-note">COT (pair implied) vs Myfxbook</span>{% endif %}
+</div>
+{% endif %}
+{% if ctx.state not in ('ok', 'partial') %}<p class="panel-state state-{{ ctx.state }}">{{ ctx.message or ('Pending.' if ctx.state == 'pending' else 'Unavailable.') }}</p>{% endif %}
+{% if ctx.state in ('ok', 'partial') %}
+{% if ctx.message %}<p class="panel-state state-partial">{{ ctx.message }}</p>{% endif %}
+
+{% if panel_id == 'summary' %}
+<div class="pos-summary">
+  <div>
+    <span class="kicker">CFTC Commitments of Traders · Traders in Financial Futures</span>
+    <h1>Positioning</h1>
+    <p class="pos-lede">{{ ctx.text }}</p>
+  </div>
+  <div class="pos-summary-side">
+    <div class="pos-stats">
+      <div><span>Data as of</span><strong>{{ ctx.as_of.strftime('%a %d %b') }}</strong></div>
+      <div><span>Released</span><strong>{{ ctx.released.strftime('%a %d %b') }}</strong>{% if ctx.release.released_source == 'assumed_friday' %}<small>assumed Friday</small>{% endif %}</div>
+      <div><span>Next release</span><strong>{{ ctx.next.strftime('%a %d %b') if ctx.next else '—' }}</strong><small>{% if ctx.release.next_delayed %}holiday-shifted · {% endif %}{{ ctx.release.release_time_et }} ET{% if not ctx.next %} · {{ ctx.release.next_release_status }}{% endif %}</small></div>
+    </div>
+    <p class="pos-note">{{ ctx.how_to_use }}</p>
+  </div>
+</div>
+
+{% elif panel_id == 'crowding' %}
+<p class="pos-note">Percentile of net positioning vs the last {{ ctx.lookback_label }}: 0 = most short, 100 = most long. Amber at or above 85 = crowded long, blue at or below 15 = crowded short. Dealers usually take the other side of speculators. Select a currency for sections 4–5.</p>
+<div class="pos-scroll"><table class="pos-crowd">
+  <thead><tr><th>Currency</th><th>Leveraged funds</th><th>Asset managers</th><th>Dealers</th><th class="num">Lev. funds net</th><th class="num">1W change</th><th>Read</th></tr></thead>
+  <tbody>{% for r in ctx.rows %}<tr>
+    <td><a class="pos-ccy{{ ' is-selected' if r.ccy == p.ccy }}" href="{{ url(ccy=r.ccy, anchor='pos-price') }}">{{ r.ccy }}</a></td>
+    {% for cat in ('leveraged_funds', 'asset_manager', 'dealer') %}{% set c = r.cells[cat] %}
+    <td><span class="pct pct-{{ c.kind }}{{ ' crowded-' ~ c.crowded if c.crowded }}" style="--a:{{ c.alpha }}">{{ c.label }}</span></td>{% endfor %}
+    <td class="num">{{ r.net }}</td>
+    <td class="num {{ 'pos-long' if r.chg and r.chg > 0 else 'pos-short' if r.chg and r.chg < 0 }}">{{ r.arrow }} {{ r.chg_label }}</td>
+    <td>{{ r.read }}</td>
+  </tr>{% endfor %}</tbody>
+</table></div>
+<p class="pos-note">USD uses the ICE dollar index futures contract (DX). Net in contracts.</p>
+
+{% elif panel_id == 'flows' %}
+<span class="pos-note">Change in leveraged-funds net position, thousands of contracts ({{ ctx.window }})</span>
+<div class="pos-flows">{% for f in ctx.rows %}
+  <div class="pos-flow"><span>{{ f.ccy }}</span><div class="pos-track"><i class="mid"></i><b class="bar-{{ f.kind }}" style="left:{{ f.left }}%;width:{{ f.width }}%"></b></div><span class="num pos-{{ f.kind }}">{{ f.arrow }} {{ f.label }}</span></div>
+{% endfor %}</div>
+<p class="pos-read">{{ ctx.read }}</p>
+
+{% elif panel_id == 'squeeze' %}
+{% for s in ctx.cards %}
+<div class="pos-card">
+  <div class="pos-card-head"><span><strong>{{ s.ccy }}</strong> {{ s.position }}</span><span class="chip sq-{{ s.status }}">{{ s.status_label }}</span></div>
+  <div class="pos-evidence"><span>Positioning: <b>{{ s.pct }}</b></span><span>Price (2W): {{ pctm(s.move, 2) }}</span><span>Flow: <b>{{ s.flow }}</b></span></div>
+  <span class="pos-read">{{ s.read }}</span>
+  {% if s.link.href %}<a href="{{ s.link.href }}">{{ s.link.label }}</a>{% else %}<span class="pos-note">{{ s.link.label }}</span>{% endif %}
+</div>
+{% endfor %}
+
+{% elif panel_id == 'price' %}{% set g = ctx.geo %}
+<div class="pos-chart">
+  <div class="axis axis-l"><span>+{{ g.pos_max }}</span><span>0</span><span>−{{ g.pos_max }}</span></div>
+  <svg viewBox="0 0 600 220" preserveAspectRatio="none" role="img" aria-label="Leveraged funds net position in {{ ctx.ccy }} with {{ ctx.price_label }} over {{ ctx.first_date.strftime('%d %b %Y') }} to {{ ctx.last_date.strftime('%d %b %Y') }}">
+    <rect x="0" y="0" width="600" height="220" class="bg"></rect>
+    <line x1="0" x2="600" y1="110" y2="110" class="zero" vector-effect="non-scaling-stroke"></line>
+    {% for s in g.spans %}<rect x="{{ s.x }}" y="0" width="{{ s.w }}" height="220" class="div-span"></rect>{% endfor %}
+    <path d="{{ g.long }}" class="bars-long"></path><path d="{{ g.short }}" class="bars-short"></path>
+    {% if g.price %}<polyline points="{{ g.price }}" class="price-line" vector-effect="non-scaling-stroke"></polyline>{% endif %}
+  </svg>
+  <div class="axis axis-r"><span>{{ '%.1f' % g.px_max if g.px_max is not none else '' }}</span><span>{{ '%.1f' % g.px_min if g.px_min is not none else '' }}</span></div>
+</div>
+<div class="pos-dates"><span>{{ ctx.first_date.strftime('%d %b %Y') }}</span><span>{{ ctx.last_date.strftime('%d %b %Y') }}</span></div>
+<div class="pos-legend"><span><i class="lg-long"></i>Leveraged funds net long (contracts, left)</span><span><i class="lg-short"></i>Net short</span><span><i class="lg-price"></i>{{ ctx.price_label }} (right)</span><span><i class="lg-div"></i>Divergence flagged</span></div>
+<p class="pos-read">{{ ctx.read }}</p>
+
+{% elif panel_id == 'extremes' %}
+<div class="pos-scroll"><table class="pos-table">
+  <thead><tr><th>Leveraged funds at</th><th class="num">Episodes</th><th class="num">Avg 4W</th><th class="num">Avg 8W</th><th class="num">Against crowd 8W</th><th class="num">Max adverse 8W</th></tr></thead>
+  <tbody>{% for r in ctx.rows %}<tr class="{{ 'is-current' if r.current }}">
+    <td>{{ r.label }}{% if r.current %} <span class="chip">now</span>{% endif %}</td>
+    <td class="num">{{ r.episodes }}</td>
+    {% if r.enough %}<td class="num">{{ pctm(r.m4, 2) }}</td><td class="num">{{ pctm(r.m8, 2) }}</td>
+    <td class="num">{{ '%.0f%%' % r.against if r.against is not none else '—' }}</td><td class="num">{{ '%.2f%%' % r.adverse if r.adverse is not none else '—' }}</td>
+    {% else %}<td class="num pos-note" colspan="4">too few episodes (&lt; {{ ctx.min_episodes }})</td>{% endif %}
+  </tr>{% endfor %}</tbody>
+</table></div>
+<p class="pos-note">Past episodes, not a forecast. Moves are {{ ctx.ccy }} vs USD (DXY for USD) from the report date; the highlighted row is where {{ ctx.ccy }} sits now ({{ '%.0f' % ctx.now_pct if ctx.now_pct is not none else '—' }}th percentile, 3 years). Episodes start when positioning first enters a band, at least 8 weeks apart.</p>
+
+{% elif panel_id == 'retail' %}
+{% if ctx.retail_state != 'ok' %}<p class="panel-state state-pending">Retail: {{ ctx.retail_message }}</p>{% endif %}
+<div class="pos-scroll"><table class="pos-table">
+  <thead><tr><th>Pair</th><th>Speculators (COT implied)</th><th>Retail (Myfxbook)</th><th class="num">Signal</th></tr></thead>
+  <tbody>{% for r in ctx.rows %}<tr>
+    <td><a href="{{ r.href }}">{{ r.pair }}</a></td>
+    <td class="pos-{{ r.kind }}">{{ r.cot_label }}</td>
+    <td>{{ r.retail_label }}{% if r.spark %} <svg class="spark" viewBox="0 0 80 20" role="img" aria-label="{{ r.pair }} retail % long, last 30 days"><polyline points="{{ r.spark }}"></polyline></svg>{% endif %}</td>
+    <td class="num"><span class="chip sig-{{ r.signal.replace(' ', '-') }}">{{ r.signal }}</span></td>
+  </tr>{% endfor %}</tbody>
+</table></div>
+<p class="pos-note">COT pair positioning is implied from both legs (base minus quote leveraged-funds percentile), since there are no cross-currency futures. Opposite sides: COT-implied above +20 with retail more than 60% short, or below −20 with retail more than 60% long. Pair pages are pending; links open the Pairs screener.</p>
+{% endif %}
+{% endif %}

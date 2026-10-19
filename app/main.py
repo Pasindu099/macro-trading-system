@@ -32,6 +32,7 @@ from app.api.routes import (
     fixed_income,
     knowledge,
     positioning,
+    positioning_page,
     shell,
     public,
     rate_probability,
@@ -132,6 +133,7 @@ app.include_router(desk_insights.router)
 app.include_router(cb.router)
 app.include_router(cb_imports.router)
 app.include_router(cb_terminal.router)
+app.include_router(positioning_page.router)
 
 
 # ══════════════════════════════════════════════════════════════════════

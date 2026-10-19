@@ -68,6 +68,39 @@ def test_news_geopolitics_filter_is_opt_in(monkeypatch):
     assert "Ceasefire talks" in shown and calls == [False, True]
 
 
+def test_news_page_filters_past_date_range(monkeypatch):
+    monkeypatch.setattr(auth, "get_settings", lambda: SimpleNamespace(auth_enabled=False))
+    calls = []
+
+    async def feed(**filters):
+        calls.append(filters)
+        return [{"published_at": __import__("datetime").datetime(2020, 3, 18, tzinfo=__import__("datetime").timezone.utc),
+                 "source": "investinglive", "news_type": "Data", "impact": "High",
+                 "url": "https://example.com/cpi", "title": "Historical CPI", "why": "Actual above consensus",
+                 "currencies": ["USD"], "situation_ids": [], "speakers": [], "drivers": []}]
+
+    async def sources(_day):
+        return []
+
+    async def today(_day):
+        return {"releases": [], "speakers": [], "blackouts": [], "mentions": []}
+
+    monkeypatch.setattr(shell.news, "tagged_feed", feed)
+    monkeypatch.setattr(shell.news, "source_health", sources)
+    monkeypatch.setattr(shell.news, "today_context", today)
+    client = TestClient(app)
+    page = client.get("/news?start=2020-03-01&end=2020-03-31&currency=USD&type=Data&impact=High&active=1")
+    assert page.status_code == 200 and "Historical CPI" in page.text
+    assert "2020-03-01" in page.text and "2020-03-31" in page.text
+    assert 'css/news.css' in page.text and 'aria-label="Sources"' in page.text
+    assert 'aria-label="Market-moving now"' in page.text and 'aria-label="Today"' in page.text
+    assert page.headers["cache-control"] == "private, max-age=60"
+    assert calls[0]["start"].isoformat() == "2020-03-01"
+    assert calls[0]["end"].isoformat() == "2020-03-31"
+    assert calls[0]["active_only"] is True and calls[0]["currency"] == "USD"
+    assert client.get("/news?start=2020-04-01&end=2020-03-01").status_code == 400
+
+
 def test_login_template_uses_new_tokens():
     response = TestClient(app).get("/login")
     assert response.status_code == 200

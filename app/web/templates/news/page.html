@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', path='css/news.css') }}">{% endblock %}
+{% block body %}
+<main class="news-page">
+  <div class="news-heading"><div><p class="news-eyebrow">FX newswire</p><h1>News</h1><p>Macro headlines with stored context and source attribution.</p></div><span class="news-freshness">Updated from stored feeds · <a href="/data">Source freshness</a></span></div>
+  <p class="news-pending">Price reaction: intraday data pending</p>
+  <section class="news-sources" aria-label="Sources"><strong>Sources</strong>
+    {% for source in sources %}<span class="news-source"><span class="news-dot {{ source.status }}"></span>{{ source.label }} <small>{{ source.status }} · {{ source.counts.kept }} kept / {{ source.counts.dropped }} dropped / {{ source.counts.merged }} merged today</small></span>
+    {% else %}<span class="news-muted">Source status unavailable.</span>{% endfor %}
+  </section>
+  <section class="news-moving" aria-label="Market-moving now"><div class="news-section-head"><h2>Market-moving now</h2><small>High impact · last 6 hours</small></div>
+    <div class="news-moving-grid">{% for item in pinned %}<article><small>{{ item.published_at.strftime('%H:%M') }} UTC · {{ item.source }}</small><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>{% if item.why %}<p>{{ item.why }}</p>{% endif %}</article>
+    {% else %}<p class="news-muted">No high-impact items in the last six hours.</p>{% endfor %}</div>
+  </section>
+  <div class="news-layout">
+    <aside class="news-filters" aria-label="Filters"><h2>Filters</h2><form method="get" action="/news">
+      <label>Search<input type="search" name="q" value="{{ filters.q }}" placeholder="Speaker, pair, keyword"></label>
+      <label>Currency<select name="currency"><option value="">All currencies</option>{% for c in ['USD','EUR','GBP','JPY','AUD','NZD','CAD','CHF','CNY'] %}<option value="{{ c }}"{% if filters.currency == c %} selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
+      <label>Type<select name="type"><option value="">All types</option>{% for t in ['Data','CB speaker','Politics & fiscal','Geopolitics','Flows & market','Commodities','Analysis'] %}<option value="{{ t }}"{% if filters.type == t %} selected{% endif %}>{{ t }}</option>{% endfor %}</select></label>
+      <label>Impact<select name="impact"><option value="">All impacts</option>{% for i in ['High','Medium','Low'] %}<option value="{{ i }}"{% if filters.impact == i %} selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
+      <label>From (UTC)<input type="date" name="start" value="{{ filters.start.isoformat() if filters.start else '' }}"></label>
+      <label>To (UTC)<input type="date" name="end" value="{{ filters.end.isoformat() if filters.end else '' }}"></label>
+      <label class="news-check"><input type="checkbox" name="active" value="1"{% if filters.active %} checked{% endif %}> Only items tied to an active situation</label>
+      <label class="news-check"><input type="checkbox" name="show_geopolitics_without_fx_link" value="1"{% if filters.show_no_fx_link %} checked{% endif %}> Show geopolitics without FX link</label>
+      <div class="news-filter-actions"><button type="submit">Apply filters</button><a href="/news">Reset</a></div>
+    </form></aside>
+    <section class="news-feed" aria-label="Feed"><div class="news-section-head"><h2>Feed</h2><small>{{ items|length }} shown</small></div>
+      {% if state == 'error' %}<p role="status" class="news-muted">The news feed is temporarily unavailable.</p>{% endif %}
+      {% for item in items %}<article class="news-item"><div class="news-item-time"><time datetime="{{ item.published_at.isoformat() }}">{{ item.published_at.strftime('%d %b %H:%M') }} UTC</time><span class="news-impact {{ item.impact|lower }}">{{ item.impact }}</span></div>
+        <div class="news-item-main"><div class="news-tags"><span class="news-type">{{ item.news_type }}</span>{% for c in item.currencies %}<a class="news-currency" href="/desks/{{ c }}">{{ c }}</a>{% endfor %}{% for sit in item.situation_ids %}<span class="news-situation">{{ sit|replace('_', ' ') }}</span>{% endfor %}<span class="news-item-source">{{ item.source }}</span></div>
+          <a class="news-title" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>{% if item.why %}<p class="news-why">{{ item.why }}</p>{% endif %}
+          {% if item.drivers %}<p class="news-drivers">Drivers: {% for d in item.drivers %}{{ d.name if d.name is defined else d.driver|default('') }}{% if d.direction %} {{ d.direction }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+          <div class="news-links">{% for speaker in item.speakers %}{% if speaker.bank %}<a href="{{ speaker.profile_url }}">{{ speaker.name|default('Speaker') }} profile</a>{% endif %}{% endfor %}{% if item.currencies %}<a href="/desks/{{ item.currencies[0] }}">{{ item.currencies[0] }} desk</a>{% endif %}<a href="/pairs">Pairs</a><a href="/calendar/event-log/new{% if item.release_id %}?release_id={{ item.release_id }}{% endif %}">Event Log</a></div>
+        </div></article>
+      {% else %}{% if state != 'error' %}<p class="news-muted">No items match these filters.</p>{% endif %}{% endfor %}
+    </section>
+    <aside class="news-today" aria-label="Today"><section><h2>Data releases today</h2>{% for event in context.releases %}<div class="news-today-row"><time>{{ event.released_at.strftime('%H:%M') }}</time><span>{{ event.currency_code }} · {{ event.name }}</span><b class="{% if event.result == 'beat' %}news-beat{% elif event.result == 'miss' %}news-miss{% endif %}">{{ ('%+.1fσ'|format(event.surprise_sigma)) if event.surprise_sigma is not none else '—' }}</b></div>{% else %}<p class="news-muted">No releases recorded today.</p>{% endfor %}<a href="/calendar">Open calendar</a></section>
+      <section><h2>Speakers today</h2>{% for speaker in context.speakers %}<div class="news-today-row"><span>{{ speaker.speaker or 'Official' }} · {{ speaker.bank }}</span><small>{{ speaker.time or 'Time pending' }}</small></div>{% else %}<p class="news-muted">No scheduled speakers available.</p>{% endfor %}{% for blackout in context.blackouts %}<p class="news-muted">{{ blackout.bank }} blackout through {{ blackout.end }}{% if not blackout.verified %} · unverified{% endif %}</p>{% endfor %}<a href="/central-banks">Central banks</a></section>
+      <section><h2>Most mentioned today</h2>{% for row in context.mentions %}<div class="news-today-row"><strong>{{ row.currency }}</strong><span class="news-mention-bar" style="--count:{{ row.n }}"></span><small>{{ row.n }}</small></div>{% else %}<p class="news-muted">No currency mentions yet.</p>{% endfor %}</section>
+    </aside>
+  </div>
+</main>
+{% endblock %}

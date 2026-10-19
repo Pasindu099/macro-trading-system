@@ -69,11 +69,11 @@ async def test_rateprobability_manual_scrape_refused_when_disabled(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_desk_news_panel_marks_ai_paused(monkeypatch):
+async def test_desk_news_panel_uses_stored_items(monkeypatch):
     async def news(_):
         return [{"headline": "h", "url": "", "source": "s", "detected_at": datetime.now(UTC) - timedelta(days=9),
                  "implied_tier": "ECONOMIC_DATA", "severity": "MEDIUM", "alert_text": ""}]
     monkeypatch.setattr(dp, "news_alerts", news)
     monkeypatch.setattr(dp, "get_settings", lambda: Settings.model_construct(news_ai_enabled=False))
     ctx = await dp.panel_news({"currency": "USD"}, {})
-    assert ctx["state"] == "ok" and ctx["ai_paused"] is True
+    assert ctx["state"] == "ok" and ctx["ai_paused"] is False

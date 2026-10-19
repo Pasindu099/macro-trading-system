@@ -695,7 +695,11 @@ async def panel_catalysts(desk: dict, params: dict) -> dict[str, Any]:
 async def news_alerts(currency: str) -> list[dict[str, Any]]:
     from app.services import news
 
-    return await news.legacy_alerts_for_currency(currency)
+    return [{"headline": row["title"], "url": row["url"], "source": row["source"],
+             "detected_at": row["published_at"], "implied_tier": row["news_type"],
+             "severity": row["impact"], "alert_text": row["why"],
+             "currencies": row["currencies"], "situation_ids": row["situation_ids"]}
+            for row in await news.tagged_feed(currency=currency, limit=40)]
 
 
 async def panel_news(desk: dict, params: dict) -> dict[str, Any]:
@@ -705,7 +709,7 @@ async def panel_news(desk: dict, params: dict) -> dict[str, Any]:
     items = [dict(r, type_label=str(r["implied_tier"] or "Other").replace("_", " ").title())
              for r in rows if selected == "All" or r["implied_tier"] == selected][:12]
     ctx = {"filters": [{"value": "All", "label": "All"}] + [{"value": t, "label": t.replace("_", " ").title()} for t in types],
-           "selected": selected, "ai_paused": not get_settings().news_ai_enabled}
+           "selected": selected, "ai_paused": False}
     if not rows:
         return empty(f"No {desk['currency']} news items stored.", **ctx)
     return {"state": "ok", "news": items, **ctx}

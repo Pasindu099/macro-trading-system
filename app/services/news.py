@@ -7,8 +7,9 @@ are kept for reference/tests; pages no longer call them.
 from __future__ import annotations
 
 import html
+import asyncio
 import re
-from datetime import datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from xml.etree import ElementTree
 
@@ -192,17 +193,37 @@ async def daily_counts(day: Any) -> dict[str, dict[str, int]]:
     return out
 
 
-async def tagged_feed(*, show_no_fx_link: bool = False, limit: int = 100) -> list[dict[str, Any]]:
+async def tagged_feed(*, show_no_fx_link: bool = False, limit: int = 100,
+                      query: str = "", currency: str = "", news_type: str = "",
+                      impact: str = "", active_only: bool = False,
+                      start: date | None = None, end: date | None = None) -> list[dict[str, Any]]:
     """Latest deduplicated headlines; unlinked geopolitics is opt-in."""
+    from app.services.news_collector import visible_source_ids
+
+    escaped_query = query.replace("%", r"\%").replace("_", r"\_")
     async with get_sessionmaker()() as session:
         rows = (await session.execute(text("""
             SELECT n.id, n.published_at, n.title, n.url, n.source, n.news_type, n.impact,
                    n.currencies, n.no_fx_link, n.speakers, n.situation_ids, n.drivers,
-                   a.actual, a.consensus
+                   a.actual, a.consensus, coalesce(a.newswire_release_id, a.scheduled_release_id) AS release_id
             FROM news_items n LEFT JOIN newswire_actuals a ON a.news_item_id = n.id
-            WHERE :show_no_fx_link OR NOT n.no_fx_link
+            WHERE n.source = ANY(:visible_sources)
+              AND (:show_no_fx_link OR NOT n.no_fx_link)
+              AND (:query = '' OR n.title ILIKE :search ESCAPE '\' OR coalesce(n.summary, '') ILIKE :search ESCAPE '\')
+              AND (:currency = '' OR :currency = ANY(n.currencies))
+              AND (:news_type = '' OR n.news_type = :news_type)
+              AND (:impact = '' OR n.impact = :impact)
+              AND (CAST(:start AS date) IS NULL OR n.published_at >= CAST(:start AS date))
+              AND (CAST(:end AS date) IS NULL OR n.published_at < CAST(:end AS date) + INTERVAL '1 day')
+              AND (NOT :active_only OR EXISTS (
+                  SELECT 1 FROM news_item_episodes ne JOIN situation_episodes e ON e.id = ne.episode_id
+                  WHERE ne.news_item_id = n.id AND e.ended_at IS NULL AND e.started_at <= CURRENT_DATE))
             ORDER BY n.published_at DESC, n.id DESC LIMIT :limit
-        """), {"show_no_fx_link": show_no_fx_link, "limit": limit})).mappings().all()
+        """), {"show_no_fx_link": show_no_fx_link, "limit": limit,
+                "query": query, "search": f"%{escaped_query}%",
+                "currency": currency, "news_type": news_type, "impact": impact,
+                "active_only": active_only, "start": start, "end": end,
+                "visible_sources": list(visible_source_ids())})).mappings().all()
     items = [dict(row) for row in rows]
     from app.services.news_context import why_line
     from app.services.calendar_detail import _event_tracking
@@ -221,3 +242,54 @@ async def tagged_feed(*, show_no_fx_link: bool = False, limit: int = 100) -> lis
     for item in items:
         item["why"] = why_line(item, tracking=tracking, episodes=episodes, speaker_focus=focus)
     return items
+
+
+async def source_health(day: date) -> list[dict[str, Any]]:
+    """Enabled sources, today's filter counts and collector check status."""
+    from app.services.news_collector import enabled_sources, visible_source_ids
+
+    counts = await daily_counts(day)
+    async with get_sessionmaker()() as session:
+        rows = (await session.execute(text("""
+            SELECT split_part(source_name, ':', 1) AS source,
+                   min(last_checked_at) AS last_checked, bool_and(is_healthy) AS healthy
+            FROM source_health WHERE source_name LIKE '%:%' GROUP BY 1
+        """))).mappings().all()
+    checks = {row["source"]: row for row in rows}
+    now = datetime.now(UTC)
+    return [{"id": sid, "label": spec["label"], "counts": counts.get(sid, {"kept": 0, "dropped": 0, "merged": 0}),
+             "last_checked": checks[sid]["last_checked"] if sid in checks else None,
+             "status": ("awaiting check" if sid not in checks else "error" if not checks[sid]["healthy"] else
+                        "current" if now - checks[sid]["last_checked"] <= timedelta(seconds=max(3 * int(spec["interval_seconds"]), 900))
+                        else "stale")}
+            for sid, spec in enabled_sources().items() if sid in visible_source_ids()]
+
+
+async def today_context(day: date) -> dict[str, Any]:
+    """Calendar releases, official speech calendars, blackouts and currency mentions."""
+    from app.services.calendar_service import list_events
+    from app.services.cb_upcoming import get_upcoming
+
+    async with get_sessionmaker()() as session:
+        releases = await list_events(session, day, day, min_impact=3)
+        mentions = (await session.execute(text("""
+            SELECT currency, count(*) AS n FROM news_items n
+            CROSS JOIN LATERAL unnest(n.currencies) currency
+            WHERE n.published_at >= CAST(:day AS date) AND n.published_at < CAST(:day AS date) + INTERVAL '1 day'
+              AND NOT n.no_fx_link GROUP BY currency ORDER BY count(*) DESC, currency LIMIT 8
+        """), {"day": day})).mappings().all()
+    speakers, blackouts = [], []
+    for bank in ("FED", "ECB"):
+        try:
+            upcoming = await asyncio.wait_for(get_upcoming(bank, today=day), timeout=4)
+        except Exception:
+            continue
+        speakers.extend({"bank": bank, **event} for event in upcoming["speeches"].get("events", [])
+                        if event["date"] == day)
+        blackouts.extend({"bank": bank, "start": window["start"], "end": window["end"],
+                          "verified": window.get("verified", False)}
+                         for meeting in upcoming["meetings"]
+                         for window in [meeting["blackout"]]
+                         if window.get("start") and window["start"] <= day <= window["end"])
+    return {"releases": releases[:8], "speakers": speakers[:8], "blackouts": blackouts,
+            "mentions": [dict(row) for row in mentions]}

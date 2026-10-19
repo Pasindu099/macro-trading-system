@@ -1,6 +1,7 @@
 """Workspace navigation and Overview panel routes."""
 
 import logging
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
@@ -78,19 +79,11 @@ async def overview_panel(request: Request, panel_id: str) -> HTMLResponse:
 
 @router.get("/desks", response_class=HTMLResponse)
 @router.get("/pairs", response_class=HTMLResponse)
-@router.get("/news", response_class=HTMLResponse)
 @router.get("/positioning", response_class=HTMLResponse)
 @router.get("/data", response_class=HTMLResponse)
 async def section_page(request: Request) -> HTMLResponse:
     title, description = SECTIONS[request.url.path]
     desks = []
-    news_items = []
-    show_no_fx_link = request.query_params.get("show_geopolitics_without_fx_link") == "1"
-    if request.url.path == "/news":
-        try:
-            news_items = await news.tagged_feed(show_no_fx_link=show_no_fx_link)
-        except Exception:
-            logger.exception("News feed unavailable")
     if request.url.path == "/desks":
         try:
             async with get_sessionmaker()() as session:
@@ -101,9 +94,65 @@ async def section_page(request: Request) -> HTMLResponse:
             desks = [{"currency": currency, "macro": None} for currency in ("USD", "EUR")]
     return templates.TemplateResponse(request, "section.html", {
         "page_title": f"{title} | ForexCompass", "section_title": title,
-        "description": description, "desks": desks, "news_items": news_items,
-        "show_no_fx_link": show_no_fx_link,
+        "description": description, "desks": desks,
     })
+
+
+@router.get("/news", response_class=HTMLResponse)
+async def news_page(request: Request) -> HTMLResponse:
+    params = request.query_params
+    show_no_fx_link = params.get("show_geopolitics_without_fx_link") == "1"
+    query = params.get("q", "").strip()[:100]
+    currency = params.get("currency", "").upper()
+    news_type = params.get("type", "")
+    impact = params.get("impact", "")
+    active_only = params.get("active") == "1"
+    if currency not in {"", "USD", "EUR", "GBP", "JPY", "AUD", "NZD", "CAD", "CHF", "CNY"}:
+        raise HTTPException(400, "Unknown currency")
+    if news_type not in {"", "Data", "CB speaker", "Politics & fiscal", "Geopolitics",
+                         "Flows & market", "Commodities", "Analysis"} or impact not in {"", "High", "Medium", "Low"}:
+        raise HTTPException(400, "Unknown news filter")
+    try:
+        start = date.fromisoformat(params["start"]) if params.get("start") else None
+        end = date.fromisoformat(params["end"]) if params.get("end") else None
+    except ValueError as exc:
+        raise HTTPException(400, "Dates must use YYYY-MM-DD") from exc
+    if start and end and start > end:
+        raise HTTPException(400, "Start date must be before end date")
+    now = datetime.now(UTC)
+    state = "ok"
+    try:
+        options = {"show_no_fx_link": show_no_fx_link}
+        if any((query, currency, news_type, impact, active_only, start, end)):
+            options.update(query=query, currency=currency, news_type=news_type, impact=impact,
+                           active_only=active_only, start=start, end=end)
+        items = await news.tagged_feed(**options)
+        pin_items = (await news.tagged_feed() if len(options) > 1 else items)
+    except Exception:
+        logger.exception("News feed unavailable")
+        items, pin_items, state = [], [], "error"
+    try:
+        sources = await news.source_health(now.date())
+    except Exception:
+        logger.exception("News source health unavailable")
+        sources = []
+    try:
+        context = await news.today_context(now.date())
+    except Exception:
+        logger.exception("News sidebar unavailable")
+        context = {"releases": [], "speakers": [], "blackouts": [], "mentions": []}
+    response = templates.TemplateResponse(request, "news/page.html", {
+        "page_title": "News | ForexCompass", "items": items, "state": state,
+        "pinned": [item for item in pin_items if item["impact"] == "High" and
+                   now - timedelta(hours=6) <= item["published_at"] <= now][:6],
+        "sources": sources, "context": context, "filters": {
+            "q": query, "currency": currency, "type": news_type, "impact": impact,
+            "active": active_only, "start": start, "end": end,
+            "show_no_fx_link": show_no_fx_link,
+        },
+    })
+    response.headers["Cache-Control"] = "private, max-age=60"
+    return response
 
 
 @router.get("/event-log", include_in_schema=False)

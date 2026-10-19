@@ -50,3 +50,10 @@
 
 - Focused tests: 13 passed. Full suite: 726 passed, 7 skipped. SQLAlchemy emitted connection cleanup warnings after pytest, but all tests passed.
 - 48-hour collector overlap is still pending; `scripts/news_parity.py --hours 48` remains deferred and old collectors stay enabled. Stopped after F; Part G untouched.
+
+## Part G — News page
+
+- `/news` now shows collector check status and daily kept/dropped/merged counts, High items from the last six hours, filtered tagged headlines, and today's releases/speakers/blackouts/currency mentions (`app/api/routes/shell.py:109`, `app/web/templates/news/page.html:1`).
+- Search, currency, type, impact, active situation, arbitrary past UTC start/end dates and the opt-in unlinked-geopolitics filter query durable `news_items`. The page uses a private 60-second browser cache, responsive layout and shared freshness navigation. Beat/miss uses amber/blue; no intraday reaction is invented (`app/services/news.py:195`, `app/web/static/css/news.css:1`).
+- The USD/EUR desk News panel and Overview "What's moving markets" now use `news.tagged_feed`; source labels and stored context are retained (`app/services/desk_panels.py:695`, `app/services/overview.py:288`).
+- Focused tests: 93 passed. Historical date-range route and combined database filter smoke passed. Full suite: 727 passed, 7 skipped.

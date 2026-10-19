@@ -288,22 +288,13 @@ def _group_situations(episodes: list[dict]) -> list[dict]:
 async def moving_markets() -> dict:
     now = datetime.now(UTC)
     since = now - timedelta(hours=24)
-    raw = [{"headline": row["title"], "source": row["source"], "url": row["url"],
-            "seen_at": row["published_at"], "severity": None}
-           for row in await news.raw_headlines(since=since, until=now, relevant_only=True, limit=60)]
-    episodes = [row for row in await situations.get_situation_episodes(active=True)
-                if row["started_at"] <= now.date()]
-    seen = set()
-    rows = []
-    for item in sorted([dict(row) for row in raw], key=lambda row: row["seen_at"], reverse=True):
-        title = item["headline"].strip()
-        classification = _classify_news(title, episodes)
-        if classification is None or title.lower() in seen or not since <= item["seen_at"] <= now:
-            continue
-        seen.add(title.lower())
-        rows.append({**item, **classification})
+    rows = [{"headline": item["title"], "source": item["source"], "url": item["url"],
+             "seen_at": item["published_at"], "currencies": item["currencies"],
+             "tag": item["situation_ids"][0].replace("_", " ") if item["situation_ids"] else item["news_type"],
+             "tag_kind": "confirmed" if item["situation_ids"] else "warning", "why": item["why"]}
+            for item in await news.tagged_feed(limit=60, start=since.date())
+            if item["impact"] == "High" and since <= item["published_at"] <= now]
     return {"state": "ok" if rows else "empty", "rows": rows[:6],
-            "ai_paused": True,
             "message": "No high-impact items in the last 24 hours."}
 
 

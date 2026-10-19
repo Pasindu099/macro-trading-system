@@ -170,3 +170,4 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] D. Newswire actual matching, provisional release versioning and EODHD confirmation audit (migration 0041). Full suite 720 passed, 7 skipped.
 - [x] E. Evidence-based "Why it matters" lines in the news feed. Full suite 724 passed, 7 skipped.
 - [x] F. Episode links and cross-asset daily observations (migration 0042); historical backfill and coverage in `REPORT_STEP13.md`. Full suite 726 passed, 7 skipped. STOP after F.
+- [x] G. Responsive `/news` page with source health, six-hour High items, search/currency/type/impact/active-situation/date filters, evidence lines and today's context. Desk and Overview panels now read the same tagged feed. Full suite 727 passed, 7 skipped.

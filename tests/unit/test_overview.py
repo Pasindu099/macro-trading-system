@@ -166,27 +166,24 @@ def test_partial_thesis_and_gap_labels():
     assert overview._gap_label("EUR", {"why": {"gap": {"raw": {"direction": "neutral"}}}}) == "neutral: projections at target"
 
 
-def test_news_uses_recent_investinglive_items_only(monkeypatch):
+def test_news_uses_recent_high_impact_stored_items(monkeypatch):
     now = datetime.now(UTC)
-    async def raw_headlines(*, since, until=None, sources=("investinglive",), relevant_only=False, limit=400):
-        assert sources == ("investinglive",) and relevant_only
-        assert since < now <= until
-        return [{"title": title, "source": "investinglive", "url": None, "published_at": timestamp}
-                for title, timestamp in (
-                    ("Fed rate outlook", now - timedelta(hours=1)),
-                    ("USD CPI tomorrow", now + timedelta(hours=1)),
-                    ("Fed rate last week", now - timedelta(days=7)),
-                    ("Weekend lifestyle update", now - timedelta(minutes=5)))]
-    monkeypatch.setattr(overview.news, "raw_headlines", raw_headlines)
-    async def episodes(*, active):
-        assert active
-        return []
-    monkeypatch.setattr(overview.situations, "get_situation_episodes", episodes)
+    async def tagged_feed(*, limit, start):
+        assert limit == 60 and start <= now.date()
+        return [{"title": title, "source": "investinglive", "url": None, "published_at": timestamp,
+                 "currencies": ["USD"], "situation_ids": [], "news_type": "CB speaker", "why": "Fed policy",
+                 "impact": impact}
+                for title, timestamp, impact in (
+                    ("Fed rate outlook", now - timedelta(hours=1), "High"),
+                    ("USD CPI tomorrow", now + timedelta(hours=1), "High"),
+                    ("Fed rate last week", now - timedelta(days=7), "High"),
+                    ("Weekend lifestyle update", now - timedelta(minutes=5), "Low"))]
+    monkeypatch.setattr(overview.news, "tagged_feed", tagged_feed)
     rows = __import__("asyncio").run(overview.moving_markets())["rows"]
     assert len(rows) == 1
     assert rows[0]["headline"] == "Fed rate outlook"
     assert rows[0]["currencies"] == ["USD"]
-    assert rows[0]["tag"] == "CB policy divergence"
+    assert rows[0]["tag"] == "CB speaker" and rows[0]["why"] == "Fed policy"
 
 
 def test_regime_map_renders_calendar_string(monkeypatch):

@@ -9,10 +9,10 @@
     <strong>{{ event.currency_code }}</strong>
     <span class="calendar-event-name">{{ component.name }}<small>{{ event.country_name }} · {{ component.source_status }}</small></span>
     <span class="impact impact-{{ event.impact }}">{{ {1:'High', 2:'Med', 3:'Low'}[event.impact] }}</span>
-    <span class="number">{{ component.actual if component.actual is not none else '—' }}</span>
+    <span class="number actual {{ component.result or '' }}">{{ component.actual if component.actual is not none else '—' }}</span>
     <span class="number">{{ component.consensus if component.consensus is not none else '—' }}</span>
     <span class="number" title="{% if component.revised_from is not none %}Revised from {{ component.revised_from }}{% endif %}">{{ component.previous if component.previous is not none else '—' }}{% if component.revised_from is not none %}<small>rev. {{ component.revised_from }}</small>{% endif %}</span>
-    <span class="number">{% if component.surprise_sigma is not none %}<b class="surprise{% if component.surprise_sigma < 0 %} miss{% endif %}">{{ '%+.1f'|format(component.surprise_sigma) }}σ</b>{% else %}—{% endif %}</span>
+    <span class="number">{% if component.surprise_sigma is not none %}<b class="surprise{% if component.surprise_sigma < 0 %} miss{% endif %}">{% if component.surprise_sigma|abs >= 1 %}<span aria-label="Significant surprise" title="Surprise of at least 1σ">⚡</span> {% endif %}{{ '%+.1f'|format(component.surprise_sigma) }}σ</b>{% else %}—{% endif %}</span>
   </div>
   {% endfor %}
   {% else %}<p class="calendar-empty">No matching releases.</p>{% endfor %}

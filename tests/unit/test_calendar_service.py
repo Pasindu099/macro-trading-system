@@ -12,6 +12,7 @@ def row(**changes):
                 raw_payload={}, retrieved_at=None, display_name="CPI", canonical_name="cpi",
                 importance=3, unit="%", country_code="US", currency_code="USD",
                 country_name="United States", surprise_normalized=1.5,
+                is_higher_better_for_currency=True,
                 bundle_id=None, bundle_key=None)
     return base | changes
 
@@ -29,6 +30,15 @@ def test_overrides_and_bundle_fallback():
     assert events[0]["surprise_sigma"] == -2
     assert events[0]["components"][0]["canonical_name"] == "core_cpi_mom"
     assert events[0]["components"][0]["revised_from"] == 0
+
+
+def test_lower_unemployment_is_a_beat_and_higher_is_a_miss():
+    lower = _shape([row(display_name="Unemployment Rate", actual=3.8, estimate=4.0,
+                        surprise_normalized=1.2, is_higher_better_for_currency=False)], None, 3, False)
+    higher = _shape([row(display_name="Unemployment Rate", actual=4.2, estimate=4.0,
+                         surprise_normalized=-1.2, is_higher_better_for_currency=False)], None, 3, False)
+    assert lower[0]["components"][0]["result"] == "beat"
+    assert higher[0]["components"][0]["result"] == "miss"
 
 
 def test_coincident_unrelated_events_do_not_merge_and_history_headline_is_mapped():

@@ -178,3 +178,13 @@ def test_form_template_markup_is_balanced_and_has_no_default_instruments():
     source = Path("app/web/templates/calendar/event_log_form.html").read_text(encoding="utf-8")
     assert source.count("<fieldset") == source.count("</fieldset>") and "\niv>" not in source
     assert "default_pairs" not in Path(routes.__file__).read_text(encoding="utf-8")
+
+
+def test_intraday_move_preserves_entered_precision():
+    from app.api.routes.event_log import parse_moves
+
+    class Form:
+        def get(self, key):
+            return "-1.234567" if key == "move__EUR/USD__1m" else ""
+
+    assert parse_moves(Form(), ["EUR/USD"])["EUR/USD"]["1m"] == Decimal("-1.234567")

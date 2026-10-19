@@ -67,7 +67,9 @@ def parse_moves(form: Any, instruments: list[str]) -> dict[str, dict[str, Decima
                 raise ValueError(f"{instrument} {horizon} move must be a number") from exc
             if not move.is_finite() or abs(move) >= log.MAX_MOVE:
                 raise ValueError(f"{instrument} {horizon} move is out of range")
-            moves.setdefault(instrument, {})[horizon] = move.quantize(Decimal("0.1"))
+            if move.as_tuple().exponent < -6:
+                raise ValueError(f"{instrument} {horizon} move supports up to 6 decimal places")
+            moves.setdefault(instrument, {})[horizon] = move
     return moves
 
 

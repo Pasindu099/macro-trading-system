@@ -2,16 +2,16 @@
    theme colours are neutral; green/red are reserved for price moves and not used here. */
 .cb-terminal{max-width:1440px;margin:0 auto;padding:24px 28px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box}
 .cb-tabs{display:flex;flex-wrap:wrap;gap:6px}
-.cb-tabs a{min-height:34px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid var(--line);border-radius:999px;color:var(--text);text-decoration:none;font:12px 'DM Mono',monospace}
+.cb-tabs a{min-height:34px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid var(--line);border-radius:999px;color:var(--text);text-decoration:none;font:12px 'Arial',monospace}
 .cb-tabs a[aria-current=page]{border-color:var(--accent);color:var(--accent-text);background:var(--accent-soft)}
 .cb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:18px}
 .cbp-summary,.cbp-speakers,.cbp-profile,.cbp-proj-revisions,.cbp-proj-formats{grid-column:1/-1}
-.cb-panel{min-width:0;font:12px 'DM Mono',monospace}
-.cb-panel h1{font:800 clamp(28px,4vw,40px) Syne,sans-serif;margin:6px 0 10px}
+.cb-panel{min-width:0;font:12px 'Arial',monospace}
+.cb-panel h1{font:800 clamp(28px,4vw,40px) Arial,sans-serif;margin:6px 0 10px}
 .cb-panel a{color:#8fc3ff}
 .cb-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px}
 .cb-chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{display:inline-block;padding:3px 8px;border:1px solid var(--line);border-radius:999px;color:#c9d1dd;font:11px 'DM Mono',monospace}
+.chip{display:inline-block;padding:3px 8px;border:1px solid var(--line);border-radius:999px;color:#c9d1dd;font:11px 'Arial',monospace}
 .chip-warn{border-color:var(--accent);color:var(--accent-text)}
 .cb-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-content:start}
 .cb-stats>div{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid #222833;border-radius:8px;background:#0e1218;min-width:0}

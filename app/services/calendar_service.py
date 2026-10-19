@@ -29,6 +29,7 @@ _DAY_SQL = text("""
 SELECT r.id, r.indicator_id, r.released_at, r.period, r.actual, r.estimate,
        r.previous, r.raw_payload, r.retrieved_at, i.display_name,
        i.canonical_name, i.importance, i.unit, i.country_code,
+       i.is_higher_better_for_currency,
        c.currency_code, c.name AS country_name, s.surprise_normalized,
        s.bundle_id, b.bundle_key,
        (SELECT old.previous FROM indicator_releases old
@@ -94,6 +95,13 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
             "revised_from": float(row["first_previous"]) if row["first_previous"] is not None
                             and row["first_previous"] != row["previous"] else None,
             "surprise_sigma": score, "unit": row["unit"],
+            "result": ("beat" if score > 0 else "miss" if score < 0 else "inline") if score is not None else
+                      ("beat" if (row["actual"] - row["estimate"]) *
+                       (1 if row["is_higher_better_for_currency"] else -1) > 0 else
+                       "miss" if (row["actual"] - row["estimate"]) *
+                       (1 if row["is_higher_better_for_currency"] else -1) < 0 else "inline")
+                      if row["actual"] is not None and row["estimate"] is not None
+                      and row["is_higher_better_for_currency"] is not None else None,
             "source_status": "confirmed" if row["actual"] is not None else "scheduled",
             "mapped": row["indicator_id"] is not None,
             "headline": bool((cal_bundle and cal_bundle["headline"] == row["canonical_name"])
@@ -123,7 +131,7 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
                                                    -(abs(item["surprise_sigma"] or 0))))
         group.update({key: group["components"][0][key] for key in
                       ("actual", "consensus", "previous", "revised_from",
-                       "surprise_sigma", "source_status")})
+                       "surprise_sigma", "source_status", "result")})
     return [group for group in result if group["impact"] <= min_impact
             and (not surprise_only or any(c["surprise_sigma"] is not None
                                           and abs(c["surprise_sigma"]) > 1

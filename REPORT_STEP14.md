@@ -39,3 +39,10 @@ Myfxbook client (login, reuse, expiry, backoff, missing credentials, no credenti
 - Stored long/short splits matched the public Community Outlook pages: [EUR/USD](https://www.myfxbook.com/community/outlook/EURUSD) 82/18, [USD/JPY](https://www.myfxbook.com/community/outlook/USDJPY) 61/39, [GBP/USD](https://www.myfxbook.com/community/outlook/GBPUSD) 44/56. The pages refresh frequently, so this confirms the sampled values at check time.
 - Recent local app logs: 0 matches for either credential in plain or URL-encoded form. All 3 Myfxbook ingestion records: 0 failed, 0 credential matches in stored error text.
 - Redaction now covers `email`, `password` and `session` URL parameters; provider error messages are not copied into Myfxbook exceptions (`app/log_redaction.py:14`, `app/services/myfxbook.py:86`). Focused tests: 13 passed. Full suite: **795 passed, 7 skipped**.
+
+## VPS deployment — 20 Oct 2026 (Berlin)
+
+- Deployed `a1b9c3e` (`v2.4-news-positioning`) to the VPS. Backup retained: 58 MB. App healthy; `/health` returns `ok`; Alembic at `0043_retail_sentiment_snapshots`.
+- Step 14 post-deploy: S&P 500 refresh 6,739 rows; headline retag 73 Flows & market; cleared 154 unparsed/unmatched audit rows from the last 30 days; parser rerun: 36 confirmed, 0 discrepancies.
+- Existing news pipeline remains running. Telegram bot was observed restarting; its condition was not diagnosed in this deployment.
+- VPS `.env` lacks both Myfxbook settings, so a production snapshot and retail panels remain pending. Automatic approval review rejected copying the local credentials to this VPS because the destination was not explicitly authorized for secret transfer. The owner must explicitly authorize that transfer or enter the settings on the VPS.

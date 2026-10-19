@@ -11,6 +11,7 @@ def test_positioning_routes_registered_with_fixed_paths_first():
     paths = [route.path for route in routes.router.routes]
     expected = [
         "/api/positioning/crowding", "/api/positioning/flows", "/api/positioning/squeeze",
+        "/api/positioning/summary", "/api/positioning/divergence", "/api/positioning/retail",
         "/api/positioning/extremes/{currency}", "/api/positioning/pair/{pair:path}",
         "/api/positioning/{currency}",
     ]

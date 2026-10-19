@@ -171,3 +171,8 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] E. Evidence-based "Why it matters" lines in the news feed. Full suite 724 passed, 7 skipped.
 - [x] F. Episode links and cross-asset daily observations (migration 0042); historical backfill and coverage in `REPORT_STEP13.md`. Full suite 726 passed, 7 skipped. STOP after F.
 - [x] G. Responsive `/news` page with source health, six-hour High items, search/currency/type/impact/active-situation/date filters, evidence lines and today's context. Desk and Overview panels now read the same tagged feed. Full suite 727 passed, 7 skipped.
+- [x] Follow-ups: headline parser 5 -> 60 of 91 parsed (98% of release prints), 28 matched, 0 EODHD disagreements; S&P 500 from EODHD GSPC.INDX 2000-01-03.. (6,739 rows). `REPORT_STEP13_FOLLOWUPS.md`.
+
+## Step 14 — Positioning page
+- [x] A. Myfxbook official API client (session reuse, re-login on expiry, backoff, honest UA, credentials never logged); `retail_sentiment_snapshots` + daily view (migration 0043), 4-hourly job, freshness "Myfxbook retail" 8 h. Credentials not set: job reports "not configured". OANDA/IG (web pages) disabled; Binance (official API, crypto) kept.
+- [x] B. Summary sentence, CFTC release info from `config/cftc_release_schedule.yaml` (holiday shifts), divergence flag, institutions vs retail; `/api/positioning/summary|divergence|retail`. Full suite 772 passed, 7 skipped. STOP after B.

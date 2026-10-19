@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import bisect
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import yaml
 from sqlalchemy import text
@@ -399,3 +400,192 @@ async def get_pair_positioning(pair: str, lookback: str = "3y") -> dict[str, Any
         "basis": "base minus quote leveraged-funds percentile; no cross-currency futures exist",
         "base": {"currency": base, **legs[base]}, "quote": {"currency": quote, **legs[quote]},
     }
+
+
+# ── Step 14 B: summary, release info, divergence, institutions vs retail ──
+
+SCHEDULE_CONFIG = Path("config/cftc_release_schedule.yaml")
+SQUEEZE_RANK = {"high": 3, "medium": 2, "trend_confirming": 1, "none": 0}
+DIVERGENCE_HIGH, DIVERGENCE_LOW = 75.0, 25.0
+IMPLIED_BIAS, RETAIL_SIDE = 20.0, 60.0
+
+
+def ordinal(value: float) -> str:
+    n = int(round(value))
+    suffix = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
+
+
+def summary_sentence(squeeze_rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """The single most important leveraged-funds story: squeeze status first, then extremeness."""
+    candidates = []
+    for row in squeeze_rows:
+        lf = row.get("leveraged_funds") or {}
+        if lf.get("crowding") in {"crowded_long", "crowded_short"} and lf.get("percentile") is not None:
+            candidates.append((SQUEEZE_RANK.get(lf["status"], 0), abs(lf["percentile"] - 50), row["currency"], lf))
+    if not candidates:
+        return {"currency": None, "status": "none",
+                "text": "No currency is crowded among speculators: leveraged-funds positions sit between the "
+                        f"{ordinal(CROWDED_SHORT)} and {ordinal(CROWDED_LONG)} percentiles."}
+    _, _, ccy, lf = max(candidates, key=lambda item: item[:3])
+    side = "long" if lf["crowding"] == "crowded_long" else "short"
+    sentence = f"Speculators crowded {side} {ccy} ({ordinal(lf['percentile'])} percentile)"
+    status = lf["status"]
+    if status == "high":
+        sentence += f" and {side}s are being cut: squeeze watch high."
+    elif status == "medium" and lf.get("reducing"):
+        sentence += f" and {side}s are being cut: squeeze watch medium."
+    elif status == "medium":
+        sentence += f" and {ccy} is moving against them: squeeze watch medium."
+    elif status == "trend_confirming":
+        sentence += f" and {ccy} is still moving their way: trend confirming."
+    else:
+        sentence += "."
+    return {"currency": ccy, "status": status, "percentile": lf["percentile"], "text": sentence}
+
+
+def report_as_of(release: date) -> date:
+    """Tuesday covered by a release: same week for Friday, previous week for a delayed Monday."""
+    return release - timedelta(days=(release.weekday() - 1) % 7)
+
+
+def _schedule_config() -> dict[str, Any]:
+    return yaml.safe_load(SCHEDULE_CONFIG.read_text(encoding="utf-8"))
+
+
+def release_schedule() -> list[dict[str, Any]]:
+    rows = []
+    for entries in _schedule_config()["releases"].values():
+        for entry in entries:
+            release = entry["date"] if isinstance(entry, dict) else entry
+            rows.append({"release_date": release, "as_of": report_as_of(release),
+                         "delayed": bool(isinstance(entry, dict) and entry.get("delayed"))})
+    return sorted(rows, key=lambda row: row["release_date"])
+
+
+def release_info(latest_report: date | None, now: datetime | None = None) -> dict[str, Any]:
+    """Data as-of (Tuesday), its release date (Friday or holiday shift) and the next scheduled release."""
+    now = now or datetime.now(UTC)
+    schedule = release_schedule()
+    hour, minute = map(int, _schedule_config()["release_time_et"].split(":"))
+    eastern = ZoneInfo("America/New_York")
+
+    def released_at(day: date) -> datetime:
+        return datetime(day.year, day.month, day.day, hour, minute, tzinfo=eastern)
+
+    current = next((row for row in schedule if row["as_of"] == latest_report), None) if latest_report else None
+    upcoming = next((row for row in schedule if released_at(row["release_date"]) > now), None)
+    if current:
+        released, released_source = current["release_date"].isoformat(), "cftc_schedule"
+    elif latest_report:
+        released, released_source = (latest_report + timedelta(days=3)).isoformat(), "assumed_friday"
+    else:
+        released, released_source = None, None
+    return {
+        "as_of": latest_report.isoformat() if latest_report else None,
+        "released": released, "released_source": released_source,
+        "next_release": upcoming["release_date"].isoformat() if upcoming else None,
+        "next_as_of": upcoming["as_of"].isoformat() if upcoming else None,
+        "next_delayed": upcoming["delayed"] if upcoming else None,
+        "next_release_status": "scheduled" if upcoming else "schedule not yet published",
+        "release_time_et": f"{hour:02d}:{minute:02d}",
+    }
+
+
+def divergence_flag(percentile: float | None, net_change_4w: int | None,
+                    price_move_4w: float | None) -> dict[str, Any]:
+    """'divergence' when the 4-week currency move and the leveraged-funds net change point opposite ways
+    while positioning is at or beyond the 75th / 25th percentile."""
+    if percentile is None or net_change_4w is None or price_move_4w is None:
+        return {"flag": "pending", "reason": "missing percentile, 4-week net change or price"}
+    disagree = (net_change_4w > 0 > price_move_4w) or (net_change_4w < 0 < price_move_4w)
+    extreme = percentile >= DIVERGENCE_HIGH or percentile <= DIVERGENCE_LOW
+    return {"flag": "divergence" if disagree and extreme else "none", "disagree": disagree, "extreme": extreme}
+
+
+async def get_divergence(lookback: str = "3y") -> dict[str, Any]:
+    years = _years(lookback)
+    positions = await load_positions()
+    spot = await load_spot()
+    rows = []
+    for ccy in CURRENCIES:
+        weeks = positions.get(ccy, {}).get("leveraged_funds", [])
+        if len(weeks) < 5:
+            rows.append({"currency": ccy, "flag": "pending", "reason": "fewer than 5 weeks of COT history"})
+            continue
+        snap = category_snapshot(weeks, years)
+        series = spot.get(ccy)
+        move = pct_move(series.on(weeks[-5].report_date), series.on(weeks[-1].report_date)) if series else None
+        rows.append({"currency": ccy, "percentile": snap["percentile"], "net_change_4w": snap["change_4w"],
+                     "price_move_4w_pct": round(move, 3) if move is not None else None,
+                     "report_date": snap["report_date"],
+                     **divergence_flag(snap["percentile"], snap["change_4w"], move)})
+    return {"lookback": lookback, "window_weeks": 4,
+            "rule": "4W price direction vs 4W leveraged-funds net change disagree and percentile >= 75 or <= 25",
+            "currencies": rows}
+
+
+def retail_signal(implied: float | None, retail_long_pct: float | None) -> str:
+    """'opposite sides' / 'same side' / 'no signal' for COT-implied bias vs Myfxbook % long."""
+    if implied is None or retail_long_pct is None:
+        return "no signal"
+    retail_short = 100 - retail_long_pct
+    if implied > IMPLIED_BIAS:
+        if retail_short > RETAIL_SIDE:
+            return "opposite sides"
+        return "same side" if retail_long_pct > RETAIL_SIDE else "no signal"
+    if implied < -IMPLIED_BIAS:
+        if retail_long_pct > RETAIL_SIDE:
+            return "opposite sides"
+        return "same side" if retail_short > RETAIL_SIDE else "no signal"
+    return "no signal"
+
+
+def config_pairs() -> list[tuple[str, str]]:
+    config = yaml.safe_load(PAIRS_CONFIG.read_text(encoding="utf-8"))
+    return [(item["base"], item["quote"]) for item in config["pairs"]]
+
+
+async def get_institutions_vs_retail(lookback: str = "3y") -> dict[str, Any]:
+    from app.services import myfxbook
+
+    years = _years(lookback)
+    positions = await load_positions()
+    pctl = {}
+    for ccy in CURRENCIES:
+        weeks = positions.get(ccy, {}).get("leveraged_funds", [])
+        pctl[ccy] = category_snapshot(weeks, years)["percentile"] if weeks else None
+    retail = {row["pair"]: row for row in await myfxbook.latest()}
+    configured = myfxbook.credentials() is not None
+    rows = []
+    for base, quote in config_pairs():
+        implied = (round(pctl[base] - pctl[quote], 2)
+                   if pctl.get(base) is not None and pctl.get(quote) is not None else None)
+        snap = retail.get(base + quote)
+        long_pct = float(snap["long_pct"]) if snap else None
+        if implied is None:
+            side = None
+        else:
+            side = "long-biased" if implied > IMPLIED_BIAS else "short-biased" if implied < -IMPLIED_BIAS else "neutral"
+        rows.append({"pair": f"{base}/{quote}", "cot_implied": implied, "cot_side": side,
+                     "retail_long_pct": long_pct,
+                     "retail_taken_at": snap["taken_at"].isoformat() if snap else None,
+                     "signal": retail_signal(implied, long_pct)})
+    if not configured:
+        state, message = "not_configured", myfxbook.NOT_CONFIGURED
+    elif not retail:
+        state, message = "pending", "No Myfxbook snapshot stored yet."
+    else:
+        state, message = "ok", None
+    return {"lookback": lookback, "retail_source": "Myfxbook community outlook", "retail_state": state,
+            "retail_message": message,
+            "rule": "opposite sides: COT-implied > +20 and retail > 60% short, or < -20 and retail > 60% long",
+            "pairs": rows}
+
+
+async def get_summary(lookback: str = "3y") -> dict[str, Any]:
+    squeeze = await get_squeeze(lookback)
+    latest = max((date.fromisoformat(row["leveraged_funds"]["report_date"]) for row in squeeze["currencies"]
+                  if (row.get("leveraged_funds") or {}).get("report_date")), default=None)
+    return {"lookback": lookback, "summary": summary_sentence(squeeze["currencies"]),
+            "release": release_info(latest)}

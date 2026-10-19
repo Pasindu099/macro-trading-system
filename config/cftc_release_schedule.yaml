@@ -1,0 +1,60 @@
+# CFTC Commitments of Traders release schedule (tentative, as published by the CFTC).
+# Source: https://www.cftc.gov/MarketReports/CommitmentsofTraders/ReleaseSchedule/index.htm (read 2026-10-19).
+# Releases at 15:30 US Eastern. Data are as of the Tuesday of the release week; a holiday-delayed
+# Monday release carries the previous week's Tuesday (as_of is derived from the date in code).
+# delayed: dates the CFTC marks "*Delayed release date due to a federal holiday".
+release_time_et: "15:30"
+releases:
+  2026:
+    - {date: 2026-01-05, delayed: true}
+    - 2026-01-09
+    - 2026-01-16
+    - 2026-01-23
+    - 2026-01-30
+    - 2026-02-06
+    - 2026-02-13
+    - 2026-02-20
+    - 2026-02-27
+    - 2026-03-06
+    - 2026-03-13
+    - 2026-03-20
+    - 2026-03-27
+    - 2026-04-03
+    - 2026-04-10
+    - 2026-04-17
+    - 2026-04-24
+    - 2026-05-01
+    - 2026-05-08
+    - 2026-05-15
+    - 2026-05-22
+    - 2026-05-29
+    - 2026-06-05
+    - 2026-06-12
+    - {date: 2026-06-22, delayed: true}
+    - 2026-06-26
+    - {date: 2026-07-06, delayed: true}
+    - 2026-07-10
+    - 2026-07-17
+    - 2026-07-24
+    - 2026-07-31
+    - 2026-08-07
+    - 2026-08-14
+    - 2026-08-21
+    - 2026-08-28
+    - 2026-09-04
+    - 2026-09-11
+    - 2026-09-18
+    - 2026-09-25
+    - 2026-10-02
+    - 2026-10-09
+    - 2026-10-16
+    - 2026-10-23
+    - 2026-10-30
+    - 2026-11-06
+    - {date: 2026-11-16, delayed: true}
+    - 2026-11-20
+    - {date: 2026-11-30, delayed: true}
+    - 2026-12-04
+    - 2026-12-11
+    - 2026-12-18
+    - {date: 2026-12-28, delayed: true}

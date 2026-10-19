@@ -40,6 +40,21 @@ async def squeeze() -> dict:
     return await positioning.get_squeeze()
 
 
+@router.get("/summary")
+async def summary(lookback: str = Query("3y", pattern="^(1y|3y|5y)$")) -> dict:
+    return await positioning.get_summary(lookback)
+
+
+@router.get("/divergence")
+async def divergence(lookback: str = Query("3y", pattern="^(1y|3y|5y)$")) -> dict:
+    return await positioning.get_divergence(lookback)
+
+
+@router.get("/retail")
+async def institutions_vs_retail(lookback: str = Query("3y", pattern="^(1y|3y|5y)$")) -> dict:
+    return await positioning.get_institutions_vs_retail(lookback)
+
+
 @router.get("/extremes/{currency}")
 async def extremes(currency: str) -> dict:
     return await _call(positioning.get_extremes(currency))

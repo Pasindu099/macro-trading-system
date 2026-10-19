@@ -13,49 +13,141 @@ from app.db.models import IndicatorRelease
 from app.db.session import session_scope
 from app.services.event_innovation_jobs import run_incremental_event_innovation
 
-NUMBER = re.compile(r"(?<![\w.])[-+]?\d+(?:\.\d+)?")
-VS = re.compile(r"\bvs\.?\s*([-+]?\d+(?:\.\d+)?)\s*%?\s*(?:exp(?:ected)?|est(?:imate)?|forecast)", re.I)
-COUNTRIES = ((r"\b(?:US|U\.S\.|United States)\b", "US"), (r"\b(?:UK|U\.K\.|Britain)\b", "UK"),
-             (r"\b(?:Germany|German)\b", "DE"), (r"\b(?:Eurozone|Euro area)\b", "EZ"),
-             (r"\bJapan\b", "JP"), (r"\bAustralia\b", "AU"), (r"\bCanada\b", "CA"),
-             (r"\bNew Zealand\b", "NZ"), (r"\bSwitzerland\b", "CH"))
-INDICATORS = ((r"\b(?:core CPI|core inflation)\b", "core_cpi"),
-              (r"\b(?:CPI|inflation rate)\b", "cpi_headline"),
-              (r"\b(?:nonfarm payrolls|non-farm payrolls|NFP)\b", "nonfarm_payrolls"),
-              (r"\bunemployment rate\b", "unemployment_rate"),
-              (r"\bretail sales\b", "retail_sales"),
-              (r"\bGDP\b", "gdp"))
+NUM = r"[-+]?\d+(?:\.\d+)?"
+UNIT = r"\s*(?:%|K|k|M|bn|B|million|billion)?"
+NUMBER = re.compile(r"(?<![\w.$])" + NUM + r"(?=" + UNIT + r"(?![\w]))")
+COMPARE = re.compile(  # "+0.4% vs +0.3% expected", "54.9 versus 55.2 estimate", "+3.8% vs +3.8% y/y prelim"
+    r"\b(?:vs\.?|versus)\s*(" + NUM + r")" + UNIT + r"\s*(?:[ymq]/[ymq]\s*)?"
+    r"(exp(?:ected)?|est(?:imate)?|forecast|consensus|prelim(?:inary)?|prior|prev(?:ious)?)\b", re.I)
+PAREN = re.compile(  # "4.7% (expected 4.6%, prior 4.7%)", "4% (vs. expected 4%, prior 3.5%)"
+    r"(" + NUM + r")" + UNIT + r"\s*(?:[ymq]/[ymq]\s*)?\((?:vs\.?\s*)?(?:exp(?:ected)?|est(?:imate)?)\.?:?\s*(" + NUM + r")",
+    re.I)
+NARRATIVE = re.compile(  # first clause only: "Tokyo core CPI jumps to 2.7%"
+    r"\b(?:confirmed at|(?:rises|rose|falls|fell|eases|eased|slips|slipped|slides|slid|jumps|jumped|climbs|climbed|"
+    r"slows|slowed|edges|edged|returns to growth|improves|improved|drops|dropped)\s+(?:to|at)|comes in at|"
+    r"(?:rises|rose|rise|hits|hit)(?:\s+to)?)\s+(" + NUM + r")"
+    + UNIT + r"(?![\w])", re.I)
+NOT_RELEASE = re.compile(r"\b(?:PBOC|People.s Bank of China|reference rate|mid-?point|central rate|news wrap|"
+                         r"calendar|GDPNow|Dallas Fed Trimmed|seen at|preview|expects?)\b", re.I)
+COUNTRIES = ((r"\b(?:US|U\.S\.|United States)\b", "US"), (r"\b(?:UK|U\.K\.|Britain|British)\b", "UK"),
+             (r"\b(?:Germany|German)\b", "DE"), (r"\b(?:Eurozone|Euro area|Euro zone)\b", "EU"),
+             (r"\b(?:Japan|Japanese|Tokyo)\b", "JP"), (r"\b(?:Australia|Australian)\b", "AU"),
+             (r"\b(?:Canada|Canadian|Bank of Canada)\b", "CA"), (r"\b(?:New Zealand|NZ)\b", "NZ"),
+             (r"\b(?:Switzerland|Swiss)\b", "CH"), (r"\b(?:China|Chinese)\b", "CN"),
+             (r"\b(?:France|French)\b", "FR"), (r"\b(?:Spain|Spanish)\b", "ES"), (r"\b(?:Italy|Italian)\b", "IT"))
+# Indicators only published for the US: the headline may omit the country.
+US_ONLY = re.compile(r"\b(?:ISM|JOLTS|UMich|Michigan|NAHB|Case-?Shiller|jobless claims|non-?farm payrolls|"
+                     r"Dallas Fed|Philly Fed|Empire State|Conference Board)\b", re.I)
+# Most specific first. Values are exact calendar base names; comparison suffixes are added in matching.
+INDICATORS = (
+    (r"\bTokyo core CPI\b", ("tokyo_core_cpi",)),
+    (r"\bcore PCE\b", ("core_pce_price_index",)),
+    (r"\b(?:PCE)\b", ("pce_price_index",)),
+    (r"\b(?:core CPI|core inflation)\b", ("core_cpi",)),
+    (r"\b(?:CPI|inflation rate|consumer prices)\b", ("cpi_headline", "consumer_price_index", "monthly_cpi_indicator",
+                                                     "cpi_monthly")),
+    (r"\b(?:non-?farm payrolls|NFP)\b", ("nfp",)),
+    (r"\bunemployment rate\b", ("unemployment_rate",)),
+    (r"\bretail sales\b", ("retail_sales",)),
+    (r"\bGDP\b", ("gdp", "real_gdp")),
+    (r"\bISM (?:non-? ?manufacturing|services)\b", ("ism_services_pmi",)),
+    (r"\bISM manufacturing\b", ("ism_manufacturing_pmi",)),
+    (r"\bmanufacturing PMI\b", ("manufacturing_pmi", "sp_global_manufacturing_pmi")),
+    (r"\bservices PMI\b", ("services_pmi", "sp_global_services_pmi")),
+    (r"\bcomposite PMI\b", ("composite_pmi", "sp_global_composite_pmi")),
+    (r"\b(?:initial )?jobless claims\b", ("initial_jobless_claims",)),
+    (r"\b(?:UMich|Michigan)\b.*\bconsumer sentiment\b", ("umich_consumer_sentiment",)),
+    (r"\bbusiness outlook survey\b", ("boc_business_outlook_survey",)),
+    (r"\bbusiness confidence\b", ("business_confidence", "nab_business_confidence")),
+    (r"\bconsumer confidence\b", ("consumer_confidence",)),
+    (r"\bbuilding permits\b", ("building_permits",)),
+    (r"\bindustrial production\b", ("industrial_production",)),
+    (r"\bimport price(?:s| index)?\b", ("import_prices", "import_price_index")),
+    (r"\bfactory orders\b", ("factory_orders",)),
+    (r"\bservices producer prices\b", ("services_ppi",)),
+    (r"\b(?:factory inflation|producer prices|PPI)\b", ("ppi", "producer_price_index")),
+    # Parsed for the audit trail; no calendar event carries these names, so they stay unmatched.
+    (r"\bdurable goods\b", ("durable_goods",)),
+    (r"\bCase-?Shiller\b", ("case_shiller_hpi",)),
+    (r"\bNAHB\b", ("nahb_housing_market_index",)),
+    (r"\bexisting home sales\b", ("existing_home_sales",)),
+    (r"\bJOLTS\b", ("jolts_job_openings",)),
+    (r"\bDallas Fed manufacturing\b", ("dallas_fed_manufacturing_index",)),
+)
+SUFFIXES = {None: ("", "_mom", "_yoy", "_qoq"), "mom": ("_mom",), "yoy": ("_yoy",), "qoq": ("_qoq",)}
 
 
 @dataclass(frozen=True)
 class DataPrint:
     country: str
-    canonical_prefix: str
+    names: tuple[str, ...]  # candidate calendar canonical names
     actual: Decimal
-    consensus: Decimal
+    consensus: Decimal | None  # market expectation only (never prior / prelim)
     comparison: str | None
+    reference: Decimal | None = None  # prelim value for final prints; disambiguation only
+
+    @property
+    def canonical_prefix(self) -> str:
+        return self.names[0]
+
+
+def _country(title: str, first_clause: str) -> str | None:
+    found = [code for pattern, code in COUNTRIES if re.search(pattern, first_clause, re.I if code != "US" else 0)]
+    if len(set(found)) == 1:
+        return found[0]
+    if not found and US_ONLY.search(first_clause):
+        return "US"
+    if len(set(found)) > 1 and "US" in found and US_ONLY.search(first_clause):
+        return "US"
+    return None
 
 
 def parse_headline(title: str) -> DataPrint | None:
-    """Only parse explicit actual-vs-expected headlines; ambiguity stays unfilled."""
-    match = VS.search(title)
-    if not match:
+    """Parse explicit data prints; anything ambiguous stays unfilled."""
+    if NOT_RELEASE.search(title):
         return None
-    preceding = NUMBER.findall(title[:match.start()])
-    if not preceding:
+    actual = consensus = reference = None
+    clause = title
+    if (match := COMPARE.search(title)):
+        preceding = NUMBER.findall(title[:match.start()])
+        if not preceding:
+            return None
+        actual = Decimal(preceding[-1])
+        kind = match.group(2).lower()
+        if kind.startswith(("exp", "est", "fore", "cons")):
+            consensus = Decimal(match.group(1))
+        elif kind.startswith("prelim"):
+            reference = Decimal(match.group(1))
+        clause = title[:match.start()]
+    elif (match := PAREN.search(title)):
+        actual, consensus = Decimal(match.group(1)), Decimal(match.group(2))
+        clause = title[:match.start()]
+    else:
+        first = re.split(r",|;| as | amid | while | but | ahead of ", title, maxsplit=1)[0]
+        match = NARRATIVE.search(first)
+        if not match or len(NUMBER.findall(first)) != 1:
+            return None
+        actual = Decimal(match.group(1))
+        clause = first[:match.start()]
+    indicators = [names for pattern, names in INDICATORS if re.search(pattern, clause, re.I)]
+    country = _country(title, clause)
+    if not country or not indicators:
         return None
-    country = next((code for pattern, code in COUNTRIES if re.search(pattern, title, re.I)), None)
-    indicator = next((prefix for pattern, prefix in INDICATORS if re.search(pattern, title, re.I)), None)
-    if not country or not indicator:
-        return None
+    names = indicators[0]
+    flash = re.search(r"\b(?:flash|prelim(?:inary)?)\b", clause, re.I)
+    if "PMI" in clause.upper():
+        names = names + tuple(n + "_flash" for n in names) if flash else names
     comparison = "mom" if re.search(r"\b(?:m/m|mom|monthly)\b", title, re.I) else (
-        "yoy" if re.search(r"\b(?:y/y|yoy|annual)\b", title, re.I) else None)
-    return DataPrint(country, indicator, Decimal(preceding[-1]), Decimal(match.group(1)), comparison)
+        "yoy" if re.search(r"\b(?:y/y|yoy|annual)\b", title, re.I) else (
+            "qoq" if re.search(r"\b(?:q/q|qoq)\b", title, re.I) else None))
+    expanded = tuple(n + s for n in names for s in SUFFIXES[comparison])
+    return DataPrint(country, expanded, actual, consensus, comparison, reference)
 
 
 def choose_candidate(candidates: list[dict], parsed: DataPrint) -> int | None:
     """Resolve co-released variants by forecast, then collapse exact duplicate versions."""
-    matching_forecast = [row for row in candidates if row["estimate"] == parsed.consensus]
+    target = parsed.consensus if parsed.consensus is not None else parsed.reference
+    matching_forecast = [row for row in candidates if target is not None and row["estimate"] == target]
     if matching_forecast:
         candidates = matching_forecast
     identities = {(row["canonical_name"], row["period"], row["released_at"]) for row in candidates}
@@ -81,15 +173,11 @@ async def process_pending(*, limit: int = 200) -> dict[str, int]:
                     JOIN indicators i ON i.id = r.indicator_id
                     WHERE i.country_code = :country AND r.is_latest
                       AND r.released_at BETWEEN :start AND :end
-                      AND i.canonical_name LIKE :prefix
-                      AND (cast(:comparison AS text) IS NULL OR i.comparison = cast(:comparison AS text)
-                           OR i.canonical_name LIKE :comp_suffix)
+                      AND i.canonical_name = ANY(:names)
                     ORDER BY abs(extract(epoch FROM r.released_at - :published_at)), r.id
                 """), {"country": parsed.country, "start": item["published_at"] - timedelta(minutes=30),
                         "end": item["published_at"] + timedelta(minutes=30),
-                        "published_at": item["published_at"], "prefix": parsed.canonical_prefix + "%",
-                        "comparison": parsed.comparison,
-                        "comp_suffix": "%_" + (parsed.comparison or "") if parsed.comparison else ""})).mappings().all()
+                        "published_at": item["published_at"], "names": list(parsed.names)})).mappings().all()
                 candidate_id = choose_candidate([dict(row) for row in candidates], parsed) if candidates else None
                 if candidate_id is None:
                     status, reason = "unmatched", "no_unique_calendar_match"

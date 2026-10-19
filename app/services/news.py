@@ -122,7 +122,8 @@ async def raw_headlines(*, since: datetime, until: datetime | None = None,
             FROM raw_news
             WHERE published_at >= :since AND published_at <= coalesce(:until, now())
               AND (cast(:sources AS text[]) IS NULL OR source = ANY(cast(:sources AS text[])))
-              AND (NOT :relevant_only OR is_gated_relevant)
+              AND (NOT :relevant_only OR EXISTS (SELECT 1 FROM news_raw_status s
+                   WHERE s.raw_news_id = raw_news.id AND s.status <> 'dropped'))
             ORDER BY published_at DESC LIMIT :limit
         """), {"since": since, "until": until, "sources": list(sources) if sources else None,
                "relevant_only": relevant_only, "limit": limit})).mappings().all()
@@ -174,3 +175,18 @@ async def legacy_alerts_for_currency(currency: str) -> list[dict[str, Any]]:
             ORDER BY detected_at DESC LIMIT 40
         """), {"ccy": currency})
         return [dict(r) for r in rows.mappings().all()]
+
+
+async def daily_counts(day: Any) -> dict[str, dict[str, int]]:
+    """Kept / dropped / merged per source for one UTC publish day."""
+    async with get_sessionmaker()() as session:
+        rows = (await session.execute(text("""
+            SELECT r.source, s.status, count(*) AS n
+            FROM news_raw_status s JOIN raw_news r ON r.id = s.raw_news_id
+            WHERE r.published_at >= cast(:day AS date) AND r.published_at < cast(:day AS date) + 1
+            GROUP BY 1, 2
+        """), {"day": day})).mappings().all()
+    out: dict[str, dict[str, int]] = {}
+    for row in rows:
+        out.setdefault(row["source"], {"kept": 0, "dropped": 0, "merged": 0})[row["status"]] = row["n"]
+    return out

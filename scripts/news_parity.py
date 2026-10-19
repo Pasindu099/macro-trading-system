@@ -26,7 +26,7 @@ async def main() -> None:
     print(f"window {since:%Y-%m-%d %H:%M} -> {until:%Y-%m-%d %H:%M} UTC ({(until - since).total_seconds() / 3600:.1f} h)")
     for source, row in summary.items():
         print(source, row)
-    print("PARITY", all(row["parity"] for row in summary.values()) and bool(summary))
+    print("PARITY", all(row["parity"] for row in summary.values()) if summary else "n/a (no overlapping items)")
 
 
 if __name__ == "__main__":

@@ -63,6 +63,7 @@ from app.services.macro_state_jobs import run_macro_state_chain
 from app.services.event_innovation_jobs import run_incremental_event_innovation
 from app.services.calendar_service import list_events
 from app.services.news_collector import collect_source, enabled_sources
+from app.services.news_tagging import process_pending as process_news
 from app.services.news_monitor import run_news_monitor
 from app.services.rate_fetchers import fetch_all, should_fetch_on_startup
 from app.services.rate_probability import save_snapshot
@@ -371,6 +372,17 @@ class Scheduler:
                 misfire_grace_time=int(source["interval_seconds"]),
             )
         logger.info("  Registered newswire collectors: %s", ", ".join(enabled_sources()))
+        self._scheduler.add_job(
+            process_news,
+            trigger=IntervalTrigger(seconds=60, timezone="UTC"),
+            id="news_tagging",
+            name="Newswire filter, dedupe and tagging",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True,
+            misfire_grace_time=60,
+        )
+        logger.info("  Registered newswire tagging every 60 seconds")
 
         # News monitor = LLM headline scoring into news_alerts; paused unless NEWS_AI_ENABLED.
         if settings.news_ai_enabled:

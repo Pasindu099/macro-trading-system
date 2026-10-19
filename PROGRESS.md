@@ -161,3 +161,8 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 - [x] H. USD/EUR CB view: statement tracker, committee balance, focus mix; Overview guidance notes statement changes. Full suite 683 passed, 7 skipped.
 - [x] Release v2.3-cb-terminal: runbook section (migrations 0032-0036, meeting sync, backfills, scoring, smoke, manual imports); CONTACT_EMAIL passed to app; browser-UA folders excluded from the image. Full suite 683 passed, 7 skipped.
 - [x] Event Log: no default instruments (ticking adds/removes move rows), form markup repaired, average moves per event (all / actual above / below forecast) on /calendar/event-log/averages and in the form.
+
+## Step 13 — FX newswire
+- [x] A. `config/news_sources.yaml` (licensed_for_redistribution false, one show_unlicensed switch); app collector with honest UA + robots.txt per feed. investingLive 45 s (3 feeds), FXStreet news+analysis and ING Think 300 s connected; Kitco disabled pending official URL.
+- [x] B. One path: app collector -> raw_news (permanent); pages/desks/Overview/CB terminal read via `app/services/news.py`; migration 0038 (md5(url), FTS). Pipeline collectors stay on (`NEWS_PIPELINE_COLLECTORS`) until 48 h parity via `scripts/news_parity.py`.
+- [x] C. Rule-based relevance, cross-source dedupe (2 h), tags (currencies, type, speaker, situation, dominance tier, impact, gold drivers) in `news_items` / `news_raw_status` (migration 0039), 60 s job. Full suite 713 passed, 7 skipped, 1 pre-existing Event Log failure. STOP after C.

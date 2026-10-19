@@ -1,0 +1,128 @@
+# Step 13 C: rule-based relevance, type, impact, situation and driver tagging (no LLM).
+# words: case-insensitive whole words or phrases, optional plural "s"/"es" ("tariff" matches "tariffs").
+# acronyms: case-sensitive whole words.
+version: 1
+
+currencies:
+  USD: {acronyms: [USD, US, U.S., FOMC, DXY], words: [dollar, greenback, united states, america, american, federal reserve, treasury, treasuries, wall street, washington]}
+  EUR: {acronyms: [EUR, ECB, EU, EZ], words: [euro, eurozone, euro area, euro zone, germany, german, france, french, italy, italian, spain, spanish, bund, bundesbank, eurostat]}
+  JPY: {acronyms: [JPY, BoJ, BOJ, JGB, JGBs], words: [yen, japan, japanese, tokyo, bank of japan]}
+  GBP: {acronyms: [GBP, BoE, BOE, UK, U.K.], words: [sterling, pound, britain, british, united kingdom, england, bank of england, gilt, gilts, chancellor of the exchequer]}
+  CHF: {acronyms: [CHF, SNB], words: [swiss franc, switzerland, swiss national bank]}
+  CAD: {acronyms: [CAD, BoC, BOC], words: [loonie, canada, canadian, bank of canada]}
+  AUD: {acronyms: [AUD, RBA], words: [aussie, australia, australian, reserve bank of australia]}
+  NZD: {acronyms: [NZD, RBNZ, NZ], words: [kiwi, new zealand]}
+  NOK: {acronyms: [NOK], words: [krone, norway, norwegian, norges bank]}
+  SEK: {acronyms: [SEK], words: [krona, sweden, swedish, riksbank]}
+
+# Country-only mentions are weak: they keep an item unless crypto/single-stock rules drop it.
+country_words: [united states, america, american, germany, german, france, french, italy, italian, spain, spanish,
+                japan, japanese, britain, british, united kingdom, england, switzerland, canada, canadian,
+                australia, australian, new zealand, norway, norwegian, sweden, swedish, eurozone, euro area]
+
+central_banks:
+  words: [federal reserve, central bank, bank of japan, bank of england, bank of canada, reserve bank,
+          swiss national bank, norges bank, riksbank, monetary policy, rate decision, policy rate]
+  acronyms: [Fed, FOMC, ECB, BoJ, BOJ, BoE, BOE, BoC, BOC, RBA, RBNZ, SNB, PBOC, PBoC]
+
+cb_decision:
+  words: [rate decision, holds rates, keeps rates, leaves rates, raises rates, cuts rates, hikes rates,
+          leaves interest rate, keeps interest rate, cuts interest rate, raises interest rate, policy statement,
+          monetary policy statement, leaves policy rate, keeps policy rate, cuts policy rate, raises policy rate,
+          leaves cash rate, cuts cash rate, raises cash rate, leaves bank rate, leaves official cash rate]
+
+
+data_releases:
+  high: [cpi, consumer price, nonfarm, non-farm, payrolls, unemployment rate, gdp, gross domestic product, pce,
+         retail sales, employment change, labour force survey, labor force survey, ism manufacturing, ism services,
+         average hourly earnings, core inflation, hicp]
+  medium: [ppi, producer price, pmi, jobless claims, initial claims, trade balance, current account, industrial production,
+           factory orders, durable goods, housing starts, building permits, existing home sales, new home sales,
+           consumer confidence, consumer sentiment, business confidence, zew, ifo, tankan, jolts, adp, wage,
+           manufacturing sales, wholesale sales, capacity utilization, machinery orders, household spending,
+           retail trade, import prices, export prices, money supply, m3, credit growth, gfk]
+  # "X vs Y expected / prior / exp" marks a data print.
+  print_pattern: '(?i)(\bvs\.?\b.*\b(exp|expected|est|estimate|prior|prev)\b)|(\bexp(ected)?\b\s*[-+]?\d)'
+
+commodities:
+  words: [gold, silver, bullion, precious metal, oil, crude, brent, wti, opec, xau, xag, petroleum]
+  acronyms: [XAU, XAG, WTI, OPEC, OPEC+]
+
+crypto_words: [bitcoin, ethereum, crypto, cryptocurrency, btc, eth, solana, xrp, stablecoin, dogecoin, altcoin, blockchain, memecoin]
+
+# Single-stock: company news without macro content. Index-level moves are "Flows & market".
+equity_single_words: [shares, earnings, eps, revenue, guidance, ipo, quarterly results, q1 results, q2 results,
+                      q3 results, q4 results, stock price, buyback, market cap, ceo, chief executive, analyst rating,
+                      price target, upgrade, downgrade]
+equity_index_words: [s&p, s&p 500, nasdaq, dow, dow jones, ftse, dax, cac, nikkei, topix, stoxx, hang seng,
+                     russell, asx, tsx, equities, stocks close, stock market, us stocks, european stocks]
+
+types:
+  analysis_words: [analysis, outlook, forecast, technical, preview, week ahead, chart, levels to watch, opinion,
+                   strategist, what to expect, scenarios, price prediction, elliott wave, fibonacci, trade idea, view]
+  analysis_source_categories: [analysis]
+  analysis_sources: [ing_think]
+  geopolitics_words: [war, invasion, missile, sanctions, conflict, ceasefire, tariff, geopolitical, geopolitics, military, troops,
+                      airstrike, strike on, attack, drone, nato, hormuz, iran, israel, gaza, ukraine, russia, taiwan,
+                      houthi, red sea, nuclear]
+  politics_fiscal_words: [budget, fiscal, deficit, debt ceiling, election, parliament, government shutdown, shutdown,
+                          prime minister, president, chancellor, finance minister, treasury secretary, white house,
+                          congress, senate, coalition, spending bill, tax cut, tax plan, bond auction, debt issuance]
+
+# Dominance tier per item type; risk/positioning words override for Flows & market.
+dominance_tier:
+  Data: Economic data
+  CB speaker: CB policy divergence
+  Geopolitics: Geopolitical shock
+  Politics & fiscal: Geopolitical shock
+  Commodities: Risk sentiment
+  Flows & market: Risk sentiment
+  Analysis: Technical
+positioning_words: [positioning, cot, speculators, short squeeze, net long, net short, option expiry, options expiry]
+
+# Situation keywords (link only while an episode is active at publish time).
+situations:
+  energy_shock: [oil, brent, wti, crude, energy, hormuz, iran, opec, gasoline, natural gas, lng, refinery]
+  fr_fiscal_stress: [france, french, oat, macron, bayrou, lecornu, french budget, french government]
+  labor_deterioration: [jobs, payrolls, nonfarm, unemployment, jobless, labor market, labour market, layoffs]
+  risk_off: [vix, risk-off, risk off, sell-off, selloff, equities slide, stocks tumble, safe haven, safe-haven]
+  bear_steepening: [yield curve, steepening, long-end, long end, 30-year, 10-year yield, bond selloff, bond sell-off]
+  yields_up_currency_down: [yields, gilt, bond selloff, bond sell-off]
+  correlation_break: [correlation, decoupling, decouple]
+  intervention_risk_jpy: [intervention, intervene, katayama, mimura, kato, rate check, yen weakness, weak yen, "160"]
+
+# Gold / commodity driver tags. Direction words are looked up within 4 words of the driver term.
+drivers:
+  yields: [treasury yields, bond yields, yields, yield]
+  real_yields: [real yields, real yield, real rates, tips yields]
+  dollar: [dollar, greenback, usd, dxy, dollar index]
+  oil: [oil, crude, brent, wti]
+  safe_haven: [safe-haven, safe haven, haven demand, haven buying, haven flows, haven bid]
+  fed_rates: [fed rate, rate cut, rate cuts, rate-cut, rate hike, rate hikes, rate-hike, fed easing, fed policy,
+              rate expectations, rate path, fomc]
+  inflation: [inflation, cpi, pce, price pressures]
+  cb_buying: [central bank buying, central bank purchases, central-bank buying, central bank demand, central bank gold, pboc gold]
+  etf_flows: [etf inflows, etf outflows, etf holdings, etf flows, spdr gold, gld holdings, etf]
+direction_up: [rising, rise, rises, rose, higher, firmer, firm, firms, stronger, strengthen, strengthens, strengthened,
+               climb, climbs, climbing, climbed, jump, jumps, jumped, surge, surges, surging, surged, gain, gains, gained,
+               up, rebound, rebounds, rebounded, elevated, increase, increases, increased, inflows, buoyant, advance,
+               advances, advanced, spike, spikes, spiked, robust, strong, strength, soaring, soar, soars,
+               grow, grows, grew, growing, build, builds, building, mount, mounts, mounting]
+direction_down: [falling, fall, falls, fell, lower, softer, soft, weaker, weak, weaken, weakens, weakened, weakening,
+                 decline, declines, declined, declining, drop, drops, dropped, slide, slides, slid, slip, slips, slipped,
+                 ease, eases, eased, easing, retreat, retreats, retreated, outflows, cooling, cool, cools, dip, dips,
+                 dipped, slump, slumps, slumped, tumble, tumbles, tumbled, sag, sags, sagging, subdued, fading, waning,
+                 fade, fades, faded, wane, wanes, waned, recede, recedes, receded]
+dovish_words: [rate cut, rate cuts, rate-cut, easing, dovish, cut bets, lower rates]
+hawkish_words: [rate hike, rate hikes, rate-hike, tightening, hawkish, hike bets, higher for longer]
+
+dedupe:
+  window_hours: 2
+  min_shared_tokens: 3
+  jaccard: 0.5
+  sequence_ratio: 0.85
+  stopwords: [a, an, the, of, to, in, on, for, and, or, as, at, by, with, from, is, are, was, be, it, its, says, said,
+              say, after, amid, over, into, than, that, this, vs, expected, exp, prior, prev, estimate, est, m, y, q,
+              live, breaking, update, new, more, will, has, have, not, but, up, down]
+
+excluded_sources: [fred]

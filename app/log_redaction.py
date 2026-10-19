@@ -13,8 +13,8 @@ import re
 REDACTED = "***"
 
 _PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
-    # Query parameters: api_token=..., api_key=..., apikey=..., access_token=..., token=..., key=...
-    (re.compile(r"(?i)\b((?:api[_-]?token|api[_-]?key|apikey|access[_-]?token|token|key|secret)=)[^&\s'\"<>]+"),
+    # Query parameters, including Myfxbook login and session values.
+    (re.compile(r"(?i)\b((?:api[_-]?token|api[_-]?key|apikey|access[_-]?token|token|key|secret|email|password|session)=)[^&\s'\"<>]+"),
      rf"\g<1>{REDACTED}"),
     # Header dicts / reprs: 'Authorization': 'Bearer abc', authorization: Basic abc
     (re.compile(r"(?i)(authorization['\"]?\s*[:=]\s*['\"]?)(?:bearer|basic|token)?\s*[^\s'\",}]+"),

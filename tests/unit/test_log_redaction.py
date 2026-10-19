@@ -25,6 +25,13 @@ def test_redacts_query_keys_headers_and_tokens():
     assert "country=US" in out and "series_id=UNRATE" in out  # non-secret params survive
 
 
+def test_redacts_myfxbook_login_and_session_parameters():
+    out = redact("https://www.myfxbook.com/api/login.json?email=person%40example.com&password=private-value "
+                 "https://www.myfxbook.com/api/get-community-outlook.json?session=session-value")
+    assert "person%40example.com" not in out and "private-value" not in out
+    assert "session-value" not in out
+
+
 def test_logged_httpx_error_url_contains_no_key():
     request = httpx.Request("GET", "https://eodhd.com/api/economic-events", params={"api_token": KEY, "country": "US"})
     response = httpx.Response(422, request=request)

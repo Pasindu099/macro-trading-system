@@ -90,7 +90,7 @@ class MyfxbookClient:
         payload = await self._get("login.json", {"email": creds[0], "password": creds[1]})
         self.logins += 1
         if payload.get("error") or not payload.get("session"):
-            raise MyfxbookError(f"login rejected: {str(payload.get('message') or 'no session')[:80]}")
+            raise MyfxbookError("login rejected by provider")
         self._session = str(payload["session"])
         return self._session
 
@@ -103,7 +103,7 @@ class MyfxbookClient:
                 self._session = None
                 continue
             if payload.get("error"):
-                raise MyfxbookError(f"outlook error: {str(payload.get('message'))[:80]}")
+                raise MyfxbookError("outlook rejected by provider")
             return list(payload.get("symbols") or [])
         raise MyfxbookError("outlook: session still invalid after re-login")
 

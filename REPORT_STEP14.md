@@ -32,3 +32,10 @@
 
 ## Tests
 Myfxbook client (login, reuse, expiry, backoff, missing credentials, no credential leak), snapshot rows + daily view (DB), web sources disabled, summary template, schedule with holiday shift, divergence incl. size rule, opposite-sides rule, extremes min-episodes, page states/sections, links. Full suite: **794 passed, 7 skipped**.
+
+## First live Myfxbook snapshot — 20 Oct 2026 (Berlin)
+
+- One manual snapshot at 2026-10-19 22:25 UTC stored **28/28** G10 pairs; missing: none. The job recorded success, 28 inserted, one API call and zero errors.
+- Stored long/short splits matched the public Community Outlook pages: [EUR/USD](https://www.myfxbook.com/community/outlook/EURUSD) 82/18, [USD/JPY](https://www.myfxbook.com/community/outlook/USDJPY) 61/39, [GBP/USD](https://www.myfxbook.com/community/outlook/GBPUSD) 44/56. The pages refresh frequently, so this confirms the sampled values at check time.
+- Recent local app logs: 0 matches for either credential in plain or URL-encoded form. All 3 Myfxbook ingestion records: 0 failed, 0 credential matches in stored error text.
+- Redaction now covers `email`, `password` and `session` URL parameters; provider error messages are not copied into Myfxbook exceptions (`app/log_redaction.py:14`, `app/services/myfxbook.py:86`). Focused tests: 13 passed. Full suite: **795 passed, 7 skipped**.

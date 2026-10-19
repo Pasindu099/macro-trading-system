@@ -10,5 +10,7 @@
 - Added focused tests for lower-is-better direction and move precision. Python syntax check passed. Pytest could not run: neither `pytest` nor the Python module is installed in this environment.
 - One-time VPS setup: `scripts/setup_vps_deploy.ps1` copies a working key to the local `.ssh` directory, saves the remote checkout path there, and tests SSH access. The key remains outside OneDrive.
 - Double-click `Deploy VPS.cmd` after committing source changes. It pushes the committed revision, uploads the deploy helper, and runs `scripts/deploy_vps_remote.sh` on the VPS. The helper checks the revision, backs up Postgres, tags the previous app image, builds, migrates, starts the app, and checks `/health`.
-- Deployment has **not** run: all existing key attempts were rejected by the VPS. A working authorized key and one-time setup are still needed.
-- Deploy-script verification: PowerShell parser passed for both scripts; Git Bash `bash -n` passed for the remote script. Live SSH/deployment verification remains pending.
+- VPS deployment completed on 19 October 2026 at commit `dbb93c4`. The durable local key lives in `.ssh` outside OneDrive; its public key is installed for VPS root and the one-click config points to `/root/macro-trading-system-v2`.
+- VPS backup: `/root/macro-trading-system-v2/backups/macro-dashboard-20261019T121917Z.dump` (53,915,121 bytes). Previous app image tagged `macro-dashboard:pre-one-click`.
+- Post-deploy verification: `/health` returned `{"status":"ok"}`; the app container was healthy; Alembic reported `0037_event_log_move_precision (head)`.
+- Deploy-script verification: PowerShell parser passed for both scripts; Git Bash `bash -n` passed for the remote script; the one-click workflow completed on the VPS.

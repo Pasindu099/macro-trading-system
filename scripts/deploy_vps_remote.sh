@@ -13,7 +13,9 @@ previous=$(git rev-parse HEAD)
 mkdir -p backups
 printf '%s\n' "$previous" > backups/pre-one-click-revision.txt
 REPO_ROOT="$PWD" COMPOSE_FILE=docker-compose.prod.yml bash scripts/backup_db.sh
-docker image tag "$(docker inspect -f '{{.Image}}' macro_dashboard_app)" macro-dashboard:pre-one-click
+app_container=$(dc ps -q app)
+[[ -n "$app_container" ]] || { echo 'Running app container not found' >&2; exit 2; }
+docker image tag "$(docker inspect -f '{{.Image}}' "$app_container")" macro-dashboard:pre-one-click
 
 git switch --detach "$revision"
 export APP_IMAGE_TAG="deploy-${revision:0:12}"

@@ -202,6 +202,23 @@ def _active_episodes(episodes: list[dict[str, Any]], published_at: datetime) -> 
     return [e for e in episodes if e["started_at"] <= day and (e.get("ended_at") is None or e["ended_at"] >= day)]
 
 
+FIRST_CLAUSE = re.compile(r",|;| as | amid | while | but | ahead of ")
+
+
+def _release_like(title: str, is_print: bool, data_tier: str | None, analysis: bool) -> bool:
+    """Data type only for release prints: not fixings/wraps/previews, and the data word leads the headline."""
+    from app.services.news_actuals import NOT_RELEASE
+
+    if NOT_RELEASE.search(title):
+        return False
+    if is_print:
+        return True
+    first = FIRST_CLAUSE.split(title, maxsplit=1)[0]
+    r = rules()
+    return bool(data_tier and not analysis and re.search(r"\d", title)
+                and (r.hit("data_high", first) or r.hit("data_medium", first)))
+
+
 def classify(*, title: str, summary: str | None, source: str, source_category: str | None,
              published_at: datetime, episodes: list[dict[str, Any]]) -> Classification:
     r = rules()
@@ -241,10 +258,12 @@ def classify(*, title: str, summary: str | None, source: str, source_category: s
     analysis = (source in r.raw["types"]["analysis_sources"]
                 or (source_category or "") in r.raw["types"]["analysis_source_categories"]
                 or r.hit("analysis", title))
+    data_candidate = is_print or bool(data_tier and re.search(r"\d", title) and not analysis)
     if cb_decision:
         news_type = "CB speaker"
-    elif is_print or (data_tier and re.search(r"\d", title) and not analysis):
-        news_type = "Data"
+    elif data_candidate:
+        # Non-releases (fixings, wraps, previews, data mentioned as a cause) are Flows & market.
+        news_type = "Data" if _release_like(title, is_print, data_tier, analysis) else "Flows & market"
     elif speakers:
         news_type = "CB speaker"
     elif analysis:
@@ -379,4 +398,30 @@ async def process_pending(*, limit: int = 1000) -> dict[str, int]:
             counts[status["status"]] += 1
     if any(counts.values()):
         logger.info("news tagging: %s", counts)
+    return counts
+
+
+async def retag_data_items(since: datetime | None = None) -> dict[str, int]:
+    """Re-run classification on items typed Data (Step 14 decision 2: non-releases leave the Data type)."""
+    episodes = await _episodes()
+    counts: dict[str, int] = {}
+    async with session_scope() as session:
+        rows = (await session.execute(text("""
+            SELECT n.id, n.title, n.summary, n.source, r.source_category, n.published_at
+            FROM news_items n JOIN raw_news r ON r.id = n.raw_news_id
+            WHERE n.news_type = 'Data' OR n.tagged_at >= cast(:since AS timestamptz)
+        """), {"since": since})).mappings().all()
+        for row in rows:
+            result = classify(title=row["title"], summary=row["summary"], source=row["source"],
+                              source_category=row["source_category"],
+                              published_at=row["published_at"].astimezone(UTC), episodes=episodes)
+            if result.status != "kept":
+                continue
+            await session.execute(text("""
+                UPDATE news_items SET news_type = :news_type, impact = :impact, data_tier = NULL,
+                       dominance_tier = :tier, tag_version = :version, tagged_at = now()
+                WHERE id = :id
+            """), {"id": row["id"], "news_type": result.news_type, "impact": result.impact,
+                   "tier": result.dominance_tier, "version": TAG_VERSION})
+            counts[result.news_type] = counts.get(result.news_type, 0) + 1
     return counts

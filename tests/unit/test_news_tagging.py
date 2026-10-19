@@ -112,3 +112,15 @@ def test_dedupe_title_similarity():
     assert same_story("Gold hits record high as dollar slides", "Gold hits a record high as the dollar slides")
     assert not same_story("US CPI 0.4% vs 0.3% expected", "US PPI 0.4% vs 0.3% expected")
     assert not same_story("Fed's Waller backs cut", "ECB's Lane backs hold")
+
+
+@pytest.mark.parametrize("title,expected", [
+    ("PBOC sets USD/ CNY reference rate for today at 6.7208 (vs. estimate at 6.6897)", "Flows & market"),
+    ("investingLive Americas FX news wrap 13 Oct: Dollar retreats as traders await CPI", "Flows & market"),
+    ("MUFG: US CPI seen at 3.6%, core must surprise to revive an October Fed hike", "Flows & market"),
+    ("Canadian dollar touches an 18-month low as the US dollar jumps on hot CPI", "Flows & market"),
+    ("US September CPI +0.4% vs +0.3% expected", "Data"),
+    ("Tokyo core CPI jumps to 2.7%, fastest in 10 months", "Data"),
+])
+def test_non_releases_are_not_data(title, expected):
+    assert tag(title).news_type == expected

@@ -35,3 +35,9 @@ Fixes on the way: euro area mapped to `EZ` but the calendar uses `EU`; US payrol
 - EODHD `GSPC.INDX` is now the primary source (fetched with the metals); FRED `SP500` is still written first and survives only on dates EODHD does not return or when the EODHD call fails (logged, other symbols continue).
 - Local coverage after refresh: SP500 2000-01-03..2026-10-19, 6,739 rows, all `source=eodhd` (was FRED 2016-10-17.., 2,514 rows). Cost: 3 EODHD calls.
 - Tests: `tests/unit/test_news_assets.py` 4 passed. VPS: picked up by the next deploy + `refresh_snapshot()` (daily job refreshes 7 days only, so run the backfill once there).
+
+## 3. Non-releases retagged (Step 14 decision 2)
+
+- Data type now requires a release print (`app/services/news_tagging.py` `_release_like`): items matching the parser's non-release pattern (PBOC fixings, wraps, calendars, previews, "seen at", "expects", GDPNow) or whose first clause is not about a data release become **Flows & market**.
+- Retag of all stored Data items: 53 moved to Flows & market, 148 stay Data. Last 30 days: Data 63, Flows & market 28 (14 PBOC fixings among them).
+- Parser on real releases (last 30 days, Data only): 58 of 63 parsed (92%), 28 matched, 0 EODHD disagreements. Unparsed: China Q3 GDP "beats estimates" ×2 and the private oil-inventory survey (no number), S&P Global composite PMI (no country), "Sticky core inflation pushes RBA…" (commentary with a data keyword).

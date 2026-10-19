@@ -124,3 +124,14 @@ def test_css_reserves_green_red_for_price():
     for rule in (".pos-long", ".pos-short", ".bar-long", ".bar-short", ".pct-long", ".pct-short"):
         line = next(l for l in css.splitlines() if l.startswith(rule))
         assert "price-" not in line
+
+
+def test_desk_and_overview_link_to_positioning_with_currency():
+    desk_html = TEMPLATES.get_template("desk/panels/positioning.html").render(
+        ctx={"state": "ok", "rows": []}, desk={"currency": "EUR"})
+    assert 'href="/positioning?ccy=EUR#pos-price"' in desk_html
+    row = {"currency": "USD", "enabled": True, "score": None, "bias": None, "partial": False,
+           "cb_regime": None, "gap": "", "cot": 88.0, "cot_label": "crowded long", "thesis": None}
+    overview_html = TEMPLATES.get_template("overview/panel.html").render(
+        panel_id="ranking", ctx={"state": "ok", "rows": [row]})
+    assert 'href="/positioning?ccy=USD#pos-price"' in overview_html

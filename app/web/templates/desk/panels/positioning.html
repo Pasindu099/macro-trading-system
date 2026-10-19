@@ -1,6 +1,6 @@
 {% from "desk/_macros.html" import state %}
 <section id="q6" class="panel" aria-label="Who is positioned">
-  <div class="panel-head"><h2>7 · Who is positioned?</h2><a class="small" href="/positioning">CFTC TFF · Positioning →</a></div>
+  <div class="panel-head"><h2>7 · Who is positioned?</h2><a class="small" href="/positioning?ccy={{ desk.currency }}#pos-price">CFTC TFF · {{ desk.currency }} positioning →</a></div>
   {% if ctx.state == 'ok' %}
     {% for p in ctx.rows %}
       <div class="stack-sm">

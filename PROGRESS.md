@@ -176,3 +176,6 @@ Decisions: `DECISIONS_STEP9.md`. Stop after Part B for user review.
 ## Step 14 — Positioning page
 - [x] A. Myfxbook official API client (session reuse, re-login on expiry, backoff, honest UA, credentials never logged); `retail_sentiment_snapshots` + daily view (migration 0043), 4-hourly job, freshness "Myfxbook retail" 8 h. Credentials not set: job reports "not configured". OANDA/IG (web pages) disabled; Binance (official API, crypto) kept.
 - [x] B. Summary sentence, CFTC release info from `config/cftc_release_schedule.yaml` (holiday shifts), divergence flag, institutions vs retail; `/api/positioning/summary|divergence|retail`. Full suite 772 passed, 7 skipped. STOP after B.
+- [x] Decisions: divergence needs |4W net change| >= 0.5 std (0 flags live); 53 non-release Data items retagged Flows & market (parser 58/63 real releases).
+- [x] C. `/positioning` page: seven lazy panels per mockup, states, 60 s cache, freshness, 390 px; Playwright static render 1440/390 no overflow.
+- [x] D. Desk section 7 and Overview ranking link to `/positioning?ccy=`; runbook section for next deploy (Myfxbook keys, S&P 500 backfill). Full suite 794 passed, 7 skipped. `REPORT_STEP14.md`. Myfxbook credentials still not set.

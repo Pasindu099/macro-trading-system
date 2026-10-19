@@ -302,3 +302,44 @@ export APP_IMAGE_TAG=pre-v2.3
 dc up -d --no-build app news_pipeline telegram_bot
 curl -fsS http://127.0.0.1:8000/health
 ```
+
+## Next release: Step 13 follow-ups + Step 14 positioning
+
+Follow sections 1–4 (backup, checkout, build, migrate). Migration head after this release: `0043_retail_sentiment_snapshots` (adds `retail_sentiment_snapshots` and the `retail_sentiment_daily` view; no data rewritten).
+
+**Before starting the app — Myfxbook credentials.** Add the owner's Myfxbook account to the VPS `.env` (never commit, never paste into logs or tickets):
+
+```bash
+# in /opt/macro-dashboard/.env (or the deploy .env), values without quotes
+MYFXBOOK_EMAIL=
+MYFXBOOK_PASSWORD=
+```
+
+Both compose files pass these to the app. Without them the 4-hourly `myfxbook_retail` job records "skipped" and the retail panels read "Myfxbook credentials not configured". OANDA/IG retail readers stay off (`RETAIL_WEB_SOURCES_ENABLED` unset).
+
+After `dc up -d app`, run these once, in order:
+
+```bash
+# 1. One Myfxbook snapshot: prints pairs stored and the G10 pairs Myfxbook does not cover.
+dc exec -T app python -c 'import asyncio; from app.services.myfxbook import run_snapshot; print(asyncio.run(run_snapshot()))' | tee backups/step14-myfxbook-first.log
+# 2. S&P 500 history from EODHD (GSPC.INDX) back to 2000 + metals refresh: 3 EODHD calls.
+dc exec -T app python -c 'import asyncio; from app.services.news_assets import refresh_snapshot; print(asyncio.run(refresh_snapshot()).get("SP500"))' | tee backups/step14-sp500.log
+# 3. Retag stored non-release "Data" headlines (PBOC fixings, wraps, previews) as Flows & market.
+dc exec -T app python -c 'import asyncio; from app.services.news_tagging import retag_data_items; print(asyncio.run(retag_data_items()))'
+# 4. Re-run the widened headline parser on the last 30 days (clears only unparsed/unmatched audit rows).
+dc exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DELETE FROM newswire_actuals a USING news_items n WHERE n.id = a.news_item_id AND n.published_at >= now() - interval '30 days' AND a.status IN ('unparsed', 'unmatched');"
+dc exec -T app python -c 'import asyncio; from app.services.news_actuals import process_pending; print(asyncio.run(process_pending(limit=2000)))'
+```
+
+Expected: step 1 `{'status': 'ok', 'stored': N, 'missing': [...]}` (or `not_configured` if the keys are absent); step 2 about 6,700 SP500 rows, `source=eodhd`; step 4 no `discrepancy` rows.
+
+Smoke checks in an authenticated browser:
+
+| URL | Expected result |
+|---|---|
+| `/positioning` | HTTP 200; summary sentence, Data as of (Tue) / Released / Next release (CFTC schedule, 15:30 ET); crowding map with 1y/3y/5y switch; flows 1W/4W; squeeze cards; 52-week chart; past-extremes table ("too few episodes" below 5); institutions vs retail (28 pairs). No panel shows "could not load". |
+| `/positioning?ccy=EUR&lookback=5y` | Sections 4–5 show EUR; crowding percentiles change with the lookback. |
+| `/desks/USD` section 7, `/` currency ranking | Positioning links open `/positioning?ccy=…`. |
+| `/api/positioning/summary`, `/divergence`, `/retail` | JSON 200. |
+
+Rollback: restore the pre-release dump as in section 7; 0043 only adds a table and a view.

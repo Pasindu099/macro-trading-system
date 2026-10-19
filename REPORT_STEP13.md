@@ -57,3 +57,11 @@
 - Search, currency, type, impact, active situation, arbitrary past UTC start/end dates and the opt-in unlinked-geopolitics filter query durable `news_items`. The page uses a private 60-second browser cache, responsive layout and shared freshness navigation. Beat/miss uses amber/blue; no intraday reaction is invented (`app/services/news.py:195`, `app/web/static/css/news.css:1`).
 - The USD/EUR desk News panel and Overview "What's moving markets" now use `news.tagged_feed`; source labels and stored context are retained (`app/services/desk_panels.py:695`, `app/services/overview.py:288`).
 - Focused tests: 93 passed. Historical date-range route and combined database filter smoke passed. Full suite: 727 passed, 7 skipped.
+
+## VPS release — 19 October 2026
+
+- Deployed code revision `55c8a53` with the backup-and-health-check script. VPS migration head is `0042_news_episode_assets`; `/health` returned OK. The deploy command surfaced Docker warnings on stderr but reported success, and the app container is healthy.
+- Production catch-up tagged 5,837 kept / 3,760 dropped / 1 merged; total stored statuses at verification: kept 6,382 / dropped 4,241 / merged 2. Geopolitics reprocessing updated 164 existing items, reopened 0.
+- Last-30-day newswire actuals: 5 matched of 6 parsed; 153 unparsed investingLive data headlines. Production historical asset backfill completed with 14 series / 90,207 observations; 185 situation episodes and 2,173 news-episode links are stored.
+- A filtered `/news` request rendered HTTP 200 with filters and sources. The legacy `news_pipeline` container remains running, with `NEWS_PIPELINE_COLLECTORS=true` in the app.
+- First VPS app-collected item was fetched 2026-10-19 16:37 UTC. The 48-hour parity check is scheduled for 2026-10-21 16:45 UTC via `macro-step13-parity.timer`; its report will be `backups/news-parity-48h-2026-10-21.txt` on the VPS. Old collectors stay on pending that result.

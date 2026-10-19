@@ -29,3 +29,9 @@ Fixes on the way: euro area mapped to `EZ` but the calendar uses `EU`; US payrol
 - Zero wrong matches: all 28 matched values equal the stored EODHD actual.
 - Re-run: deleted only the 86 `unparsed`/`unmatched` audit rows for the window and reprocessed; no newswire actual was written (all matched releases already had EODHD actuals).
 - Tests: `tests/unit/test_news_actuals.py` 19 passed. Full suite 741 passed, 7 skipped.
+
+## 2. S&P 500 history (`app/services/news_assets.py`)
+
+- EODHD `GSPC.INDX` is now the primary source (fetched with the metals); FRED `SP500` is still written first and survives only on dates EODHD does not return or when the EODHD call fails (logged, other symbols continue).
+- Local coverage after refresh: SP500 2000-01-03..2026-10-19, 6,739 rows, all `source=eodhd` (was FRED 2016-10-17.., 2,514 rows). Cost: 3 EODHD calls.
+- Tests: `tests/unit/test_news_assets.py` 4 passed. VPS: picked up by the next deploy + `refresh_snapshot()` (daily job refreshes 7 days only, so run the backfill once there).

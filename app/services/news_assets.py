@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 
+import httpx
 from sqlalchemy import text
 
 from app.db.session import session_scope
@@ -18,6 +20,11 @@ FRED_ASSETS = {
 }
 FX_ASSETS = {"USD/DXY": "DXY", "USD/JPY": "USDJPY", "USD/CHF": "USDCHF", "EUR/USD": "EURUSD"}
 METALS = {"XAUUSD.FOREX": "XAUUSD", "XAGUSD.FOREX": "XAGUSD"}
+# EODHD EOD series. GSPC.INDX overwrites FRED SP500 (FRED keeps only ~10 years); FRED rows remain
+# only for dates EODHD does not return, i.e. the fallback when EODHD is unavailable.
+EODHD_EOD = {**METALS, "GSPC.INDX": "SP500"}
+
+logger = logging.getLogger(__name__)
 
 
 def valid_close(row: dict) -> Decimal | None:
@@ -43,7 +50,7 @@ async def link_news_episodes() -> int:
 
 
 async def refresh_snapshot(*, from_date: date | None = None, fetch_metals: bool = True) -> dict[str, int]:
-    """Refresh from durable FX/FRED history; fetch metals from EODHD EOD."""
+    """Refresh from durable FX/FRED history; fetch metals and S&P 500 from EODHD EOD."""
     start = from_date or date(2000, 1, 1)
     async with session_scope() as session:
         await session.execute(text("""
@@ -77,8 +84,12 @@ async def refresh_snapshot(*, from_date: date | None = None, fetch_metals: bool 
         """), {"series": list(FRED_ASSETS), "start": start})
     if fetch_metals:
         async with EODHDClient() as client:
-            for symbol, series in METALS.items():
-                rows = await client.fetch_eod_history(symbol, from_date=start, to_date=date.today())
+            for symbol, series in EODHD_EOD.items():
+                try:
+                    rows = await client.fetch_eod_history(symbol, from_date=start, to_date=date.today())
+                except httpx.HTTPError as exc:
+                    logger.warning("EODHD %s unavailable, keeping existing rows: %s", symbol, exc)
+                    continue
                 values = []
                 for row in rows:
                     close = valid_close(row)

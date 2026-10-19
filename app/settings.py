@@ -142,6 +142,22 @@ class Settings(BaseSettings):
         alias="CONTACT_EMAIL",
         description="Contact address in the identifying User-Agent sent to central-bank websites",
     )
+    myfxbook_email: str | None = Field(
+        default=None,
+        alias="MYFXBOOK_EMAIL",
+        description="Myfxbook account email for the official community-outlook API (never logged)",
+    )
+    myfxbook_password: str | None = Field(
+        default=None,
+        alias="MYFXBOOK_PASSWORD",
+        description="Myfxbook account password (never logged)",
+        repr=False,
+    )
+    retail_web_sources_enabled: bool = Field(
+        default=False,
+        alias="RETAIL_WEB_SOURCES_ENABLED",
+        description="Legacy OANDA/IG retail readers that read web pages (disabled, Step 14 decision)",
+    )
     rateprobability_scraper_enabled: bool = Field(
         default=False,
         alias="RATEPROBABILITY_SCRAPER_ENABLED",

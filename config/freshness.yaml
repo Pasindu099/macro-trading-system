@@ -4,6 +4,7 @@ fred_daily: {max_age: 2, unit: business_days, publication_lag: 1, market: US, la
 calendar: {max_age: 1, unit: days, label: Calendar}
 news: {max_age: 6, unit: hours, label: investingLive news}
 cot: {max_age: 10, unit: days, label: COT}
+myfxbook_retail: {max_age: 8, unit: hours, label: Myfxbook retail}
 macro_state: {max_age: 2, unit: days, label: Macro State}
 dominance: {max_age: 2, unit: business_days, label: Dominance}
 situations: {max_age: 2, unit: days, label: Situations}

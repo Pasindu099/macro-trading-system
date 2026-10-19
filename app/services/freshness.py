@@ -19,6 +19,7 @@ QUERIES = {
     "calendar": "SELECT max(retrieved_at) FROM indicator_releases",
     "news": "SELECT max(published_at) FROM raw_news WHERE source = 'investinglive' AND published_at <= now()",
     "cot": "SELECT max(report_date) FROM cot_positions WHERE report_date <= current_date",
+    "myfxbook_retail": "SELECT max(taken_at) FROM retail_sentiment_snapshots WHERE source = 'myfxbook' AND taken_at <= now()",
     "macro_state": "SELECT max(date) FROM processed.currency_stance WHERE date <= current_date",
     "dominance": "SELECT max(snapshot_date) FROM dominance_snapshots WHERE window_days = 20 AND snapshot_date <= current_date",
     "situations": "SELECT max(observation_date) FROM fx_spot_observations WHERE quality_status = 'valid' AND NOT is_outlier AND observation_date <= current_date",

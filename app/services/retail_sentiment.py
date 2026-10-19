@@ -19,18 +19,17 @@ from typing import Any
 
 import httpx
 
+from app.services import source_identity
+
 log = logging.getLogger(__name__)
 
 CACHE_TTL_SECONDS = int(os.getenv("RETAIL_SENTIMENT_CACHE_TTL", "300"))
 HISTORY_DIR = Path(os.getenv("RETAIL_SENTIMENT_HISTORY_DIR", "data/retail_sentiment_history"))
 TIMEOUT_SECONDS = 12.0
 
+# Step 14: honest identifying UA (was a spoofed browser UA).
 HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0.0.0 Safari/537.36"
-    ),
+    **source_identity.headers(),
     "Accept": "application/json, text/html, */*",
     "Accept-Language": "en-US,en;q=0.9",
 }
@@ -251,7 +250,7 @@ async def myfxbook_login(username: str, password: str) -> str | None:
             response.raise_for_status()
             payload = response.json()
     except Exception as exc:
-        log.warning("Myfxbook login error: %s", exc)
+        log.warning("Myfxbook login error: %s", type(exc).__name__)  # str(exc) would contain the credentials
         return None
 
     if payload.get("error"):
@@ -414,12 +413,37 @@ async def fetch_ig() -> dict[str, dict[str, Any]]:
     return results
 
 
+async def _stored_myfxbook() -> dict[str, dict[str, Any]]:
+    """Latest official-API snapshots (app/services/myfxbook.py) in the legacy shape."""
+    from app.services import myfxbook
+
+    try:
+        rows = await myfxbook.latest()
+    except Exception as exc:
+        log.warning("Stored Myfxbook snapshots unavailable: %s", type(exc).__name__)
+        return {}
+    return {MFB_MAP.get(row["pair"], row["pair"]): {
+        "long": float(row["long_pct"]), "short": float(row["short_pct"]),
+        "positions": (row["long_positions"] or 0) + (row["short_positions"] or 0),
+        "avg_long": row["avg_long_price"], "avg_short": row["avg_short_price"], "source": "myfxbook",
+    } for row in rows}
+
+
+async def _disabled() -> dict[str, dict[str, Any]]:
+    return {}
+
+
 async def fetch_all_sources(myfxbook_session: str | None = None) -> dict[str, Any]:
+    # Step 14: Myfxbook comes from stored official-API snapshots; OANDA and IG read web pages and stay
+    # disabled unless RETAIL_WEB_SOURCES_ENABLED. Binance is an official public API (crypto only).
+    from app.settings import get_settings
+
+    web = get_settings().retail_web_sources_enabled
     mfb, oanda, binance, ig = await asyncio.gather(
-        fetch_myfxbook(myfxbook_session),
-        fetch_oanda(),
+        fetch_myfxbook(myfxbook_session) if myfxbook_session else _stored_myfxbook(),
+        fetch_oanda() if web else _disabled(),
         fetch_binance_crypto(),
-        fetch_ig(),
+        fetch_ig() if web else _disabled(),
     )
     assets = merge_sources(ig, binance, oanda, mfb)
     return {
@@ -491,7 +515,10 @@ async def refresh_retail_sentiment(force: bool = False) -> dict[str, Any]:
             _cache["myfxbook_env_attempted"] = True
             username = os.getenv("MYFXBOOK_USER", "").strip()
             password = os.getenv("MYFXBOOK_PASS", "").strip()
-            if username and password:
+            # Legacy live login only when the new official-API job is not configured (avoids two sessions).
+            from app.services.myfxbook import credentials
+
+            if username and password and credentials() is None:
                 _cache["myfxbook_session"] = await myfxbook_login(username, password)
 
         result = await fetch_all_sources(_cache.get("myfxbook_session"))

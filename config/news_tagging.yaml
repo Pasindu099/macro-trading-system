@@ -65,6 +65,8 @@ types:
   geopolitics_words: [war, invasion, missile, sanctions, conflict, ceasefire, tariff, geopolitical, geopolitics, military, troops,
                       airstrike, strike on, attack, drone, nato, hormuz, iran, israel, gaza, ukraine, russia, taiwan,
                       houthi, red sea, nuclear]
+  tier1_shock_words: [nuclear attack, nuclear strike, invasion begins, full-scale invasion, missile barrage,
+                      emergency sanctions, strait of hormuz closed, hormuz blockade, pandemic declared]
   politics_fiscal_words: [budget, fiscal, deficit, debt ceiling, election, parliament, government shutdown, shutdown,
                           prime minister, president, chancellor, finance minister, treasury secretary, white house,
                           congress, senate, coalition, spending bill, tax cut, tax plan, bond auction, debt issuance]

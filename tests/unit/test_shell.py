@@ -51,6 +51,23 @@ def test_placeholder_sections_and_event_log_navigation(monkeypatch):
     assert "chart.umd.min.js" not in client.get("/").text
 
 
+def test_news_geopolitics_filter_is_opt_in(monkeypatch):
+    monkeypatch.setattr(auth, "get_settings", lambda: SimpleNamespace(auth_enabled=False))
+    calls = []
+
+    async def feed(*, show_no_fx_link=False, limit=100):
+        calls.append(show_no_fx_link)
+        return [{"published_at": __import__("datetime").datetime(2026, 10, 19),
+                 "source": "al_jazeera", "news_type": "Geopolitics", "impact": "Low",
+                 "url": "https://example.com/story", "title": "Ceasefire talks"}] if show_no_fx_link else []
+
+    monkeypatch.setattr(shell.news, "tagged_feed", feed)
+    client = TestClient(app)
+    assert "Ceasefire talks" not in client.get("/news").text
+    shown = client.get("/news?show_geopolitics_without_fx_link=1").text
+    assert "Ceasefire talks" in shown and calls == [False, True]
+
+
 def test_login_template_uses_new_tokens():
     response = TestClient(app).get("/login")
     assert response.status_code == 200

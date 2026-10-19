@@ -190,3 +190,15 @@ async def daily_counts(day: Any) -> dict[str, dict[str, int]]:
     for row in rows:
         out.setdefault(row["source"], {"kept": 0, "dropped": 0, "merged": 0})[row["status"]] = row["n"]
     return out
+
+
+async def tagged_feed(*, show_no_fx_link: bool = False, limit: int = 100) -> list[dict[str, Any]]:
+    """Latest deduplicated headlines; unlinked geopolitics is opt-in."""
+    async with get_sessionmaker()() as session:
+        rows = (await session.execute(text("""
+            SELECT id, published_at, title, url, source, news_type, impact, currencies, no_fx_link
+            FROM news_items
+            WHERE :show_no_fx_link OR NOT no_fx_link
+            ORDER BY published_at DESC, id DESC LIMIT :limit
+        """), {"show_no_fx_link": show_no_fx_link, "limit": limit})).mappings().all()
+    return [dict(row) for row in rows]

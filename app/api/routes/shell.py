@@ -9,7 +9,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.db.session import get_sessionmaker
 from app.services.macro_state import get_macro_state_board
-from app.services import desks, freshness, overview
+from app.services import desks, freshness, overview, news
 
 router = APIRouter(tags=["shell"])
 templates = Jinja2Templates(directory=str(Path("app/web/templates")))
@@ -84,6 +84,13 @@ async def overview_panel(request: Request, panel_id: str) -> HTMLResponse:
 async def section_page(request: Request) -> HTMLResponse:
     title, description = SECTIONS[request.url.path]
     desks = []
+    news_items = []
+    show_no_fx_link = request.query_params.get("show_geopolitics_without_fx_link") == "1"
+    if request.url.path == "/news":
+        try:
+            news_items = await news.tagged_feed(show_no_fx_link=show_no_fx_link)
+        except Exception:
+            logger.exception("News feed unavailable")
     if request.url.path == "/desks":
         try:
             async with get_sessionmaker()() as session:
@@ -94,7 +101,8 @@ async def section_page(request: Request) -> HTMLResponse:
             desks = [{"currency": currency, "macro": None} for currency in ("USD", "EUR")]
     return templates.TemplateResponse(request, "section.html", {
         "page_title": f"{title} | ForexCompass", "section_title": title,
-        "description": description, "desks": desks,
+        "description": description, "desks": desks, "news_items": news_items,
+        "show_no_fx_link": show_no_fx_link,
     })
 
 

@@ -91,6 +91,7 @@ def rules() -> Rules:
         "equity_index": _words_re(raw["equity_index_words"]),
         "analysis": _words_re(raw["types"]["analysis_words"]),
         "geopolitics": _words_re(raw["types"]["geopolitics_words"]),
+        "tier1_shock": _words_re(raw["types"]["tier1_shock_words"]),
         "politics": _words_re(raw["types"]["politics_fiscal_words"]),
         "positioning": _words_re(raw["positioning_words"]),
         "technical": _words_re(list(TECHNICAL_WORDS)),
@@ -193,6 +194,7 @@ class Classification:
     dominance_tier: str | None = None
     is_commodity: bool = False
     drivers: list[dict[str, Any]] = field(default_factory=list)
+    no_fx_link: bool = False
 
 
 def _active_episodes(episodes: list[dict[str, Any]], published_at: datetime) -> list[dict[str, Any]]:
@@ -216,6 +218,8 @@ def classify(*, title: str, summary: str | None, source: str, source_category: s
     data_tier = "high" if r.hit("data_high", title) else "medium" if r.hit("data_medium", title) else None
     is_print = r.hit("print", title)
     commodity = source == "kitco" or r.hit("commodity", title) or r.hit("commodity_acr", title)
+    geopolitical = r.hit("geopolitics", title)
+    tier1_shock = r.hit("tier1_shock", title)
     linked = []
     for episode in _active_episodes(episodes, published_at):
         if not r.hit(f"situation:{episode['situation_id']}", title):
@@ -230,7 +234,7 @@ def classify(*, title: str, summary: str | None, source: str, source_category: s
         return Classification("dropped", "crypto_only")
     if r.hit("equity_single", title) and not r.hit("equity_index", title) and not strong:
         return Classification("dropped", "single_stock")
-    if not strong and not weak:
+    if not strong and not weak and not geopolitical:
         return Classification("dropped", "unrelated")
 
     cb_decision = bool(r.hit("cb_decision", title) and (cb or source in {"federal_reserve", "ecb"}))
@@ -247,7 +251,7 @@ def classify(*, title: str, summary: str | None, source: str, source_category: s
         news_type = "Analysis"
     elif commodity:
         news_type = "Commodities"
-    elif r.hit("geopolitics", title):
+    elif geopolitical:
         news_type = "Geopolitics"
     elif r.hit("politics", title):
         news_type = "Politics & fiscal"
@@ -260,7 +264,7 @@ def classify(*, title: str, summary: str | None, source: str, source_category: s
     high_situation = any(e.get("severity") == "high" for e in linked)
     if news_type == "Analysis":
         impact = "Low"
-    elif cb_decision or voter_on_policy or (news_type == "Data" and data_tier == "high" and currencies) or high_situation:
+    elif cb_decision or voter_on_policy or (news_type == "Data" and data_tier == "high" and currencies) or high_situation or tier1_shock:
         impact = "High"
     elif speakers or news_type in {"Data", "Commodities"} or commodity:
         impact = "Medium"
@@ -273,10 +277,11 @@ def classify(*, title: str, summary: str | None, source: str, source_category: s
     if news_type == "Analysis":
         tier = "Technical" if r.hit("technical", title) else None
 
+    no_fx_link = bool(news_type == "Geopolitics" and not strong_ccy and not linked and not tier1_shock)
     return Classification(
         "kept", None, currencies, news_type, impact, cb_decision, data_tier if news_type == "Data" else None,
         speakers, situation_ids, sorted(e["id"] for e in linked), tier, bool(commodity),
-        detect_drivers(body) if commodity else [],
+        detect_drivers(body) if commodity else [], no_fx_link,
     )
 
 
@@ -315,9 +320,9 @@ CANDIDATES = text("""
 """)
 INSERT_ITEM = text("""
     INSERT INTO news_items (raw_news_id, source, published_at, title, summary, url, currencies, news_type, impact,
-        cb_decision, data_tier, speakers, situation_ids, dominance_tier, is_commodity, drivers, tag_version)
+        cb_decision, data_tier, speakers, situation_ids, dominance_tier, is_commodity, drivers, no_fx_link, tag_version)
     VALUES (:raw_news_id, :source, :published_at, :title, :summary, :url, :currencies, :news_type, :impact,
-        :cb_decision, :data_tier, :speakers, :situation_ids, :dominance_tier, :is_commodity, :drivers, :tag_version)
+        :cb_decision, :data_tier, :speakers, :situation_ids, :dominance_tier, :is_commodity, :drivers, :no_fx_link, :tag_version)
     RETURNING id
 """).bindparams(bindparam("currencies", type_=ARRAY(Text)), bindparam("situation_ids", type_=ARRAY(Text)),
                 bindparam("speakers", type_=JSONB), bindparam("drivers", type_=JSONB))
@@ -366,7 +371,8 @@ async def process_pending(*, limit: int = 1000) -> dict[str, int]:
                         "currencies": result.currencies, "news_type": result.news_type, "impact": result.impact,
                         "cb_decision": result.cb_decision, "data_tier": result.data_tier, "speakers": result.speakers,
                         "situation_ids": result.situation_ids, "dominance_tier": result.dominance_tier,
-                        "is_commodity": result.is_commodity, "drivers": result.drivers, "tag_version": TAG_VERSION,
+                        "is_commodity": result.is_commodity, "drivers": result.drivers,
+                        "no_fx_link": result.no_fx_link, "tag_version": TAG_VERSION,
                     })).scalar_one()
                     status["news_item_id"] = item_id
             await session.execute(INSERT_STATUS, status)

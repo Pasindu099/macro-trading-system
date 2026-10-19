@@ -53,7 +53,7 @@ def test_form_parsing_moves_per_instrument_and_ignores_trade_fields():
     assert data["event_title"] == "CPI surprise" and data["currency"] == "USD"
     assert data["pairs"] == ["EUR/USD", "XAU/USD", "US100"]
     assert data["moves"] == {"EUR/USD": {"1m": Decimal("-12.5"), "1h": Decimal("30.0")},
-                             "XAU/USD": {"5m": Decimal("8.2")}, "US100": {"30m": Decimal("-145.0")}}
+                             "XAU/USD": {"5m": Decimal("8.25")}, "US100": {"30m": Decimal("-145.0")}}
     assert not {"traded", "direction", "pnl_pips", "ai_note_raw"} & set(data)   # trades are not edited
     with pytest.raises(ValueError, match="EUR/USD 5m move must be a number"):
         parse_entry_form(FormData([("pairs", "EUR/USD"), ("move__EUR/USD__5m", "lots")]))

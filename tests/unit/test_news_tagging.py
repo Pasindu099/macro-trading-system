@@ -64,8 +64,11 @@ def test_types_and_impact():
     assert (gold.news_type, gold.impact, gold.is_commodity) == ("Commodities", "Medium", True)
     geo = tag("US and China agree tariff truce", source="al_jazeera", category="all_news")
     assert geo.news_type == "Geopolitics" and geo.currencies == ["USD"]
-    # Geopolitics alone is not on the keep list: no G10 / CB / data / commodity / active situation -> dropped.
-    assert tag("Ukraine and Russia agree ceasefire talks", source="al_jazeera").reason == "unrelated"
+    unlinked = tag("Ukraine and Russia agree ceasefire talks", source="al_jazeera")
+    assert (unlinked.status, unlinked.news_type, unlinked.impact, unlinked.no_fx_link) == (
+        "kept", "Geopolitics", "Low", True)
+    shock = tag("Nuclear attack reported near border", source="al_jazeera", episodes=[])
+    assert (shock.status, shock.impact, shock.no_fx_link) == ("kept", "High", False)
     fiscal = tag("UK budget: chancellor confirms fiscal rules")
     assert fiscal.news_type == "Politics & fiscal" and fiscal.currencies == ["GBP"]
 

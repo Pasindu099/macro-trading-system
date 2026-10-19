@@ -62,6 +62,7 @@ from app.services.meeting_calendar import SUPPORTED_BANKS
 from app.services.macro_state_jobs import run_macro_state_chain
 from app.services.event_innovation_jobs import run_incremental_event_innovation
 from app.services.calendar_service import list_events
+from app.services.news_collector import collect_source, enabled_sources
 from app.services.news_monitor import run_news_monitor
 from app.services.rate_fetchers import fetch_all, should_fetch_on_startup
 from app.services.rate_probability import save_snapshot
@@ -355,6 +356,21 @@ class Scheduler:
             misfire_grace_time=60 * 10,
         )
         logger.info("  Registered CB feed poller every 10 minutes")
+
+        # Step 13 newswire: one interval job per enabled source in config/news_sources.yaml.
+        for source_id, source in enabled_sources().items():
+            self._scheduler.add_job(
+                collect_source,
+                trigger=IntervalTrigger(seconds=int(source["interval_seconds"]), timezone="UTC"),
+                args=[source_id],
+                id=f"news_collect_{source_id}",
+                name=f"Newswire {source['label']}",
+                replace_existing=True,
+                max_instances=1,
+                coalesce=True,
+                misfire_grace_time=int(source["interval_seconds"]),
+            )
+        logger.info("  Registered newswire collectors: %s", ", ".join(enabled_sources()))
 
         # News monitor = LLM headline scoring into news_alerts; paused unless NEWS_AI_ENABLED.
         if settings.news_ai_enabled:

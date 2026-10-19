@@ -1,0 +1,71 @@
+# Step 13 newswire sources (one collection path: app/services/news_collector.py -> raw_news).
+# Official RSS only; honest User-Agent (app/services/source_identity.py); robots.txt checked per feed.
+# interval_seconds: investingLive 45 s (as before); third-party publishers >= 300 s.
+version: 1
+
+# One switch: false hides every source with licensed_for_redistribution: false in the UI.
+show_unlicensed_sources: true
+
+sources:
+  investinglive:
+    label: investingLive
+    enabled: true
+    interval_seconds: 45
+    licensed_for_redistribution: false
+    feeds:
+      - {category: all, url: "https://investinglive.com/feed/"}
+      - {category: news, url: "https://investinglive.com/feed/news/"}
+      - {category: central_bank, url: "https://investinglive.com/feed/centralbank/"}
+
+  kitco:
+    label: Kitco News
+    # Official RSS URL pending from the owner; do not scrape Kitco pages.
+    enabled: false
+    interval_seconds: 300
+    licensed_for_redistribution: false
+    feeds:
+      - {category: news, url: ""}
+
+  fxstreet:
+    label: FXStreet
+    # Checked 2026-10-19: official RSS, robots.txt allows /rss/* for our UA.
+    enabled: true
+    interval_seconds: 300
+    licensed_for_redistribution: false
+    feeds:
+      - {category: news, url: "https://www.fxstreet.com/rss/news"}
+      - {category: analysis, url: "https://www.fxstreet.com/rss/analysis"}
+
+  ing_think:
+    label: ING Think
+    # Checked 2026-10-19: official RSS, robots.txt allows /rss/.
+    enabled: true
+    interval_seconds: 300
+    licensed_for_redistribution: false
+    feeds:
+      - {category: analysis, url: "https://think.ing.com/rss/"}
+
+  # Carried over from news_pipeline so collection runs in one place.
+  federal_reserve:
+    label: Federal Reserve
+    enabled: true
+    interval_seconds: 90
+    licensed_for_redistribution: false
+    feeds:
+      - {category: press_releases, url: "https://www.federalreserve.gov/feeds/press_all.xml"}
+
+  ecb:
+    label: ECB
+    enabled: true
+    interval_seconds: 90
+    licensed_for_redistribution: false
+    feeds:
+      - {category: press_releases, url: "https://www.ecb.europa.eu/rss/press.html"}
+
+  al_jazeera:
+    label: Al Jazeera
+    enabled: true
+    interval_seconds: 300
+    licensed_for_redistribution: false
+    feeds:
+      - {category: all_news, url: "https://www.aljazeera.com/xml/rss/all.xml"}

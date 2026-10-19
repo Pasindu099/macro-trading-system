@@ -9,3 +9,11 @@
 - Event Log test now expects the stored `8.25` move.
 - Focused tests: 45 passed. Full suite with local Postgres/Redis: 715 passed, 7 skipped. An initial isolated-container run lacked DB connectivity; the connected rerun was green.
 - Parity: new app collector began on 19 October; 48 hours of *collector overlap* have not elapsed. Old collectors remain enabled. Run `scripts/news_parity.py --hours 48` after the overlap window.
+
+## Part D — headline actuals
+
+- Migration `0041_newswire_actuals` applied locally after a 42,512,543-byte backup at `backups/news-step13-before-0041.dump`.
+- Explicit investingLive actual-vs-expected headlines match a unique calendar release by country, indicator and ±30 minutes. Co-released variants use forecast values; exact duplicate release rows collapse to the newest ID. Ambiguous matches remain unfilled (`app/services/news_actuals.py:1`).
+- A provisional actual is versioned with `source_status=newswire`; EODHD confirmation creates a new version even when its actual agrees. Disagreements stay in `newswire_actuals` as discrepancies. Scheduled EODHD polls cannot erase a provisional print (`app/ingestion/ingest_service.py:207`). Event Innovation reruns after provisional writes.
+- Last 30 days locally: 90 tagged investingLive data items; 5 parsed explicit values, all 5 matched (100% of parsed, 5.6% of all tagged data items). The remaining 85 need broader headline syntax support; they were left unfilled.
+- Focused tests: 15 passed. Full suite: 720 passed, 7 skipped.

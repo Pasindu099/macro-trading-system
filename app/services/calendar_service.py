@@ -102,7 +102,8 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
                        (1 if row["is_higher_better_for_currency"] else -1) < 0 else "inline")
                       if row["actual"] is not None and row["estimate"] is not None
                       and row["is_higher_better_for_currency"] is not None else None,
-            "source_status": "confirmed" if row["actual"] is not None else "scheduled",
+            "source_status": ("newswire" if raw.get("source_status") == "newswire" else
+                              "confirmed" if row["actual"] is not None else "scheduled"),
             "mapped": row["indicator_id"] is not None,
             "headline": bool((cal_bundle and cal_bundle["headline"] == row["canonical_name"])
                              or (configured_bundle and _BUNDLE_HEADLINES.get(configured_bundle.bundle_key)

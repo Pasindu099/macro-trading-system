@@ -27,7 +27,7 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import Date, cast, select, update
+from sqlalchemy import Date, cast, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import session
@@ -247,8 +247,11 @@ class IngestService:
             session.add(new_row)
             return "inserted"
 
+        if (latest.raw_payload or {}).get("source_status") == "newswire" and canonical.actual is None:
+            return "same"  # a stale scheduled poll must not erase a provisional print
+
         # Compare actual value. If unchanged, skip (no-op).
-        if latest.actual == canonical.actual:
+        if latest.actual == canonical.actual and (latest.raw_payload or {}).get("source_status") != "newswire":
             # Also check estimate — EODHD sometimes updates consensus post-release
             if (
                 latest.estimate == canonical.estimate
@@ -264,6 +267,13 @@ class IngestService:
         )
         new_row = self._make_release_row(indicator.id, canonical)
         session.add(new_row)
+        if (latest.raw_payload or {}).get("source_status") == "newswire" and canonical.actual is not None:
+            await session.flush()
+            await session.execute(text("""
+                UPDATE newswire_actuals SET eodhd_actual = :actual,
+                    status = CASE WHEN actual = :actual THEN 'confirmed' ELSE 'discrepancy' END
+                WHERE newswire_release_id = :release_id
+            """), {"actual": canonical.actual, "release_id": latest.id})
         return "updated"
 
     async def _store_unmapped(

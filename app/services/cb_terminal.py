@@ -5,7 +5,7 @@ States: ok | empty | unavailable | pending | error (error is set by the route on
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import text
@@ -14,7 +14,7 @@ from app.db.session import get_sessionmaker
 from app.processing.cb_officials import THEMES, match_officials, official, officials
 from app.services import (
     cb_projection_loaders, cb_statement_diff, cb_summary, cb_tone, cb_tracking, cb_upcoming, ecb_projections,
-    ecb_tracking, fed_projections, fed_regime,
+    ecb_tracking, fed_projections, fed_regime, news,
 )
 from app.services.cb_manual_imports import manual_sources
 from app.services.cb_summary import bank_config
@@ -134,10 +134,8 @@ async def upcoming(bank: str, **_: Any) -> dict[str, Any]:
 
 async def headlines(bank: str, **_: Any) -> dict[str, Any]:
     context = officials()[bank].get("context", [])
-    async with get_sessionmaker()() as session:
-        rows = (await session.execute(text("""SELECT id, title, url, published_at FROM raw_news
-            WHERE source = 'investinglive' AND published_at >= now() - interval '21 days'
-            ORDER BY published_at DESC LIMIT 400"""))).mappings().all()
+    rows = [{key: row[key] for key in ("id", "title", "url", "published_at")}
+            for row in await news.raw_headlines(since=datetime.now(UTC) - timedelta(days=21), limit=400)]
     picked, seen = [], set()
     for row in rows:
         if row["title"] in seen:

@@ -296,15 +296,8 @@ def _parse_rss_articles(xml_body: str, *, limit: int = 40) -> list[dict[str, Any
 
 
 async def fetch_investinglive_articles(*, limit: int = 40) -> list[dict[str, Any]]:
-    """Fetch and normalize InvestingLive RSS headlines."""
-    try:
-        return await news_service.fetch_investinglive_articles(limit=limit)
-    except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=502, detail="InvestingLive feed returned an error.") from exc
-    except httpx.HTTPError as exc:
-        raise HTTPException(status_code=502, detail="InvestingLive feed is unavailable.") from exc
-    except ElementTree.ParseError as exc:
-        raise HTTPException(status_code=502, detail="InvestingLive feed returned invalid RSS.") from exc
+    """Stored investingLive headlines (Step 13: read path is app/services/news.py)."""
+    return await news_service.latest_articles(limit=limit)
 
 
 def _extract_response_text(payload: dict[str, Any]) -> str:
@@ -1132,30 +1125,9 @@ async def get_news_feed(
     session: AsyncSession = DB_SESSION,
 ) -> dict[str, Any]:
     """Return scored intelligence monitor headlines for the dashboard feed."""
-    result = await session.execute(
-        text(
-            """
-            SELECT
-                headline,
-                source,
-                url,
-                detected_at,
-                relevance_score,
-                severity,
-                affected_currencies,
-                implied_tier,
-                alert_text
-            FROM intelligence.news_alerts
-            WHERE detected_at >= NOW() - INTERVAL '24 hours'
-            ORDER BY detected_at DESC
-            LIMIT :limit
-            """
-        ),
-        {"limit": limit},
-    )
     articles = [
         _news_alert_row_to_article(row)
-        for row in result.mappings().all()
+        for row in await news_service.legacy_alert_feed(limit=limit)
     ]
     return {
         "source": "intelligence_monitor",

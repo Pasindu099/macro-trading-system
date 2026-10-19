@@ -33,7 +33,20 @@ logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler(timezone="UTC")
 
 
+# Step 13: the app collector (app/services/news_collector.py) is the single news path.
+# Set NEWS_PIPELINE_COLLECTORS=false once 48 h side-by-side parity is verified.
+NEWS_PIPELINE_COLLECTORS = os.getenv("NEWS_PIPELINE_COLLECTORS", "true").lower() != "false"
+
+
 def register_jobs() -> None:
+    if NEWS_PIPELINE_COLLECTORS:
+        _register_news_collectors()
+    else:
+        logger.info("News collectors disabled (NEWS_PIPELINE_COLLECTORS=false); app collector is the single path")
+    _register_other_jobs()
+
+
+def _register_news_collectors() -> None:
     scheduler.add_job(
         collect_ap_news,
         "interval",
@@ -74,6 +87,9 @@ def register_jobs() -> None:
         max_instances=1,
         coalesce=True,
     )
+
+
+def _register_other_jobs() -> None:
     scheduler.add_job(
         collect_fred_release_calendar,
         "interval",

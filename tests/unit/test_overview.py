@@ -168,29 +168,16 @@ def test_partial_thesis_and_gap_labels():
 
 def test_news_uses_recent_investinglive_items_only(monkeypatch):
     now = datetime.now(UTC)
-    class Result:
-        def mappings(self):
-            return self
-        def all(self):
-            return [{"headline": title, "source": "investinglive", "url": None,
-                     "seen_at": timestamp, "severity": None} for title, timestamp in (
-                         ("Fed rate outlook", now - timedelta(hours=1)),
-                         ("USD CPI tomorrow", now + timedelta(hours=1)),
-                         ("Fed rate last week", now - timedelta(days=7)),
-                         ("Weekend lifestyle update", now - timedelta(minutes=5)))]
-    class Session:
-        async def __aenter__(self):
-            return self
-        async def __aexit__(self, *_):
-            pass
-        async def execute(self, query, params):
-            sql = str(query)
-            assert "news_alerts" not in sql
-            assert "source = 'investinglive'" in sql
-            assert "published_at <= :now" in sql
-            assert params["since"] < now <= params["now"]
-            return Result()
-    monkeypatch.setattr(overview, "get_sessionmaker", lambda: lambda: Session())
+    async def raw_headlines(*, since, until=None, sources=("investinglive",), relevant_only=False, limit=400):
+        assert sources == ("investinglive",) and relevant_only
+        assert since < now <= until
+        return [{"title": title, "source": "investinglive", "url": None, "published_at": timestamp}
+                for title, timestamp in (
+                    ("Fed rate outlook", now - timedelta(hours=1)),
+                    ("USD CPI tomorrow", now + timedelta(hours=1)),
+                    ("Fed rate last week", now - timedelta(days=7)),
+                    ("Weekend lifestyle update", now - timedelta(minutes=5)))]
+    monkeypatch.setattr(overview.news, "raw_headlines", raw_headlines)
     async def episodes(*, active):
         assert active
         return []

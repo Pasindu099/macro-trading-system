@@ -11,7 +11,7 @@ import yaml
 from sqlalchemy import text
 
 from app.db.session import get_sessionmaker
-from app.services import cb_tracking, ecb_regime, ecb_tracking, fed_regime, positioning, situations, verdict
+from app.services import cb_tracking, ecb_regime, ecb_tracking, fed_regime, news, positioning, situations, verdict
 from app.services.curve_metrics import get_curve
 from app.services.macro_state import get_macro_state_board
 from app.services.meeting_calendar import get_upcoming_meetings
@@ -185,10 +185,8 @@ async def hero() -> dict:
             SELECT shares FROM dominance_snapshots WHERE window_days = 20
               AND snapshot_date <= current_date ORDER BY snapshot_date DESC LIMIT 1
         """))).mappings().first()
-        headlines = (await session.execute(text("""
-            SELECT title FROM raw_news WHERE source = 'investinglive' AND is_gated_relevant
-              AND published_at BETWEEN now() - interval '3 days' AND now()
-        """))).scalars().all()
+    headlines = [row["title"] for row in await news.raw_headlines(
+        since=datetime.now(UTC) - timedelta(days=3), relevant_only=True, limit=5000)]
     keywords = yaml.safe_load(DOMINANCE_CONFIG.read_text(encoding="utf-8"))["geopolitics_keywords"]
     geo_count = sum(any(word in title.lower() for word in keywords) for title in headlines)
     vix_rows = [(day, value) for day, value in await load_series("VIXCLS", today - timedelta(days=10)) if day <= today]
@@ -290,13 +288,9 @@ def _group_situations(episodes: list[dict]) -> list[dict]:
 async def moving_markets() -> dict:
     now = datetime.now(UTC)
     since = now - timedelta(hours=24)
-    async with get_sessionmaker()() as session:
-        raw = (await session.execute(text("""
-            SELECT title AS headline, source, url, published_at AS seen_at, NULL::text AS severity
-            FROM raw_news WHERE published_at >= :since AND published_at <= :now
-              AND source = 'investinglive' AND is_gated_relevant
-            ORDER BY published_at DESC LIMIT 60
-        """), {"since": since, "now": now})).mappings().all()
+    raw = [{"headline": row["title"], "source": row["source"], "url": row["url"],
+            "seen_at": row["published_at"], "severity": None}
+           for row in await news.raw_headlines(since=since, until=now, relevant_only=True, limit=60)]
     episodes = [row for row in await situations.get_situation_episodes(active=True)
                 if row["started_at"] <= now.date()]
     seen = set()

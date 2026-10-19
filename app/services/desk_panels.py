@@ -693,14 +693,9 @@ async def panel_catalysts(desk: dict, params: dict) -> dict[str, Any]:
 
 
 async def news_alerts(currency: str) -> list[dict[str, Any]]:
-    async with get_sessionmaker()() as session:
-        rows = await session.execute(text("""
-            SELECT headline, url, source, detected_at, implied_tier, severity, alert_text
-            FROM intelligence.news_alerts
-            WHERE :ccy = ANY(affected_currencies)
-            ORDER BY detected_at DESC LIMIT 40
-        """), {"ccy": currency})
-        return [dict(r) for r in rows.mappings().all()]
+    from app.services import news
+
+    return await news.legacy_alerts_for_currency(currency)
 
 
 async def panel_news(desk: dict, params: dict) -> dict[str, Any]:

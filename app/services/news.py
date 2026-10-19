@@ -1,14 +1,21 @@
-"""InvestingLive RSS retrieval for the News page and public feed."""
+"""Single read path for news (Step 13): pages, desks and Overview read stored items only here.
+
+Collection: app/services/news_collector.py -> raw_news (permanent). The live RSS helpers below
+are kept for reference/tests; pages no longer call them.
+"""
 
 from __future__ import annotations
 
 import html
 import re
+from datetime import datetime
 from typing import Any
 from xml.etree import ElementTree
 
 import httpx
+from sqlalchemy import text
 
+from app.db.session import get_sessionmaker
 from app.settings import get_settings
 
 INVESTINGLIVE_RSS_URL = "https://investinglive.com/feed/"
@@ -103,3 +110,67 @@ def normalize_news_item(item: dict[str, Any]) -> dict[str, Any] | None:
         "summary": summary_text, "category": category,
         "tags": list(tags)[:3] if isinstance(tags, list) else [],
     }
+
+
+async def raw_headlines(*, since: datetime, until: datetime | None = None,
+                        sources: tuple[str, ...] | None = ("investinglive",),
+                        relevant_only: bool = False, limit: int = 400) -> list[dict[str, Any]]:
+    """Stored headlines (id, title, body, url, source, published_at), newest first."""
+    async with get_sessionmaker()() as session:
+        rows = (await session.execute(text("""
+            SELECT id, title, body, url, source, source_category, published_at
+            FROM raw_news
+            WHERE published_at >= :since AND published_at <= coalesce(:until, now())
+              AND (cast(:sources AS text[]) IS NULL OR source = ANY(cast(:sources AS text[])))
+              AND (NOT :relevant_only OR is_gated_relevant)
+            ORDER BY published_at DESC LIMIT :limit
+        """), {"since": since, "until": until, "sources": list(sources) if sources else None,
+               "relevant_only": relevant_only, "limit": limit})).mappings().all()
+    return [dict(row) for row in rows]
+
+
+async def latest_articles(*, source: str = "investinglive", limit: int = 40) -> list[dict[str, Any]]:
+    """Stored replacement for the live investingLive fetch (same article shape)."""
+    async with get_sessionmaker()() as session:
+        rows = (await session.execute(text("""
+            SELECT DISTINCT ON (md5(url)) title, url, body, published_at, raw_payload
+            FROM raw_news WHERE source = :source AND published_at <= now()
+            ORDER BY md5(url), published_at DESC
+        """), {"source": source})).mappings().all()
+    rows = sorted(rows, key=lambda row: row["published_at"], reverse=True)[:limit]
+    articles = []
+    for row in rows:
+        payload = row["raw_payload"] or {}
+        categories = [t.get("term", "") for t in payload.get("tags", []) if isinstance(t, dict)]
+        description = _strip_html(row["body"] or "")
+        articles.append({
+            "title": row["title"], "link": row["url"], "pubDate": row["published_at"].isoformat(),
+            "description": description,
+            "category": _news_category(categories, row["title"], description),
+            "source": "investinglive.com" if source == "investinglive" else source,
+        })
+    return articles
+
+
+async def legacy_alert_feed(*, limit: int) -> list[dict[str, Any]]:
+    """Scored alerts from the paused LLM monitor (intelligence.news_alerts), last 24 h."""
+    async with get_sessionmaker()() as session:
+        rows = (await session.execute(text("""
+            SELECT headline, source, url, detected_at, relevance_score, severity,
+                   affected_currencies, implied_tier, alert_text
+            FROM intelligence.news_alerts
+            WHERE detected_at >= NOW() - INTERVAL '24 hours'
+            ORDER BY detected_at DESC LIMIT :limit
+        """), {"limit": limit})).mappings().all()
+    return [dict(row) for row in rows]
+
+
+async def legacy_alerts_for_currency(currency: str) -> list[dict[str, Any]]:
+    async with get_sessionmaker()() as session:
+        rows = await session.execute(text("""
+            SELECT headline, url, source, detected_at, implied_tier, severity, alert_text
+            FROM intelligence.news_alerts
+            WHERE :ccy = ANY(affected_currencies)
+            ORDER BY detected_at DESC LIMIT 40
+        """), {"ccy": currency})
+        return [dict(r) for r in rows.mappings().all()]

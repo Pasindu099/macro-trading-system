@@ -13,7 +13,7 @@ from sqlalchemy import text
 from app.db.session import get_sessionmaker
 from app.processing.cb_officials import THEMES, match_officials, official, officials
 from app.services import (
-    cb_projection_loaders, cb_statement_diff, cb_summary, cb_tone, cb_tracking, cb_upcoming, ecb_projections,
+    cb_projection_loaders, cb_statement_diff, cb_summary, cb_tone, cb_tracking, cb_upcoming, cb_votes, ecb_projections,
     ecb_tracking, fed_projections, fed_regime, news,
 )
 from app.services.cb_manual_imports import manual_sources
@@ -65,6 +65,13 @@ async def summary(bank: str, **_: Any) -> dict[str, Any]:
 
 
 async def balance(bank: str, **_: Any) -> dict[str, Any]:
+    if bank in ("BOE", "BOJ"):
+        votes = await cb_votes.committee_balance(bank)
+        tone = await cb_tone.get_committee_balance(bank)
+        if votes["status"] != "available":
+            return {"state": "pending", "message": "Published policy votes pending.", "votes": votes}
+        return {"state": "ok", "votes": votes, "data": tone,
+                "peak": max((w["active"] for w in tone["weeks"]), default=0) or 1}
     data = await cb_tone.get_committee_balance(bank)
     if not any(w["active"] for w in data["weeks"]):
         return {"state": "empty", "message": _manual(bank, "speeches") or "No attributed speeches or comments in 12 weeks."}
@@ -287,7 +294,7 @@ PANELS = {"summary": summary, "balance": balance, "statement": statement, "speak
           "upcoming": upcoming, "headlines": headlines, "library": library, "proj-revisions": proj_revisions,
           "proj-dots": proj_dots, "proj-risk": proj_risk, "proj-tracking": proj_tracking,
           "proj-vintages": proj_vintages, "proj-formats": proj_formats}
-TITLES = {"summary": "Summary", "balance": "Committee balance · 12 weeks", "statement": "Statement language tracker",
+TITLES = {"summary": "Summary", "balance": "Committee balance", "statement": "Statement language tracker",
           "speakers": "Speaker tracker", "profile": "Profile", "upcoming": "Upcoming",
           "headlines": "Latest CB headlines", "library": "Speech library",
           "proj-revisions": "Projections and revisions", "proj-dots": "Dots vs market",

@@ -31,6 +31,13 @@
   </div>
 
 {% elif panel_id == 'balance' %}{% set d = ctx.data %}
+  {% if ctx.votes is defined and ctx.votes.latest %}{% set v = ctx.votes.latest %}
+  <p class="cb-sub">Published policy vote · {{ v.date.strftime('%d %b %Y') }} · <a href="{{ v.source_url }}">source</a></p>
+  <strong>{{ v['for'] }}–{{ v.against }}</strong>
+  {% if v.against %}<span> · dissents {% if v.dissent_bp %}{{ v.dissent_bp|join(', ') }} bp{% else %}direction pending{% endif %}</span>{% endif %}
+  {% if ctx.votes.previous %}<p class="cb-note">Previous {{ ctx.votes.previous['for'] }}–{{ ctx.votes.previous.against }} ({{ ctx.votes.previous.date.strftime('%d %b %Y') }})</p>{% endif %}
+  <p class="cb-note">A vote split measures today's disagreement, not the next decision.</p>
+  {% endif %}
   <p class="cb-sub">{{ tone_label(d) }} · speakers active per week (voters marked in the speaker table)</p>
   <div class="cb-balance" role="img" aria-label="Committee balance over 12 weeks">
     {% for w in d.weeks %}

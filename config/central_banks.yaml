@@ -93,7 +93,7 @@ banks:
     rate_path_type: none
     conditioning: board_median          # median of Policy Board members' forecasts; rate assumption not confirmed
     voting: {body: Policy Board, participants: 9, voters: 9, decision: majority, dissents published}
-    meetings: {per_year: 8, meeting_days: 2, calendar: "https://www.boj.or.jp/en/mopo/mpmsche_minu/index.htm"}
+    meetings: {per_year: 8, meeting_days: 2, calendar: "https://www.boj.or.jp/en/mopo/mpmsche_minu/index.htm", dates_2026: [2026-01-23, 2026-03-19, 2026-04-28, 2026-06-16, 2026-07-31, 2026-09-18, 2026-10-30, 2026-12-18]}
     minutes: {name: Summary of Opinions (minutes after the next meeting), lag_days: 8}
     policy_rate: {name: uncollateralized overnight call rate target}
     blackout:

@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import re
+import io
 from datetime import date, datetime, time, timezone
 
 import httpx
 from bs4 import BeautifulSoup
+from pypdf import PdfReader
 from sqlalchemy import text
 
 from app.db.session import get_sessionmaker, session_scope
 from app.services import source_identity
 from app.services.cb_projection_loaders import decision_dates
+from app.services.cb_summary import bank_config
 
 MONTHS = ("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december")
 BOJ_DIRS = ("state", "mpr")
@@ -60,7 +63,8 @@ def parse_boj(html: str, meeting: date) -> tuple[datetime, list[dict]]:
         raise ValueError("BoJ named policy vote missing")
     yes = _names(match.group(1))
     no = [] if match.group(2).lower() == "none" else _names(match.group(2))
-    if len(yes) + len(no) != 9:
+    absent = re.search(r"\bAbsent:\s*([A-Z]+\s+[A-Z]+)\.", body[match.end():match.end() + 100], re.I)
+    if len(yes) + len(no) != (8 if absent else 9):
         raise ValueError("BoJ vote count invalid")
     preferred = None
     if no:
@@ -102,7 +106,8 @@ def source_urls(bank: str, meeting: date) -> list[str]:
     if bank == "BOE":
         return [f"https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/{meeting.year}/{MONTHS[meeting.month - 1]}-{meeting.year}"]
     if bank == "BOJ":
-        return [f"https://www.boj.or.jp/en/mopo/mpmdeci/{directory}_{meeting.year}/k{meeting:%y%m%d}a.htm" for directory in BOJ_DIRS]
+        return [f"https://www.boj.or.jp/en/mopo/mpmdeci/{directory}_{meeting.year}/k{meeting:%y%m%d}a.{extension}"
+                for extension in ("htm", "pdf") for directory in BOJ_DIRS]
     return [f"https://www.federalreserve.gov/newsevents/pressreleases/monetary{meeting:%Y%m%d}a.htm"]
 
 
@@ -114,7 +119,10 @@ async def load_votes(since: date = date(2020, 1, 1), banks: tuple[str, ...] = ("
                 continue
             summary = {"meetings": 0, "votes": 0, "skipped": 0}
             blocked = False
-            for meeting in await decision_dates(bank):
+            dates = await decision_dates(bank)
+            if bank == "BOJ":
+                dates = sorted(set(dates) | {date.fromisoformat(str(d)) for d in bank_config()["BOJ"]["meetings"]["dates_2026"]})
+            for meeting in dates:
                 if meeting < since or meeting > date.today():
                     continue
                 if blocked:
@@ -128,7 +136,9 @@ async def load_votes(since: date = date(2020, 1, 1), banks: tuple[str, ...] = ("
                             break
                         if response.status_code != 200:
                             continue
-                        stamp, rows = parser(response.text, meeting)
+                        source = " ".join(page.extract_text(extraction_mode="layout") or ""
+                                          for page in PdfReader(io.BytesIO(response.content)).pages) if url.endswith(".pdf") else response.text
+                        stamp, rows = parser(source, meeting)
                         if stamp.date() > date.today():
                             continue
                         async with session_scope() as session:

@@ -45,3 +45,14 @@ def test_missing_named_vote_rejected():
     with pytest.raises(ValueError):
         parse_boj("The Policy Board decided unanimously.", date(2025, 1, 1))
     assert source_urls("BOJ", date(2025, 10, 30))[0].endswith("k251030a.htm")
+
+
+def test_boj_pdf_vote_with_published_absence():
+    extracted = """Voting for the action: HIMINO Ryozo, UCHIDA Shinichi, NAKAGAWA Junko,
+    TAKATA Hajime, TAMURA Naoki, KOEDA Junko, and MASU Kazuyuki.
+    Voting against the action: ASADA Toichiro. Absent: UEDA Kazuo."""
+    _, rows = parse_boj(extracted, date(2026, 6, 16))
+    assert len(rows) == 8
+    assert sum(row["vote"] == "against" for row in rows) == 1
+    assert "UEDA Kazuo" not in {row["member"] for row in rows}
+    assert source_urls("BOJ", date(2026, 6, 16))[-1].endswith("k260616a.pdf")

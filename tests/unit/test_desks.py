@@ -44,7 +44,7 @@ def test_usd_and_eur_desks_enabled():
     assert desks.get_desk("XXX") is None
     nav = desks.desk_nav("USD")
     assert [d["code"] for d in nav] == desks.DESK_ORDER
-    assert [d["code"] for d in nav if d["enabled"]] == ["USD", "EUR"]
+    assert [d["code"] for d in nav if d["enabled"]] == ["USD", "EUR", "GBP", "JPY", "CAD", "CHF"]
 
 
 def test_usd_and_eur_desks_render_and_disabled_desks_404():
@@ -59,7 +59,7 @@ def test_usd_and_eur_desks_render_and_disabled_desks_404():
     assert client.get("/desks/EUR").status_code == 200
     assert 'hx-get="/desks/EUR/panels/country"' in client.get("/desks/EUR").text
     assert client.get("/desks/USD/panels/country").status_code == 404
-    assert client.get("/desks/GBP").status_code == 404
+    assert client.get("/desks/GBP").status_code == 200
     assert client.get("/desks/USD/panels/nope").status_code == 404
 
 
@@ -78,6 +78,27 @@ def test_usd_config_maps_every_requested_indicator():
     names = {s["canonical"] for c in desks.get_desk("USD")["charts"] for s in c["series"]}
     assert {"cpi_headline_yoy", "core_cpi_yoy", "core_pce_price_index_yoy", "unemployment_rate",
             "real_gdp_qoq_annualised", "ism_manufacturing_pmi", "ism_services_pmi", "nfp"} <= names
+
+
+@pytest.mark.parametrize("currency,bank,country,required,pending", [
+    ("GBP", "BOE", "UK", {"cpi_headline_yoy", "core_cpi_yoy", "avg_earnings_excl_bonus",
+                           "unemployment_rate", "gdp_mom", "manufacturing_pmi", "services_pmi"},
+     {"Services CPI", "Private-sector pay"}),
+    ("JPY", "BOJ", "JP", {"tokyo_core_cpi_yoy", "core_cpi_yoy", "cpi_ex_food_energy_yoy",
+                           "tankan_large_manufacturers_index", "gdp_qoq"},
+     {"Wage growth", "Services PPI"}),
+    ("CAD", "BOC", "CA", {"cpi_headline_yoy", "cpi_trimmed_mean_yoy", "cpi_median_yoy",
+                           "employment_change", "unemployment_rate", "gdp_mom"}, set()),
+    ("CHF", "SNB", "CH", {"cpi_headline_yoy", "unemployment_rate", "gdp_qoq"},
+     {"Core CPI", "KOF leading indicator", "Manufacturing PMI"}),
+])
+def test_step16_desk_indicators(currency, bank, country, required, pending):
+    desk = desks.get_desk(currency)
+    assert desk["cb"] == bank and desk["country"] == country
+    configured = {series["canonical"] for chart in desk["charts"] for series in chart["series"]}
+    assert required <= configured
+    assert {series["name"] for chart in desk["charts"] for series in chart["series"]
+            if series["canonical"] is None} == pending
 
 
 def test_panel_cached_for_60_seconds_and_errors_not_cached(monkeypatch):

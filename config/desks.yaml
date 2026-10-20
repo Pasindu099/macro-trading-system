@@ -116,9 +116,135 @@ desks:
         bars: true
         series:
           - {name: GDP QoQ, canonical: gdp_qoq}
-  GBP: {enabled: false}
-  JPY: {enabled: false}
+  GBP:
+    enabled: true
+    name: Sterling Desk
+    currency: GBP
+    country: UK
+    curve_country: UK
+    cb: BOE
+    cb_name: Bank of England
+    cb_short: BoE
+    policy_indicator: bank_rate
+    charts:
+      - id: infl
+        title: Inflation
+        sub: YoY %
+        unit: "%"
+        ref: 2
+        ref_label: BoE target 2%
+        series:
+          - {name: CPI, canonical: cpi_headline_yoy}
+          - {name: Core CPI, canonical: core_cpi_yoy}
+          - {name: Services CPI, canonical: null}
+      - id: pay
+        title: Pay and labour
+        sub: YoY % and unemployment %
+        unit: "%"
+        series:
+          - {name: Regular pay growth, canonical: avg_earnings_excl_bonus}
+          - {name: Private-sector pay, canonical: null}
+          - {name: Unemployment, canonical: unemployment_rate}
+      - id: growth
+        title: Growth and PMIs
+        sub: Monthly GDP % and PMI diffusion indexes
+        unit: ""
+        series:
+          - {name: Monthly GDP, canonical: gdp_mom}
+          - {name: Manufacturing PMI, canonical: manufacturing_pmi}
+          - {name: Services PMI, canonical: services_pmi}
+  JPY:
+    enabled: true
+    name: Yen Desk
+    currency: JPY
+    country: JP
+    curve_country: JP
+    cb: BOJ
+    cb_name: Bank of Japan
+    cb_short: BoJ
+    policy_indicator: boj_interest_rate_decision
+    charts:
+      - id: infl
+        title: Inflation
+        sub: YoY %
+        unit: "%"
+        ref: 2
+        ref_label: BoJ target 2%
+        series:
+          - {name: Tokyo CPI ex fresh food, canonical: tokyo_core_cpi_yoy}
+          - {name: National CPI ex fresh food, canonical: core_cpi_yoy}
+          - {name: National core-core CPI, canonical: cpi_ex_food_energy_yoy}
+      - id: activity
+        title: Pay and activity
+        sub: Wages, Tankan, services PPI and GDP
+        unit: ""
+        series:
+          - {name: Wage growth, canonical: null}
+          - {name: Tankan large manufacturers, canonical: tankan_large_manufacturers_index}
+          - {name: Services PPI, canonical: null}
+          - {name: GDP QoQ, canonical: gdp_qoq}
   AUD: {enabled: false}
   NZD: {enabled: false}
-  CAD: {enabled: false}
-  CHF: {enabled: false}
+  CAD:
+    enabled: true
+    name: Canadian Dollar Desk
+    currency: CAD
+    country: CA
+    curve_country: CA
+    cb: BOC
+    cb_name: Bank of Canada
+    cb_short: BoC
+    policy_indicator: overnight_rate
+    charts:
+      - id: infl
+        title: Inflation
+        sub: YoY %
+        unit: "%"
+        ref: 2
+        ref_label: BoC target 2%
+        series:
+          - {name: CPI, canonical: cpi_headline_yoy}
+          - {name: CPI-trim, canonical: cpi_trimmed_mean_yoy}
+          - {name: CPI-median, canonical: cpi_median_yoy}
+      - id: labour
+        title: Labour Force Survey
+        sub: Monthly employment change and unemployment %
+        unit: ""
+        series:
+          - {name: Employment change, canonical: employment_change}
+          - {name: Unemployment, canonical: unemployment_rate}
+      - id: growth
+        title: Monthly GDP
+        sub: Month on month %
+        unit: "%"
+        series:
+          - {name: GDP MoM, canonical: gdp_mom}
+  CHF:
+    enabled: true
+    name: Swiss Franc Desk
+    currency: CHF
+    country: CH
+    curve_country: CH
+    cb: SNB
+    cb_name: Swiss National Bank
+    cb_short: SNB
+    policy_indicator: policy_rate
+    charts:
+      - id: infl
+        title: Inflation
+        sub: YoY %
+        unit: "%"
+        ref: 2
+        ref_label: SNB price stability
+        series:
+          - {name: CPI, canonical: cpi_headline_yoy}
+          - {name: Core CPI, canonical: null}
+      - id: activity
+        title: Activity
+        sub: KOF, PMI, unemployment and GDP
+        unit: ""
+        series:
+          - {name: KOF leading indicator, canonical: null}
+          - {name: Manufacturing PMI, canonical: null}
+          - {name: Unemployment, canonical: unemployment_rate}
+          - {name: GDP QoQ, canonical: gdp_qoq}

@@ -170,10 +170,12 @@ async def refresh(today: date | None = None) -> dict[str, dict]:
             neutral = _input(float(fallback["value"]), date.fromisoformat(str(fallback["published_at"])),
                              fallback["source_url"], fallback["confidence"], now, basis=fallback["basis"],
                              max_age_days=fallback.get("max_age_days", cfg["freshness_days"]["neutral_rate"]))
-        target_value = banks[bank]["inflation_target"].get("value")
+        target = banks[bank]["inflation_target"]
+        target_value = target.get("value")
         inputs = {"neutral_rate": neutral,
                   "inflation": await _inflation(entry["country"], entry["inflation"], now),
-                  "target": _input(float(target_value), today, "config/central_banks.yaml", "high", now)
+                  "target": _input(float(target_value), today, "config/central_banks.yaml", "high", now,
+                                   band=target.get("range"), basis=target.get("form"))
                   if target_value is not None else None,
                   "output_gap": oecd.get(entry["oecd"]), "market": await _market(bank, today, now)}
         result = evaluate(bank, inputs, cfg, today)

@@ -166,7 +166,7 @@ banks:
     name: Swiss National Bank
     currency: CHF
     mandate: single_price_stability
-    inflation_target: {value: null, range: [0.0, 2.0], measure: CPI, basis: yoy, form: ceiling}
+    inflation_target: {value: 1.0, range: [0.0, 2.0], measure: CPI, basis: yoy, form: band_midpoint}
     projections: {name: conditional inflation forecast, cadence: quarterly, months: [3, 6, 9, 12]}
     rate_path_type: none
     conditioning: constant_rate         # policy rate held constant over the forecast horizon

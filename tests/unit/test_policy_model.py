@@ -1,6 +1,7 @@
 from datetime import date, datetime, timezone
 
 from app.services.policy_model import config, evaluate, implied_rate, parse_oecd
+from app.services.cb_summary import bank_config
 
 
 NOW = datetime(2026, 10, 20, tzinfo=timezone.utc)
@@ -58,3 +59,10 @@ def test_dated_bank_neutral_values_and_older_snb_source():
               "inflation": _entry(1), "target": _entry(1), "output_gap": _entry(0),
               "market": _entry(0.5, NOW.date())}
     assert evaluate("SNB", inputs, cfg, NOW.date())["status"] == "available"
+
+
+def test_snb_target_midpoint_preserves_band():
+    target = bank_config()["SNB"]["inflation_target"]
+    assert target["value"] == 1.0
+    assert target["range"] == [0.0, 2.0]
+    assert target["form"] == "band_midpoint"

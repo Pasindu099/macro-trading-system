@@ -28,6 +28,7 @@ VARIABLE_LABELS = {"real_gdp": "Real GDP", "unemployment_rate": "Unemployment ra
                    "core_pce_inflation": "Core PCE inflation", "federal_funds_rate": "Fed funds rate",
                    "hicp_inflation": "HICP inflation", "core_hicp_inflation": "Core HICP inflation",
                    "cpi_inflation": "CPI inflation", "core_cpi_inflation": "Core CPI inflation",
+                   "core_core_cpi_inflation": "Core-core CPI inflation",
                    "policy_rate": "Policy rate"}
 BANK_READ_NOTES = {
     "BOC": "Internal policy-rate assumption is not published; read against the Bank's own guidance.",
@@ -208,10 +209,13 @@ def _point_rows(data: dict, revisions: list[dict], meta: dict) -> dict[str, Any]
             value = stat.get("point", stat.get("median"))
             rev = by_key.get((var, h), {})
             cells.append({"horizon": h, "median": value, "previous": rev.get("previous", rev.get("previous_median")),
-                          "change": rev.get("change", rev.get("median_change"))})
+                          "change": rev.get("change", rev.get("median_change")),
+                          "range_low": stat.get("range_low"), "range_high": stat.get("range_high")})
         rows.append({"name": VARIABLE_LABELS.get(var, var), "cells": cells})
     return {"state": "ok", "round": current["release_date"], "previous_round": meta.get("previous_round"),
-            "horizons": horizons, "rows": rows, "flag": meta.get("reaction_function"), "stats": "point projection",
+            "horizons": horizons, "rows": rows, "flag": meta.get("reaction_function"),
+            "stats": "board median · range" if data["bank"] == "BOJ" else "point projection",
+            "source_date": current.get("source_date"), "source_url": current.get("source_url"),
             "assumption": current["variables"].get("policy_rate", {}).get("constant", {}).get("assumption")}
 
 
@@ -286,7 +290,7 @@ async def proj_formats(bank: str, **_: Any) -> dict[str, Any]:
         rows.append({"bank": code, "current": code == bank, "publication": cfg["projections"]["name"],
                      "path": cfg["rate_path_type"].replace("_", " "), "conditioning": cfg["conditioning"].replace("_", " "),
                      "read": BANK_READ_NOTES.get(code, READ_NOTES.get(cfg["conditioning"], "")),
-                     "manual": "projections" in manual_sources(code)})
+                     "manual": code != "BOJ" and "projections" in manual_sources(code)})
     return {"state": "ok", "rows": rows}
 
 

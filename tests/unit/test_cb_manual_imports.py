@@ -14,7 +14,7 @@ FIX = Path("tests/fixtures/cb_projections")
 def test_manual_sources_from_config():
     assert set(m.manual_sources("RBNZ")) == {"projections", "statements", "speeches"}
     assert set(m.manual_sources("RBA")) == {"projections", "statements", "speeches"}
-    assert m.manual_sources("BOJ") == {"projections": "Outlook Report forecasts are PDF only"}
+    assert "fallback" in m.manual_sources("BOJ")["projections"].lower()
     assert m.manual_sources("FED") == {} and not m.is_manual("BOE", "statements")
 
 

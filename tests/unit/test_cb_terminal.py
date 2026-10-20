@@ -43,7 +43,7 @@ def test_formats_cover_all_banks_and_flag_manual_imports():
     import asyncio
     ctx = asyncio.run(cb_terminal.proj_formats("BOE"))
     assert [r["bank"] for r in ctx["rows"]] == list(cb_terminal.BANKS)
-    assert {r["bank"] for r in ctx["rows"] if r["manual"]} == {"BOJ", "RBA", "RBNZ"}
+    assert {r["bank"] for r in ctx["rows"] if r["manual"]} == {"RBA", "RBNZ"}
     assert next(r for r in ctx["rows"] if r["bank"] == "BOE")["current"] is True
 
 

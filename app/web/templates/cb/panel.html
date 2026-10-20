@@ -116,11 +116,12 @@
 
 {% elif panel_id == 'proj-revisions' %}
   <p class="cb-sub">Round {{ ctx.round }}{% if ctx.previous_round %} vs {{ ctx.previous_round }} (grey){% endif %} · {{ ctx.stats }}{% if ctx.assumption is defined and ctx.assumption is not none %} · policy rate held at {{ ctx.assumption }}%{% endif %}</p>
+  {% if ctx.source_date %}<p class="cb-note">Source published {{ ctx.source_date }}{% if ctx.source_url %} · <a href="{{ ctx.source_url }}">BoJ Outlook source</a>{% else %} · manual entry{% endif %}</p>{% endif %}
   {% if ctx.flag %}<p class="chip">Reaction function: {{ ctx.flag.flag }}{% if ctx.flag.reason %} — {{ ctx.flag.reason }}{% endif %}</p>{% endif %}
   <div class="table-scroll"><table class="cb-table cb-rev">
     <thead><tr><th>Variable</th>{% for h in ctx.horizons %}<th class="num">{{ h.replace('_', ' ') }}</th>{% endfor %}</tr></thead>
     <tbody>{% for r in ctx.rows %}<tr><td>{{ r.name }}</td>{% for c in r.cells %}
-      <td class="num"><strong>{{ num(c.median, 1) }}</strong>{% if c.ct_low is defined and c.ct_low is not none %}<small>CT {{ num(c.ct_low, 1) }}–{{ num(c.ct_high, 1) }}</small><small>range {{ num(c.range_low, 1) }}–{{ num(c.range_high, 1) }}</small>{% endif %}
+      <td class="num"><strong>{{ num(c.median, 1) }}</strong>{% if c.ct_low is defined and c.ct_low is not none %}<small>CT {{ num(c.ct_low, 1) }}–{{ num(c.ct_high, 1) }}</small><small>range {{ num(c.range_low, 1) }}–{{ num(c.range_high, 1) }}</small>{% elif c.range_low is defined and c.range_low is not none %}<small>range {{ num(c.range_low, 1) }}–{{ num(c.range_high, 1) }}</small>{% endif %}
         {% if c.previous is not none %}<small class="prev">{{ num(c.previous, 1) }}</small>{% endif %}
         {% if c.change %}<small class="{{ 'rev-up' if c.change > 0 else 'rev-down' }}">{{ '%+.1f' % c.change }}</small>{% endif %}</td>{% endfor %}</tr>{% endfor %}</tbody>
   </table></div>

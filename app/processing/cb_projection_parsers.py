@@ -14,7 +14,7 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 
-BOUNDS = {"cpi_inflation": (-5, 25), "core_cpi_inflation": (-5, 25), "real_gdp": (-25, 25),
+BOUNDS = {"cpi_inflation": (-5, 25), "core_cpi_inflation": (-5, 25), "core_core_cpi_inflation": (-5, 25), "real_gdp": (-25, 25),
           "unemployment_rate": (0, 30), "policy_rate": (-2, 20)}
 NUMBER = re.compile(r"^\s*(-?\d+(?:\.\d+)?)")
 QUARTER = re.compile(r"^(20\d\d)\s*Q([1-4])$")
@@ -58,6 +58,61 @@ def _require(bank: str, release: date, rows: list[dict], needed: set[str]) -> li
     if missing:
         raise ValueError(f"Incomplete {bank} round {release}: missing {sorted(missing)}")
     return rows
+
+
+def parse_boj_highlights(html: str, release: date) -> list[dict[str, Any]]:
+    """Read only explicitly labelled forecast values from the BoJ's accessible HTML image text."""
+    soup = BeautifulSoup(html, "html.parser")
+    rows = []
+    for image in soup.find_all("img", alt=True):
+        alt = " ".join(image["alt"].split())
+        if "Forecasts are" not in alt:
+            continue
+        if "real gdp" in alt.lower():
+            variable = "real_gdp"
+        elif "all items less fresh food" in alt and "energy" not in alt:
+            variable = "core_cpi_inflation"
+        elif "all items less fresh food and energy" in alt:
+            variable = "core_core_cpi_inflation"
+        else:
+            continue
+        forecast = alt.split("Forecasts are", 1)[1]
+        for value, year in re.findall(r"([+-]?\d+(?:\.\d+)?)%\s+for fiscal\s+(20\d\d)", forecast):
+            rows.append(_row("BOJ", release, variable, year, float(value), stat="median"))
+    return _require("BOJ", release, rows, {"real_gdp", "core_cpi_inflation"})
+
+
+BOJ_RANGE = re.compile(r"([+-]?\d+(?:\.\d+)?)\s+to\s+([+-]?\d+(?:\.\d+)?)\s*\[\s*([+-]?\d+(?:\.\d+)?)\s*\]")
+
+
+def parse_boj_outlook_pdf(page_text: str, release: date) -> list[dict[str, Any]]:
+    """Parse the policy-board median/range table extracted by the installed pypdf package."""
+    heading = re.search(r"Forecasts of (?:the Majority of )?(?:the )?Policy Board Members", page_text)
+    if not heading:
+        raise ValueError("BoJ forecast table missing from PDF text")
+    table = page_text[heading.start():]
+    table = table[:table.find("Notes:")] if "Notes:" in table else table
+    first = re.search(r"Fiscal\s+20\d\d", table)
+    if not first:
+        raise ValueError("BoJ fiscal-year rows missing")
+    header = " ".join(table[:first.start()].lower().split())
+    has_core_core = "less fresh food and energy" in header
+    variables = ["real_gdp", "core_cpi_inflation"] + (["core_core_cpi_inflation"] if has_core_core else [])
+    rows = []
+    for match in re.finditer(r"Fiscal\s+(20\d\d)(.*?)(?=Forecasts made|Fiscal\s+20\d\d|Notes:|$)", table, re.S):
+        year, content = match.groups()
+        found = BOJ_RANGE.findall(content)
+        if len(found) < len(variables):
+            if int(year) < release.year:
+                continue
+            raise ValueError(f"BoJ {year}: incomplete PDF forecast row")
+        for variable, (low, high, median) in zip(variables, found):
+            lo, hi, mid = float(low), float(high), float(median)
+            if not lo <= mid <= hi:
+                raise ValueError(f"BoJ {year}: median outside published range")
+            for stat, value in (("range_low", lo), ("range_high", hi), ("median", mid)):
+                rows.append(_row("BOJ", release, variable, year, value, stat=stat))
+    return _require("BOJ", release, rows, {"real_gdp", "core_cpi_inflation"})
 
 
 # ── Bank of England: Monetary Policy Report HTML ──────────────────────

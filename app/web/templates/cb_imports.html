@@ -3,7 +3,7 @@
 <main class="page">
   <p class="eyebrow">ForexCompass / Admin</p>
   <h1>Central-bank imports</h1>
-  <p class="intro">Sources that are PDF-only or block automated requests. Upload the official file (parsed by the same loader) or enter projection values; the same validation applies.</p>
+  <p class="intro">Manual fallback for sources that are unavailable or cannot be validated automatically. Upload an official file or enter projection values; the same validation applies.</p>
   {% if message %}<p class="auth-message">{{ message }}</p>{% endif %}
   <div class="settings-grid">
     <section class="settings-panel">
@@ -29,7 +29,7 @@
       <p class="eyebrow">Enter projection values</p>
       <form method="post" action="/admin/cb-imports/values" class="auth-form">
         <label>Bank<select name="bank">{% for b in banks %}<option value="{{ b }}">{{ b }}</option>{% endfor %}</select></label>
-        <label>Round date<input name="round_date" type="date" required></label>
+        <label>Source publication / round date<input name="round_date" type="date" required></label>
         <label>Values — one per line: variable, horizon (YYYY or YYYYQn), value
           <textarea name="values" rows="8" required placeholder="cpi_inflation, 2026, 2.8&#10;real_gdp, 2027, 0.9"></textarea></label>
         <small>Variables: {{ variables | join(", ") }}</small>

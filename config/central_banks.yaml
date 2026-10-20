@@ -101,7 +101,7 @@ banks:
       end: {days_after_decision: 0}       # Outlook meetings: until the report is released
       verified: false                     # only a 2001 BoJ notice found
       source: "https://www.boj.or.jp/en/mopo/mpmsche_minu/m_ref/mpm0104a.htm"
-    manual_import: {projections: "Outlook Report forecasts are PDF only"}
+    manual_import: {projections: "Fallback when Outlook HTML/PDF values cannot be validated"}
     verify: false
 
   RBA:

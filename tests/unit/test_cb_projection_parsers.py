@@ -10,7 +10,7 @@ import pytest
 
 from app.processing import cb_projection_parsers as p
 from app.processing.xlsx_reader import read_sheet, sheet_names
-from app.services.cb_projection_loaders import compute_revisions, rbnz_rounds_from_files
+from app.services.cb_projection_loaders import _boj_date, _boj_sources, compute_revisions, rbnz_rounds_from_files
 
 FIX = Path("tests/fixtures/cb_projections")
 
@@ -76,6 +76,48 @@ def test_snb_cube_forecast_rows_and_constant_rate_assumption():
 def test_bounds_rejected():
     with pytest.raises(ValueError, match="Implausible"):
         p._row("RBNZ", date(2020, 5, 1), "policy_rate", "2020Q4", -2.31)
+
+
+def test_boj_html_medians_pdf_core_core_ranges_and_source_date():
+    html = """<img alt="Real GDP. Forecasts are +0.7% for fiscal 2025, +0.7% for fiscal 2026.">
+    <img alt="CPI all items less fresh food. Forecasts are +2.7% for fiscal 2025, +1.8% for fiscal 2026.">"""
+    rows = p.parse_boj_highlights(html, date(2025, 11, 14))
+    assert {(r["variable"], r["horizon"], r["value"]) for r in rows} >= {
+        ("real_gdp", "2026", 0.7), ("core_cpi_inflation", "2026", 1.8)}
+    pdf = """Forecasts of the Majority of the Policy Board Members
+    Real GDP CPI (all items less fresh food) (Reference) CPI (all items less fresh food and energy)
+    Fiscal 2025 +0.6 to +0.8 [+0.7] +2.7 to +2.9 [+2.7] +2.8 to +3.0 [+2.8]
+    Fiscal 2026 +0.6 to +0.8 [+0.7] +1.6 to +2.0 [+1.8] +1.8 to +2.2 [+2.0]
+    Notes: figures in brackets are medians."""
+    rows = p.parse_boj_outlook_pdf(pdf, date(2025, 10, 30))
+    assert len(rows) == 18
+    assert next(r for r in rows if (r["variable"], r["horizon"], r["stat"]) ==
+                ("core_core_cpi_inflation", "2026", "median"))["value"] == 2.0
+    sources = _boj_sources('<a href="/en/mopo/outlook/gor2510a.pdf">PDF</a>',
+                           '<table><tr><td>Nov. 14, 2025</td><td><a href="ten202510.htm">Highlights</a></td></tr></table>',
+                           date(2025, 1, 1))
+    assert sources[(2025, 10)]["html_date"] == date(2025, 11, 14)
+
+
+def test_boj_pdf_never_mislabels_tax_adjusted_cpi_as_core_core():
+    pdf = """Forecasts of the Majority of the Policy Board Members
+    Real GDP CPI (all items less fresh food) (Reference) Excluding the effects of the consumption tax hike
+    Fiscal 2020 +0.8 to +1.1 [+0.9] +1.0 to +1.1 [+1.0] +0.9 to +1.0 [+0.9]
+    Fiscal 2021 +1.0 to +1.3 [+1.1] +1.2 to +1.6 [+1.4]
+    Notes: bracketed figures are medians."""
+    rows = p.parse_boj_outlook_pdf(pdf, date(2020, 1, 21))
+    assert {r["variable"] for r in rows} == {"real_gdp", "core_cpi_inflation"}
+    with pytest.raises(ValueError, match="median outside"):
+        p.parse_boj_outlook_pdf(pdf.replace("[+0.9]", "[+9.9]", 1), date(2020, 1, 21))
+    assert _boj_date("January 21 , 20 20 Bank of Japan") == date(2020, 1, 21)
+
+
+def test_boj_median_revisions_use_same_horizon():
+    current = {("core_cpi_inflation", "2027", "median"): 2.0}
+    previous = {("core_cpi_inflation", "2027", "median"): 1.8}
+    result = compute_revisions("BOJ", current, previous, date(2026, 8, 17))
+    assert result["revisions"][0]["change"] == 0.2
+    assert result["reaction_function"]["flag"] == "unavailable"
 
 
 def _tiny_xlsx():

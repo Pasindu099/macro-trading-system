@@ -30,3 +30,11 @@
 - NY Fed HLW supplies US, euro-area and Canada neutral rates; OECD Economic Outlook supplies output gaps. The NY Fed workbook has no UK neutral-rate series. BoJ's published neutral range is represented by a dated low-confidence midpoint. Missing inputs remain unavailable.
 - 20 Oct local snapshot: FED 4.3919%, +18.43 bp, medium; BOJ 1.28%, +5.19 bp, low. ECB lacks fresh 3-month pricing; BOE lacks r*; BOC lacks fresh core inflation and a 3-month tenor; RBA lacks r*; RBNZ lacks r*, core inflation and fresh pricing; SNB lacks r*, core inflation, target and a 3-month tenor.
 - API: `/api/cb/{bank}/model-policy`; daily scheduler refreshes snapshots. Focused tests 4 passed; full container suite 815 passed, 7 skipped, 1 dependency warning.
+
+## Part E — currency-specific evidence
+
+- Added `/api/desks/{currency}/specific` for GBP, JPY, CAD and CHF; Part F will place these panels beneath the desk layout (`app/services/currency_specific.py`).
+- GBP: 2/10/30Y gilts and a 30Y-up/GBP-down possible risk-premium flag. JPY: 2/10/30Y JGBs, active MoF intervention situation and 20-change USD/JPY correlations with VIX, S&P 500 and the US–JP 2Y spread.
+- CAD: Brent, USD/CAD, shock classification and US surprise total alongside US/CA 2Y yields. Canadian terms of trade remains explicitly unavailable pending export/import price indices. On 20 Oct oil and equities rose, CA 2Y fell: unclassified.
+- CHF: EUR/CHF, 20-change CHF/VIX correlation and weekly SNB domestic-bank sight deposits. 16 Oct observation: CHF 435,355 million, published 19 Oct, with the required intervention-proxy caveat. [SNB weekly series](https://data.snb.ch/en/topics/snb/cube/snbgwdchfsgw).
+- Focused tests 3 passed; full container suite 818 passed, 7 skipped, 1 dependency warning.

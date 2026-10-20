@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from app.db.session import get_sessionmaker
-from app.services import desk_panels, desks, freshness
+from app.services import currency_specific, desk_panels, desks, freshness
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["desks"])
@@ -30,6 +30,14 @@ def _label(panel: desk_panels.Panel, desk: dict) -> str:
 
 def _panels(desk: dict) -> list[desk_panels.Panel]:
     return [panel for panel in desk_panels.PANELS if panel.id != "country" or desk.get("members")]
+
+
+@router.get("/api/desks/{currency}/specific")
+async def currency_specific_panel(currency: str) -> dict:
+    desk = _desk_or_404(currency)
+    if desk["currency"] not in {"GBP", "JPY", "CAD", "CHF"}:
+        raise HTTPException(status_code=404, detail="No currency-specific panel")
+    return await currency_specific.panel(desk["currency"])
 
 
 @router.get("/desks/{currency}", response_class=HTMLResponse)

@@ -8,12 +8,12 @@ nyfed_vintage: {last_period: 2026Q2, published_at: 2026-08-28, source_url: https
 banks:
   FED: {country: US, oecd: USA, inflation: core_pce_price_index_yoy, neutral: nyfed_us}
   ECB: {country: EU, oecd: EA17, inflation: core_cpi_yoy, neutral: nyfed_ea}
-  BOE: {country: UK, oecd: GBR, inflation: core_cpi_yoy, neutral: null}
+  BOE: {country: UK, oecd: GBR, inflation: core_cpi_yoy, neutral: nyfed_uk_unpublished}
   BOJ: {country: JP, oecd: JPN, inflation: core_cpi_yoy, neutral: boj_range_midpoint}
   BOC: {country: CA, oecd: CAN, inflation: cpi_trimmed_mean_yoy, neutral: nyfed_ca}
-  RBA: {country: AU, oecd: AUS, inflation: rba_trimmed_mean_cpi_yoy, neutral: null}
-  RBNZ: {country: NZ, oecd: NZL, inflation: null, neutral: null}
-  SNB: {country: CH, oecd: CHE, inflation: null, neutral: null}
+  RBA: {country: AU, oecd: AUS, inflation: rba_trimmed_mean_cpi_yoy, neutral: rba_nominal_range_midpoint}
+  RBNZ: {country: NZ, oecd: NZL, inflation: null, neutral: rbnz_nominal_neutral}
+  SNB: {country: CH, oecd: CHE, inflation: null, neutral: snb_real_neutral}
 neutral_fallbacks:
   boj_range_midpoint:
     value: -0.25
@@ -21,3 +21,22 @@ neutral_fallbacks:
     published_at: 2026-02-06
     source_url: https://www.boj.or.jp/en/about/press/koen_2026/ko260206a.htm
     confidence: low
+  rba_nominal_range_midpoint:
+    value: 1.1
+    basis: RBA February 2026 nominal neutral range 3.0-4.2 midpoint 3.6 less 2.5 inflation target midpoint; derived real midpoint
+    published_at: 2026-02-03
+    source_url: https://www.rba.gov.au/publications/smp/2026/feb/pdf/statement-on-monetary-policy-2026-02.pdf
+    confidence: low
+  rbnz_nominal_neutral:
+    value: 1.0
+    basis: RBNZ February 2026 long-term nominal neutral OCR around 3 less 2 inflation target midpoint; derived real value
+    published_at: 2026-02-18
+    source_url: https://www.rbnz.govt.nz/monetary-policy/monetary-policy-statement/monetary-policy-statement-filtered-listing-page/2026/feb-182/monetary-policy-statement-february-2026/web-version
+    confidence: low
+  snb_real_neutral:
+    value: 0.0
+    basis: SNB governing-board speech says r-star around zero; older published estimate, low confidence
+    published_at: 2024-05-30
+    source_url: https://www.snb.ch/public/publication/en/www-snb-ch/publications/communication/speeches/2024/ref_20240530_tjn/publications0_en/ref_20240530_tjn.en.pdf
+    confidence: low
+    max_age_days: 1000

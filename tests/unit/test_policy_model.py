@@ -46,3 +46,15 @@ def test_low_confidence_source_caps_model_confidence():
               "target": _entry(2), "output_gap": _entry(-.5, confidence="medium"),
               "market": _entry(1.25, NOW.date())}
     assert evaluate("BOJ", inputs, config(), NOW.date())["confidence"] == "low"
+
+
+def test_dated_bank_neutral_values_and_older_snb_source():
+    cfg = config()
+    assert cfg["banks"]["BOE"]["neutral"] == "nyfed_uk_unpublished"
+    for bank in ("RBA", "RBNZ", "SNB"):
+        item = cfg["neutral_fallbacks"][cfg["banks"][bank]["neutral"]]
+        assert item["source_url"].startswith("https://") and item["confidence"] == "low"
+    inputs = {"neutral_rate": {**_entry(0, date(2024, 5, 30), "low"), "max_age_days": 1000},
+              "inflation": _entry(1), "target": _entry(1), "output_gap": _entry(0),
+              "market": _entry(0.5, NOW.date())}
+    assert evaluate("SNB", inputs, cfg, NOW.date())["status"] == "available"

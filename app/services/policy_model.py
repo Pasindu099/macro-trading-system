@@ -125,7 +125,7 @@ def evaluate(bank: str, inputs: dict, cfg: dict, today: date) -> dict:
         if entry is None or entry.get("value") is None:
             missing.append(name)
         elif name in limits and (date.fromisoformat(entry["as_of"]) > today or
-                                 (today - date.fromisoformat(entry["as_of"])).days > limits[name]):
+                                 (today - date.fromisoformat(entry["as_of"])).days > entry.get("max_age_days", limits[name])):
             missing.append(f"{name} stale")
     if missing:
         return {"bank": bank, "status": "unavailable", "missing_inputs": missing, "inputs": inputs,
@@ -168,7 +168,8 @@ async def refresh(today: date | None = None) -> dict[str, dict]:
         if entry["neutral"] in cfg.get("neutral_fallbacks", {}):
             fallback = cfg["neutral_fallbacks"][entry["neutral"]]
             neutral = _input(float(fallback["value"]), date.fromisoformat(str(fallback["published_at"])),
-                             fallback["source_url"], fallback["confidence"], now, basis=fallback["basis"])
+                             fallback["source_url"], fallback["confidence"], now, basis=fallback["basis"],
+                             max_age_days=fallback.get("max_age_days", cfg["freshness_days"]["neutral_rate"]))
         target_value = banks[bank]["inflation_target"].get("value")
         inputs = {"neutral_rate": neutral,
                   "inflation": await _inflation(entry["country"], entry["inflation"], now),

@@ -278,7 +278,7 @@ def _group_situations(episodes: list[dict]) -> list[dict]:
     for card in grouped.values():
         card["currencies"] = [currency for currency in CURRENCIES if currency in card["currencies"]]
         card["pairs"] = sorted(card["pairs"])
-        card["href"] = (f"/pairs?pair={card['pairs'][0]}" if card["pairs"] else
+        card["href"] = (f"/pairs/{card['pairs'][0].replace('/', '')}" if card["pairs"] else
                         next((f"/desks/{currency}" for currency in card["currencies"] if currency in ("USD", "EUR")), None))
         del card["_latest"]
         rows.append(card)

@@ -138,7 +138,7 @@ async def event_detail(session: AsyncSession, release_id: int,
         "single_indicator": len(event["components"]) == 1,
         "links": {
             "desk": f"/desks/{currency}" if get_desk(currency) else None,
-            "pairs": [{"pair": pair, "href": "/pairs?pair=" + pair.replace("/", "")}
+            "pairs": [{"pair": pair, "href": "/pairs/" + pair.replace("/", "")}
                       for pair in reactions["pairs"]],
             "data": f"/data?indicator={indicator_id}" if indicator_id else None,
             "event_log": f"/calendar/event-log/new?release_id={headline['release_id']}",

@@ -1,0 +1,23 @@
+# Experimental display-only policy rule. Missing source values remain unavailable.
+model_version: taylor-0.1
+freshness_days: {inflation: 100, output_gap: 365, neutral_rate: 365, market: 7}
+oecd_url: https://sdmx.oecd.org/public/rest/data/OECD.ECO.MAD,DSD_EO@DF_EO,/USA+EA17+GBR+JPN+CAN+CHE+AUS+NZL.GAP.A
+oecd_vintage: {name: Economic Outlook 119, dataflow_version: "1.5", published_at: 2026-06-03, source_url: https://www.oecd.org/en/topics/sub-issues/economic-outlook.html}
+nyfed_url: https://www.newyorkfed.org/medialibrary/media/research/economists/williams/data/Holston_Laubach_Williams_current_estimates.xlsx
+nyfed_vintage: {last_period: 2026Q2, published_at: 2026-08-28, source_url: https://www.newyorkfed.org/research/policy/rstar}
+banks:
+  FED: {country: US, oecd: USA, inflation: core_pce_price_index_yoy, neutral: nyfed_us}
+  ECB: {country: EU, oecd: EA17, inflation: core_cpi_yoy, neutral: nyfed_ea}
+  BOE: {country: UK, oecd: GBR, inflation: core_cpi_yoy, neutral: null}
+  BOJ: {country: JP, oecd: JPN, inflation: core_cpi_yoy, neutral: boj_range_midpoint}
+  BOC: {country: CA, oecd: CAN, inflation: cpi_trimmed_mean_yoy, neutral: nyfed_ca}
+  RBA: {country: AU, oecd: AUS, inflation: rba_trimmed_mean_cpi_yoy, neutral: null}
+  RBNZ: {country: NZ, oecd: NZL, inflation: null, neutral: null}
+  SNB: {country: CH, oecd: CHE, inflation: null, neutral: null}
+neutral_fallbacks:
+  boj_range_midpoint:
+    value: -0.25
+    basis: midpoint of published -1.0 to +0.5 real neutral range; experimental, not a BoJ point estimate
+    published_at: 2026-02-06
+    source_url: https://www.boj.or.jp/en/about/press/koen_2026/ko260206a.htm
+    confidence: low

@@ -5,7 +5,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from app.auth import require_role
-from app.services import cb_projection_loaders, cb_statement_diff, cb_summary, cb_tone, cb_upcoming, cb_tracking, ecb_projections, ecb_regime, ecb_tracking, fed_projections, fed_regime
+from app.services import cb_projection_loaders, cb_statement_diff, cb_summary, cb_tone, cb_upcoming, cb_tracking, ecb_projections, ecb_regime, ecb_tracking, fed_projections, fed_regime, policy_model
 from app.settings import get_settings
 
 SUPPORTED = {"FED", "ECB"}
@@ -17,6 +17,14 @@ def _require_viewer(request: Request) -> None:
 
 
 router = APIRouter(prefix="/api/cb", tags=["central-banks"], dependencies=[Depends(_require_viewer)])
+
+
+@router.get("/{bank}/model-policy")
+async def model_policy(bank: str) -> dict:
+    code = bank.upper()
+    if code not in policy_model.BANKS:
+        raise HTTPException(status_code=404, detail=f"Unknown bank {code}")
+    return await policy_model.latest(code)
 
 
 def _bank(bank: str) -> str:

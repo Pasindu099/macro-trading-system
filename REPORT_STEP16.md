@@ -23,3 +23,10 @@
 - `/admin/cb-imports` retains manual values as fallback, with the entered date labelled as the source publication / round date.
 - Focused parser/manual/terminal tests: 24 passed. Full container suite: 810 passed, 7 skipped, 1 dependency warning.
 - April 2020 correction: focused parser tests 15 passed; full container suite 811 passed, 7 skipped, 1 dependency warning.
+
+## Part D — experimental model-implied policy rate
+
+- Added daily point-in-time snapshots with dated inputs, source URLs, version, 3-month implied market rate, sensitivity range and confidence (`app/services/policy_model.py`, `config/policy_model.yaml`). The model is display-only; it does not affect verdicts or pair sorting.
+- NY Fed HLW supplies US, euro-area and Canada neutral rates; OECD Economic Outlook supplies output gaps. The NY Fed workbook has no UK neutral-rate series. BoJ's published neutral range is represented by a dated low-confidence midpoint. Missing inputs remain unavailable.
+- 20 Oct local snapshot: FED 4.3919%, +18.43 bp, medium; BOJ 1.28%, +5.19 bp, low. ECB lacks fresh 3-month pricing; BOE lacks r*; BOC lacks fresh core inflation and a 3-month tenor; RBA lacks r*; RBNZ lacks r*, core inflation and fresh pricing; SNB lacks r*, core inflation, target and a 3-month tenor.
+- API: `/api/cb/{bank}/model-policy`; daily scheduler refreshes snapshots. Focused tests 4 passed; full container suite 815 passed, 7 skipped, 1 dependency warning.

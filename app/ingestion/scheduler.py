@@ -327,6 +327,15 @@ class Scheduler:
         )
         logger.info("  Registered job:cb_projections daily at 07:30 UTC")
 
+        self._scheduler.add_job(
+            _run_policy_model,
+            trigger=CronTrigger(hour=18, minute=0, timezone="UTC"),
+            id="policy_model_daily",
+            name="Experimental policy model daily snapshot",
+            replace_existing=True,
+            misfire_grace_time=60 * 60,
+        )
+
         # Step 12 Part E: speeches (14-day window) and investingLive comment attribution, daily.
         self._scheduler.add_job(
             _run_cb_speeches,
@@ -824,6 +833,12 @@ async def _run_cb_speeches() -> None:
 async def _run_cb_projections() -> None:
     from app.services.cb_projection_loaders import load_projections
     await load_projections(since=date.today() - timedelta(days=120))
+
+
+async def _run_policy_model() -> None:
+    from app.services.policy_model import refresh
+
+    await refresh()
 
 
 async def _poll_cb_feeds() -> None:

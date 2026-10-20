@@ -153,9 +153,11 @@ async def _boj_rounds(client: httpx.AsyncClient, since: date, summary: dict) -> 
             continue
         merged = {(r["variable"], r["horizon"], r["stat"]): {**r, "release_date": release} for r in pdf_rows}
         merged.update({(r["variable"], r["horizon"], r["stat"]): {**r, "release_date": release} for r in html_rows})
-        variables = {r["variable"] for r in merged.values() if r["stat"] == "median"}
+        ranges_only = not any(r["stat"] == "median" for r in merged.values())
+        required_stat = "range_low" if ranges_only else "median"
+        variables = {r["variable"] for r in merged.values() if r["stat"] == required_stat}
         if not {"real_gdp", "core_cpi_inflation"} <= variables:
-            summary["errors"][key] = "Required GDP/core CPI medians missing"
+            summary["errors"][key] = "Required GDP/core CPI forecasts missing"
             continue
         rounds.append((list(merged.values()), {"bank": "BOJ", "release_date": release,
                        "source_date": release, "source_url": links["html_url"] if html_rows else links["pdf_url"],
@@ -347,7 +349,9 @@ async def get_projections(bank: str, round_: str = "latest") -> dict[str, Any]:
                 source = (await session.execute(text("""SELECT source_date, source_url, pdf_url
                     FROM cb_projection_round_sources WHERE bank=:b AND release_date=:d"""),
                     {"b": bank, "d": day})).mappings().first()
-        out.append({"release_date": day, "variables": variables,
+        coverage = "ranges only" if bank == "BOJ" and not any(
+            "median" in stats for values in variables.values() for stats in values.values()) else "full"
+        out.append({"release_date": day, "variables": variables, "coverage": coverage,
                     **({"source_date": source["source_date"], "source_url": source["source_url"],
                         "pdf_url": source["pdf_url"]} if source else
                        {"source_date": day, "source_url": None, "pdf_url": None} if bank == "BOJ" else {})})

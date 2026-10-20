@@ -112,6 +112,21 @@ def test_boj_pdf_never_mislabels_tax_adjusted_cpi_as_core_core():
     assert _boj_date("January 21 , 20 20 Bank of Japan") == date(2020, 1, 21)
 
 
+def test_boj_april_2020_published_ranges_without_medians():
+    pdf = """Forecasts of the Majority of the Policy Board Members
+    Real GDP CPI (all items less fresh food) (Reference) Excluding tax effects
+    Fiscal 2019 -0.4 to -0.1 +0.6 +0.4
+    Fiscal 2020 -5.0 to -3.0 -0.7 to -0.3 -0.8 to -0.4
+    Fiscal 2021 +2.8 to +3.9 0.0 to +0.7
+    Fiscal 2022 +0.8 to +1.6 +0.4 to +1.0
+    Notes: each Policy Board member made their forecasts as a range."""
+    rows = p.parse_boj_outlook_pdf(pdf, date(2020, 4, 27))
+    assert len(rows) == 12
+    assert {r["stat"] for r in rows} == {"range_low", "range_high"}
+    assert {r["variable"] for r in rows} == {"real_gdp", "core_cpi_inflation"}
+    assert {(r["horizon"], r["value"]) for r in rows if r["variable"] == "real_gdp" and r["stat"] == "range_low"} >= {("2020", -5.0)}
+
+
 def test_boj_median_revisions_use_same_horizon():
     current = {("core_cpi_inflation", "2027", "median"): 2.0}
     previous = {("core_cpi_inflation", "2027", "median"): 1.8}

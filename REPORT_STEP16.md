@@ -19,6 +19,7 @@
 
 - Automated official HTML highlights (GDP/core CPI medians) with installed `pypdf` fallback for core-core CPI, medians and ranges. Only explicitly labelled forecast cells are loaded; the 2020 tax-adjusted CPI reference column is excluded.
 - Added `cb_projection_round_sources` for validated source publication date, HTML URL and optional PDF URL. The source date is also the stored round date, so HTML highlights appear only after their publication; the CB panel shows date and source link.
-- Local 2020 onward backfill: 26 validated rounds, 634 values, 15 rounds led by HTML, latest source 17 Aug 2026. April 2020 is pending: the official PDF provides ranges without medians. Zero validation errors.
+- Local 2020 onward backfill: 27 validated rounds, 646 values, 15 rounds led by HTML, latest source 17 Aug 2026. April 2020 stores 12 published range bounds and is labelled "ranges only"; no median is stored.
 - `/admin/cb-imports` retains manual values as fallback, with the entered date labelled as the source publication / round date.
 - Focused parser/manual/terminal tests: 24 passed. Full container suite: 810 passed, 7 skipped, 1 dependency warning.
+- April 2020 correction: focused parser tests 15 passed; full container suite 811 passed, 7 skipped, 1 dependency warning.

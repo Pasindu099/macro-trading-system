@@ -214,7 +214,8 @@ def _point_rows(data: dict, revisions: list[dict], meta: dict) -> dict[str, Any]
         rows.append({"name": VARIABLE_LABELS.get(var, var), "cells": cells})
     return {"state": "ok", "round": current["release_date"], "previous_round": meta.get("previous_round"),
             "horizons": horizons, "rows": rows, "flag": meta.get("reaction_function"),
-            "stats": "board median · range" if data["bank"] == "BOJ" else "point projection",
+            "stats": ("ranges only" if current.get("coverage") == "ranges only" else "board median · range")
+            if data["bank"] == "BOJ" else "point projection",
             "source_date": current.get("source_date"), "source_url": current.get("source_url"),
             "assumption": current["variables"].get("policy_rate", {}).get("constant", {}).get("assumption")}
 

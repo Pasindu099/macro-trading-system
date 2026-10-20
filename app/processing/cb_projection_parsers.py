@@ -83,6 +83,7 @@ def parse_boj_highlights(html: str, release: date) -> list[dict[str, Any]]:
 
 
 BOJ_RANGE = re.compile(r"([+-]?\d+(?:\.\d+)?)\s+to\s+([+-]?\d+(?:\.\d+)?)\s*\[\s*([+-]?\d+(?:\.\d+)?)\s*\]")
+BOJ_PLAIN_RANGE = re.compile(r"([+-]?\d+(?:\.\d+)?)\s+to\s+([+-]?\d+(?:\.\d+)?)")
 
 
 def parse_boj_outlook_pdf(page_text: str, release: date) -> list[dict[str, Any]]:
@@ -98,9 +99,23 @@ def parse_boj_outlook_pdf(page_text: str, release: date) -> list[dict[str, Any]]
     header = " ".join(table[:first.start()].lower().split())
     has_core_core = "less fresh food and energy" in header
     variables = ["real_gdp", "core_cpi_inflation"] + (["core_core_cpi_inflation"] if has_core_core else [])
+    ranges_only = not BOJ_RANGE.search(table) and "made their forecasts as a range" in page_text
     rows = []
     for match in re.finditer(r"Fiscal\s+(20\d\d)(.*?)(?=Forecasts made|Fiscal\s+20\d\d|Notes:|$)", table, re.S):
         year, content = match.groups()
+        if ranges_only:
+            found_ranges = BOJ_PLAIN_RANGE.findall(content)
+            if len(found_ranges) < 2:
+                if int(year) < release.year:
+                    continue
+                raise ValueError(f"BoJ {year}: incomplete range-only forecast row")
+            for variable, (low, high) in zip(variables, found_ranges):
+                lo, hi = float(low), float(high)
+                if lo > hi:
+                    raise ValueError(f"BoJ {year}: inverted forecast range")
+                rows.extend((_row("BOJ", release, variable, year, lo, stat="range_low"),
+                             _row("BOJ", release, variable, year, hi, stat="range_high")))
+            continue
         found = BOJ_RANGE.findall(content)
         if len(found) < len(variables):
             if int(year) < release.year:

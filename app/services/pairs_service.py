@@ -11,7 +11,7 @@ from app.db.session import get_sessionmaker
 from app.services import freshness, overview, positioning, rates_drivers, situations, yield_spreads
 
 CONFIG_PATH = Path("config/pairs.yaml")
-DEFAULT_SORT = "overall_score"  # Change to policy_gap once at least ten pairs have numeric gaps.
+DEFAULT_SORT = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8"))["default_sort"]
 
 
 def pair_config() -> list[dict]:

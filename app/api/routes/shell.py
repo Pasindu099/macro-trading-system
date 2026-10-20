@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.db.session import get_sessionmaker
 from app.services.macro_state import get_macro_state_board
-from app.services import desks, freshness, overview, news
+from app.services import desks, freshness, overview, news, pairs_service
 
 router = APIRouter(tags=["shell"])
 templates = Jinja2Templates(directory=str(Path("app/web/templates")))
@@ -77,8 +77,55 @@ async def overview_panel(request: Request, panel_id: str) -> HTMLResponse:
     return HTMLResponse(html)
 
 
-@router.get("/desks", response_class=HTMLResponse)
 @router.get("/pairs", response_class=HTMLResponse)
+async def pairs_page(request: Request) -> HTMLResponse:
+    params = request.query_params
+    group = params.get("group", "all")
+    if group not in {"all", "usd", "jpy", "neighbours", "commodity"}:
+        raise HTTPException(400, "Unknown pair group")
+    sort = params.get("sort", pairs_service.DEFAULT_SORT)
+    if sort not in {"pair", "last", "week_change", "month_change", "overall_score", "policy_gap",
+                    "data_implied", "priced", "spread_2y", "spread_change_20d", "driver",
+                    "cot_implied", "retail_long_pct", "warnings"}:
+        raise HTTPException(400, "Unknown sort column")
+    descending = params.get("direction", "desc") != "asc"
+    search = params.get("q", "")[:40]
+    data = desks.cache_get(("pairs", "screener"))
+    if data is None:
+        try:
+            data = await pairs_service.screener()
+            desks.cache_set(("pairs", "screener"), data, ttl=60)
+        except Exception:
+            logger.exception("Pair screener failed")
+            data = {"rows": [], "freshness": {}, "state": "error"}
+    rows = pairs_service.sort_rows(pairs_service.filter_rows(data["rows"], group, search), sort, descending)
+    all_rows = data["rows"]
+    gaps = [row for row in all_rows if row["policy_gap"] is not None]
+    diverging = [row for row in all_rows if row["driver"] == "diverging"]
+    cot = [row for row in all_rows if row["cot_implied"] is not None]
+    tiles = {"gap": max(gaps, key=lambda row: abs(row["policy_gap"])) if gaps else None,
+             "driver": max(diverging, key=lambda row: row["driver_as_of"] or date.min) if diverging else None,
+             "cot": max(cot, key=lambda row: abs(row["cot_implied"])) if cot else None}
+    return templates.TemplateResponse(request, "pairs/page.html", {
+        "page_title": "Pairs | ForexCompass", "rows": rows, "tiles": tiles,
+        "group": group, "sort": sort, "descending": descending, "search": search,
+        "state": data.get("state", "ok"), "freshness": data["freshness"],
+    })
+
+
+@router.get("/pairs/{pair_code}", response_class=HTMLResponse)
+async def pair_pending_page(request: Request, pair_code: str) -> HTMLResponse:
+    match = next((item for item in pairs_service.pair_config()
+                  if item["pair"].replace("/", "") == pair_code.upper()), None)
+    if match is None:
+        raise HTTPException(404, "Unknown pair")
+    return templates.TemplateResponse(request, "pairs/pending.html", {
+        "page_title": f"{match['pair']} | ForexCompass", "pair": match["pair"],
+        "desks": [currency for currency in (match["base"], match["quote"]) if currency in ("USD", "EUR")],
+    })
+
+
+@router.get("/desks", response_class=HTMLResponse)
 @router.get("/data", response_class=HTMLResponse)
 async def section_page(request: Request) -> HTMLResponse:
     title, description = SECTIONS[request.url.path]

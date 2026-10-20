@@ -1,5 +1,6 @@
 # Market convention: higher-priority currency is the base.
 currency_priority: [EUR, GBP, AUD, NZD, USD, CAD, CHF, JPY]
+default_sort: overall_score
 currency_benchmarks:
   EUR: DE
   GBP: UK

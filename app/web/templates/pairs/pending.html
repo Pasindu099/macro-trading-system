@@ -1,0 +1,2 @@
+{% extends "base.html" %}
+{% block body %}<main class="page"><p class="eyebrow">ForexCompass / Pairs / {{ pair }}</p><h1>{{ pair }}</h1><section class="placeholder"><p>Pair page pending</p><a href="/pairs">← Back to pair screener</a>{% for currency in desks %}<p><a href="/desks/{{ currency }}">{{ currency }} desk →</a></p>{% endfor %}</section></main>{% endblock %}

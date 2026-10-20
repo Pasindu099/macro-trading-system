@@ -10,5 +10,7 @@
 - All columns sort with pending numeric values last. Overall score sorts by magnitude; clicking a header reverses its direction.
 - Retail without a Myfxbook snapshot and other missing data display `pending` rather than fabricated values.
 - `python -m compileall` on the changed Python modules and Jinja template compilation passed.
-- Focused tests were added in `tests/unit/test_pairs_service.py`, `test_pairs_page.py`, and `test_pair_links.py` but could not run: the Docker engine pipe is unavailable, and host Python has no pytest. The required in-container full suite is therefore unverified.
+- In-container focused tests: 34 passed after updating two old Step 15 route/link expectations. Full suite: 799 passed, 7 skipped, 1 dependency deprecation warning; no remaining failures.
+- Live local app smoke: 28 configured pairs in market order in the service; 28 rows rendered; overall-score, pair, and last sort orders matched the service; a pair link opened its pending page.
+- Myfxbook long percentages are explicitly labelled “% by volume”; long and short position counts are shown separately.
 - The worktree still contains unrelated pre-existing changes and untracked files; they were not staged.

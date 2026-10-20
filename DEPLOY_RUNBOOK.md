@@ -303,9 +303,13 @@ dc up -d --no-build app news_pipeline telegram_bot
 curl -fsS http://127.0.0.1:8000/health
 ```
 
-## Next release: Step 13 follow-ups + Step 14 positioning
+## v2.5-pairs release (Steps 13–15; no separate v2.4 tag)
 
-Follow sections 1–4 (backup, checkout, build, migrate). Migration head after this release: `0043_retail_sentiment_snapshots` (adds `retail_sentiment_snapshots` and the `retail_sentiment_daily` view; no data rewritten).
+Follow sections 1–4 (backup, checkout, build, migrate), checking out `v2.5-pairs` instead of the earlier release tag. Migration head after this release: `0043_retail_sentiment_snapshots` (adds `retail_sentiment_snapshots` and the `retail_sentiment_daily` view; no data rewritten). Step 15 adds no migration.
+
+```bash
+git switch --detach v2.5-pairs
+```
 
 **Before starting the app — Myfxbook credentials.** Add the owner's Myfxbook account to the VPS `.env` (never commit, never paste into logs or tickets):
 
@@ -341,5 +345,9 @@ Smoke checks in an authenticated browser:
 | `/positioning?ccy=EUR&lookback=5y` | Sections 4–5 show EUR; crowding percentiles change with the lookback. |
 | `/desks/USD` section 7, `/` currency ranking | Positioning links open `/positioning?ccy=…`. |
 | `/api/positioning/summary`, `/divergence`, `/retail` | JSON 200. |
+| `/pairs` | HTTP 200; 28 unique rows. Default sort is descending absolute overall score; each pair uses market convention from `config/pairs.yaml`. Search and all five group filters work. Sort Last, Policy gap, and COT in both directions; pending cells stay last. |
+| `/pairs` retail column | Myfxbook long percentage says “% by volume”; long and short position counts appear separately. Missing snapshots say “pending”. |
+| `/pairs` matrix view | Overview pair map and lenses load; pair links open `/pairs/{BASEQUOTE}`. |
+| `/pairs/EURUSD` | HTTP 200; “Pair page pending”, back link to screener, and USD/EUR desk links. Calendar event panel and Overview pair links open the same route. |
 
 Rollback: restore the pre-release dump as in section 7; 0043 only adds a table and a view.

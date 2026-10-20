@@ -22,7 +22,7 @@ def test_placeholder_sections_and_event_log_navigation(monkeypatch):
                           "labor_score": 0.0, "growth_score": -0.3, "date": "2026-10-04"}]}
     monkeypatch.setattr(shell, "get_macro_state_board", board)
     client = TestClient(app)
-    for path, title in (("/desks", "Desks"), ("/pairs", "Pairs"),
+    for path, title in (("/desks", "Desks"),
                         ("/calendar", "Calendar"),
                         ("/news", "News"), ("/data", "Data")):
         response = client.get(path)

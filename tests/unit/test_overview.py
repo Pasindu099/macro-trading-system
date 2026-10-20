@@ -264,7 +264,7 @@ def test_situations_group_currencies_and_pairs():
     assert "0.6pp" in labor["evidence"]
     pair = next(card for card in cards if card["name"] == "Correlation break")
     assert pair["pairs"] == ["EUR/USD", "USD/JPY"]
-    assert pair["href"] == "/pairs?pair=EUR/USD"
+    assert pair["href"] == "/pairs/EURUSD"
 
 
 def test_labor_watch_is_separate_and_stale_evidence_is_visible():

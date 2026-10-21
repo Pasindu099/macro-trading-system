@@ -2,7 +2,7 @@
 <section id="q5" class="panel wide gap" aria-label="Where is the gap">
   {% if desk.cb in ('BOE', 'BOJ', 'BOC', 'SNB') %}
   <div class="panel-head"><h2>6 · Model–Market gap (experimental)</h2></div>
-  {% if ctx.model.gap_bp is not none %}<p>{{ '%+.1f'|format(ctx.model.gap_bp) }} bp · {{ ctx.model.confidence }} confidence</p>{% else %}<p>Unavailable: {{ ctx.model.missing_inputs|join(', ') }}</p>{% endif %}
+  {% if ctx.model.gap_bp is not none %}<p>{{ '%+.1f'|format(ctx.model.gap_bp) }} bp · {{ ctx.model.confidence }} confidence{% if ctx.model.inputs and ctx.model.inputs.market and ctx.model.inputs.market.label is defined %} · against {{ ctx.model.inputs.market.label }}{% endif %}</p>{% else %}<p>Unavailable: {{ ctx.model.missing_inputs|join(', ') }}</p>{% endif %}
   {% else %}
   {% if desk.cb == 'ECB' %}
   <div class="panel-head"><h2>6 · ECB projection gap</h2></div>

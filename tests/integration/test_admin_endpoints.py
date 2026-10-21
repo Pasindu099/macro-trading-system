@@ -15,6 +15,7 @@ unit tests.
 from __future__ import annotations
 
 import os
+import signal
 
 import pytest
 from fastapi.testclient import TestClient
@@ -49,7 +50,18 @@ def test_health_endpoint(client: TestClient) -> None:
 
 
 def test_desks_page_renders_html(client: TestClient) -> None:
-    r = client.get("/desks")
+    def timeout(_signum, _frame):
+        raise TimeoutError("/desks test exceeded 45 seconds")
+
+    if hasattr(signal, "setitimer"):
+        previous = signal.signal(signal.SIGALRM, timeout)
+        signal.setitimer(signal.ITIMER_REAL, 45)
+    try:
+        r = client.get("/desks")
+    finally:
+        if hasattr(signal, "setitimer"):
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            signal.signal(signal.SIGALRM, previous)
     assert r.status_code == 200
     assert "text/html" in r.headers["content-type"]
     assert "<h1>Desks</h1>" in r.text

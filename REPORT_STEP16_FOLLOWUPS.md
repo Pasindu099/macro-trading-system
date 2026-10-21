@@ -17,3 +17,16 @@ Desk-page stall audit: isolated test and the original first-three sequence both 
 ## 2. BoE neutral estimate
 
 Before: BOE model unavailable because the current NY Fed HLW workbook does not publish UK r*. After: **3.5573% model rate; −60.13 bp vs 4.1586% 3-month pricing; low confidence** on 21 Oct 2026. Config uses **0.875% real neutral**, derived from the midpoint of Alan Taylor's 2.75–3.00% nominal range less the 2% target, [BoE speech published 29 Sep 2026](https://www.bankofengland.co.uk/speech/2026/september/searching-for-signposts-speech-by-alan-taylor). This is one MPC member's estimate, not a committee estimate. See `config/policy_model.yaml`. Focused model tests: 8 passed; full container suite 827 passed, 7 skipped.
+
+## 3. CB Tracking for BoE, BoJ, BoC and SNB
+
+| Bank | Projection | Index latest | Required pace | 3m annualised | Status |
+| --- | ---: | --- | ---: | ---: | --- |
+| BoE | CPI 2026 Q4 3.2% | Sep 2026 | +0.72% | +4.57% | Running hot |
+| BoJ | Core CPI FY2026 2.5% | Aug 2026 | +5.39% | +1.58% | Running cold |
+| BoC | CPI 2026 Q4 2.4% | Sep 2026 | −2.80% | +2.39% | Running hot |
+| SNB | CPI 2026 Q4 1.2% | Sep 2026 | −1.14% | +0.79% | Running hot |
+
+Sources: [ONS all-items CPI index](https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23/data), [Statistics Canada all-items CPI vector 41690973](https://www.statcan.gc.ca/en/developers/wds), [SNB national CPI index](https://data.snb.ch/en/topics/uvo/cube/plkopr), [Japan Statistics Bureau/e-Stat all-items less fresh food](https://www.e-stat.go.jp/en/stat-search/file-download?fileKind=1&statInfId=000040482943). All four indexes are unadjusted, so latest 3m annualised rates can contain seasonality. BoJ's source ID is release-specific and must be updated when the next monthly file is published; its stale guard then reports unavailable instead of carrying an old tilt.
+
+The daily 17:15 UTC CPI refresh persists levels with a 15-second HTTP timeout per source (`app/services/cb_price_series.py`, `app/ingestion/scheduler.py`). Missing/stale levels show unavailable; no placeholder pace. The central-bank terminal and four desks show the tracking; verdicts use its tilt while retaining the official vote/decision bias separately (`app/services/cb_other_tracking.py`, `app/services/verdict.py`). Focused unit tests: 4 passed; affected desk/verdict/terminal/overview tests: 74 passed; real-DB route smoke: 4 passed. Full suite: **835 passed, 7 skipped**.

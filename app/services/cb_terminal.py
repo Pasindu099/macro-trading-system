@@ -14,7 +14,7 @@ from app.db.session import get_sessionmaker
 from app.processing.cb_officials import THEMES, match_officials, official, officials
 from app.services import (
     cb_projection_loaders, cb_statement_diff, cb_summary, cb_tone, cb_tracking, cb_upcoming, cb_votes, ecb_projections,
-    ecb_tracking, fed_projections, fed_regime, news,
+    ecb_tracking, fed_projections, fed_regime, news, cb_other_tracking,
 )
 from app.services.cb_manual_imports import manual_sources
 from app.services.cb_summary import bank_config
@@ -257,6 +257,10 @@ async def proj_tracking(bank: str, **_: Any) -> dict[str, Any]:
         data = await cb_tracking.get_tracking()
     elif bank == "ECB":
         data = await ecb_tracking.get_tracking()
+        if data.get("status") == "unavailable":
+            return {"state": "unavailable", "message": data["reason"]}
+    elif bank in cb_other_tracking.BANKS:
+        data = await cb_other_tracking.get_tracking(bank)
         if data.get("status") == "unavailable":
             return {"state": "unavailable", "message": data["reason"]}
     else:

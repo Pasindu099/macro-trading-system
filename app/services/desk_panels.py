@@ -446,10 +446,10 @@ async def panel_fedview(desk: dict, params: dict) -> dict[str, Any]:
     from app.services import cb_statement_diff, cb_tone
     bank = desk["cb"]
     if bank in ("BOE", "BOJ", "BOC", "SNB"):
-        from app.services import cb_projection_loaders, cb_votes, policy_model
+        from app.services import cb_other_tracking, cb_projection_loaders, cb_votes, policy_model
         return {"state": "ok", "projections": await cb_projection_loaders.get_projections(bank),
                 "votes": await cb_votes.committee_balance(bank) if bank in ("BOE", "BOJ") else None,
-                "model": await policy_model.latest(bank)}
+                "model": await policy_model.latest(bank), "tracking": await cb_other_tracking.get_tracking(bank)}
     diff = await cb_statement_diff.get_statement_diff(bank)
     statements = await cb_statement_diff.latest_statements(bank, limit=5)
     balance = await cb_tone.get_committee_balance(bank)

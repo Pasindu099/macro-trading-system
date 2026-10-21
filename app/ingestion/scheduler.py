@@ -328,6 +328,15 @@ class Scheduler:
         logger.info("  Registered job:cb_projections daily at 07:30 UTC")
 
         self._scheduler.add_job(
+            _run_cb_price_series,
+            trigger=CronTrigger(hour=17, minute=15, timezone="UTC"),
+            id="cb_price_series_daily",
+            name="Official CPI indexes for CB tracking",
+            replace_existing=True,
+            misfire_grace_time=60 * 60,
+        )
+
+        self._scheduler.add_job(
             _run_policy_model,
             trigger=CronTrigger(hour=18, minute=0, timezone="UTC"),
             id="policy_model_daily",
@@ -833,6 +842,11 @@ async def _run_cb_speeches() -> None:
 async def _run_cb_projections() -> None:
     from app.services.cb_projection_loaders import load_projections
     await load_projections(since=date.today() - timedelta(days=120))
+
+
+async def _run_cb_price_series() -> None:
+    from app.services.cb_price_series import ingest_official_cpi
+    await ingest_official_cpi()
 
 
 async def _run_policy_model() -> None:

@@ -10,6 +10,11 @@
     <div class="tile"><h3>Committee votes</h3>{% if vote %}<p>{{ vote.date }} · {{ vote['for'] }} for, {{ vote.against }} against</p>{% if vote.dissent_bp %}<p>Dissent: {{ vote.dissent_bp|join(', ') }} bp</p>{% endif %}
     {% else %}<p>Unavailable: no published member vote record.</p>{% endif %}</div></div>
   <div class="tile"><h3>Three policy measures</h3><div class="split"><p>Official projection: {{ pj.publication if pj.status == 'available' else 'unavailable' }}</p><p>Market 3M{% if model.inputs and model.inputs.market and model.inputs.market.label is defined %} ({{ model.inputs.market.label }}){% endif %}: {{ '%.2f%%'|format(model.market_rate_3m) if model.market_rate_3m is not none else 'unavailable' }}</p><p>Model implied: {{ '%.2f%%'|format(model.model_rate) if model.model_rate is not none else 'unavailable' }}</p></div><p>Model–Market gap (experimental): {{ '%+.1f bp'|format(model.gap_bp) if model.gap_bp is not none else 'unavailable' }} · {{ model.confidence or 'unavailable' }} confidence</p></div>
+  {% set tracking = ctx.tracking %}{% set tracked = tracking.variables.values()|first if tracking.variables else none %}
+  <div class="tile"><h3>CB Tracking</h3>{% if tracked and tracked.status != 'unavailable' %}
+    <p>{{ tracked.horizon }} {{ '%.1f%%'|format(tracked.projection) }} · required pace {{ '%.2f%%'|format(tracked.required_pace) }} · latest 3m annualised {{ '%.2f%%'|format(tracked.actual_3m_ann) }}</p>
+    <span class="chip">{{ tracked.status|replace('_', ' ') }}</span><p class="note">{{ tracking.method }}. Latest index: {{ tracked.latest_month }}.</p>
+    {% else %}<p>Unavailable: {{ tracked.reason if tracked else tracking.reason }}.</p>{% endif %}</div>
   {% else %}
   {{ head('3 · What does the ' ~ desk.cb_short ~ ' think?', 'Statement tracker · committee balance' ~ ((' · latest statement ' ~ ctx.latest_date.strftime('%d %b %Y')) if ctx.latest_date else '')) }}
   <div class="split">

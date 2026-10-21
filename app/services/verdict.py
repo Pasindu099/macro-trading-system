@@ -185,7 +185,7 @@ async def get_verdict(currency: str) -> dict[str, Any]:
         gap_component = _component({"hawkish": 1.0, "neutral": 0.0, "dovish": -1.0}.get(gap.get("direction")),
                                    raw=gap, reason=gap.get("reason"))
     else:
-        from app.services import cb_projection_loaders, cb_votes
+        from app.services import cb_other_tracking, cb_projection_loaders, cb_votes
         bank = NEW_BANKS[currency]
         projections = await cb_projection_loaders.get_projections(bank)
         votes = await cb_votes.committee_balance(bank) if bank in ("BOE", "BOJ") else {"latest": None}
@@ -197,9 +197,12 @@ async def get_verdict(currency: str) -> dict[str, Any]:
             official = 1.0 if sum(dissents) > 0 else -1.0 if sum(dissents) < 0 else 0.0
         else:
             official = None
-        cb_component = (_component(official, raw={"vote": latest_vote, "projections": projections.get("status")})
-                        if official is not None else await _official_policy_bias(currency))
-        gap_component = _component(None, reason="Comparable official projection versus priced path unavailable")
+        tracking = await cb_other_tracking.get_tracking(bank)
+        inflation = tracking.get("variables", {}).get(cb_projection_loaders.INFLATION[bank], {})
+        cb_component = _component(TRACKING_VALUES.get(inflation.get("status")), raw=inflation,
+                                  reason=inflation.get("reason", f"{bank} CPI tracking unavailable"))
+        gap_component = (_component(official, raw={"vote": latest_vote, "projections": projections.get("status")})
+                         if official is not None else await _official_policy_bias(currency))
     crowding = await positioning.get_crowding()
     row = next((row for row in crowding["currencies"] if row["currency"] == currency), None)
     lever = row.get("leveraged_funds", {}) if row else {}

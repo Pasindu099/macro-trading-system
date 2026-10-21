@@ -67,6 +67,15 @@ def test_desks_page_renders_html(client: TestClient) -> None:
     assert "<h1>Desks</h1>" in r.text
 
 
+@pytest.mark.parametrize("currency,bank", [("GBP", "BOE"), ("JPY", "BOJ"), ("CAD", "BOC"), ("CHF", "SNB")])
+def test_step16_tracking_on_desk_and_terminal(client: TestClient, currency: str, bank: str) -> None:
+    desk = client.get(f"/desks/{currency}/panels/fedview")
+    terminal = client.get(f"/central-banks/panels/proj-tracking?bank={bank}")
+    assert desk.status_code == terminal.status_code == 200
+    assert "CB Tracking" in desk.text and "state-error" not in desk.text
+    assert "Required pace" in terminal.text and "state-error" not in terminal.text
+
+
 def test_calendar_page_renders_html(client: TestClient) -> None:
     r = client.get("/calendar")
     assert r.status_code == 200

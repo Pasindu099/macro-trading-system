@@ -351,3 +351,24 @@ Smoke checks in an authenticated browser:
 | `/pairs/EURUSD` | HTTP 200; “Pair page pending”, back link to screener, and USD/EUR desk links. Calendar event panel and Overview pair links open the same route. |
 
 Rollback: restore the pre-release dump as in section 7; 0043 only adds a table and a view.
+
+## v2.6-desks release (Step 16)
+
+Follow sections 1–4 (backup, checkout, build, migrate), checking out `v2.6-desks`. Migration head is `0046_policy_model_daily`. The scheduled official CPI index refresh runs daily at 17:15 UTC; the first run is needed before the four new CB Tracking panels show live values.
+
+```bash
+dc exec -T app python -c 'import asyncio; from app.services.cb_price_series import ingest_official_cpi; print(asyncio.run(ingest_official_cpi()))'
+dc exec -T app python -c 'import asyncio; from app.services.policy_model import refresh; print(asyncio.run(refresh()))'
+dc exec -T app pytest -q
+```
+
+Expected CPI counts on a first import: BoE, BoJ, BoC and SNB each >0. A zero means the source failed or its values were already stored; check the latest index month on each desk before relying on CB Tracking. The BoJ e-Stat CSV source is release-specific; update its source ID when a newer core CPI file is published.
+
+Smoke checks in an authenticated browser:
+
+| URL | Expected result |
+|---|---|
+| `/desks/GBP`, `/desks/JPY`, `/desks/CAD`, `/desks/CHF` | All seven panels load; CB view shows projection, vote summary where published, model/market gap, and CPI tracking status with required versus latest 3m annualised pace. |
+| `/central-banks?bank=BOE&view=projections` (also BOJ, BOC, SNB) | CB Tracking panel shows the same measure and status. BoJ uses core CPI for a fiscal-year average; the others use headline CPI Q4 averages. |
+| `/desks/CAD` | Market rate is labelled bill-based proxy; oil-shock classification shows mixed when signals conflict. |
+| `/desks/GBP` | Low-confidence BoE real neutral estimate carries the 29 Sep 2026 source date. |

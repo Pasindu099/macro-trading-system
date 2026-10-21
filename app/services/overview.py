@@ -362,7 +362,7 @@ def _gap_label(currency: str, view: dict | None) -> str:
         relation = "at" if direction == "neutral" else "above" if direction == "hawkish" else "below"
         return f"{direction}: projections {relation} target"
     if currency in {"GBP", "JPY", "CAD", "CHF"} and view:
-        value = view.get("why", {}).get("cb_tracking", {}).get("value")
+        value = view.get("why", {}).get("gap", {}).get("value")
         if value is not None:
             return "hawkish" if value > 0 else "dovish" if value < 0 else "neutral"
     return "pending"

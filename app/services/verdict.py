@@ -14,7 +14,8 @@ from app.services.curve_metrics import get_curve
 from app.services.macro_state import get_macro_state_board
 
 CONFIG_PATH = Path("config/verdict.yaml")
-SUPPORTED = {"USD": "US", "EUR": "DE"}
+SUPPORTED = {"USD": "US", "EUR": "DE", "GBP": "UK", "JPY": "JP", "CAD": "CA", "CHF": "CH"}
+NEW_BANKS = {"GBP": "BOE", "JPY": "BOJ", "CAD": "BOC", "CHF": "SNB"}
 TRACKING_VALUES = {"running_hot": 1.0, "on_track": 0.0, "running_cold": -1.0}
 
 
@@ -132,6 +133,24 @@ async def _active_situations(currency: str) -> list[dict[str, Any]]:
             for row in active if _applies(row, currency)]
 
 
+async def _official_policy_bias(currency: str) -> dict[str, Any]:
+    from app.services.desks import get_desk
+    desk = get_desk(currency)
+    async with get_sessionmaker()() as session:
+        rows = (await session.execute(text("""SELECT DISTINCT ON (r.released_at::date)
+            r.released_at::date AS day, r.actual::float AS rate
+            FROM indicator_releases r JOIN indicators i ON i.id=r.indicator_id
+            WHERE i.country_code=:country AND i.canonical_name=:indicator
+              AND r.actual IS NOT NULL AND r.released_at<=now()
+            ORDER BY r.released_at::date DESC, r.retrieved_at DESC, r.id DESC LIMIT 2"""),
+            {"country": desk["country"], "indicator": desk["policy_indicator"]})).mappings().all()
+    if len(rows) < 2:
+        return _component(None, reason="Two official policy decisions unavailable")
+    change = rows[0]["rate"] - rows[1]["rate"]
+    return _component(1.0 if change > 0 else -1.0 if change < 0 else 0.0,
+                      raw={"latest": dict(rows[0]), "previous": dict(rows[1])})
+
+
 async def get_verdict(currency: str) -> dict[str, Any]:
     currency = currency.upper()
     if currency not in SUPPORTED:
@@ -157,7 +176,7 @@ async def get_verdict(currency: str) -> dict[str, Any]:
         first_gap = next((row for row in gap.get("gaps", []) if row.get("gap_bp") is not None), None)
         gap_component = _component(_clip(first_gap["gap_bp"] / cfg["normalization"]["fed_gap_bp_per_unit"], 2)
                                    if first_gap else None, raw=first_gap, reason=gap.get("reason"))
-    else:
+    elif currency == "EUR":
         tracking = await ecb_tracking.get_tracking()
         hicp = tracking.get("variables", {}).get("hicp_inflation", {})
         cb_component = _component(TRACKING_VALUES.get(hicp.get("status")), raw=hicp,
@@ -165,6 +184,22 @@ async def get_verdict(currency: str) -> dict[str, Any]:
         gap = await ecb_regime.get_gap()
         gap_component = _component({"hawkish": 1.0, "neutral": 0.0, "dovish": -1.0}.get(gap.get("direction")),
                                    raw=gap, reason=gap.get("reason"))
+    else:
+        from app.services import cb_projection_loaders, cb_votes
+        bank = NEW_BANKS[currency]
+        projections = await cb_projection_loaders.get_projections(bank)
+        votes = await cb_votes.committee_balance(bank) if bank in ("BOE", "BOJ") else {"latest": None}
+        latest_vote = votes.get("latest")
+        # Published policy preferences are the official bias; projection coverage is tracking evidence.
+        if latest_vote:
+            dissents = [m["preferred_change_bp"] for m in latest_vote["members"]
+                        if m["vote"] == "against" and m["preferred_change_bp"] is not None]
+            official = 1.0 if sum(dissents) > 0 else -1.0 if sum(dissents) < 0 else 0.0
+        else:
+            official = None
+        cb_component = (_component(official, raw={"vote": latest_vote, "projections": projections.get("status")})
+                        if official is not None else await _official_policy_bias(currency))
+        gap_component = _component(None, reason="Comparable official projection versus priced path unavailable")
     crowding = await positioning.get_crowding()
     row = next((row for row in crowding["currencies"] if row["currency"] == currency), None)
     lever = row.get("leveraged_funds", {}) if row else {}

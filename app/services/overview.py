@@ -361,6 +361,10 @@ def _gap_label(currency: str, view: dict | None) -> str:
         direction = raw["direction"]
         relation = "at" if direction == "neutral" else "above" if direction == "hawkish" else "below"
         return f"{direction}: projections {relation} target"
+    if currency in {"GBP", "JPY", "CAD", "CHF"} and view:
+        value = view.get("why", {}).get("cb_tracking", {}).get("value")
+        if value is not None:
+            return "hawkish" if value > 0 else "dovish" if value < 0 else "neutral"
     return "pending"
 
 
@@ -368,7 +372,7 @@ async def currency_ranking() -> dict:
     board = await _board()
     by_currency = {row["currency"]: row for row in board["rows"]}
     crowding = {row["currency"]: row for row in (await positioning.get_crowding())["currencies"]}
-    desk_views = {currency: await verdict.get_verdict(currency) for currency in ("USD", "EUR")}
+    desk_views = {currency: await verdict.get_verdict(currency) for currency in verdict.SUPPORTED}
     regimes = await _policy_regimes()
     rows = []
     for currency in CURRENCIES:
@@ -397,7 +401,7 @@ async def currency_ranking() -> dict:
 
 async def central_bank_map() -> dict:
     regimes = await _policy_regimes()
-    views = {currency: await verdict.get_verdict(currency) for currency in ("USD", "EUR")}
+    views = {currency: await verdict.get_verdict(currency) for currency in verdict.SUPPORTED}
     rows = []
     for currency in CURRENCIES:
         bank = BANKS[currency]

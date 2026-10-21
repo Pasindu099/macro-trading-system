@@ -19,7 +19,7 @@ def pair_config() -> list[dict]:
 
 
 def sort_rows(rows: list[dict], column: str = DEFAULT_SORT, descending: bool = True) -> list[dict]:
-    columns = {"pair", "last", "week_change", "month_change", "overall_score", "policy_gap",
+    columns = {"pair", "last", "week_change", "month_change", "overall_score", "policy_gap", "cb_bias",
                "data_implied", "priced", "spread_2y", "spread_change_20d", "driver",
                "cot_implied", "retail_long_pct", "warnings"}
     column = column if column in columns else DEFAULT_SORT
@@ -59,6 +59,10 @@ async def screener() -> dict:
     config = pair_config()
     ranking = await overview.currency_ranking()
     currency = {row["currency"]: row for row in ranking["rows"]}
+    from app.services import policy_model
+    models = {ccy: await policy_model.latest(bank) for ccy, bank in
+              {"EUR": "ECB", "GBP": "BOE", "AUD": "RBA", "NZD": "RBNZ", "USD": "FED",
+               "CAD": "BOC", "CHF": "SNB", "JPY": "BOJ"}.items()}
     retail = {row["pair"]: row for row in (await positioning.get_institutions_vs_retail())["pairs"]}
     from app.services import myfxbook
     retail_snapshots = {row["pair"]: row for row in await myfxbook.latest()}
@@ -78,17 +82,13 @@ async def screener() -> dict:
         base_view, quote_view = currency.get(base, {}), currency.get(quote, {})
         a, b = base_view.get("score"), quote_view.get("score")
         score = round(a - b, 2) if a is not None and b is not None else None
-        # A numeric pair path needs numeric models for both central banks.
-        base_gap = (base_view.get("verdict") or {}).get("why", {}).get("gap", {}).get("raw") or {}
-        quote_gap = (quote_view.get("verdict") or {}).get("why", {}).get("gap", {}).get("raw") or {}
-        numeric_gap = (
-            isinstance(base_gap.get("gap_bp"), (int, float)) and
-            isinstance(quote_gap.get("gap_bp"), (int, float)) and
-            all(isinstance(view.get(key), (int, float)) for view in (base_gap, quote_gap)
-                for key in ("sep_median", "market")))
-        gap = round(base_gap["gap_bp"] - quote_gap["gap_bp"], 1) if numeric_gap else None
-        data_implied = round((base_gap["sep_median"] - quote_gap["sep_median"]) * 100, 1) if numeric_gap else None
-        priced = round((base_gap["market"] - quote_gap["market"]) * 100, 1) if numeric_gap else None
+        base_model, quote_model = models[base], models[quote]
+        numeric_gap = all(view.get("status") == "available" and all(
+            isinstance(view.get(key), (int, float)) for key in ("model_rate", "market_rate_3m", "gap_bp"))
+            for view in (base_model, quote_model))
+        gap = round(base_model["gap_bp"] - quote_model["gap_bp"], 1) if numeric_gap else None
+        data_implied = round((base_model["model_rate"] - quote_model["model_rate"]) * 100, 1) if numeric_gap else None
+        priced = round((base_model["market_rate_3m"] - quote_model["market_rate_3m"]) * 100, 1) if numeric_gap else None
         spread = await yield_spreads.get_spread(pair, "2Y", 21)
         spread_rows = spread.get("rows", [])
         spread_now = spread_rows[-1]["spread_bp"] if spread_rows else None
@@ -102,6 +102,8 @@ async def screener() -> dict:
                      "last": last, "week_change": change(7), "month_change": change(30),
                      "overall_score": score, "partial": bool(base_view.get("partial") or quote_view.get("partial")),
                      "policy_gap": gap, "data_implied": data_implied, "priced": priced,
+                     "cb_bias": (f"{base}: {base_view.get('gap', 'pending')} · {quote}: {quote_view.get('gap', 'pending')}"
+                                 if base_view.get("gap") != "pending" or quote_view.get("gap") != "pending" else None),
                      "gap_tooltip": "; ".join(f"{ccy}: {view['gap']}" for ccy, view in
                                                ((base, base_view), (quote, quote_view)) if view.get("gap") != "pending"),
                      "spread_2y": spread_now, "spread_change_20d": spread_delta,

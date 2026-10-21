@@ -200,7 +200,7 @@ def test_eur_panel_200_when_inputs_unavailable(monkeypatch, panel_id):
     assert "Unavailable" in response.text or "No " in response.text
 
 
-@pytest.mark.parametrize("panel_id", [p.id for p in dp.PANELS if p.id != "country"])
+@pytest.mark.parametrize("panel_id", [p.id for p in dp.PANELS if p.id not in {"country", "specific"}])
 def test_panel_200_with_data(monkeypatch, panel_id):
     _data_sources(monkeypatch)
     resp = make_client().get(f"/desks/USD/panels/{panel_id}")
@@ -213,7 +213,7 @@ def test_panel_200_with_data(monkeypatch, panel_id):
             assert "state-unavailable" not in resp.text
 
 
-@pytest.mark.parametrize("panel_id", [p.id for p in dp.PANELS if p.id != "country"])
+@pytest.mark.parametrize("panel_id", [p.id for p in dp.PANELS if p.id not in {"country", "specific"}])
 def test_panel_200_with_unavailable_state_when_service_returns_nothing(monkeypatch, panel_id):
     _empty_sources(monkeypatch)
     resp = make_client().get(f"/desks/USD/panels/{panel_id}")

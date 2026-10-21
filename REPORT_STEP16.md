@@ -38,3 +38,11 @@
 - CAD: Brent, USD/CAD, shock classification and US surprise total alongside US/CA 2Y yields. Canadian terms of trade remains explicitly unavailable pending export/import price indices. On 20 Oct oil and equities rose, CA 2Y fell: unclassified.
 - CHF: EUR/CHF, 20-change CHF/VIX correlation and weekly SNB domestic-bank sight deposits. 16 Oct observation: CHF 435,355 million, published 19 Oct, with the required intervention-proxy caveat. [SNB weekly series](https://data.snb.ch/en/topics/snb/cube/snbgwdchfsgw).
 - Focused tests 3 passed; full container suite 818 passed, 7 skipped, 1 dependency warning.
+
+## Part F — GBP, JPY, CAD and CHF desks
+
+- Enabled core desk panels, official projections and votes where published, three policy measures, and the Part E evidence panel beneath the layout. Missing model inputs remain labelled unavailable. See `app/services/desk_panels.py`, `app/web/templates/desk/panels/specific.html`.
+- Full verdicts for four currencies now use official vote preferences or recent policy decisions with macro, curve, situations and positioning; experimental model gap is excluded. Overview ranking and pair map inherit the new scores. See `app/services/verdict.py`, `app/services/overview.py`.
+- Screener shows Model–Market gap (experimental) from two available bank snapshots, and CB bias separately; default absolute overall-score sort stays. See `app/services/pairs_service.py`, `app/web/templates/pairs/page.html`.
+- Focused tests: 82 passed plus 14 desk-route tests. Full container suite: 827 passed, 7 skipped, 1 dependency warning. Live 24 panel routes across the four desks returned HTTP 200 without an error panel.
+- Model-input corrections and 21 Oct bank outcomes: `REPORT_MODEL_INPUT_FIXES.md`.

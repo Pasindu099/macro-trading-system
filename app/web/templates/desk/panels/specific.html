@@ -1,0 +1,20 @@
+<section id="specific" class="panel wide" aria-label="{{ desk.currency }} specific evidence">
+  <div class="panel-head"><h2>{{ desk.currency }} · currency-specific evidence</h2><span class="muted small">{{ ctx.as_of }}</span></div>
+  {% if desk.currency == 'GBP' %}
+    <h3>Gilt curve</h3><div class="split">{% for tenor, point in ctx.gilt_curve.items() %}<p>{{ tenor }}: {{ '%.2f%%'|format(point[1]) if point else 'unavailable' }}</p>{% endfor %}</div>
+    <p>Fiscal stress: {{ ctx.fiscal_stress.state }} · 30Y move {{ '%+.2f'|format(ctx.fiscal_stress['30y_change_pp']) if ctx.fiscal_stress['30y_change_pp'] is not none else 'unavailable' }} pp · GBP/USD move {{ '%+.4f'|format(ctx.fiscal_stress.gbpusd_change) if ctx.fiscal_stress.gbpusd_change is not none else 'unavailable' }}</p>
+  {% elif desk.currency == 'JPY' %}
+    <h3>JGB curve</h3><div class="split">{% for tenor, point in ctx.jgb_curve.items() %}<p>{{ tenor }}: {{ '%.2f%%'|format(point[1]) if point else 'unavailable' }}</p>{% endfor %}</div>
+    <p>Trading on: {{ ctx.trading_on }} · {{ ctx.window }}</p><p>MoF intervention risk: {{ ctx.mof_intervention_risk|length }} active situation(s)</p>
+    {% for name, value in ctx.rolling_correlations.items() %}<p>{{ name }}: {{ '%+.2f'|format(value) if value is not none else 'unavailable' }}</p>{% endfor %}
+  {% elif desk.currency == 'CAD' %}
+    <p>Brent: {{ '%.2f'|format(ctx.brent[1]) if ctx.brent else 'unavailable' }} · USD/CAD: {{ '%.4f'|format(ctx.usd_cad[1]) if ctx.usd_cad else 'unavailable' }}</p>
+    <p>Oil shock: <strong>{{ ctx.oil_shock.classification }}</strong> · {{ ctx.oil_shock.note }}</p>
+    {% for input in ctx.oil_shock.conflicting_inputs %}<p>{{ input.name }} {{ '%+.3f'|format(input.change) }} · {{ input.signal }}</p>{% endfor %}
+    <p>Terms of trade: {{ ctx.terms_of_trade.state }} · {{ ctx.terms_of_trade.reason }}</p>
+  {% else %}
+    <p>EUR/CHF: {{ '%.4f'|format(ctx.eur_chf[1]) if ctx.eur_chf else 'unavailable' }}</p>
+    <p>Sight deposits: {{ ctx.sight_deposits.label or 'intervention proxy — sight deposits also move with repos, swaps and banknotes; not confirmed intervention' }}</p>
+    <p>{{ ctx.sight_deposits.state }} · CHF vs VIX correlation {{ '%+.2f'|format(ctx.chf_vs_vix_correlation) if ctx.chf_vs_vix_correlation is not none else 'unavailable' }}</p>
+  {% endif %}
+</section>

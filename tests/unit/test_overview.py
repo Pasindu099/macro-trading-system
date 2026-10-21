@@ -156,7 +156,7 @@ def test_ranking_sorts_by_verdict_score_and_labels_partial(monkeypatch):
     assert [row["currency"] for row in rows[:3]] == ["AUD", "USD", "EUR"]
     assert rows[0]["partial"] and rows[0]["score"] > rows[1]["score"]
     assert not rows[1]["partial"]
-    assert rows[3]["score"] is None
+    assert {row["currency"] for row in rows if not row["partial"]} == {"USD", "EUR", "GBP", "JPY", "CAD", "CHF"}
 
 
 def test_partial_thesis_and_gap_labels():

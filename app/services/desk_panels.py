@@ -445,6 +445,11 @@ async def panel_fedview(desk: dict, params: dict) -> dict[str, Any]:
     """Step 12 Part H: statement tracker (C), committee balance and speaker focus mix (F), projections."""
     from app.services import cb_statement_diff, cb_tone
     bank = desk["cb"]
+    if bank in ("BOE", "BOJ", "BOC", "SNB"):
+        from app.services import cb_projection_loaders, cb_votes, policy_model
+        return {"state": "ok", "projections": await cb_projection_loaders.get_projections(bank),
+                "votes": await cb_votes.committee_balance(bank) if bank in ("BOE", "BOJ") else None,
+                "model": await policy_model.latest(bank)}
     diff = await cb_statement_diff.get_statement_diff(bank)
     statements = await cb_statement_diff.latest_statements(bank, limit=5)
     balance = await cb_tone.get_committee_balance(bank)
@@ -461,6 +466,9 @@ REGIME_LABEL = {"qe": "QE", "near_zero": "Near zero", "cutting": "Cutting", "hol
 
 
 async def panel_fedpath(desk: dict, params: dict) -> dict[str, Any]:
+    if desk["cb"] in ("BOE", "BOJ", "BOC", "SNB"):
+        from app.services import policy_model
+        return {"state": "ok", "model": await policy_model.latest(desk["cb"])}
     regime = await (ecb_regime.get_regime() if desk["cb"] == "ECB" else fed_regime.get_regime())
     if regime.get("regime") == "unavailable":
         return unavailable(regime.get("reason", "No policy-rate history"))
@@ -493,6 +501,9 @@ def _cond_value(c: dict[str, Any]) -> str:
 
 
 async def panel_priced(desk: dict, params: dict) -> dict[str, Any]:
+    if desk["cb"] in ("BOE", "BOJ", "BOC", "SNB"):
+        from app.services import policy_model
+        return {"state": "ok", "model": await policy_model.latest(desk["cb"])}
     if desk["cb"] == "ECB":
         async with get_sessionmaker()() as session:
             pricing = await get_ecb_yield_approximation(session)
@@ -616,6 +627,9 @@ async def panel_curve(desk: dict, params: dict) -> dict[str, Any]:
 
 
 async def panel_gap(desk: dict, params: dict) -> dict[str, Any]:
+    if desk["cb"] in ("BOE", "BOJ", "BOC", "SNB"):
+        from app.services import policy_model
+        return {"state": "ok", "model": await policy_model.latest(desk["cb"])}
     if desk["cb"] == "ECB":
         gap = await ecb_regime.get_gap()
         return {"state": "ok" if gap["status"] == "available" else "unavailable", **gap}
@@ -723,6 +737,11 @@ async def panel_scenarios(desk: dict, params: dict) -> dict[str, Any]:
             "message": result.get("reason"), **result}
 
 
+async def panel_specific(desk: dict, params: dict) -> dict[str, Any]:
+    from app.services import currency_specific
+    return {"state": "ok", **await currency_specific.panel(desk["currency"])}
+
+
 @dataclass(frozen=True)
 class Panel:
     id: str
@@ -751,5 +770,6 @@ PANELS: list[Panel] = [
     Panel("catalysts", "q7", "8", "Catalysts", False, panel_catalysts),
     Panel("news", "usdnews", "·", "News", True, panel_news),
     Panel("scenarios", "q8", "9", "Scenarios", True, panel_scenarios),
+    Panel("specific", "specific", "", "Currency-specific evidence", True, panel_specific),
 ]
 PANELS_BY_ID = {p.id: p for p in PANELS}

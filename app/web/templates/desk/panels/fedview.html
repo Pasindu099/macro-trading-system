@@ -1,5 +1,16 @@
 {% from "desk/_macros.html" import state, head %}
 <section id="fedview" class="panel wide" aria-label="What the {{ desk.cb_short }} thinks">
+  {% if desk.cb in ('BOE', 'BOJ', 'BOC', 'SNB') %}
+  {{ head('3 · ' ~ desk.cb_short ~ ' view', 'Official projections · committee votes · experimental model') }}
+  {% set pj = ctx.projections %}{% set vote = ctx.votes.latest if ctx.votes else none %}{% set model = ctx.model %}
+  <div class="split"><div class="tile"><h3>Official projections</h3>
+    {% if pj.status == 'available' %}{% set round = pj.rounds[0] %}<p>{{ pj.publication }} · {{ round.release_date }} · {{ round.coverage }}</p>
+    {% for variable, horizons in round.variables.items() %}{% for horizon, stats in horizons.items() %}<p>{{ variable|replace('_',' ') }} {{ horizon }}: {% if stats.median is defined %}{{ stats.median }}%{% elif stats.range_low is defined and stats.range_high is defined %}{{ stats.range_low }}–{{ stats.range_high }}% · ranges only{% else %}pending{% endif %}</p>{% endfor %}{% endfor %}
+    {% else %}<p>{{ pj.reason or pj.status }}</p>{% endif %}</div>
+    <div class="tile"><h3>Committee votes</h3>{% if vote %}<p>{{ vote.date }} · {{ vote['for'] }} for, {{ vote.against }} against</p>{% if vote.dissent_bp %}<p>Dissent: {{ vote.dissent_bp|join(', ') }} bp</p>{% endif %}
+    {% else %}<p>Unavailable: no published member vote record.</p>{% endif %}</div></div>
+  <div class="tile"><h3>Three policy measures</h3><div class="split"><p>Official projection: {{ pj.publication if pj.status == 'available' else 'unavailable' }}</p><p>Market 3M: {{ '%.2f%%'|format(model.market_rate_3m) if model.market_rate_3m is not none else 'unavailable' }}</p><p>Model implied: {{ '%.2f%%'|format(model.model_rate) if model.model_rate is not none else 'unavailable' }}</p></div><p>Model–Market gap (experimental): {{ '%+.1f bp'|format(model.gap_bp) if model.gap_bp is not none else 'unavailable' }} · {{ model.confidence or 'unavailable' }} confidence</p></div>
+  {% else %}
   {{ head('3 · What does the ' ~ desk.cb_short ~ ' think?', 'Statement tracker · committee balance' ~ ((' · latest statement ' ~ ctx.latest_date.strftime('%d %b %Y')) if ctx.latest_date else '')) }}
   <div class="split">
     <div class="stack">
@@ -78,4 +89,5 @@
       <div class="row-between muted small">{% for theme, share in fm.shares.items() %}<span>{{ theme }} {{ (share * 100) | round | int }}%</span>{% endfor %}</div>
     {% else %}<p class="note">No attributed speeches or comments in the last {{ fm.days }} days.</p>{% endif %}
   </div>
+  {% endif %}
 </section>

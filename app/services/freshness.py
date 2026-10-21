@@ -79,6 +79,7 @@ DESK_PANEL_SOURCES = {
     "catalysts": ("calendar",),
     "news": ("news",),
     "scenarios": ("macro_state", "government_yields"),
+    "specific": ("fx_spot", "government_yields", "fred_daily", "situations"),
 }
 
 

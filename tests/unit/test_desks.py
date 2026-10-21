@@ -63,6 +63,16 @@ def test_usd_and_eur_desks_render_and_disabled_desks_404():
     assert client.get("/desks/USD/panels/nope").status_code == 404
 
 
+@pytest.mark.parametrize("currency", ["GBP", "JPY", "CAD", "CHF"])
+def test_new_desk_layout_includes_specific_evidence(currency):
+    client = make_client()
+    page = client.get(f"/desks/{currency}")
+    assert page.status_code == 200
+    assert f'hx-get="/desks/{currency}/panels/specific"' in page.text
+    assert f'hx-get="/desks/{currency}/panels/verdict"' in page.text
+    assert client.get("/desks/USD/panels/specific").status_code == 404
+
+
 def test_indicator_validation_reports_unknown_names_without_crashing():
     desk = {"charts": [
         {"id": "infl", "series": [{"name": "CPI", "canonical": "cpi_headline_yoy"},

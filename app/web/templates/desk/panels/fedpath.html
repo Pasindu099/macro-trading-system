@@ -1,5 +1,10 @@
 {% from "desk/_macros.html" import state, head %}
 <section id="q3" class="panel" aria-label="What will the {{ desk.cb_short }} do">
+  {% if desk.cb in ('BOE', 'BOJ', 'BOC', 'SNB') %}
+  {{ head('4 · ' ~ desk.cb_short ~ ' path', 'Model implied · experimental') }}
+  {% if ctx.model.status == 'available' %}<p>Model implied {{ '%.2f'|format(ctx.model.model_rate) }}% · Market 3M {{ '%.2f'|format(ctx.model.market_rate_3m) }}% · Gap {{ '%+.1f'|format(ctx.model.gap_bp) }} bp</p><p>{{ ctx.model.confidence }} confidence</p>
+  {% else %}<p>Unavailable: {{ ctx.model.missing_inputs|join(', ') }}</p>{% endif %}
+  {% else %}
   {{ head('4 · What will the ' ~ desk.cb_short ~ ' do?', 'Policy regime model v1') }}
   {% if ctx.state == 'ok' %}
     <div class="ladder" role="list" aria-label="Policy regime ladder">
@@ -21,5 +26,6 @@
       {% for r in ['QE', 'Near zero', 'Cutting', 'Holding', 'Hiking'] %}<div class="rung">{{ r }}</div>{% endfor %}
     </div>
     {{ state(ctx) }}
+  {% endif %}
   {% endif %}
 </section>

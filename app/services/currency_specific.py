@@ -36,13 +36,28 @@ def change(series: dict[date, float] | list[tuple[date, float]], day: date,
 
 def shock_type(oil: float | None, equities: float | None, yields: float | None,
                vix: float | None) -> str:
+    return shock_assessment(oil, equities, yields, vix)["classification"]
+
+
+def shock_assessment(oil: float | None, equities: float | None, yields: float | None,
+                     vix: float | None) -> dict:
     if oil is None or oil <= 0:
-        return "unclassified"
+        return {"classification": "unclassified", "conflicting_inputs": []}
+    demand = [("equities", equities)] if equities is not None and equities > 0 else []
+    demand += [("CA 2Y yield", yields)] if yields is not None and yields > 0 else []
+    demand += [("VIX", vix)] if vix is not None and vix < 0 else []
+    supply = [("equities", equities)] if equities is not None and equities < 0 else []
+    supply += [("CA 2Y yield", yields)] if yields is not None and yields < 0 else []
+    supply += [("VIX", vix)] if vix is not None and vix > 0 else []
+    if demand and supply:
+        return {"classification": "mixed", "conflicting_inputs": [
+            {"name": name, "change": value, "signal": signal}
+            for signal, entries in (("demand", demand), ("supply", supply)) for name, value in entries]}
     if (equities is not None and equities < 0) or (vix is not None and vix > 0):
-        return "supply-driven"
+        return {"classification": "supply-driven", "conflicting_inputs": []}
     if equities is not None and equities > 0 and yields is not None and yields > 0:
-        return "demand-driven"
-    return "unclassified"
+        return {"classification": "demand-driven", "conflicting_inputs": []}
+    return {"classification": "unclassified", "conflicting_inputs": []}
 
 
 def correlation(left: dict[date, float], right: dict[date, float], minimum: int = 12):
@@ -149,7 +164,7 @@ async def panel(currency: str, day: date | None = None) -> dict:
                 "brent": latest(fred["DCOILBRENTEU"], day),
                 "usd_cad": latest(usd_cad, day),
                 "terms_of_trade": {"state": "unavailable", "reason": "Canadian export/import price index series not configured"},
-                "oil_shock": {"classification": shock_type(moves["oil"], moves["equities"], moves["ca_2y"], moves["vix"]), "changes": moves,
+                "oil_shock": {**shock_assessment(moves["oil"], moves["equities"], moves["ca_2y"], moves["vix"]), "changes": moves,
                               "note": "A supply-driven oil rise is not automatically CAD-positive."},
                 "us_surprise_index": await _us_surprise(day),
                 "two_year_yields": {"US": latest(us.get("2Y", {}), day), "CA": latest(ca.get("2Y", {}), day)}}

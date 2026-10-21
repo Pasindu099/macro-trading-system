@@ -1,15 +1,19 @@
 from datetime import date
 
 from app.services.currency_specific import (SIGHT_LABEL, correlation, parse_sight_deposits,
-                                            shock_type)
+                                            shock_assessment, shock_type)
 
 
 def test_cad_shock_classification():
     assert shock_type(1, 2, 0.1, -1) == "demand-driven"
-    assert shock_type(1, -2, 0.1, -1) == "supply-driven"
-    assert shock_type(1, 2, 0.1, 1) == "supply-driven"
-    assert shock_type(1, 2, -0.1, -1) == "unclassified"
+    assert shock_type(1, -2, -0.1, 1) == "supply-driven"
+    assert shock_type(1, -2, 0.1, -1) == "mixed"
+    assert shock_type(1, 2, 0.1, 1) == "mixed"
+    assert shock_type(1, 2, -0.1, -1) == "mixed"
     assert shock_type(None, 2, 0.1, -1) == "unclassified"
+    mixed = shock_assessment(1, 2, -0.1, -1)
+    assert mixed["classification"] == "mixed"
+    assert {row["name"] for row in mixed["conflicting_inputs"]} == {"equities", "CA 2Y yield", "VIX"}
 
 
 def test_snb_weekly_release_and_caveat():

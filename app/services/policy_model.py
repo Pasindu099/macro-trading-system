@@ -84,7 +84,38 @@ def parse_oecd(content: str, cfg: dict, year: int, observed_at: datetime) -> dic
     return values
 
 
-async def _inflation(country: str, canonical: str | None, now: datetime) -> dict | None:
+def parse_boc_valet(payload: dict, cfg: dict, today: date, observed_at: datetime) -> dict | None:
+    """Use the latest common CPI-trim/CPI-median month; Valet dates are reference months."""
+    if observed_at.date() > today:
+        return None
+    candidates = []
+    for row in payload.get("observations", []):
+        try:
+            period = date.fromisoformat(row["d"])
+            if period > today or (period.month == today.month and period.year == today.year):
+                continue
+            trim = float(row["CPI_TRIM"]["v"])
+            median = float(row["CPI_MEDIAN"]["v"])
+            if -10 <= trim <= 30 and -10 <= median <= 30:
+                candidates.append((period, trim, median))
+        except (KeyError, TypeError, ValueError):
+            continue
+    if not candidates:
+        return None
+    period, trim, median = max(candidates)
+    return _input(round((trim + median) / 2, 4), period, cfg["boc_valet_url"], "medium", observed_at,
+                  label="BoC CPI-trim/CPI-median average (YoY)",
+                  components={"CPI-trim": trim, "CPI-median": median},
+                  date_basis="reference month; Valet supplies no release timestamp")
+
+
+def _fresh_input(entry: dict | None, today: date, max_days: int) -> bool:
+    return bool(entry and entry.get("as_of") and
+                0 <= (today - date.fromisoformat(entry["as_of"])).days <= max_days)
+
+
+async def _inflation(country: str, canonical: str | None, now: datetime,
+                     label: str | None = None) -> dict | None:
     if canonical is None:
         return None
     async with get_sessionmaker()() as session:
@@ -97,6 +128,7 @@ async def _inflation(country: str, canonical: str | None, now: datetime) -> dict
     if row is None:
         return None
     return _input(float(row["value"]), row["released_at"].date(), f"indicator:{country}:{canonical}", "high", now,
+                  label=label or canonical, provider="EODHD economic events",
                   released_at=row["released_at"].isoformat(), retrieved_at=row["retrieved_at"].isoformat())
 
 
@@ -162,7 +194,7 @@ async def refresh(today: date | None = None) -> dict[str, dict]:
     today = today or date.today()
     now = datetime.now(timezone.utc)
     cfg = config()
-    oecd, nyfed = {}, {}
+    oecd, nyfed, boc_core = {}, {}, None
     async with httpx.AsyncClient(timeout=40, headers=source_identity.headers()) as client:
         try:
             url = f"{cfg['oecd_url']}?startPeriod={today.year}&endPeriod={today.year}&format=csvfile"
@@ -171,6 +203,14 @@ async def refresh(today: date | None = None) -> dict[str, dict]:
             oecd = parse_oecd(response.text, cfg, today.year, now)
         except (httpx.HTTPError, ValueError, KeyError):
             pass
+        if today == date.today():
+            try:
+                response = await client.get(cfg["boc_valet_url"],
+                                            params={"start_date": (today - timedelta(days=130)).isoformat()})
+                response.raise_for_status()
+                boc_core = parse_boc_valet(response.json(), cfg, today, now)
+            except (httpx.HTTPError, ValueError, KeyError):
+                pass
         try:
             response = await client.get(cfg["nyfed_url"])
             response.raise_for_status()
@@ -189,8 +229,17 @@ async def refresh(today: date | None = None) -> dict[str, dict]:
                              max_age_days=fallback.get("max_age_days", cfg["freshness_days"]["neutral_rate"]))
         target = banks[bank]["inflation_target"]
         target_value = target.get("value")
+        inflation = boc_core if bank == "BOC" else None
+        if not _fresh_input(inflation, today, cfg["freshness_days"]["inflation"]):
+            inflation = await _inflation(entry["country"], entry["inflation"], now,
+                                         entry.get("inflation_label"))
+        if not _fresh_input(inflation, today, cfg["freshness_days"]["inflation"]) and entry.get("inflation_fallback"):
+            fallback_inflation = await _inflation(entry["country"], entry["inflation_fallback"], now,
+                                                 entry.get("fallback_label"))
+            if _fresh_input(fallback_inflation, today, cfg["freshness_days"]["inflation"]):
+                inflation = fallback_inflation
         inputs = {"neutral_rate": neutral,
-                  "inflation": await _inflation(entry["country"], entry["inflation"], now),
+                  "inflation": inflation,
                   "target": _input(float(target_value), today, "config/central_banks.yaml", "high", now,
                                    band=target.get("range"), basis=target.get("form"))
                   if target_value is not None else None,

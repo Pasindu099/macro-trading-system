@@ -3,7 +3,7 @@ from datetime import date, datetime, timezone
 import pytest
 
 from app.services import policy_model
-from app.services.policy_model import config, evaluate, implied_rate, parse_oecd
+from app.services.policy_model import config, evaluate, implied_rate, parse_boc_valet, parse_oecd
 from app.services.cb_summary import bank_config
 
 
@@ -104,3 +104,15 @@ async def test_stale_ois_falls_back_to_dated_bill(monkeypatch):
     result = await policy_model._market("ECB", NOW.date(), NOW, 7)
     assert result["value"] == 2.5 and result["label"] == "bill-based proxy"
     assert result["confidence"] == "low"
+
+
+def test_boc_valet_uses_both_preferred_core_measures_and_reference_date():
+    payload = {"observations": [
+        {"d": "2026-09-01", "CPI_TRIM": {"v": "1.8"}, "CPI_MEDIAN": {"v": "1.9"}},
+        {"d": "2026-10-01", "CPI_TRIM": {"v": "9"}, "CPI_MEDIAN": {"v": "9"}},
+    ]}
+    item = parse_boc_valet(payload, config(), NOW.date(), NOW)
+    assert item["value"] == 1.85
+    assert item["components"] == {"CPI-trim": 1.8, "CPI-median": 1.9}
+    assert item["as_of"] == "2026-09-01" and "Valet" in item["date_basis"]
+    assert parse_boc_valet(payload, config(), date(2026, 9, 30), NOW) is None

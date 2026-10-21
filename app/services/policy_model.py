@@ -20,6 +20,8 @@ from app.services.cb_summary import bank_config
 
 CONFIG = Path("config/policy_model.yaml")
 BANKS = ("FED", "ECB", "BOE", "BOJ", "BOC", "RBA", "RBNZ", "SNB")
+BILL_COUNTRIES = {"FED": "US", "ECB": "DE", "BOE": "UK", "BOJ": "JP",
+                  "BOC": "CA", "RBA": "AU", "RBNZ": "NZ", "SNB": "CH"}
 
 
 def config() -> dict:
@@ -98,7 +100,7 @@ async def _inflation(country: str, canonical: str | None, now: datetime) -> dict
                   released_at=row["released_at"].isoformat(), retrieved_at=row["retrieved_at"].isoformat())
 
 
-async def _market(bank: str, today: date, observed_at: datetime) -> dict | None:
+async def _market(bank: str, today: date, observed_at: datetime, max_age_days: int) -> dict | None:
     async with get_sessionmaker()() as session:
         rows = (await session.execute(text("""SELECT curve_date,tenor_days,rate::float AS rate FROM ois_cache
             WHERE bank=:bank AND curve_date=(SELECT max(curve_date) FROM ois_cache
@@ -106,15 +108,30 @@ async def _market(bank: str, today: date, observed_at: datetime) -> dict | None:
             {"bank": bank, "today": today})).mappings().all()
     below = next((r for r in reversed(rows) if r["tenor_days"] <= 90), None)
     above = next((r for r in rows if r["tenor_days"] >= 90), None)
-    if below is None or above is None:
-        return None
-    if below["tenor_days"] == above["tenor_days"]:
-        value = float(below["rate"])
-    else:
-        weight = (90 - below["tenor_days"]) / (above["tenor_days"] - below["tenor_days"])
-        value = float(below["rate"]) + weight * (float(above["rate"]) - float(below["rate"]))
-    return _input(round(value, 4), below["curve_date"], f"ois_cache:{bank}:90d", "medium", observed_at,
-                  horizon_days=90, tenor_bracket=[below["tenor_days"], above["tenor_days"]])
+    ois = None
+    if below is not None and above is not None:
+        if below["tenor_days"] == above["tenor_days"]:
+            value = float(below["rate"])
+        else:
+            weight = (90 - below["tenor_days"]) / (above["tenor_days"] - below["tenor_days"])
+            value = float(below["rate"]) + weight * (float(above["rate"]) - float(below["rate"]))
+        ois = _input(round(value, 4), below["curve_date"], f"ois_cache:{bank}:90d", "medium", observed_at,
+                     horizon_days=90, tenor_bracket=[below["tenor_days"], above["tenor_days"]])
+    if ois and (today - date.fromisoformat(ois["as_of"])).days <= max_age_days:
+        return ois
+    async with get_sessionmaker()() as session:
+        bill = (await session.execute(text("""SELECT market_observation_date,yield_value::float AS value,provider_symbol
+            FROM government_yield_observations WHERE country_code=:country AND maturity='3M'
+            AND provider='eodhd' AND quality_status='valid' AND NOT is_outlier
+            AND market_observation_date<=:today
+            ORDER BY market_observation_date DESC,ingested_at DESC,id DESC LIMIT 1"""),
+            {"country": BILL_COUNTRIES[bank], "today": today})).mappings().first()
+    if bill and (today - bill["market_observation_date"]).days <= max_age_days:
+        return _input(float(bill["value"]), bill["market_observation_date"],
+                      f"eodhd:{bill['provider_symbol']}", "low", observed_at,
+                      label="bill-based proxy", horizon_days=90,
+                      caveat="Government bill yield includes term and liquidity premia; it is not a policy expectation.")
+    return ois
 
 
 def evaluate(bank: str, inputs: dict, cfg: dict, today: date) -> dict:
@@ -177,7 +194,8 @@ async def refresh(today: date | None = None) -> dict[str, dict]:
                   "target": _input(float(target_value), today, "config/central_banks.yaml", "high", now,
                                    band=target.get("range"), basis=target.get("form"))
                   if target_value is not None else None,
-                  "output_gap": oecd.get(entry["oecd"]), "market": await _market(bank, today, now)}
+                  "output_gap": oecd.get(entry["oecd"]),
+                  "market": await _market(bank, today, now, cfg["freshness_days"]["market"])}
         result = evaluate(bank, inputs, cfg, today)
         result.update({"model_version": cfg["model_version"], "data_date": today, "computed_at": now})
         async with session_scope() as session:

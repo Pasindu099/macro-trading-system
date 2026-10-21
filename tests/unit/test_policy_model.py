@@ -1,5 +1,8 @@
 from datetime import date, datetime, timezone
 
+import pytest
+
+from app.services import policy_model
 from app.services.policy_model import config, evaluate, implied_rate, parse_oecd
 from app.services.cb_summary import bank_config
 
@@ -66,3 +69,38 @@ def test_snb_target_midpoint_preserves_band():
     assert target["value"] == 1.0
     assert target["range"] == [0.0, 2.0]
     assert target["form"] == "band_midpoint"
+
+
+@pytest.mark.asyncio
+async def test_stale_ois_falls_back_to_dated_bill(monkeypatch):
+    class Rows:
+        def __init__(self, rows):
+            self.rows = rows
+
+        def mappings(self):
+            return self
+
+        def all(self):
+            return self.rows
+
+        def first(self):
+            return self.rows[0] if self.rows else None
+
+    class Session:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            pass
+
+        async def execute(self, query, params):
+            if "ois_cache" in str(query):
+                return Rows([{"curve_date": date(2026, 10, 1), "tenor_days": 90, "rate": 2.0}])
+            assert params["country"] == "DE"
+            return Rows([{"market_observation_date": date(2026, 10, 19),
+                          "provider_symbol": "DE3M.GBOND", "value": 2.5}])
+
+    monkeypatch.setattr(policy_model, "get_sessionmaker", lambda: lambda: Session())
+    result = await policy_model._market("ECB", NOW.date(), NOW, 7)
+    assert result["value"] == 2.5 and result["label"] == "bill-based proxy"
+    assert result["confidence"] == "low"

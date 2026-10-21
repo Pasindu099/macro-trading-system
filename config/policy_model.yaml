@@ -9,13 +9,19 @@ boc_valet_url: https://www.bankofcanada.ca/valet/observations/CPI_TRIM,CPI_MEDIA
 banks:
   FED: {country: US, oecd: USA, inflation: core_pce_price_index_yoy, inflation_label: Core PCE (YoY), inflation_fallback: core_cpi_yoy, fallback_label: Core CPI (YoY), neutral: nyfed_us}
   ECB: {country: EU, oecd: EA17, inflation: core_cpi_yoy, inflation_label: Core HICP (YoY), neutral: nyfed_ea}
-  BOE: {country: UK, oecd: GBR, inflation: core_cpi_yoy, inflation_label: Core CPI (YoY), neutral: nyfed_uk_unpublished}
+  BOE: {country: UK, oecd: GBR, inflation: core_cpi_yoy, inflation_label: Core CPI (YoY), neutral: boe_taylor_real_midpoint}
   BOJ: {country: JP, oecd: JPN, inflation: core_cpi_yoy, inflation_label: Core CPI (YoY), neutral: boj_range_midpoint}
   BOC: {country: CA, oecd: CAN, inflation: cpi_trimmed_mean_yoy, inflation_fallback: core_cpi_yoy, fallback_label: Core CPI (YoY), neutral: nyfed_ca}
   RBA: {country: AU, oecd: AUS, inflation: rba_trimmed_mean_cpi_yoy, inflation_label: RBA trimmed-mean CPI (YoY), inflation_fallback: rba_weighted_median_cpi_yoy, fallback_label: RBA weighted-median CPI (YoY), neutral: rba_nominal_range_midpoint}
   RBNZ: {country: NZ, oecd: NZL, inflation: null, neutral: rbnz_nominal_neutral}
   SNB: {country: CH, oecd: CHE, inflation: null, neutral: snb_real_neutral}
 neutral_fallbacks:
+  boe_taylor_real_midpoint:
+    value: 0.875
+    basis: Midpoint of Alan Taylor's 2.75-3.00% nominal neutral range less the 2% inflation target; individual MPC member estimate, not a committee estimate
+    published_at: 2026-09-29
+    source_url: https://www.bankofengland.co.uk/speech/2026/september/searching-for-signposts-speech-by-alan-taylor
+    confidence: low
   boj_range_midpoint:
     value: -0.25
     basis: midpoint of published -1.0 to +0.5 real neutral range; experimental, not a BoJ point estimate

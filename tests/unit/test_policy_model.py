@@ -54,8 +54,9 @@ def test_low_confidence_source_caps_model_confidence():
 
 def test_dated_bank_neutral_values_and_older_snb_source():
     cfg = config()
-    assert cfg["banks"]["BOE"]["neutral"] == "nyfed_uk_unpublished"
-    for bank in ("RBA", "RBNZ", "SNB"):
+    assert cfg["banks"]["BOE"]["neutral"] == "boe_taylor_real_midpoint"
+    assert cfg["neutral_fallbacks"]["boe_taylor_real_midpoint"]["value"] == .875
+    for bank in ("BOE", "RBA", "RBNZ", "SNB"):
         item = cfg["neutral_fallbacks"][cfg["banks"][bank]["neutral"]]
         assert item["source_url"].startswith("https://") and item["confidence"] == "low"
     inputs = {"neutral_rate": {**_entry(0, date(2024, 5, 30), "low"), "max_age_days": 1000},

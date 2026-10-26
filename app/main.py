@@ -46,6 +46,7 @@ from app.ingestion.scheduler import Scheduler
 from app.logging_config import configure_logging
 from app.services.correlation_service import ensure_correlation_schema
 from app.services.meeting_calendar import seed_meetings_from_yaml
+from app.whiteboard.router import router as whiteboard_router
 from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -129,6 +130,7 @@ app.include_router(rate_probability_scraped.router)
 app.include_router(rates.router)
 app.include_router(positioning.router)
 app.include_router(desks.router)
+app.include_router(whiteboard_router)
 app.include_router(desk_insights.router)
 app.include_router(cb.router)
 app.include_router(cb_imports.router)

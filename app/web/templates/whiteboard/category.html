@@ -1,0 +1,15 @@
+<div class="wb-category-content">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search {{ category|replace('_', ' ') }}"
+         hx-get="/api/whiteboard/library/{{ category }}?currency={{ currency }}"
+         hx-trigger="keyup changed delay:250ms" hx-target="closest .wb-category-content" hx-swap="outerHTML">
+  <div class="wb-category-items">
+    {% for item in items %}
+    <div class="wb-library-item" draggable="true" data-widget-type="{{ item.widget_type }}"
+         data-config='{{ item.config|tojson }}'>
+      <span class="wb-grip" aria-hidden="true">::</span>{{ item.title }}
+      {% if item.config.country_code %}<small>{{ item.config.country_code }}</small>{% endif %}
+      {% if item.cb_preferred %}<span class="wb-cb-badge">CB preferred</span>{% endif %}
+    </div>
+    {% else %}<p class="wb-empty">No matches</p>{% endfor %}
+  </div>
+</div>

@@ -1,0 +1,8 @@
+<div class="wb-library" role="list" aria-label="Widget library">
+  {% for category in categories %}
+  <details class="wb-library-category">
+    <summary hx-get="/api/whiteboard/library/{{ category }}?currency={{ currency }}" hx-target="next .wb-library-items" hx-trigger="click once">{{ category|replace('_', ' ')|title }} <span>{{ counts[category] }}</span></summary>
+    <div class="wb-library-items"></div>
+  </details>
+  {% endfor %}
+</div>

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/whiteboard.css') }}">
+<script src="{{ url_for('static', path='vendor/htmx-1.9.12.min.js') }}" defer></script>
+<script src="{{ url_for('static', path='vendor/echarts-5.6.0.min.js') }}" defer></script>
+<script src="{{ url_for('static', path='js/whiteboard.js') }}" defer></script>
+{% endblock %}
+{% block body %}
+<main class="wb" data-currency="{{ currency }}" tabindex="0">
+  <header class="wb-header">
+    <a href="/desks/{{ currency }}">{{ currency }} Desk</a>
+    <strong>{{ currency }} Whiteboard</strong>
+    <nav class="wb-tabs" aria-label="Boards"></nav>
+    <button type="button" data-action="new-board">New board</button>
+    <button type="button" data-action="fit">Fit</button>
+    <button type="button" data-action="note">Note</button>
+    <button type="button" data-action="thesis">Thesis</button>
+    <button type="button" data-action="connect">Connect</button>
+    <button type="button" disabled>Ask AI</button>
+    <button type="button" disabled>Export</button>
+  </header>
+  <div class="wb-layout">
+    <aside class="wb-sidebar" aria-label="Widget library"
+           hx-get="/api/whiteboard/library?currency={{ currency }}" hx-trigger="load"></aside>
+    <div class="wb-viewport" tabindex="0" aria-label="Whiteboard canvas">
+      <div class="wb-world">
+        <svg class="wb-links" aria-hidden="true"></svg>
+        <div class="wb-cards"></div>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}

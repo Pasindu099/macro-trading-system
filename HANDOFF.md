@@ -1,5 +1,12 @@
 # HANDOFF
 
+## 2026-10-26 - Currency whiteboard
+
+- Migrations 0047_whiteboards and 0048_whiteboard_currencies: whiteboards, whiteboard_items, whiteboard_links; unique currency/name, eight-currency CHECK, item-kind CHECK, cascading foreign keys.
+- Routes: GET /desks/{currency}/whiteboard; board list/create/read at /whiteboard/{currency}/boards and /api/boards; item create/patch/delete, link create/delete, viewport patch under /api/boards/{id}; library, category partial, and widget-data under /api/whiteboard/.
+- Files: app/whiteboard/{router,registry,categories}.py, app/web/templates/whiteboard/, app/web/static/{js/whiteboard.js,css/whiteboard.css}, desk entry in app/web/templates/desk/page.html, router/config in app/main.py and app/settings.py, tests in tests/integration/test_whiteboard_{api,registry}.py.
+- Root theme variables: --wb-bg, --wb-card, --wb-border, --wb-text, --wb-muted, --wb-accent, --wb-link, --wb-font, --wb-font-size; --wb-bull/--wb-bear color directional chips. See REPORT_WHITEBOARD_FINAL.md for browser results.
+
 Running log of what was built, what was deliberately deferred, and what the next
 session needs to know. Architectural conventions live in `CONTEXT.md`; this file
 is the session-to-session state.

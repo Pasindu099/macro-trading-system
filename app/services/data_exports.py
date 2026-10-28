@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 from collections.abc import AsyncIterator, Sequence
 from typing import Any
 
@@ -24,6 +25,8 @@ def csv_response(sql: str, params: dict[str, Any], columns: Sequence[str], filen
             buffer.seek(0)
             buffer.truncate(0)
             # Neutralize spreadsheet formula strings; numeric values stay numeric.
+            values = [json.dumps(value, default=str, ensure_ascii=True) if isinstance(value, (dict, list)) else value
+                      for value in values]
             writer.writerow(["'" + value if isinstance(value, str) and value.lstrip().startswith(
                 ("=", "+", "-", "@")) else value for value in values])
             return buffer.getvalue()

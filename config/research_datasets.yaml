@@ -1,0 +1,14 @@
+# False excludes personal-use datasets from listing, reads AND exports.
+show_unlicensed_sources: true
+
+# Conservative redistribution policy: no rights inferred from API access.
+# FRED includes third-party series; derived datasets inherit input restrictions.
+sources:
+  eodhd: {label: EODHD, licensed_for_redistribution: false}
+  fred: {label: FRED and underlying publishers, licensed_for_redistribution: false}
+  cftc: {label: CFTC public reports, licensed_for_redistribution: true}
+  myfxbook: {label: Myfxbook official API, licensed_for_redistribution: false}
+  nyfed: {label: NY Fed HLW, licensed_for_redistribution: false}
+  oecd: {label: OECD Economic Outlook, licensed_for_redistribution: false}
+  calendar: {label: EODHD economic calendar, licensed_for_redistribution: false}
+  central_banks: {label: Official central-bank publications and configured neutral-rate estimates, licensed_for_redistribution: false}

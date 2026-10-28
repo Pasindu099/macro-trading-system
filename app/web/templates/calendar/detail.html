@@ -82,7 +82,7 @@
   <footer class="detail-links">
     {% if links.desk %}<a href="{{ links.desk }}">{{ event.currency_code }} desk →</a>{% endif %}
     {% for pair in links.pairs %}<a href="{{ pair.href }}">{{ pair.pair }} →</a>{% endfor %}
-    {% if links.data %}<a href="{{ links.data }}">Indicator history →</a>{% endif %}
+    {% if links.data %}<a href="{{ links.data }}">Full history →</a>{% endif %}
     <a href="{{ links.event_log }}" class="detail-log">Log to Event Log</a>
   </footer>
 </section>

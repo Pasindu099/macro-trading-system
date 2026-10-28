@@ -1,6 +1,7 @@
 {% from "desk/_macros.html" import head %}
 <section id="country" class="panel wide" aria-label="Country monitor">
 {{ head('Country monitor', 'EZ / DE / FR') }}
+<p><a href="/data/country/DE">Germany indicators →</a> · <a href="/data/country/FR">France indicators →</a></p>
 {% if ctx.state == 'ok' %}
 <table><thead><tr><th>Indicator</th>{% for member in ctx.members %}<th>{{ member }}</th>{% endfor %}</tr></thead>
 <tbody>{% for item in ctx.indicators %}<tr><th>{{ item.label }}</th>{% for member in ctx.members %}

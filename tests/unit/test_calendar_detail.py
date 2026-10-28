@@ -113,5 +113,6 @@ async def test_event_detail_header_components_and_links(monkeypatch):
     assert detail["history"][0]["first_print"] == 135.0
     assert detail["links"]["desk"] == "/desks/USD"
     assert detail["links"]["event_log"] == "/calendar/event-log/new?release_id=12"
+    assert detail["links"]["data"] == "/data/indicator/US/unemployment_rate"
     assert [pair["pair"] for pair in detail["links"]["pairs"]] == ["EUR/USD", "USD/JPY", "GBP/USD"]
     assert await calendar_detail.event_detail(Session(), 99) is None

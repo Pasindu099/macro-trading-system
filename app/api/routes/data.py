@@ -6,7 +6,7 @@ from datetime import date
 from urllib.parse import quote, urlencode
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app.db.session import get_sessionmaker
@@ -224,3 +224,23 @@ async def dataset_csv(request: Request, name: str):
         raise HTTPException(404, str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
+
+
+@router.get("/country/{code}", include_in_schema=False)
+async def legacy_country(request: Request, code: str):
+    try:
+        code = library.country_code(code)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    suffix = "?" + request.url.query if request.url.query else ""
+    return RedirectResponse(f"/data/country/{code}" + suffix, status_code=301)
+
+
+@router.get("/country/{country}/indicator/{canonical}", include_in_schema=False)
+async def legacy_indicator(request: Request, country: str, canonical: str):
+    try:
+        country = library.country_code(country)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    suffix = "?" + request.url.query if request.url.query else ""
+    return RedirectResponse(f"/data/indicator/{country}/{quote(canonical, safe='')}" + suffix, status_code=301)

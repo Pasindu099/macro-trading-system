@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from urllib.parse import quote
+
 from datetime import datetime, timezone
 from typing import Any
 
@@ -140,7 +142,8 @@ async def event_detail(session: AsyncSession, release_id: int,
             "desk": f"/desks/{currency}" if get_desk(currency) else None,
             "pairs": [{"pair": pair, "href": "/pairs/" + pair.replace("/", "")}
                       for pair in reactions["pairs"]],
-            "data": f"/data?indicator={indicator_id}" if indicator_id else None,
+            "data": (f"/data/indicator/{event['country_code']}/{quote(headline['canonical_name'], safe='')}"
+                     if indicator_id and headline.get("canonical_name") else None),
             "event_log": f"/calendar/event-log/new?release_id={headline['release_id']}",
         },
     }

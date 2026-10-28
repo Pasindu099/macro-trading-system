@@ -1,6 +1,8 @@
 {% from "desk/_macros.html" import state, head, pills %}
 <section id="data" class="panel wide" aria-label="Key data at a glance">
   {{ head('Key data at a glance', 'Last 24 months · Expand a chart for detail') }}
+  {% set library_country = ctx.country if ctx.country in ['DE', 'FR'] else desk.country %}
+  <p class="muted"><a href="/data/country/{{ library_country }}">All {{ library_country }} indicators →</a></p>
   {% if desk.currency == 'EUR' %}{{ pills(ctx.country_options, ctx.country, url, 'country', 'Country') }}{% endif %}
   {% if ctx.state == 'ok' %}
   <div class="cards">

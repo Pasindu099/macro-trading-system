@@ -372,3 +372,32 @@ Smoke checks in an authenticated browser:
 | `/central-banks?bank=BOE&view=projections` (also BOJ, BOC, SNB) | CB Tracking panel shows the same measure and status. BoJ uses core CPI for a fiscal-year average; the others use headline CPI Q4 averages. |
 | `/desks/CAD` | Market rate is labelled bill-based proxy; oil-shock classification shows mixed when signals conflict. |
 | `/desks/GBP` | Low-confidence BoE real neutral estimate carries the 29 Sep 2026 source date. |
+
+## v2.7-data release (Step 17)
+
+Follow sections 1-4 (backup, checkout, build, migrate), checking out `v2.7-data`. Step 17 adds read-only services/pages and no new migrations; this tag's migration head is `0048_whiteboard_currencies`. No data backfill or LLM call is required. Preserve private configuration and authentication.
+
+```bash
+dc exec -T app alembic current
+dc exec -T app pytest -q
+```
+
+Smoke checks in an authenticated browser, at both 1440 px and 390 px. Wait for loading placeholders to resolve; tables must scroll inside their frames, with no page-level horizontal overflow or JavaScript errors.
+
+| URL / action | Expected result |
+|---|---|
+| `/health`; `/data` | Health 200; shared navigation/freshness; 11 country tiles with theme counts and a latest scored surprise where available; health counts and datasets. |
+| `/data/country/US` | Theme/importance/search filters, latest/prior/change, last-24-print sparklines and next release. Amber/blue surprises and macro changes; changes have direction arrows. |
+| `/data/country/CN` | Calendar-only notice; no China/CNY entry added to Macro State or the eight-currency ranking. |
+| `/data/indicator/US/cpi_headline_yoy` | Actual/consensus chart, first-print/revised toggle and surprise bars; every stored print accessible in 500-row pages with first/latest values and revision columns. Desk/calendar links work. |
+| Indicator date filter, next/previous page, CSV | Filters persist in pagination and download links. CSV has download headers, `text/csv`, `X-Export-Row-Limit: 50000`, `Cache-Control: no-store`; at most 50,000 data rows, including revision/surprise columns. |
+| `/data/sources` | Read-only fresh/stale/manual import/disabled/error statuses, redacted errors and next runs when known; thirty-day quality groups and parser coverage. No refresh/import/admin actions. |
+| `/data/datasets/fx_spot` (also all other listed datasets) | Description, sources, licence flag, coverage and date/series/currency filters; chart where meaningful, details/evidence/inputs and CSV. COT uses bars; model rates retain inputs and confidence. |
+| Empty date/search selection; unavailable source | Explicit empty/unavailable state; failed requests offer Retry; missing values/scores are not fabricated. Successful content fragments use a 60 s private cache. |
+| Desk key-data panels; EUR DE/FR member selection and country monitor | All-country links target the selected country; Germany and France links open `/data/country/DE` and `/FR`. |
+| Calendar event panel, including a selected bundle component | Full history opens `/data/indicator/{country}/{canonical}` for that component. |
+| `/country/US`; `/country/US/indicator/cpi_headline_yoy` | Network inspector shows 301 to the corresponding `/data/...` route, preserving query filters; final page 200. Existing `/api/country/...` remains a JSON API. |
+
+Redistribution gate: `config/research_datasets.yaml` defaults to private/personal-use visibility. For a future public demo, set `show_unlicensed_sources: false`, rebuild/restart the app and hard-reload. Restricted datasets must disappear from `/data`; direct dataset page, content-fragment and CSV requests (for example `fx_spot`) must return 404. Derived datasets inherit input restrictions; do not infer redistribution rights from API access.
+
+Known limits: outliers are dated by observation date (no flag-time audit column); revisions by retrieval date; historical unavailable situation states were not persisted, so only current missing situation inputs are shown. See `REPORT_STEP17.md`. Release preparation does not deploy production or change source schedules.

@@ -53,10 +53,20 @@ const path = require('path');
         await page.screenshot({ path: path.join(output, `${name}-${width}.png`), animations: 'disabled' });
         results.push({ page: name, ...dimensions });
       }
+      const redirect = await page.request.get(base + '/country/US', { maxRedirects: 0 });
+      if (redirect.status() !== 301 || redirect.headers().location !== '/data/country/US') throw new Error('Legacy country redirect failed');
+      for (const [url, expected] of [
+        ['/desks/USD/panels/keydata', '/data/country/US'],
+        ['/desks/EUR/panels/keydata?country=DE', '/data/country/DE'],
+        ['/desks/EUR/panels/country', '/data/country/FR']
+      ]) {
+        const panel = await page.request.get(base + url);
+        if (!panel.ok() || !(await panel.text()).includes(`href="${expected}"`)) throw new Error(`${url}: data link missing`);
+      }
       if (errors.length) throw new Error(errors.join('; '));
       await page.close();
     }
   } finally { await browser.close(); }
   fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify(results, null, 2));
-  console.log(JSON.stringify({ pages: results.length, widths: [1440, 390], overflow: 0, chartToggle: 'passed', csv: 'passed' }));
+  console.log(JSON.stringify({ pages: results.length, widths: [1440, 390], overflow: 0, chartToggle: 'passed', csv: 'passed', links: 'passed' }));
 })().catch(error => { console.error(error.message); process.exit(1); });

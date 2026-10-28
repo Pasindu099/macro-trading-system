@@ -37,7 +37,8 @@ async def catalogue(session: AsyncSession, country: str, *, theme: str | None = 
         SELECT i.id, i.canonical_name, i.display_name, i.primary_category, i.unit,
                i.frequency, i.importance, r.actual AS latest_value, r.released_at AS latest_date,
                COALESCE(r.previous, prior.actual) AS previous_value,
-               s.surprise_normalized AS surprise_sigma, upcoming.next_release
+               s.surprise_normalized AS surprise_sigma, upcoming.next_release,
+               COALESCE(spark.points, '[]'::jsonb) AS sparkline
         FROM indicators i
         LEFT JOIN LATERAL (
             SELECT * FROM indicator_releases WHERE indicator_id=i.id
@@ -56,6 +57,17 @@ async def catalogue(session: AsyncSession, country: str, *, theme: str | None = 
             SELECT min(released_at) AS next_release FROM indicator_releases
             WHERE indicator_id=i.id AND released_at > now() AND actual IS NULL
         ) upcoming ON true
+        LEFT JOIN LATERAL (
+            SELECT jsonb_agg(jsonb_build_array(released_at::date, actual) ORDER BY released_at) AS points
+            FROM (
+                SELECT * FROM (
+                    SELECT DISTINCT ON (COALESCE(period_start_date::text, period, released_at::date::text))
+                        released_at, actual FROM indicator_releases WHERE indicator_id=i.id
+                        AND actual IS NOT NULL AND released_at <= now()
+                    ORDER BY COALESCE(period_start_date::text, period, released_at::date::text), retrieved_at DESC, id DESC
+                ) prints ORDER BY released_at DESC LIMIT 24
+            ) recent
+        ) spark ON true
         WHERE i.country_code=:country
         ORDER BY i.importance, i.display_name
     """), {"country": country})).mappings().all()

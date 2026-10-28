@@ -24,7 +24,7 @@ def test_placeholder_sections_and_event_log_navigation(monkeypatch):
     client = TestClient(app)
     for path, title in (("/desks", "Desks"),
                         ("/calendar", "Calendar"),
-                        ("/news", "News"), ("/data", "Data")):
+                        ("/news", "News"), ("/data", "Data library")):
         response = client.get(path)
         assert response.status_code == 200
         assert f"<h1>{title}</h1>" in response.text

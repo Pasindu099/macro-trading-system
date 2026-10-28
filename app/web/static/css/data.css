@@ -1,0 +1,23 @@
+.data-page{max-width:1440px;margin:auto;padding:28px;min-width:0;font-family:var(--font-body,Arial,sans-serif)}
+.data-heading,.data-title,.data-actions,.data-pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.data-heading{margin-bottom:24px}.data-heading h1{font-family:var(--font-head,Arial,sans-serif);margin:8px 0;font-size:clamp(26px,3vw,38px)}
+.data-page h2{font-size:19px;margin:0 0 14px;font-family:var(--font-head,Arial,sans-serif)}.data-page h3{font-size:15px;margin:0 0 10px}
+.data-page section{margin:18px 0}.data-card{display:block;min-width:0;padding:20px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+.data-card p{line-height:1.6}.data-card a:hover,.data-actions a:hover{color:var(--accent-text)}.data-muted,.data-card small{color:var(--muted);font-size:12px}
+.data-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.data-tiles .data-card{margin:0}.data-country-tile:hover{border-color:var(--accent)}
+.data-theme-counts,.data-health-counts{display:flex;flex-wrap:wrap;gap:8px;font-size:12px}.data-theme-counts span,.data-health-counts span,.data-status,.data-licence{border:1px solid var(--line);border-radius:5px;padding:4px 7px;font-size:11px}
+.data-licence{color:var(--muted)}.data-title{align-items:baseline}.data-title>h2,.data-title h3{margin-bottom:8px}.data-title>div{min-width:0}
+.data-filters{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin:18px 0}.data-filters label{display:grid;gap:6px;min-width:0;color:var(--muted);font-size:12px}
+.data-filters input,.data-filters select,.data-page button,.data-button{max-width:100%;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--text);padding:8px 11px;font:inherit}
+.data-filters select[multiple]{width:240px}.data-page button,.data-button{cursor:pointer;display:inline-block;font-size:12px}.data-filters button:hover,.data-button:hover{border-color:var(--accent)}
+.data-filters input:focus,.data-filters select:focus,.data-page button:focus-visible,.data-button:focus-visible{outline:2px solid var(--down);outline-offset:2px}
+.data-table-frame{max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-inline:contain;border:1px solid var(--line);border-radius:6px}
+.data-table-frame table{width:100%;border-collapse:collapse;font:12px var(--font-mono,monospace);text-align:left;white-space:nowrap}.data-table-frame td,.data-table-frame th{padding:11px 12px;border-bottom:1px solid var(--line);font-weight:400}
+.data-table-frame thead{background:var(--surface-2);color:var(--muted)}.data-table-frame th a{color:var(--text)}.data-table-frame th small{display:block;margin-top:5px}
+.data-table-frame .data-wrap{white-space:normal;min-width:160px;max-width:360px;overflow-wrap:anywhere}.data-table-frame pre{white-space:pre-wrap;overflow-wrap:anywhere;min-width:240px;max-width:440px;font:11px var(--font-mono,monospace)}
+.data-sigma{padding:4px 6px;border-radius:4px;border:1px solid currentColor}.data-beat,.data-sigma.beat{color:var(--accent-text)}.data-miss,.data-sigma.miss{color:var(--down)}
+.data-spark{width:90px;height:25px}.data-spark polyline{stroke:var(--down);stroke-width:1.5;fill:none}.data-chart{width:100%;height:300px;min-width:0}.data-chart-small{height:155px}
+.data-toggle{font-size:12px;color:var(--muted);display:flex;gap:7px;align-items:center}.data-quality-group{padding:14px 0;border-top:1px solid var(--line)}.data-quality-group summary{cursor:pointer;margin-bottom:12px}
+.data-state{padding:28px;color:var(--muted);border:1px dashed var(--line);border-radius:8px}.data-notice{padding:12px;border-left:3px solid var(--down);background:var(--surface-2)}.data-pagination{justify-content:flex-end;margin:16px 0;font-size:12px}
+@media(max-width:1000px){.data-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.data-page{padding:18px 12px}.data-tiles{grid-template-columns:minmax(0,1fr)}.data-card{padding:14px}.data-filters label{flex:1 1 140px}.data-filters input,.data-filters select,.data-filters select[multiple]{width:100%}.data-chart{height:245px}.data-chart-small{height:140px}.data-heading{align-items:start}.data-heading>div{min-width:0}.data-actions{align-items:start;justify-content:flex-start}.data-licence{max-width:100%;overflow-wrap:anywhere}}

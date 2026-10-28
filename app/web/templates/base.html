@@ -31,7 +31,7 @@
             <a href="/calendar/event-log"{% if request.url.path.startswith('/calendar/event-log') %} class="active" aria-current="page"{% endif %}>Event Log</a>
           </div></details>
           <a href="/positioning" class="{% if request.url.path == '/positioning' %}active{% endif %}"{% if request.url.path == '/positioning' %} aria-current="page"{% endif %}>Positioning</a>
-          <a href="/data" class="{% if request.url.path == '/data' %}active{% endif %}"{% if request.url.path == '/data' %} aria-current="page"{% endif %}>Data</a>
+          <a href="/data" class="{% if request.url.path == '/data' or request.url.path.startswith('/data/') %}active{% endif %}"{% if request.url.path == '/data' or request.url.path.startswith('/data/') %} aria-current="page"{% endif %}>Data</a>
         </nav>
         <div class="header-actions">
           <details class="nav-freshness"><summary id="freshness-summary">Checking freshness…</summary><div id="global-data-freshness" class="nav-freshness-list" role="status">Checking data freshness…</div></details>

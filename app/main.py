@@ -28,6 +28,7 @@ from app.api.routes import (
     cb_imports,
     cb_terminal,
     desk_insights,
+    data,
     desks,
     fixed_income,
     knowledge,
@@ -116,6 +117,7 @@ app.add_middleware(AuthMiddleware)
 app.mount("/static", StaticFiles(directory="app/web/static"), name="static")
 app.include_router(auth.router)
 app.include_router(shell.router)
+app.include_router(data.router)
 from app.api.routes import calendar
 app.include_router(calendar.router)
 from app.api.routes import event_log

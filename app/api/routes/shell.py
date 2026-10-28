@@ -126,7 +126,6 @@ async def pair_pending_page(request: Request, pair_code: str) -> HTMLResponse:
 
 
 @router.get("/desks", response_class=HTMLResponse)
-@router.get("/data", response_class=HTMLResponse)
 async def section_page(request: Request) -> HTMLResponse:
     title, description = SECTIONS[request.url.path]
     desks = []

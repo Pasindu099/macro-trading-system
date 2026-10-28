@@ -87,7 +87,8 @@ def test_data_page_renders_html(client: TestClient) -> None:
     r = client.get("/data")
     assert r.status_code == 200
     assert "text/html" in r.headers["content-type"]
-    assert "<h1>Data</h1>" in r.text
+    assert "<h1>Data library</h1>" in r.text
+    assert 'data-content-url="/data/content?view=landing"' in r.text
 
 
 

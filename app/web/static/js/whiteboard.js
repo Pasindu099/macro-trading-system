@@ -16,6 +16,8 @@
   const state = { board: null, boards: [], items: new Map(), links: [],
     x: 0, y: 0, zoom: 1, selected: null, connect: null, charts: new Map() };
   const timers = new Map();
+  const pending = new Map();
+  let cursor = null;
 
   async function request(url, method = 'GET', data) {
     const response = await fetch(url, { method, headers: data ? { 'Content-Type': 'application/json' } : {},
@@ -72,10 +74,12 @@
     drawLinks();
   }
   function saveItem(item, patch) {
+    pending.set(item.id, { ...pending.get(item.id), ...patch });
+    const boardId = state.board.id;
     debounce(`item-${item.id}`, async () => {
+      const changes = pending.get(item.id); pending.delete(item.id);
       try {
-        const saved = await request(`/api/boards/${state.board.id}/items/${item.id}`, 'PATCH', patch);
-        Object.assign(item, saved);
+        await request(`/api/boards/${boardId}/items/${item.id}`, 'PATCH', changes);
       } catch (error) { showError(error); }
     });
   }
@@ -115,22 +119,25 @@
     input.addEventListener('input', () => onInput(input.value));
     wrap.append(input); parent.append(wrap);
   }
-  function chartOptions(payload) {
+  function chartOptions(payload, type = 'line') {
     const series = payload.series;
     if (!series || !Object.keys(series).length) return null;
     const lines = Array.isArray(series) ? [{ name: payload.title, data: series }] :
       Object.entries(series).map(([name, data]) => ({ name, data }));
     return { animation: false, tooltip: { trigger: 'axis' }, legend: { show: lines.length > 1 },
       xAxis: { type: 'time' }, yAxis: { type: 'value' },
-      series: lines.map(line => ({ name: line.name, type: 'line', showSymbol: false,
+      series: lines.map(line => ({ name: line.name, type, showSymbol: false,
         data: line.data })) };
   }
   async function loadWidget(item, body, header) {
     const chartNode = document.createElement('div'); chartNode.className = 'wb-chart';
     body.append(chartNode);
     const params = new URLSearchParams({ currency, ...item.config });
+    if (item.widget_type === 'indicator') params.set('range', item.config.range || '5Y');
     try {
       const data = await request(`/api/whiteboard/widget-data/${item.widget_type}?${params}`);
+      if (!chartNode.isConnected) return;
+      header.querySelector('.wb-status')?.remove();
       if (data.status_chip) {
         const status = document.createElement('span');
         const direction = data.status_chip.toLowerCase();
@@ -138,7 +145,8 @@
         status.textContent = data.status_chip;
         header.append(status);
       }
-      const options = chartOptions(data);
+      item.payload = data;
+      const options = chartOptions(data, item.config.chart_type || 'line');
       if (options && window.echarts) {
         const chart = echarts.init(chartNode); chart.setOption(options); state.charts.set(item.id, chart);
       } else {
@@ -151,10 +159,55 @@
     const card = document.createElement('article'); card.className = 'wb-card'; card.dataset.id = item.id;
     const header = document.createElement('div'); header.className = 'wb-card-header';
     header.textContent = item.kind === 'widget' ? (item.config.title || item.widget_type) :
-      item.kind === 'note' ? 'Note' : 'Thesis';
+      item.kind === 'note' ? 'Note' : item.kind === 'image' ? 'Image' : 'Thesis';
     header.addEventListener('pointerdown', event => dragCard(event, item));
     const body = document.createElement('div'); body.className = 'wb-card-body';
     if (item.kind === 'widget') loadWidget(item, body, header);
+    if (item.widget_type === 'indicator') {
+      const controls = document.createElement('div'); controls.className = 'wb-chart-controls';
+      controls.addEventListener('pointerdown', event => event.stopPropagation());
+      for (const [key, choices, fallback] of [
+        ['chart_type', ['line', 'bar'], 'line'], ['range', ['6M', '1Y', '5Y', '10Y', 'ALL'], '5Y']]) {
+        const group = document.createElement('span');
+        for (const value of choices) {
+          const button = document.createElement('button'); button.type = 'button';
+          button.textContent = value === 'ALL' ? 'All' : value === 'line' ? 'Line' : value === 'bar' ? 'Bar' : value;
+          button.setAttribute('aria-pressed', String((item.config[key] || fallback) === value));
+          button.addEventListener('click', event => {
+            event.stopPropagation(); item.config[key] = value;
+            group.querySelectorAll('button').forEach(other => other.setAttribute('aria-pressed', String(other === button)));
+            saveItem(item, { config: { ...item.config } });
+            if (key === 'chart_type') {
+              if (item.payload) state.charts.get(item.id)?.setOption(chartOptions(item.payload, value));
+            } else {
+              state.charts.get(item.id)?.dispose(); state.charts.delete(item.id);
+              body.replaceChildren(); loadWidget(item, body, header);
+            }
+          });
+          group.append(button);
+        }
+        controls.append(group);
+      }
+      header.append(controls);
+    }
+    if (item.kind === 'image') {
+      body.classList.add('wb-image-body');
+      const image = document.createElement('img'); image.className = 'wb-image';
+      image.src = `/api/boards/${item.board_id}/images/${item.config.image_id}`;
+      image.alt = item.config.caption || 'Pasted screenshot'; image.draggable = false;
+      const fields = document.createElement('div'); fields.className = 'wb-thesis-fields';
+      for (const [key, label] of [['caption', 'Caption'], ['source', 'Source'], ['as_of', 'As-of date']]) {
+        const wrap = document.createElement('label'); wrap.textContent = label;
+        const input = document.createElement('input'); input.type = key === 'as_of' ? 'date' : 'text';
+        input.value = item.config[key] || '';
+        input.addEventListener('input', () => {
+          item.config[key] = input.value; saveItem(item, { config: { ...item.config } });
+          if (key === 'caption') image.alt = input.value;
+        });
+        wrap.append(input); fields.append(wrap);
+      }
+      body.append(image, fields);
+    }
     if (item.kind === 'note') {
       const note = document.createElement('textarea'); note.className = 'wb-note-text';
       note.value = item.config.text || ''; note.placeholder = 'Write a note';
@@ -175,9 +228,11 @@
     }
     const resize = document.createElement('div'); resize.className = 'wb-resize';
     resize.addEventListener('pointerdown', event => dragCard(event, item, true));
-    card.addEventListener('pointerdown', () => select(item.id));
+    card.addEventListener('pointerdown', event => {
+      if (!event.target.closest('input, textarea, button')) select(item.id);
+    });
     card.addEventListener('click', async event => {
-      if (!state.connect || event.target.closest('textarea')) return;
+      if (!state.connect || event.target.closest('input, textarea, button')) return;
       event.stopPropagation();
       if (state.connect === 'choose') { state.connect = item.id; return; }
       if (state.connect === item.id) return;
@@ -216,6 +271,27 @@
     renderItem(item); select(item.id);
   }
   viewport.addEventListener('dragover', event => event.preventDefault());
+  viewport.addEventListener('pointermove', event => { cursor = { clientX: event.clientX, clientY: event.clientY }; });
+  viewport.addEventListener('pointerleave', () => { cursor = null; });
+  viewport.addEventListener('paste', async event => {
+    if (!state.board || event.target.closest('input, textarea, [contenteditable]')) return;
+    const entry = Array.from(event.clipboardData.items).find(item => item.type.startsWith('image/'));
+    if (!entry) return;
+    event.preventDefault();
+    const file = entry.getAsFile(); if (!file) return;
+    const rect = viewport.getBoundingClientRect();
+    const inside = cursor && cursor.clientX >= rect.left && cursor.clientX <= rect.right &&
+      cursor.clientY >= rect.top && cursor.clientY <= rect.bottom;
+    const where = point(inside ? cursor : { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 });
+    const boardId = state.board.id;
+    try {
+      const response = await fetch(`/api/boards/${boardId}/images?x=${snap(where.x)}&y=${snap(where.y)}`,
+        { method: 'POST', headers: { 'Content-Type': file.type }, body: file });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || 'Image upload failed');
+      if (state.board.id === boardId) { renderItem(data); select(data.id); }
+    } catch (error) { showError(error); window.alert(error.message); }
+  });
   viewport.addEventListener('drop', event => {
     event.preventDefault();
     try {

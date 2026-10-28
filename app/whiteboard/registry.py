@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from datetime import date, timedelta
+from calendar import monthrange
 from typing import Any, Awaitable, Callable
 
 from sqlalchemy import text
@@ -57,7 +58,13 @@ async def _indicator(currency: str, config: dict[str, Any]) -> dict[str, Any]:
     country = config.get("country_code") or COUNTRY[currency]
     if not isinstance(code, str) or country not in await _countries(currency):
         return _pending("Indicator unavailable")
-    since = date.today() - timedelta(days=730)
+    today = date.today()
+    months = {"6M": 6, "1Y": 12, "5Y": 60, "10Y": 120}.get(config.get("range", "5Y"))
+    if months is None:
+        since = date.min
+    else:
+        year, month = divmod(today.year * 12 + today.month - 1 - months, 12)
+        since = date(year, month + 1, min(today.day, monthrange(year, month + 1)[1]))
     points = (await desk_panels.indicator_history(country, [code], since)).get(code, [])
     sigma = None
     title = config.get("title") or code.replace("_", " ").title()

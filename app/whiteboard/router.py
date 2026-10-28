@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 from sqlalchemy import text
@@ -29,7 +30,7 @@ class BoardCreate(BaseModel):
 
 
 class ItemCreate(BaseModel):
-    kind: Literal["widget", "note", "thesis"]
+    kind: Literal["widget", "note", "thesis", "image"]
     widget_type: str | None = None
     config: dict[str, Any] = Field(default_factory=dict)
     x: int
@@ -133,6 +134,8 @@ async def get_board(board_id: int, session: AsyncSession = SessionDep) -> dict[s
 @router.post("/api/boards/{board_id}/items", status_code=201)
 async def create_item(board_id: int, body: ItemCreate, session: AsyncSession = SessionDep) -> dict[str, Any]:
     await _board(session, board_id)
+    if body.kind == "image":
+        raise HTTPException(422, "Create image cards through the image upload endpoint")
     if body.kind == "widget" and body.widget_type not in WIDGET_REGISTRY:
         raise HTTPException(422, "Unknown widget type")
     if body.kind != "widget" and body.widget_type is not None:
@@ -157,6 +160,11 @@ async def patch_item(board_id: int, item_id: int, body: ItemPatch,
     if any(value is None for value in fields.values()):
         raise HTTPException(422, "Null values are not supported")
     if "config" in fields:
+        existing = (await session.execute(text(
+            "SELECT kind, config FROM whiteboard_items WHERE id=:id AND board_id=:board"
+        ), {"id": item_id, "board": board_id})).first()
+        if existing and existing.kind == "image":
+            fields["config"]["image_id"] = existing.config["image_id"]
         fields["config"] = json.dumps(fields["config"])
     assignments = ", ".join(f"{key} = {'CAST(:config AS jsonb)' if key == 'config' else ':' + key}"
                             for key in fields)
@@ -173,11 +181,53 @@ async def patch_item(board_id: int, item_id: int, body: ItemPatch,
 @router.delete("/api/boards/{board_id}/items/{item_id}", status_code=204)
 async def delete_item(board_id: int, item_id: int, session: AsyncSession = SessionDep) -> None:
     await _board(session, board_id)
-    result = await session.execute(text("DELETE FROM whiteboard_items WHERE id=:id AND board_id=:board_id"),
+    result = await session.execute(text("DELETE FROM whiteboard_items WHERE id=:id AND board_id=:board_id RETURNING kind, config"),
                                    {"id": item_id, "board_id": board_id})
-    if result.rowcount == 0:
+    deleted = result.first()
+    if deleted is None:
         raise HTTPException(404, "Item not found")
+    if deleted.kind == "image":
+        await session.execute(text("DELETE FROM whiteboard_images WHERE id=:id AND board_id=:board"),
+                              {"id": deleted.config["image_id"], "board": board_id})
     await session.commit()
+
+
+@router.post("/api/boards/{board_id}/images", status_code=201)
+async def upload_image(board_id: int, request: Request, x: int = 0, y: int = 0,
+                       session: AsyncSession = SessionDep) -> dict[str, Any]:
+    await _board(session, board_id)
+    data = bytearray()
+    async for chunk in request.stream():
+        data.extend(chunk)
+        if len(data) > 5 * 1024 * 1024:
+            raise HTTPException(413, "Image exceeds the 5 MB limit")
+    raw = bytes(data)
+    mime = ("image/png" if raw.startswith(b"\x89PNG\r\n\x1a\n") else
+            "image/jpeg" if raw.startswith(b"\xff\xd8\xff") else
+            "image/webp" if raw[:4] == b"RIFF" and raw[8:12] == b"WEBP" else None)
+    if mime is None or request.headers.get("content-type", "").split(";")[0] != mime:
+        raise HTTPException(415, "Only PNG, JPEG and WebP images with matching magic bytes are supported")
+    image_id = (await session.execute(text("""
+        INSERT INTO whiteboard_images (board_id, mime, bytes, size_bytes)
+        VALUES (:board, :mime, :data, :size) RETURNING id
+    """), {"board": board_id, "mime": mime, "data": raw, "size": len(raw)})).scalar_one()
+    config = {"image_id": image_id, "caption": "", "source": "", "as_of": date.today().isoformat()}
+    row = (await session.execute(text("""
+        INSERT INTO whiteboard_items (board_id, kind, config, x, y, w, h)
+        VALUES (:board, 'image', CAST(:config AS jsonb), :x, :y, 420, 360) RETURNING *
+    """), {"board": board_id, "config": json.dumps(config), "x": x, "y": y})).first()
+    await session.commit()
+    return _dict(row)
+
+
+@router.get("/api/boards/{board_id}/images/{image_id}")
+async def get_image(board_id: int, image_id: int, session: AsyncSession = SessionDep) -> Response:
+    row = (await session.execute(text(
+        "SELECT mime, bytes FROM whiteboard_images WHERE board_id=:board AND id=:id"
+    ), {"board": board_id, "id": image_id})).first()
+    if row is None:
+        raise HTTPException(404, "Image not found")
+    return Response(bytes(row.bytes), media_type=row.mime, headers={"X-Content-Type-Options": "nosniff"})
 
 
 @router.post("/api/boards/{board_id}/links", status_code=201)
@@ -253,9 +303,11 @@ async def library_category_items(category: str, currency: str, q: str = "",
 @router.get("/api/whiteboard/widget-data/{widget_type}")
 async def get_widget_data(widget_type: str, currency: str,
                           indicator_code: str | None = None, country_code: str | None = None,
-                          title: str | None = None) -> dict[str, Any]:
+                          title: str | None = None,
+                          range: Literal["6M", "1Y", "5Y", "10Y", "ALL"] = "5Y") -> dict[str, Any]:
     currency = _currency(currency)
     if widget_type not in WIDGET_REGISTRY:
         raise HTTPException(404, "Unknown widget type")
     return await widget_data(widget_type, currency, {"indicator_code": indicator_code,
-                                                   "country_code": country_code, "title": title})
+                                                   "country_code": country_code, "title": title,
+                                                   "range": range})

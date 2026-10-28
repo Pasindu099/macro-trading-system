@@ -146,3 +146,9 @@
 .wb-status.bullish { color: var(--wb-bull); }
 .wb-status.bearish { color: var(--wb-bear); }
 .wb-empty { color: var(--wb-muted); }
+.wb-image-body { display: flex; flex-direction: column; gap: var(--wb-tight); }
+.wb-image { width: 100%; flex: 1; min-height: 0; object-fit: contain; }
+.wb-image-body input { width: 100%; color: var(--wb-text); background: var(--wb-card); border: var(--wb-border-width) solid var(--wb-border); }
+.wb-chart-controls { display: flex; flex-wrap: wrap; gap: var(--wb-tight); }
+.wb-chart-controls button { padding: var(--wb-tight); color: var(--wb-text); background: var(--wb-card); border: var(--wb-border-width) solid var(--wb-border); font-size: var(--wb-small); cursor: pointer; }
+.wb-chart-controls button[aria-pressed="true"] { color: var(--wb-accent); border-color: var(--wb-accent); }

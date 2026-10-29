@@ -1,0 +1,805 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Positioning · COT · ForexCompass</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&amp;family=DM+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0b0e13}
+a{color:#8fc3ff}a:hover{color:#c3ddff}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #0b0e13; color: #e6e9ef; font-family: 'DM Mono', ui-monospace, Menlo, monospace; font-size: 13px; line-height: 1.5">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 28px; border-bottom: 1px solid #222833; background: #0e1218">
+<div style="display: flex; align-items: center; gap: 12px">
+<a href="Overview.dc.html" style="font-family: Syne, 'Helvetica Neue', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: 0.02em; color: #e6e9ef; text-decoration: none">ForexCompass</a>
+<span style="color: #9aa3b2; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em">Research · Positioning</span>
+</div>
+<nav aria-label="Main" style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{nav}}" as="n" hint-placeholder-count="5">
+<a href="{{n.href}}" style="{{n.style}}">{{n.label}}</a>
+</sc-for>
+</nav>
+<span style="color: #9aa3b2; font-size: 11px">Illustrative data</span>
+</header>
+
+<main style="max-width: 1440px; margin: 0 auto; padding: 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+
+<section aria-label="Summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; padding: 24px; border: 1px solid #2c3442; border-radius: 10px; background: #12161d">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="color: #9aa3b2; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em">CFTC Commitments of Traders · Traders in Financial Futures</div>
+<h1 style="margin: 0; font-family: Syne, 'Helvetica Neue', sans-serif; font-weight: 800; font-size: 44px; line-height: 1.05">Positioning</h1>
+<p style="margin: 6px 0 0; font-size: 15px; line-height: 1.6">Speculators are crowded long USD and short JPY at the same time. That is the one positioning story that matters this week: both are near 3-year extremes, and JPY has started moving against the shorts.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 12px; border: 1px solid #222833; border-radius: 8px; background: #0e1218"><span style="color: #9aa3b2; font-size: 11px">Data as of</span><span style="font-size: 15px">Tue 29 Sep</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 12px; border: 1px solid #222833; border-radius: 8px; background: #0e1218"><span style="color: #9aa3b2; font-size: 11px">Released</span><span style="font-size: 15px">Fri 2 Oct</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 12px; border: 1px solid #222833; border-radius: 8px; background: #0e1218"><span style="color: #9aa3b2; font-size: 11px">Next release</span><span style="font-size: 15px">Fri 9 Oct</span></div>
+</div>
+<p style="margin: 0; color: #9aa3b2; font-size: 12px">How to use it: COT is weekly and lags by three days, so it is risk context, not a timing tool. It covers CME and ICE futures, a sample of a market that trades mostly OTC. Extremes can persist for months; the signal is extreme positioning <span style="color: #e6e9ef">plus</span> price starting to move against it.</p>
+</div>
+</section>
+
+<section aria-label="Where are the big traders betting" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid #222833; border-radius: 10px; background: #12161d">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-family: Syne, sans-serif; font-weight: 700; font-size: 18px">1 · Where are the big traders betting?</h2>
+<span style="color: #9aa3b2; font-size: 12px">Hedge funds' bets on each currency, compared with the last {{lookback}}</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{viewBtns}}" as="v" hint-placeholder-count="2">
+<button type="button" onClick="{{v.pick}}" aria-pressed="{{v.pressed}}" style="{{v.style}}">{{v.label}}</button>
+</sc-for>
+<span style="width: 8px"></span>
+<sc-for list="{{lookbacks}}" as="b" hint-placeholder-count="3">
+<button type="button" onClick="{{b.pick}}" aria-pressed="{{b.pressed}}" style="{{b.style}}">{{b.label}}</button>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid #222833; border-radius: 8px; background: #0e1218; font-size: 13px; color: #c9d1dd">
+<span style="color: #e6e9ef; font-weight: 500">How to read this</span>
+<span>Each bar shows how big the hedge-fund bet on a currency is compared with the last {{lookback}}. <span style="color: #8fc3ff">Far left</span> = the biggest bet against it in that period, <span style="color: #f6b65a">far right</span> = the biggest bet on it.</span>
+<span>A bet at an extreme leaves little room to add more, so a surprise the other way can force a fast unwind. That is a risk to watch, not a signal on its own.</span>
+</div>
+<sc-if value="{{isSimple}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: #c9d1dd">
+<span><span style="color: #e6e9ef; font-weight: 500">Fast money</span> = hedge funds: borrow to trade, move in and out quickly.</span>
+<span><span style="color: #e6e9ef; font-weight: 500">Slow money</span> = pension funds and asset managers: long-term, move slowly.</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px">
+<sc-for list="{{cards}}" as="c" hint-placeholder-count="8">
+<button type="button" onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="{{c.cardStyle}}">
+<span style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-family: Syne, sans-serif; font-weight: 700; font-size: 18px; color: #e6e9ef">{{c.ccy}}</span><span style="{{c.statusStyle}}">{{c.status}}</span></span>
+<span style="color: #e6e9ef; font-size: 13px; line-height: 1.45; text-align: left">{{c.sentence}}</span>
+<span style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 6px 10px; align-items: center; font-size: 11px; color: #9aa3b2; text-align: left">
+<span>Fast money</span>
+<span style="position: relative; height: 12px; display: block"><span style="position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #4a5568"></span><span style="{{c.fastBar}}"></span></span>
+<span>Slow money</span>
+<span style="position: relative; height: 12px; display: block"><span style="position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #4a5568"></span><span style="{{c.slowBar}}"></span></span>
+<span></span>
+<span style="display: flex; justify-content: space-between; color: #4a5568; font-size: 10px"><span>◀ against</span><span>on ▶</span></span>
+</span>
+<span style="{{c.riskStyle}}">{{c.risk}}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{isBars}}" hint-placeholder-val="{{false}}">
+<div style="overflow-x: auto">
+<div style="display: grid; grid-template-columns: 70px minmax(220px, 1.6fr) minmax(170px, 1fr) 110px minmax(150px, 0.9fr) 140px; gap: 10px 14px; align-items: center; min-width: 900px; font-size: 12px">
+<span style="color: #9aa3b2">Currency</span>
+<span style="display: flex; justify-content: space-between; color: #9aa3b2"><span>◀ Biggest bet against</span><span>Biggest bet on ▶</span></span>
+<span style="color: #9aa3b2">In plain words</span>
+<span style="color: #9aa3b2; text-align: right">Size of the bet</span>
+<span style="color: #9aa3b2">This week</span>
+<span style="color: #9aa3b2">Watch</span>
+<sc-for list="{{crowd2}}" as="r" hint-placeholder-count="8">
+<button type="button" onClick="{{r.pick}}" aria-pressed="{{r.pressed}}" style="{{r.btnStyle}}">{{r.ccy}}</button>
+<div style="position: relative; height: 22px" title="{{r.title}}">
+<div style="position: absolute; left: 0; right: 0; top: 8px; height: 6px; border-radius: 3px; background: #1b2230"></div>
+<div style="position: absolute; left: 0; width: 15%; top: 8px; height: 6px; border-radius: 3px 0 0 3px; background: rgba(90,169,255,0.35)"></div>
+<div style="position: absolute; right: 0; width: 15%; top: 8px; height: 6px; border-radius: 0 3px 3px 0; background: rgba(242,163,58,0.35)"></div>
+<div style="position: absolute; left: 50%; top: 4px; bottom: 4px; width: 1px; background: #4a5568"></div>
+<div style="{{r.dot}}"></div>
+</div>
+<span style="{{r.labelStyle}}">{{r.label}}</span>
+<span style="text-align: right; color: #e6e9ef">{{r.size}}</span>
+<span style="color: {{r.weekColor}}">{{r.week}}</span>
+<span style="{{r.watchStyle}}">{{r.watch}}</span>
+</sc-for>
+</div>
+</div>
+</sc-if>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px">
+<span style="color: #9aa3b2; font-size: 11px">Sorted by how extreme the bet is. Click a currency to see its history below. Data: CFTC, as of {{asOf}} (weekly).</span>
+<button type="button" onClick="{{toggleDetail}}" aria-expanded="{{detailExpanded}}" style="min-height: 32px; padding: 0 12px; border: 1px solid #2c3442; border-radius: 999px; background: #0e1218; color: #c9d1dd; font-family: inherit; font-size: 12px; cursor: pointer">{{detailLabel}}</button>
+</div>
+<sc-if value="{{showDetail}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid #222833; border-radius: 8px; background: #0e1218">
+<span style="color: #e6e9ef; font-size: 13px; font-weight: 500">All trader groups (for experienced users)</span>
+<span style="color: #9aa3b2; font-size: 12px"><span style="color: #e6e9ef">Hedge funds</span> = fast money, the bars above · <span style="color: #e6e9ef">Asset managers</span> = slow, long-term money · <span style="color: #e6e9ef">Banks / dealers</span> = usually on the other side of hedge funds. Numbers are the position vs the last {{lookback}} (0 = biggest bet against, 100 = biggest bet on).</span>
+<div style="overflow-x: auto">
+<table style="width: 100%; min-width: 520px; border-collapse: collapse; font-size: 12px">
+<thead><tr style="color: #9aa3b2; text-align: left"><th style="padding: 6px 8px 6px 0; font-weight: 400">Currency</th><th style="padding: 6px 8px; font-weight: 400; text-align: right">Hedge funds</th><th style="padding: 6px 8px; font-weight: 400; text-align: right">Asset managers</th><th style="padding: 6px 0 6px 8px; font-weight: 400; text-align: right">Banks / dealers</th></tr></thead>
+<tbody>
+<sc-for list="{{crowd2}}" as="r" hint-placeholder-count="8">
+<tr style="border-top: 1px solid #222833"><td style="padding: 6px 8px 6px 0; color: #e6e9ef">{{r.ccy}}</td><td style="padding: 6px 8px; text-align: right; color: #c9d1dd">{{r.lev}}</td><td style="padding: 6px 8px; text-align: right; color: #c9d1dd">{{r.am}}</td><td style="padding: 6px 0 6px 8px; text-align: right; color: #c9d1dd">{{r.dl}}</td></tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</div>
+</sc-if>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 20px">
+
+<section aria-label="Flows" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid #222833; border-radius: 10px; background: #12161d">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 12px">
+<h2 style="margin: 0; font-family: Syne, sans-serif; font-weight: 700; font-size: 18px">2 · Flows: who is building, who is unwinding?</h2>
+<div style="display: flex; gap: 6px">
+<sc-for list="{{flowWindows}}" as="b" hint-placeholder-count="2">
+<button type="button" onClick="{{b.pick}}" aria-pressed="{{b.pressed}}" style="{{b.style}}">{{b.label}}</button>
+</sc-for>
+</div>
+</div>
+<span style="color: #9aa3b2; font-size: 11px">Change in leveraged funds net position, thousands of contracts</span>
+<sc-for list="{{flows}}" as="f" hint-placeholder-count="8">
+<div style="display: grid; grid-template-columns: 44px minmax(0, 1fr) 70px; gap: 10px; align-items: center">
+<span style="color: #e6e9ef; font-weight: 500">{{f.ccy}}</span>
+<div style="position: relative; height: 14px; border-radius: 4px; background: #1b2230">
+<div style="position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: #4a5568"></div>
+<div style="{{f.bar}}"></div>
+</div>
+<span style="text-align: right; color: {{f.color}}">{{f.label}}</span>
+</div>
+</sc-for>
+<p style="margin: 0; color: #c9d1dd; font-size: 12px">{{flowRead}}</p>
+</section>
+
+<section aria-label="Squeeze watch" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid #3a2a10; border-radius: 10px; background: #15140f">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-family: Syne, sans-serif; font-weight: 700; font-size: 18px">3 · Squeeze watch: who might be forced out?</h2>
+<span style="color: #c9d1dd; font-size: 13px">A squeeze happens when many traders bet the same way and the market turns against them. They rush to exit, and that speeds the move up.</span>
+</div>
+<sc-for list="{{sq2}}" as="s" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border: 1px solid #222833; border-radius: 10px; background: #12161d">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px">
+<span style="font-family: Syne, sans-serif; font-weight: 700; font-size: 18px">{{s.ccy}}</span>
+<span style="{{s.badgeStyle}}">{{s.badge}}</span>
+</div>
+<p style="margin: 0; color: #e6e9ef; font-size: 14px; line-height: 1.5">{{s.headline}}</p>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<sc-for list="{{s.checks}}" as="k" hint-placeholder-count="3">
+<div style="display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: start; font-size: 13px">
+<span style="{{k.iconStyle}}">{{k.icon}}</span>
+<span><span style="color: #e6e9ef">{{k.label}}</span> <span style="color: #9aa3b2">{{k.detail}}</span></span>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; font-size: 11px; color: #7c8698">
+<span>{{s.dates}}</span>
+<a href="{{s.href}}" style="font-size: 12px">{{s.link}}</a>
+</div>
+</div>
+</sc-for>
+</section>
+
+</div>
+
+<section aria-label="Who is betting and how much" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid #222833; border-radius: 10px; background: #12161d">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-family: Syne, sans-serif; font-weight: 700; font-size: 18px">4 · Who is betting on {{pTitle}}, and how much?</h2>
+<span style="color: #9aa3b2; font-size: 12px">Size of the bets in US dollars, week by week, with the price underneath</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{pModeBtns}}" as="m" hint-placeholder-count="2">
+<button type="button" onClick="{{m.pick}}" aria-pressed="{{m.pressed}}" style="{{m.style}}">{{m.label}}</button>
+</sc-for>
+<span style="width: 8px"></span>
+<sc-for list="{{pPeriodBtns}}" as="m" hint-placeholder-count="2">
+<button type="button" onClick="{{m.pick}}" aria-pressed="{{m.pressed}}" style="{{m.style}}">{{m.label}}</button>
+</sc-for>
+</div>
+</div>
+
+<sc-if value="{{pIsPair}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="color: #9aa3b2; font-size: 11px">Against the US dollar</span>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{pUsdBtns}}" as="t" hint-placeholder-count="7">
+<button type="button" onClick="{{t.pick}}" aria-pressed="{{t.pressed}}" style="{{t.style}}">{{t.label}}</button>
+</sc-for>
+</div>
+<span style="color: #9aa3b2; font-size: 11px; margin-top: 4px">Crosses (no futures contract of their own: built from the two currencies)</span>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{pCrossBtns}}" as="t" hint-placeholder-count="21">
+<button type="button" onClick="{{t.pick}}" aria-pressed="{{t.pressed}}" style="{{t.style}}">{{t.label}}</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{pIsCcy}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{pCcyBtns}}" as="t" hint-placeholder-count="8">
+<button type="button" onClick="{{t.pick}}" aria-pressed="{{t.pressed}}" style="{{t.style}}">{{t.label}}</button>
+</sc-for>
+</div>
+</sc-if>
+
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 12px; border: 1px solid #222833; border-radius: 8px; background: #0e1218">
+<span style="color: #9aa3b2; font-size: 11px">Show as</span>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{pUnitBtns}}" as="m" hint-placeholder-count="2">
+<button type="button" onClick="{{m.pick}}" aria-pressed="{{m.pressed}}" style="{{m.style}}">{{m.label}}</button>
+</sc-for>
+</div>
+<sc-if value="{{pShowOI}}" hint-placeholder-val="{{false}}">
+<span style="color: #9aa3b2; font-size: 11px">Traders</span>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{pGroupBtns}}" as="m" hint-placeholder-count="3">
+<button type="button" onClick="{{m.pick}}" aria-pressed="{{m.pressed}}" style="{{m.style}}">{{m.label}}</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+<sc-if value="{{pShowOI}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px">
+<span style="color: #9aa3b2; font-size: 11px; margin-right: 4px">Lines</span>
+<sc-for list="{{pSeriesBtns}}" as="m" hint-placeholder-count="6">
+<button type="button" onClick="{{m.pick}}" aria-pressed="{{m.pressed}}" style="{{m.style}}">{{m.label}}</button>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{pOIBlocked}}" hint-placeholder-val="{{false}}">
+<div style="padding: 10px 12px; border: 1px solid #4a3a6a; border-radius: 8px; background: #1d1729; color: #d6c4fb; font-size: 12px">"% of open interest" only works for a single futures market. {{pTitle}} is built from two markets with different sizes, so it is shown in dollars instead.</div>
+</sc-if>
+
+<sc-if value="{{pShowOI}}" hint-placeholder-val="{{false}}">
+<div style="display: grid; grid-template-columns: 48px minmax(0, 1fr) 52px; gap: 6px">
+<div style="display: flex; flex-direction: column; justify-content: space-between; color: #9aa3b2; font-size: 10px; text-align: right; padding: 2px 0"><span>+{{oiMax}}%</span><span>0%</span><span>−{{oiMax}}%</span></div>
+<svg viewBox="0 0 600 260" preserveAspectRatio="none" style="display: block; width: 100%; height: 300px; border-radius: 4px" role="img" aria-label="{{oiAria}}">
+<rect x="0" y="0" width="600" height="260" fill="#0e1218"></rect>
+<line x1="0" x2="600" y1="130" y2="130" stroke="#4a5568" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"></line>
+<sc-if value="{{sBands}}" hint-placeholder-val="{{true}}">
+<line x1="0" x2="600" y1="{{oiP80}}" y2="{{oiP80}}" stroke="#f2a33a" stroke-dasharray="3 5" vector-effect="non-scaling-stroke"></line>
+<line x1="0" x2="600" y1="{{oiP20}}" y2="{{oiP20}}" stroke="#5aa9ff" stroke-dasharray="3 5" vector-effect="non-scaling-stroke"></line>
+</sc-if>
+<sc-if value="{{sOI}}" hint-placeholder-val="{{false}}"><polyline points="{{oiOIPts}}" fill="none" stroke="#4a5568" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline></sc-if>
+<sc-if value="{{sLong}}" hint-placeholder-val="{{true}}"><polyline points="{{oiLongPts}}" fill="none" stroke="#f2a33a" stroke-width="1.6" vector-effect="non-scaling-stroke"></polyline></sc-if>
+<sc-if value="{{sShort}}" hint-placeholder-val="{{true}}"><polyline points="{{oiShortPts}}" fill="none" stroke="#5aa9ff" stroke-width="1.6" vector-effect="non-scaling-stroke"></polyline></sc-if>
+<sc-if value="{{sPrice}}" hint-placeholder-val="{{true}}"><polyline points="{{oiPxPts}}" fill="none" stroke="#6fe0c4" stroke-width="1.3" vector-effect="non-scaling-stroke"></polyline></sc-if>
+<sc-if value="{{sNet}}" hint-placeholder-val="{{true}}"><polyline points="{{oiNetPts}}" fill="none" stroke="#e6e9ef" stroke-width="2.6" vector-effect="non-scaling-stroke"></polyline></sc-if>
+</svg>
+<div style="display: flex; flex-direction: column; justify-content: space-between; color: #6fe0c4; font-size: 10px; padding: 2px 0"><span>price high</span><span>price low</span></div>
+</div>
+<div style="display: flex; justify-content: space-between; padding: 0 58px 0 54px; color: #9aa3b2; font-size: 10px"><span>{{pStart}}</span><span>Latest week</span></div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 11px; color: #c9d1dd">
+<span style="display: flex; align-items: center; gap: 6px"><span style="display: inline-block; width: 16px; height: 3px; background: #e6e9ef"></span>Net (long minus short)</span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="display: inline-block; width: 16px; height: 2px; background: #f2a33a"></span>Long bets</span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="display: inline-block; width: 16px; height: 2px; background: #5aa9ff"></span>Short bets</span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="display: inline-block; width: 16px; height: 2px; background: #6fe0c4"></span>Price (right)</span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="display: inline-block; width: 16px; height: 0; border-top: 2px dashed #f2a33a"></span>Top 20% line</span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="display: inline-block; width: 16px; height: 0; border-top: 2px dashed #5aa9ff"></span>Bottom 20% line</span>
+</div>
+<span style="color: #9aa3b2; font-size: 11px">"% of open interest" = this group's bets as a share of all open contracts in the market. The dashed lines mark the top and bottom 20% of the net line over the selected period.</span>
+</sc-if>
+
+<sc-if value="{{pShowUsd}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: #c9d1dd">
+<span style="display: flex; align-items: center; gap: 6px"><span style="display: inline-block; width: 18px; height: 3px; background: #e6e9ef"></span>Fast money (hedge funds)</span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="display: inline-block; width: 18px; height: 0; border-top: 2px dashed #9aa3b2"></span>Slow money (pension funds, asset managers)</span>
+<span style="{{pBadgeStyle}}">{{pBadge}}</span>
+</div>
+
+<div style="display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 6px">
+<div style="display: flex; flex-direction: column; justify-content: space-between; color: #9aa3b2; font-size: 10px; text-align: right; padding: 2px 0"><span>{{pTop}}</span><span>$0</span><span>{{pBot}}</span></div>
+<svg viewBox="0 0 600 220" preserveAspectRatio="none" style="display: block; width: 100%; height: 240px; border-radius: 4px" role="img" aria-label="{{pAria}}">
+<rect x="0" y="0" width="600" height="110" fill="rgba(242,163,58,0.06)"></rect>
+<rect x="0" y="110" width="600" height="110" fill="rgba(90,169,255,0.06)"></rect>
+<line x1="0" x2="600" y1="110" y2="110" stroke="#4a5568" vector-effect="non-scaling-stroke"></line>
+<polyline points="{{pSlowPts}}" fill="none" stroke="#9aa3b2" stroke-width="2" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"></polyline>
+<polyline points="{{pFastPts}}" fill="none" stroke="#e6e9ef" stroke-width="2.5" vector-effect="non-scaling-stroke"></polyline>
+</svg>
+</div>
+<div style="display: flex; justify-content: space-between; padding-left: 64px; font-size: 11px">
+<span style="color: #f6b65a">▲ Betting on {{pTitle}} (above the line)</span>
+<span style="color: #8fc3ff">▼ Betting against it (below)</span>
+</div>
+
+<div style="display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 6px">
+<div style="display: flex; flex-direction: column; justify-content: space-between; color: #9aa3b2; font-size: 10px; text-align: right"><span>{{pPxMax}}</span><span>{{pPxMin}}</span></div>
+<svg viewBox="0 0 600 90" preserveAspectRatio="none" style="display: block; width: 100%; height: 90px; border-radius: 4px" role="img" aria-label="{{pTitle}} price">
+<rect x="0" y="0" width="600" height="90" fill="#0e1218"></rect>
+<polyline points="{{pPxPts}}" fill="none" stroke="#f2a33a" stroke-width="1.8" vector-effect="non-scaling-stroke"></polyline>
+</svg>
+</div>
+<div style="display: flex; justify-content: space-between; padding-left: 64px; color: #9aa3b2; font-size: 10px"><span>{{pStart}}</span><span>{{pTitle}} price</span><span>Latest week</span></div>
+</sc-if>
+
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid #222833; border-left: 3px solid #f2a33a; border-radius: 8px; background: #0e1218; font-size: 13px">
+<div><span style="color: #9aa3b2; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em">What this shows</span><br><span style="color: #c9d1dd">How much money the two kinds of big traders have bet on or against {{pTitle}}, and how the price moved at the same time.</span></div>
+<div><span style="color: #9aa3b2; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em">What it says now</span><br><span style="color: #e6e9ef">{{pNow}}</span></div>
+<div><span style="color: #9aa3b2; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em">Why it matters</span><br><span style="color: #c9d1dd">{{pWhy}}</span></div>
+</div>
+<span style="color: #7c8698; font-size: 11px">{{pNote}}</span>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 20px">
+
+<section aria-label="After extremes" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid #222833; border-radius: 10px; background: #12161d">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-family: Syne, sans-serif; font-weight: 700; font-size: 18px">5 · What happened the last times they were this extreme?</h2>
+<span style="color: #9aa3b2; font-size: 12px">Every past time hedge funds held a bet this big on {{sel}}, and how {{exName}} moved over the next 8 weeks</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{exCcyBtns}}" as="t" hint-placeholder-count="8">
+<button type="button" onClick="{{t.pick}}" aria-pressed="{{t.pressed}}" style="{{t.style}}">{{t.label}}</button>
+</sc-for>
+</div>
+</div>
+
+<sc-if value="{{exHas}}" hint-placeholder-val="{{true}}">
+<p style="margin: 0; color: #e6e9ef; font-size: 15px; line-height: 1.5">{{exSentence}}</p>
+<div style="display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 6px">
+<div style="display: flex; flex-direction: column; justify-content: space-between; color: #9aa3b2; font-size: 10px; text-align: right; padding: 2px 0"><span>+{{exMax}}%</span><span>0%</span><span>−{{exMax}}%</span></div>
+<svg viewBox="0 0 600 200" style="display: block; width: 100%; height: auto; max-height: 240px; border-radius: 4px" role="img" aria-label="{{exAria}}">
+<rect x="0" y="0" width="600" height="200" fill="#0e1218"></rect>
+<line x1="0" x2="600" y1="100" y2="100" stroke="#4a5568" vector-effect="non-scaling-stroke"></line>
+<sc-for list="{{exDots}}" as="d" hint-placeholder-count="8">
+<line x1="{{d.x}}" x2="{{d.x}}" y1="100" y2="{{d.y}}" stroke="{{d.color}}" stroke-width="2" vector-effect="non-scaling-stroke" opacity="0.6"></line>
+<circle cx="{{d.x}}" cy="{{d.y}}" r="6" fill="{{d.color}}" stroke="#0e1218" stroke-width="2"><title>{{d.date}}: {{d.move}}</title></circle>
+</sc-for>
+</svg>
+</div>
+<div style="display: flex; justify-content: space-between; padding-left: 54px; font-size: 11px">
+<span style="color: #4cc38a">▲ {{exName}} rose over the next 8 weeks</span>
+<span style="color: #f2706a">▼ {{exName}} fell</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{exDots}}" as="d" hint-placeholder-count="8">
+<span style="{{d.chipStyle}}">{{d.date}} · {{d.move}}</span>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{exNone}}" hint-placeholder-val="{{false}}">
+<p style="margin: 0; color: #c9d1dd; font-size: 14px">{{exNoneText}}</p>
+</sc-if>
+
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid #222833; border-left: 3px solid #f2a33a; border-radius: 8px; background: #0e1218; font-size: 13px">
+<div><span style="color: #9aa3b2; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em">What this shows</span><br><span style="color: #c9d1dd">Past times hedge funds held a bet on {{sel}} as extreme as today's, and what the price did in the 8 weeks after each one.</span></div>
+<div><span style="color: #9aa3b2; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em">What it says now</span><br><span style="color: #e6e9ef">{{exNow}}</span></div>
+<div><span style="color: #9aa3b2; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em">Why it matters</span><br><span style="color: #c9d1dd">These are past episodes, not a forecast: each one had its own story, and the gap between the best and worst outcome shows how differently they played out.</span></div>
+</div>
+
+<div style="display: flex; justify-content: flex-end">
+<button type="button" onClick="{{exToggle}}" aria-expanded="{{exExpanded}}" style="min-height: 32px; padding: 0 12px; border: 1px solid #2c3442; border-radius: 999px; background: #0e1218; color: #c9d1dd; font-family: inherit; font-size: 12px; cursor: pointer">{{exToggleLabel}}</button>
+</div>
+<sc-if value="{{exShowBands}}" hint-placeholder-val="{{false}}">
+<div style="overflow-x: auto">
+<table style="width: 100%; min-width: 560px; border-collapse: collapse; font-size: 12px">
+<thead><tr style="color: #9aa3b2; text-align: left">
+<th style="padding: 6px 8px 6px 0; font-weight: 400">When hedge funds' bet was</th>
+<th style="padding: 6px 8px; font-weight: 400; text-align: right">Times</th>
+<th style="padding: 6px 8px; font-weight: 400; text-align: right">Typical move 4 weeks later</th>
+<th style="padding: 6px 8px; font-weight: 400; text-align: right">8 weeks later</th>
+<th style="padding: 6px 0 6px 8px; font-weight: 400; text-align: right">Price went against them</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{exBands}}" as="e" hint-placeholder-count="4">
+<tr style="{{e.rowStyle}}"><td style="padding: 8px 8px 8px 0; color: #e6e9ef">{{e.label}}</td><td style="padding: 8px; text-align: right; color: #c9d1dd">{{e.n}}</td><td style="padding: 8px; text-align: right; color: #c9d1dd">{{e.m4}}</td><td style="padding: 8px; text-align: right; color: #c9d1dd">{{e.m8}}</td><td style="padding: 8px 0 8px 8px; text-align: right; color: #c9d1dd">{{e.against}}</td></tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<span style="color: #9aa3b2; font-size: 11px">"Typical" = median. Rows with fewer than 5 past episodes are hidden as too few to compare. The highlighted row is where {{sel}} is now.</span>
+</sc-if>
+</section>
+
+<section aria-label="Institutions vs retail" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid #222833; border-radius: 10px; background: #12161d">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 12px">
+<h2 style="margin: 0; font-family: Syne, sans-serif; font-weight: 700; font-size: 18px">6 · Institutions vs retail</h2>
+<span style="color: #9aa3b2; font-size: 11px">COT (pair implied) vs Myfxbook · OANDA · IG</span>
+</div>
+<div style="overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; font-size: 12px">
+<thead>
+<tr style="color: #9aa3b2; text-align: left">
+<th style="padding: 6px 8px 6px 0; font-weight: 400">Pair</th>
+<th style="padding: 6px 8px; font-weight: 400">Speculators (COT)</th>
+<th style="padding: 6px 8px; font-weight: 400">Retail</th>
+<th style="padding: 6px 0 6px 8px; font-weight: 400; text-align: right">Signal</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{instRetail}}" as="r" hint-placeholder-count="7">
+<tr style="border-top: 1px solid #222833">
+<td style="padding: 8px 8px 8px 0"><a href="{{r.href}}" style="text-decoration: none; color: #e6e9ef; font-weight: 500">{{r.pair}}</a></td>
+<td style="padding: 8px; color: {{r.cotColor}}">{{r.cot}}</td>
+<td style="padding: 8px; color: #c9d1dd">{{r.retail}}</td>
+<td style="padding: 8px 0 8px 8px; text-align: right"><span style="{{r.sigStyle}}">{{r.sig}}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<p style="margin: 0; color: #9aa3b2; font-size: 12px">When institutions and retail sit on opposite sides, retail has historically been on the wrong side more often than not. Pair positioning from COT is implied from both legs, since there are no cross-currency futures.</p>
+</section>
+
+</div>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":3000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var self = this, st = this.state || {};
+    var HOT = '#f6b65a', COOL = '#8fc3ff', TEXT = '#e6e9ef';
+    function pill(on) { return 'min-height: 32px; padding: 0 12px; border-radius: 999px; font-family: inherit; font-size: 12px; cursor: pointer; ' + (on ? 'background: #f2a33a; color: #14100a; border: 1px solid #f2a33a' : 'background: #0e1218; color: #c9d1dd; border: 1px solid #2c3442'); }
+    function chip(bg, fg) { return 'padding: 3px 10px; border-radius: 999px; font-size: 11px; white-space: nowrap; background: ' + bg + '; color: ' + fg; }
+    var nav = [['Overview', 'Overview.dc.html', false], ['Desks', 'Main.dc.html', false], ['Pairs', 'Pairs.dc.html', false], ['Positioning', 'Positioning.dc.html', true], ['Calendar', '#', false]].map(function (n) {
+      return { label: n[0], href: n[1], style: 'padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; ' + (n[2] ? 'background: #f2a33a; color: #14100a; font-weight: 500' : 'border: 1px solid #222833; color: #c9d1dd') };
+    });
+    var lb = st.lb || '3 years';
+    var lookbacks = ['1 year', '3 years', '5 years'].map(function (b) { return { label: b, pressed: b === lb ? 'true' : 'false', pick: function () { self.setState({ lb: b }); }, style: pill(b === lb) }; });
+    var adj = { '1 year': 1.08, '3 years': 1, '5 years': 0.92 }[lb];
+    var sel = st.sel || 'JPY';
+    var D = {
+      USD: { lev: 88, am: 64, dl: 18, net: '+21.4k', chg: -2.1, read: 'Crowded long; first reduction in 6 weeks', price: 'DXY', drift: 0.15, posBase: 18 },
+      EUR: { lev: 41, am: 76, dl: 30, net: '+8.2k', chg: -6.3, read: 'Asset managers structurally long; funds cutting', price: 'EUR/USD', drift: -0.12, posBase: 10 },
+      GBP: { lev: 58, am: 52, dl: 45, net: '+12.0k', chg: 1.4, read: 'Neutral', price: 'GBP/USD', drift: 0.02, posBase: 9 },
+      JPY: { lev: 12, am: 30, dl: 86, net: '−92.5k', chg: 8.7, read: 'Crowded short, shorts being cut: squeeze risk', price: 'JPY (inverse USD/JPY)', drift: -0.2, posBase: -70 },
+      AUD: { lev: 90, am: 2, dl: 65, net: '+52.5k', chg: 1.9, read: 'Crowded long', price: 'AUD/USD', drift: -0.05, posBase: -25 },
+      NZD: { lev: 14, am: 18, dl: 82, net: '−28.6k', chg: -4.9, read: 'Crowded short and still building: trend-confirming', price: 'NZD/USD', drift: -0.25, posBase: -22 },
+      CAD: { lev: 47, am: 40, dl: 55, net: '−15.3k', chg: 0.8, read: 'Neutral', price: 'CAD (inverse USD/CAD)', drift: 0.03, posBase: -12 },
+      CHF: { lev: 26, am: 35, dl: 68, net: '−9.1k', chg: 1.9, read: 'Short; safe-haven bid would hurt', price: 'CHF (inverse USD/CHF)', drift: -0.06, posBase: -8 }
+    };
+    function pctCell(p) {
+      p = Math.max(1, Math.min(99, Math.round(p)));
+      var crowdedL = p >= 85, crowdedS = p <= 15;
+      var a = Math.abs(p - 50) / 50 * 0.75 + 0.08;
+      var bg = p >= 50 ? 'rgba(242,163,58,' + a.toFixed(2) + ')' : 'rgba(90,169,255,' + a.toFixed(2) + ')';
+      var fg = a > 0.55 ? '#0b0e13' : '#e6e9ef';
+      return { label: p + (crowdedL ? ' · crowded long' : crowdedS ? ' · crowded short' : ''), style: 'display: block; padding: 8px 10px; border-radius: 6px; text-align: center; background: ' + bg + '; color: ' + fg + (crowdedL || crowdedS ? '; font-weight: 500; outline: 1px solid ' + (crowdedL ? '#f2a33a' : '#5aa9ff') : '') };
+    }
+    var order = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'NZD', 'CAD', 'CHF'];
+    var crowd = order.map(function (c) {
+      var d = D[c];
+      return { ccy: c, lev: pctCell(50 + (d.lev - 50) * adj), am: pctCell(50 + (d.am - 50) * adj), dl: pctCell(50 + (d.dl - 50) * adj), net: d.net,
+        chg: (d.chg > 0 ? '+' : '−') + Math.abs(d.chg).toFixed(1) + 'k', chgColor: d.chg > 0 ? HOT : COOL, read: d.read, pick: function () { self.setState({ sel: c }); } };
+    });
+    var fw = st.fw || '1W';
+    var flowWindows = ['1W', '4W'].map(function (b) { return { label: b, pressed: b === fw ? 'true' : 'false', pick: function () { self.setState({ fw: b }); }, style: pill(b === fw) }; });
+    var f4 = { USD: -4.8, EUR: -11.2, GBP: 3.0, JPY: 19.6, AUD: -6.1, NZD: -12.4, CAD: 2.2, CHF: 3.5 };
+    var flowVals = order.map(function (c) { return { c: c, v: fw === '1W' ? D[c].chg : f4[c] }; }).sort(function (a, b) { return b.v - a.v; });
+    var maxF = Math.max.apply(null, flowVals.map(function (f) { return Math.abs(f.v); }));
+    var flows = flowVals.map(function (f) {
+      var w = Math.abs(f.v) / maxF * 50, left = f.v >= 0 ? 50 : 50 - w;
+      return { ccy: f.c, label: (f.v > 0 ? '+' : '−') + Math.abs(f.v).toFixed(1) + 'k', color: f.v >= 0 ? HOT : COOL,
+        bar: 'position: absolute; top: 0; bottom: 0; left: ' + left + '%; width: ' + w + '%; border-radius: 4px; background: ' + (f.v >= 0 ? '#f2a33a' : '#5aa9ff') };
+    });
+    var flowRead = fw === '1W' ? 'Read: the biggest flow is short-covering in JPY (+8.7k). Speculators are leaving the carry trade, which is how unwinds start. NZD shorts are still being added.' : 'Read: over four weeks, JPY short-covering (+19.6k) dominates, while EUR and NZD have seen steady selling. USD longs are being trimmed but remain crowded.';
+    function riskS(r) { return r === 'High' ? chip('#3a2a10', '#f6b65a') : r === 'Medium' ? chip('#1b2230', '#e6e9ef') : chip('#10302a', '#6fe0c4'); }
+    var squeeze = [
+      { ccy: 'JPY', position: 'Crowded short', pct: '12th pctile', px: 'JPY +1.4% against shorts', pxColor: HOT, flow: 'Shorts cut 2 weeks running', risk: 'Squeeze risk: High', riskStyle: riskS('High'), read: 'All three ingredients are present: extreme, price moving against, and covering under way. Intervention risk adds fuel.', href: 'USDJPY.dc.html', link: 'Open USD/JPY →' },
+      { ccy: 'USD', position: 'Crowded long', pct: '88th pctile', px: 'DXY −0.4% against longs', pxColor: HOT, flow: 'First reduction in 6 weeks', risk: 'Squeeze risk: Medium', riskStyle: riskS('Medium'), read: 'Extreme but the macro story still supports it. Watch whether this week\u2019s trim becomes a trend.', href: 'Main.dc.html', link: 'Open USD desk →' },
+      { ccy: 'NZD', position: 'Crowded short', pct: '14th pctile', px: 'NZD −0.9% with shorts', pxColor: COOL, flow: 'Shorts still building', risk: 'Trend-confirming', riskStyle: riskS('Low'), read: 'Extreme, but price is still moving in the crowd\u2019s favour. Not a squeeze setup until that changes.', href: '#', link: 'Open NZD desk →' }
+    ];
+    var ccyTabs = order.map(function (c) { return { label: c, pressed: c === sel ? 'true' : 'false', pick: function () { self.setState({ sel: c }); }, style: pill(c === sel) }; });
+    var d = D[sel], n = 52, pos = [], px = [];
+    for (var i = 0; i < n; i++) {
+      var t = i / (n - 1);
+      var p = d.posBase * (0.55 + 0.45 * Math.sin(Math.PI * t * 0.9)) + d.posBase * 0.18 * Math.sin(i / 3.3);
+      if (sel === 'JPY' && i > 47) p += (i - 47) * 4.2;
+      pos.push(p);
+      px.push(100 + d.drift * i + 1.2 * Math.sin(i / 6 + 1) + (sel === 'JPY' && i > 47 ? (i - 47) * 0.55 : 0));
+    }
+    var pMaxAbs = Math.max.apply(null, pos.map(function (v) { return Math.abs(v); })) * 1.1;
+    var bw = 600 / n, longP = '', shortP = '';
+    pos.forEach(function (v, i) {
+      var h = Math.abs(v) / pMaxAbs * 105, x = (i * bw + bw * 0.15).toFixed(1), w = (bw * 0.7).toFixed(1);
+      if (v >= 0) longP += 'M' + x + ' ' + (110 - h).toFixed(1) + 'h' + w + 'v' + h.toFixed(1) + 'h-' + w + 'Z';
+      else shortP += 'M' + x + ' 110h' + w + 'v' + h.toFixed(1) + 'h-' + w + 'Z';
+    });
+    var mn = Math.min.apply(null, px) - 0.5, mx = Math.max.apply(null, px) + 0.5;
+    var pricePts = px.map(function (v, i) { return (i * bw + bw / 2).toFixed(1) + ',' + (210 - (v - mn) / (mx - mn) * 200).toFixed(1); }).join(' ');
+    var divFlag = sel === 'JPY' || sel === 'USD';
+    var reads = {
+      JPY: 'Read: speculators built a record short over the year while JPY weakened. In the last four weeks shorts are being covered as JPY rises: positioning and price now move together against the crowd. That is the squeeze pattern.',
+      USD: 'Read: longs built steadily with DXY. The latest week shows price slipping while longs are only trimmed, an early divergence worth watching.',
+      NZD: 'Read: shorts and price have moved together all year. No divergence: the crowd is still being paid.',
+      EUR: 'Read: leveraged funds have cut longs while EUR drifted lower; asset managers have not followed yet. If they do, there is a lot of long base to unwind.'
+    };
+    var pctNow = Math.round(50 + (D[sel].lev - 50) * adj);
+    var extremes = [['Above 90th pctile (extreme long)', pctNow >= 90], ['85th–90th pctile', pctNow >= 85 && pctNow < 90], ['10th–15th pctile', pctNow > 10 && pctNow <= 15], ['Below 10th pctile (extreme short)', pctNow <= 10]].map(function (e) {
+      return { label: e[0], rowStyle: 'border-top: 1px solid #222833' + (e[1] ? '; background: #15140f; outline: 1px solid #3a2a10' : '') };
+    });
+    function sig(s) { return s === 'Opposite sides' ? chip('#3a2a10', '#f6b65a') : s === 'Same side' ? chip('#1b2230', '#c9d1dd') : chip('#1b2230', '#9aa3b2'); }
+    var instRetail = [
+      ['USD/JPY', 'Long (JPY shorts crowded)', HOT, '[XX]% short', 'Opposite sides', 'USDJPY.dc.html'],
+      ['EUR/USD', 'Short (funds cutting EUR)', COOL, '[XX]% long', 'Opposite sides', '#'],
+      ['GBP/USD', 'Neutral', TEXT, '[XX]% long', 'No signal', '#'],
+      ['AUD/USD', 'Short', COOL, '[XX]% long', 'Opposite sides', '#'],
+      ['NZD/USD', 'Short (crowded)', COOL, '[XX]% short', 'Same side', '#'],
+      ['USD/CAD', 'Neutral', TEXT, '[XX]% short', 'No signal', '#'],
+      ['USD/CHF', 'Long', HOT, '[XX]% long', 'Same side', '#']
+    ].map(function (r) { return { pair: r[0], cot: r[1], cotColor: r[2], retail: r[3], sig: r[4], sigStyle: sig(r[4]), href: r[5] }; });
+    // ---- simplified crowding view ----
+    var CONTRACT_USD_K = { USD: 100, EUR: 135, GBP: 79, JPY: 83, AUD: 65, NZD: 59, CAD: 73, CHF: 141 };
+    var SQUEEZE = { JPY: 'high', USD: 'medium', NZD: 'trend' };
+    function netNum(t) { var v = parseFloat(t.replace('−', '-').replace('+', '').replace('k', '')); return v * 1000; }
+    function plain(p, c) {
+      if (p <= 15) return ['Heavily betting against ' + c, 'background: #13243a; color: #8fc3ff; border: 1px solid #5aa9ff'];
+      if (p < 35) return ['Betting against ' + c, 'background: #14202e; color: #8fc3ff'];
+      if (p <= 65) return ['No strong bet', 'background: #1b2230; color: #c9d1dd'];
+      if (p < 85) return ['Betting on ' + c, 'background: #2a2214; color: #f6b65a'];
+      return ['Heavily betting on ' + c, 'background: #3a2a10; color: #f6b65a; border: 1px solid #f2a33a'];
+    }
+    var crowd2 = order.map(function (c) {
+      var d = D[c], p = Math.max(1, Math.min(99, Math.round(50 + (d.lev - 50) * adj)));
+      var net = netNum(d.net), notional = net * CONTRACT_USD_K[c] / 1e6;
+      var chgN = d.chg * 1000, adding = (net < 0 && chgN < 0) || (net > 0 && chgN > 0);
+      var pl = plain(p, c), on = c === sel, sq = SQUEEZE[c];
+      var watch = sq === 'high' ? ['Squeeze risk: high', 'padding: 2px 8px; border-radius: 999px; font-size: 11px; background: #261d3a; color: #d6c4fb; border: 1px solid #b794f6'] :
+                  sq === 'medium' ? ['Squeeze risk: medium', 'padding: 2px 8px; border-radius: 999px; font-size: 11px; background: #1d1729; color: #d6c4fb'] :
+                  sq === 'trend' ? ['Crowded, trend still intact', 'padding: 2px 8px; border-radius: 999px; font-size: 11px; background: #1b2230; color: #c9d1dd'] :
+                  ['—', 'color: #4a5568; font-size: 11px'];
+      return {
+        ccy: c, pressed: on ? 'true' : 'false', pick: function () { self.setState({ sel: c }); },
+        btnStyle: 'min-height: 34px; padding: 0 10px; border-radius: 6px; font-family: Syne, sans-serif; font-weight: 700; font-size: 14px; cursor: pointer; ' + (on ? 'background: #f2a33a; color: #14100a; border: 1px solid #f2a33a' : 'background: #0e1218; color: #e6e9ef; border: 1px solid #2c3442'),
+        dot: 'position: absolute; top: 3px; left: calc(' + p + '% - 8px); width: 16px; height: 16px; border-radius: 50%; border: 2px solid #0b0e13; background: ' + (p >= 85 ? '#f2a33a' : p <= 15 ? '#5aa9ff' : '#c9d1dd'),
+        title: c + ': ' + p + ' of 100 vs the last ' + lb,
+        label: pl[0], labelStyle: 'justify-self: start; padding: 3px 10px; border-radius: 999px; font-size: 12px; ' + pl[1],
+        size: (Math.abs(notional) < 0.05 ? '≈ $0' : '$' + Math.abs(notional).toFixed(1) + 'bn ' + (net >= 0 ? 'long' : 'short')),
+        week: Math.abs(d.chg) < 1 ? 'Little change' : (adding ? '▲ Adding to the bet' : '▼ Cutting the bet'),
+        weekColor: Math.abs(d.chg) < 1 ? '#9aa3b2' : '#e6e9ef',
+        watch: watch[0], watchStyle: 'justify-self: start; ' + watch[1],
+        lev: Math.round(50 + (d.lev - 50) * adj), am: Math.round(50 + (d.am - 50) * adj), dl: Math.round(50 + (d.dl - 50) * adj),
+        ext: Math.abs(p - 50)
+      };
+    }).sort(function (x, y) { return y.ext - x.ext; });
+    var showDetail = !!st.showDetail;
+    // ---- simple view: fast vs slow money ----
+    var pView = st.pView || 'Simple';
+    var viewBtns = ['Simple', 'Bars'].map(function (v) { return { label: v === 'Simple' ? 'Simple view' : 'Bar view', pressed: v === pView ? 'true' : 'false', pick: function () { self.setState({ pView: v }); }, style: 'min-height: 32px; padding: 0 12px; border-radius: 999px; font-family: inherit; font-size: 12px; cursor: pointer; ' + (v === pView ? 'background: #1b2230; color: #e6e9ef; border: 1px solid #f2a33a' : 'background: #0e1218; color: #9aa3b2; border: 1px solid #2c3442') }; });
+    function side(p) { return p >= 65 ? 1 : p <= 35 ? -1 : 0; }
+    function half(p) {
+      var w = Math.abs(p - 50), left = p >= 50 ? 50 : 50 - w;
+      return 'position: absolute; top: 2px; height: 8px; border-radius: 4px; left: ' + left + '%; width: ' + Math.max(w, 1) + '%; background: ' + (p >= 50 ? '#f2a33a' : '#5aa9ff') + '; opacity: ' + (Math.abs(p - 50) >= 35 ? 1 : 0.55);
+    }
+    function chip(bg, fg, bd) { return 'padding: 2px 9px; border-radius: 999px; font-size: 11px; white-space: nowrap; background: ' + bg + '; color: ' + fg + (bd ? '; border: 1px solid ' + bd : ''); }
+    var cards = order.map(function (c) {
+      var d = D[c];
+      var f = Math.round(50 + (d.lev - 50) * adj), sl = Math.round(50 + (d.am - 50) * adj);
+      var fs = side(f), ss = side(sl), fx = Math.abs(f - 50) >= 35, sx = Math.abs(sl - 50) >= 35;
+      var status, sStyle, sentence, rank;
+      if (fs !== 0 && fs === ss) {
+        status = fs > 0 ? 'Everyone betting on it' : 'Everyone betting against it';
+        sStyle = fs > 0 ? chip('#3a2a10', '#f6b65a') : chip('#13243a', '#8fc3ff');
+        sentence = 'Fast and slow money are both betting ' + (fs > 0 ? 'on ' : 'against ') + c + '.';
+        rank = 2 + (fx ? 1 : 0);
+      } else if (fs !== 0 && ss !== 0) {
+        status = 'They disagree'; sStyle = chip('#261d3a', '#d6c4fb', '#b794f6');
+        sentence = 'Hedge funds are betting ' + (fs > 0 ? 'on ' : 'against ') + c + ', while pension funds and asset managers are betting ' + (ss > 0 ? 'on' : 'against') + ' it.';
+        rank = 4;
+      } else if (fs !== 0) {
+        status = 'Hedge funds only'; sStyle = chip('#1b2230', '#e6e9ef');
+        sentence = 'Hedge funds are betting ' + (fs > 0 ? 'on ' : 'against ') + c + '; the slow money has no strong view.';
+        rank = 1 + (fx ? 1.5 : 0);
+      } else if (ss !== 0) {
+        status = 'Slow money only'; sStyle = chip('#1b2230', '#e6e9ef');
+        sentence = 'Pension funds and asset managers are betting ' + (ss > 0 ? 'on ' : 'against ') + c + '; hedge funds have no strong view.';
+        rank = 1;
+      } else {
+        status = 'No strong bets'; sStyle = chip('#161b24', '#9aa3b2');
+        sentence = 'Neither group has a big bet on ' + c + ' right now.';
+        rank = 0;
+      }
+      var risk = fx ? 'Watch: hedge funds are at an extreme. If the market turns, they may have to exit fast.' :
+                 (fs !== 0 && fs === ss) ? 'One-sided: with everyone on the same side, there are fewer buyers (or sellers) left.' :
+                 (status === 'They disagree') ? 'Short-term bets against a long-term flow: worth knowing which story wins.' : 'Nothing extreme here.';
+      var on = c === sel;
+      return { ccy: c, status: status, statusStyle: sStyle, sentence: sentence, fastBar: half(f), slowBar: half(sl), risk: risk,
+        riskStyle: 'font-size: 11px; text-align: left; color: ' + (fx ? '#d6c4fb' : '#9aa3b2'),
+        pressed: on ? 'true' : 'false', pick: function () { self.setState({ sel: c }); }, rank: rank,
+        cardStyle: 'display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 10px; font-family: inherit; cursor: pointer; text-align: left; background: #0e1218; border: 1px solid ' + (on ? '#f2a33a' : '#222833') };
+    }).sort(function (a, b) { return b.rank - a.rank; });
+    // ---- simplified squeeze watch ----
+    function ck(ok, label, detail) { return { icon: ok ? '✓' : '✗', label: label, detail: detail, iconStyle: 'display: inline-flex; justify-content: center; width: 20px; height: 20px; border-radius: 50%; font-size: 12px; line-height: 20px; ' + (ok ? 'background: #261d3a; color: #d6c4fb' : 'background: #1b2230; color: #7c8698') }; }
+    function badge(level) {
+      if (level === 'high') return ['Squeeze risk: high', 'padding: 3px 10px; border-radius: 999px; font-size: 12px; background: #261d3a; color: #d6c4fb; border: 1px solid #b794f6'];
+      if (level === 'medium') return ['Squeeze risk: medium', 'padding: 3px 10px; border-radius: 999px; font-size: 12px; background: #1d1729; color: #d6c4fb'];
+      return ['Crowded, but still working for them', 'padding: 3px 10px; border-radius: 999px; font-size: 12px; background: #1b2230; color: #c9d1dd'];
+    }
+    var SQ = [
+      { ccy: 'JPY', level: 'high', dir: 'against', pct: 12, px: '+1.4%', pxBig: true, f1: '+8.7k', f2: '+5.2k', reducing: true, ref: 'JPY vs USD', href: 'USDJPY.dc.html', link: 'Open USD/JPY →' },
+      { ccy: 'NZD', level: 'medium', dir: 'against', pct: 10, px: '+1.0%', pxBig: true, f1: '−7.7k', f2: '−2.1k', reducing: false, ref: 'NZD vs USD', href: '#', link: 'NZD desk pending' },
+      { ccy: 'CAD', level: 'medium', dir: 'against', pct: 6, px: '+1.1%', pxBig: true, f1: '−3.0k', f2: '−1.4k', reducing: false, ref: 'CAD vs USD', href: '#', link: 'Open CAD desk →' },
+      { ccy: 'EUR', level: 'none', dir: 'against', pct: 0, px: '−0.2%', pxBig: false, f1: '−0.8k', f2: '−3.6k', reducing: false, ref: 'EUR vs USD', href: 'EUR.dc.html', link: 'Open EUR desk →' },
+      { ccy: 'AUD', level: 'none', dir: 'on', pct: 90, px: '+0.4%', pxBig: false, f1: '+1.9k', f2: '+4.0k', reducing: false, ref: 'AUD vs USD', href: '#', link: 'AUD desk pending' }
+    ];
+    var sq2 = SQ.map(function (q) {
+      var against = q.dir === 'against', priceAgainst = q.pxBig;
+      var headline;
+      if (q.level === 'high') headline = 'Hedge funds are heavily betting ' + (against ? 'against ' : 'on ') + q.ccy + ', the price is moving against them, and they have started backing out: the pattern squeezes usually start from.';
+      else if (q.level === 'medium') headline = 'Hedge funds are heavily betting ' + (against ? 'against ' : 'on ') + q.ccy + ' and the price is moving against them, but they have not started backing out yet.';
+      else headline = 'Hedge funds are heavily betting ' + (against ? 'against ' : 'on ') + q.ccy + ', and so far the price is still moving their way. No squeeze while that holds.';
+      var bd = badge(q.level);
+      return {
+        ccy: q.ccy, badge: bd[0], badgeStyle: bd[1], headline: headline,
+        checks: [
+          ck(true, 'Big one-sided bet', '(hedge funds ' + (against ? 'heavily short' : 'heavily long') + ', ' + q.pct + ' of 100)'),
+          ck(priceAgainst, 'Price moving against them', '(' + q.ccy + ' ' + q.px + ' in 2 weeks' + (priceAgainst ? ', bigger than its usual 2-week move)' : ', not a meaningful move against them)')),
+          ck(q.reducing, 'They are backing out', '(bet changes last 2 weeks: ' + q.f1 + ', ' + q.f2 + (q.reducing ? ', shrinking)' : ', not shrinking)'))
+        ],
+        dates: 'Bets as of Tue 20 Oct (weekly CFTC data) · price as of 27 Oct · price = ' + q.ref,
+        href: q.href, link: q.link
+      };
+    });
+    // ---- section 4: dollar positioning for currencies and pairs ----
+    var pMode = st.pMode || 'pair', pPair = st.pPair || 'EUR/USD', pCcy = st.pCcy || 'JPY', pWeeks = st.pWeeks || 52;
+    var CONV = ['EUR', 'GBP', 'AUD', 'NZD', 'USD', 'CAD', 'CHF', 'JPY'];
+    var PAIRS = [];
+    for (var i1 = 0; i1 < CONV.length; i1++) for (var j1 = i1 + 1; j1 < CONV.length; j1++) PAIRS.push(CONV[i1] + '/' + CONV[j1]);
+    function chipStyle(on) { return 'min-height: 30px; padding: 0 10px; border-radius: 999px; font-family: inherit; font-size: 12px; cursor: pointer; ' + (on ? 'background: #f2a33a; color: #14100a; border: 1px solid #f2a33a' : 'background: #0e1218; color: #c9d1dd; border: 1px solid #2c3442'); }
+    var END = { EUR: [-9.3, 14.0], GBP: [1.9, -6.5], AUD: [3.4, -5.8], NZD: [-1.1, -2.6], CAD: [-6.7, 3.1], CHF: [-1.9, 1.2], JPY: [-7.7, 4.4], USD: [2.1, 1.5] };
+    var SEED = { EUR: 1, GBP: 2, AUD: 3, NZD: 4, CAD: 5, CHF: 6, JPY: 7, USD: 8 };
+    function series(c, k, n) {
+      var e = END[c][k], sd = SEED[c] + k * 11, out = [];
+      for (var w = 0; w < n; w++) {
+        var t = (n - 1 - w) / 52;
+        out.push(e + Math.sin(t * 2.1 + sd) * (3 + k) + Math.sin(t * 5.3 + sd * 2) * 1.4 + t * (k ? -0.6 : 0.9) * (sd % 2 ? 1 : -1) - Math.sin(sd) * (3 + k) - Math.sin(sd * 2) * 1.4);
+      }
+      return out;
+    }
+    function pairSeries(pair, k, n) {
+      var b = pair.split('/')[0], q = pair.split('/')[1];
+      if (q === 'USD') return series(b, k, n);
+      if (b === 'USD') return series(q, k, n).map(function (v) { return -v; });
+      var x = series(b, k, n), y = series(q, k, n);
+      return x.map(function (v, i) { return v - y[i]; });
+    }
+    var isPair = pMode === 'pair', label = isPair ? pPair : pCcy;
+    var fast = isPair ? pairSeries(pPair, 0, pWeeks) : series(pCcy, 0, pWeeks);
+    var slow = isPair ? pairSeries(pPair, 1, pWeeks) : series(pCcy, 1, pWeeks);
+    var mx = Math.max.apply(null, fast.concat(slow).map(Math.abs)) * 1.15 || 1;
+    function pts(arr) { return arr.map(function (v, i) { return (i / (arr.length - 1) * 600).toFixed(1) + ',' + (110 - v / mx * 105).toFixed(1); }).join(' '); }
+    var px = [], pv = 1;
+    for (var w2 = 0; w2 < pWeeks; w2++) { pv = pv * (1 + (w2 ? (fast[w2] - fast[w2 - 1]) * 0.0012 : 0) + Math.sin(w2 * 0.7 + label.length) * 0.002); px.push(pv); }
+    var pmin = Math.min.apply(null, px), pmax = Math.max.apply(null, px);
+    var pxPts = px.map(function (v, i) { return (i / (px.length - 1) * 600).toFixed(1) + ',' + (84 - (v - pmin) / (pmax - pmin || 1) * 78).toFixed(1); }).join(' ');
+    var fEnd = fast[fast.length - 1], fPrev = fast[fast.length - 5], sEnd = slow[slow.length - 1];
+    var pxChg = (px[px.length - 1] / px[px.length - 5] - 1) * 100;
+    function bn(v) { return '$' + Math.abs(v).toFixed(1) + 'bn'; }
+    function sideTxt(v) { return v >= 0 ? 'on' : 'against'; }
+    var fAdding = Math.abs(fEnd) > Math.abs(fPrev);
+    var pNow = 'Hedge funds have a ' + bn(fEnd) + ' bet ' + sideTxt(fEnd) + ' ' + label + ' and ' + (Math.abs(fEnd - fPrev) < 0.1 ? 'kept it about the same over the last 4 weeks' : 'have ' + (fAdding ? 'added to it' : 'cut it') + ' over the last 4 weeks (by ' + bn(fEnd - fPrev) + ')') + ', while the price ' + (pxChg >= 0 ? 'rose ' : 'fell ') + Math.abs(pxChg).toFixed(1) + '%. Long-term investors hold a ' + bn(sEnd) + ' bet ' + sideTxt(sEnd) + ' it.';
+    var priceWithFast = (fEnd - fPrev >= 0) === (pxChg >= 0);
+    var pWhy = (Math.sign(fEnd) !== Math.sign(sEnd) ? 'Fast and slow money are on opposite sides, so short-term bets are running against a long-term flow. ' : '') +
+      (priceWithFast ? 'Hedge funds are moving with the price, so their bets are currently supporting the move.' : 'Hedge funds are moving against the price; when that lasts, they are often forced to change course.');
+    var b0 = label.split('/')[0], q0 = label.split('/')[1];
+    var direct = isPair && (q0 === 'USD' || b0 === 'USD');
+    var pBadge = !isPair ? (pCcy === 'USD' ? 'Dollar index futures (USD vs a basket)' : pCcy + ' futures (vs USD)') : direct ? 'Direct: from ' + (q0 === 'USD' ? b0 : q0) + ' futures' : 'Implied from ' + b0 + ' and ' + q0 + ' futures';
+    var pNote = !isPair ? 'Bets in dollars = contracts × contract size × exchange rate on each report date. Weekly CFTC data, as of Tue 20 Oct.' :
+      direct ? 'There is a futures contract for this pair, so these are the real positions (sign flipped when USD is the first currency). The dollar index is not subtracted, because about 58% of it is the euro. Weekly CFTC data, as of Tue 20 Oct.' :
+      'There is no ' + label + ' futures contract, so this is ' + b0 + ' bets minus ' + q0 + ' bets in dollars: a good guide, but the same traders do not necessarily hold both. Weekly CFTC data, as of Tue 20 Oct.';
+    var usdPairs = PAIRS.filter(function (x) { return x.indexOf('USD') >= 0; });
+    var crossPairs = PAIRS.filter(function (x) { return x.indexOf('USD') < 0; });
+    // ---- % of open interest view ----
+    var pUnit = st.pUnit || 'usd', pGroup = st.pGroup || 'fast';
+    var ser = st.ser || { net: true, long: true, short: true, price: true, oi: false, bands: true };
+    var oiAllowed = !isPair || direct;
+    var showOI = pUnit === 'oi' && oiAllowed;
+    var gIdx = pGroup === 'slow' ? 1 : 0;
+    function netPctSeries(c, n) {
+      var a = series(c, 0, n), b = series(c, 1, n);
+      return a.map(function (v, i) { var f = pGroup === 'legacy' ? (0.6 * v + 0.4 * b[i]) : (gIdx ? b[i] : v); return Math.max(-62, Math.min(62, f * 6)); });
+    }
+    var oiBase = !isPair ? pCcy : (q0 === 'USD' ? b0 : q0);
+    var flip = isPair && b0 === 'USD';
+    var netP = oiAllowed ? netPctSeries(oiBase, pWeeks).map(function (v) { return flip ? -v : v; }) : [];
+    var longP = netP.map(function (v, i) { return Math.max(4, 32 + v / 2 + Math.sin(i * 0.31 + oiBase.length) * 4); });
+    var shortP = longP.map(function (v, i) { return Math.max(4, v - netP[i]); });
+    var oiMaxV = 70;
+    function oiPts(arr) { return arr.map(function (v, i) { return (i / (arr.length - 1) * 600).toFixed(1) + ',' + (130 - v / oiMaxV * 125).toFixed(1); }).join(' '); }
+    var oiShortNeg = shortP.map(function (v) { return -v; });
+    var sorted = netP.slice().sort(function (x, y) { return x - y; });
+    var p20 = sorted.length ? sorted[Math.floor(sorted.length * 0.2)] : 0, p80 = sorted.length ? sorted[Math.floor(sorted.length * 0.8)] : 0;
+    var lastNet = netP.length ? netP[netP.length - 1] : 0;
+    var rank = sorted.length ? Math.round(sorted.filter(function (v) { return v <= lastNet; }).length / sorted.length * 100) : 0;
+    var oiPx = px.map(function (v, i) { return (i / (px.length - 1) * 600).toFixed(1) + ',' + (250 - (v - pmin) / (pmax - pmin || 1) * 240).toFixed(1); }).join(' ');
+    var oiOI = netP.map(function (v, i) { return (i / (netP.length - 1) * 600).toFixed(1) + ',' + (200 - (Math.sin(i * 0.05 + 1) * 0.5 + 0.5) * 60).toFixed(1); }).join(' ');
+    var gName = { fast: 'Hedge funds', slow: 'Long-term investors', legacy: 'Large speculators' }[pGroup];
+    var rangeTxt = { 52: 'year', 156: '3 years', 260: '5 years', 870: 'since 2010' }[pWeeks];
+    if (showOI) {
+      pNow = gName + ' are net ' + (lastNet >= 0 ? 'long' : 'short') + ' ' + label + ' by ' + Math.abs(lastNet).toFixed(0) + '% of all open contracts. ' +
+        (function () { var per = pWeeks === 870 ? 'since 2010' : 'over the last ' + rangeTxt;
+          if (rank <= 20) return lastNet < 0 ? 'That is in the bottom 20% ' + per + ': they have rarely bet more heavily against it.' : 'That is in the bottom 20% ' + per + ': their bet on it has rarely been this small.';
+          if (rank >= 80) return lastNet > 0 ? 'That is in the top 20% ' + per + ': they have rarely bet more heavily on it.' : 'That is in the top 20% ' + per + ': their bet against it has rarely been this small.';
+          return 'That is within the normal range ' + per + '.'; })();
+      pWhy = (rank <= 20 || rank >= 80) ? 'When positioning sits beyond the dashed lines, the crowd is stretched; watch the price line for signs it is turning against them.' : 'Positioning is not stretched, so it is unlikely to be the main driver of the next move.';
+    }
+    function sBtn(k, lbl) { var on = !!ser[k]; return { label: (on ? '☑ ' : '☐ ') + lbl, pressed: on ? 'true' : 'false', style: chipStyle(false) + (on ? '; color: #e6e9ef; border-color: #4a5568' : '; color: #7c8698'), pick: function () { var n = Object.assign({}, ser); n[k] = !n[k]; self.setState({ ser: n }); } }; }
+    function pairBtn(x) { return { label: x, pressed: (isPair && x === pPair) ? 'true' : 'false', style: chipStyle(isPair && x === pPair), pick: function () { self.setState({ pMode: 'pair', pPair: x }); } }; }
+    // ---- section 5: past extreme episodes ----
+    var NAMES = { USD: 'the dollar', EUR: 'the euro', GBP: 'the pound', JPY: 'the yen', AUD: 'the Australian dollar', NZD: 'the New Zealand dollar', CAD: 'the Canadian dollar', CHF: 'the Swiss franc' };
+    var exPct = Math.round(50 + (D[sel].lev - 50) * adj);
+    var exShort = exPct <= 15, exLong = exPct >= 85, exHas = exShort || exLong;
+    var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var seed0 = SEED[sel] || 1, nEp = 6 + (seed0 % 4), eps = [];
+    for (var e1 = 0; e1 < nEp; e1++) {
+      var yr = 2010 + Math.round((e1 + 0.5) / nEp * 15.5), mo = (seed0 * 5 + e1 * 7) % 12;
+      var mv = Math.sin(seed0 * 3.1 + e1 * 2.3) * 4.2 + (exShort ? 1.1 : exLong ? -1.1 : 0);
+      eps.push({ yr: yr, mo: mo, mv: Math.round(mv * 10) / 10 });
+    }
+    var up = eps.filter(function (x) { return x.mv > 0; }), dn = eps.filter(function (x) { return x.mv <= 0; });
+    function med(a) { if (!a.length) return 0; var b = a.slice().sort(function (x, y) { return x - y; }); return b[Math.floor(b.length / 2)]; }
+    var exMaxV = Math.max(5, Math.ceil(Math.max.apply(null, eps.map(function (x) { return Math.abs(x.mv); })) + 0.5));
+    var exDots = eps.map(function (x, i) {
+      var c = x.mv > 0 ? '#4cc38a' : '#f2706a';
+      return { x: ((i + 0.5) / eps.length * 600).toFixed(1), y: (100 - x.mv / exMaxV * 95).toFixed(1), color: c,
+        date: MON[x.mo] + ' ' + x.yr, move: (x.mv > 0 ? '▲ +' : '▼ −') + Math.abs(x.mv).toFixed(1) + '%',
+        chipStyle: 'padding: 2px 8px; border-radius: 999px; font-size: 11px; background: #0e1218; border: 1px solid #222833; color: ' + c };
+    });
+    var nm = NAMES[sel], nmCap = nm.charAt(0).toUpperCase() + nm.slice(1);
+    var against = exShort ? up : dn, withCrowd = exShort ? dn : up;
+    var exSentence = exHas ? 'Hedge funds were this ' + (exShort ? 'short ' : 'long ') + sel + ' ' + eps.length + ' times since 2010. In ' + up.length + ' of those, ' + nm + ' rose over the next 8 weeks' +
+      (up.length ? ' (typical rise +' + med(up.map(function (x) { return x.mv; })).toFixed(1) + '%)' : '') + '; in ' + dn.length + ', it fell' +
+      (dn.length ? ' (worst −' + Math.abs(Math.min.apply(null, dn.map(function (x) { return x.mv; }))).toFixed(1) + '%)' : '') + '.' : '';
+    var exNow = exHas ? 'In ' + against.length + ' of ' + eps.length + ' past cases the price went against the crowd within 8 weeks; in ' + withCrowd.length + ', the crowd kept being right.' :
+      'Hedge funds are not at an extreme in ' + sel + ' right now (' + exPct + ' of 100), so there are no comparable past cases.';
+    var exShowBands = !!st.exBands;
+    var bandDefs = [['Extremely long (top 10%)', exPct >= 90], ['Very long (85–90)', exPct >= 85 && exPct < 90], ['Very short (10–15)', exPct > 10 && exPct <= 15], ['Extremely short (bottom 10%)', exPct <= 10]];
+    var exBands = bandDefs.map(function (bd, i) {
+      var n = 4 + ((seed0 + i * 3) % 6);
+      var hide = n < 5;
+      return { label: bd[0], n: hide ? n + ' (too few)' : String(n), m4: hide ? '—' : ((i < 2 ? '−' : '+') + (0.6 + ((seed0 + i) % 4) * 0.4).toFixed(1) + '%'),
+        m8: hide ? '—' : ((i < 2 ? '−' : '+') + (1.1 + ((seed0 + i) % 5) * 0.5).toFixed(1) + '%'), against: hide ? '—' : (45 + ((seed0 * 7 + i * 9) % 35)) + '%',
+        rowStyle: 'border-top: 1px solid #222833' + (bd[1] ? '; background: #15140f; outline: 1px solid #3a2a10' : '') };
+    });
+    return {
+      exHas: exHas, exNone: !exHas, exNoneText: exNow, exName: nm, exSentence: exSentence, exNow: exNow, exDots: exDots, exMax: exMaxV,
+      exAria: 'Past extreme episodes for ' + sel + ' and the move over the following 8 weeks',
+      exCcyBtns: order.map(function (c) { return { label: c, pressed: c === sel ? 'true' : 'false', style: chipStyle(c === sel), pick: function () { self.setState({ sel: c }); } }; }),
+      exShowBands: exShowBands, exExpanded: exShowBands ? 'true' : 'false', exToggleLabel: exShowBands ? 'Hide all bands' : 'Show all bands', exToggle: function () { self.setState({ exBands: !exShowBands }); }, exBands: exBands,
+      pTitle: label, pIsPair: isPair, pIsCcy: !isPair,
+      pShowOI: showOI, pShowUsd: !showOI, pOIBlocked: pUnit === 'oi' && !oiAllowed,
+      pUnitBtns: [['usd', 'US dollars ($bn)'], ['oi', '% of open interest']].map(function (m) { return { label: m[1], pressed: pUnit === m[0] ? 'true' : 'false', style: chipStyle(pUnit === m[0]), pick: function () { self.setState({ pUnit: m[0] }); } }; }),
+      pGroupBtns: [['fast', 'Hedge funds'], ['slow', 'Long-term investors'], ['legacy', 'Large speculators (as on most sites)']].map(function (m) { return { label: m[1], pressed: pGroup === m[0] ? 'true' : 'false', style: chipStyle(pGroup === m[0]), pick: function () { self.setState({ pGroup: m[0] }); } }; }),
+      pSeriesBtns: [sBtn('net', 'Net'), sBtn('long', 'Long'), sBtn('short', 'Short'), sBtn('price', 'Price'), sBtn('oi', 'Open interest'), sBtn('bands', 'Top / bottom 20%')],
+      sNet: !!ser.net, sLong: !!ser.long, sShort: !!ser.short, sPrice: !!ser.price, sOI: !!ser.oi, sBands: !!ser.bands,
+      oiMax: oiMaxV, oiNetPts: oiAllowed ? oiPts(netP) : '', oiLongPts: oiAllowed ? oiPts(longP) : '', oiShortPts: oiAllowed ? oiPts(oiShortNeg) : '', oiPxPts: oiPx, oiOIPts: oiOI,
+      oiP80: (130 - p80 / oiMaxV * 125).toFixed(1), oiP20: (130 - p20 / oiMaxV * 125).toFixed(1), oiAria: gName + ' positioning in ' + label + ' as % of open interest',
+      pModeBtns: [['pair', 'Pairs'], ['ccy', 'Single currency']].map(function (m) { return { label: m[1], pressed: pMode === m[0] ? 'true' : 'false', style: chipStyle(pMode === m[0]), pick: function () { self.setState({ pMode: m[0] }); } }; }),
+      pPeriodBtns: [[52, '1Y'], [156, '3Y'], [260, '5Y'], [870, 'Since 2010']].map(function (m) { return { label: m[1], pressed: pWeeks === m[0] ? 'true' : 'false', style: chipStyle(pWeeks === m[0]), pick: function () { self.setState({ pWeeks: m[0] }); } }; }),
+      pUsdBtns: usdPairs.map(pairBtn), pCrossBtns: crossPairs.map(pairBtn),
+      pCcyBtns: order.map(function (c) { return { label: c, pressed: (!isPair && c === pCcy) ? 'true' : 'false', style: chipStyle(!isPair && c === pCcy), pick: function () { self.setState({ pMode: 'ccy', pCcy: c }); } }; }),
+      pFastPts: pts(fast), pSlowPts: pts(slow), pTop: '+' + bn(mx), pBot: '−' + bn(mx), pAria: 'Fast and slow money bets on ' + label + ' in dollars',
+      pPxPts: pxPts, pPxMax: 'high', pPxMin: 'low', pStart: { 52: '1 year ago', 156: '3 years ago', 260: '5 years ago', 870: '2010' }[pWeeks],
+      pNow: pNow, pWhy: pWhy, pBadge: pBadge, pNote: pNote,
+      pBadgeStyle: 'padding: 2px 9px; border-radius: 999px; font-size: 11px; ' + (direct || !isPair ? 'background: #10302a; color: #6fe0c4' : 'background: #1d1729; color: #d6c4fb'),
+      sq2: sq2, cards: cards, viewBtns: viewBtns, isSimple: pView === 'Simple', isBars: pView === 'Bars',
+      crowd2: crowd2, showDetail: showDetail, detailExpanded: showDetail ? 'true' : 'false', detailLabel: showDetail ? 'Hide trader-group detail' : 'Show all trader groups', toggleDetail: function () { self.setState({ showDetail: !showDetail }); }, asOf: 'Tue 29 Sep',
+      nav: nav, lookbacks: lookbacks, lookback: lb, crowd: crowd, flowWindows: flowWindows, flows: flows, flowRead: flowRead, squeeze: squeeze,
+      sel: sel, ccyTabs: ccyTabs, posLong: longP, posShort: shortP, pricePts: pricePts,
+      posMax: '+' + Math.round(pMaxAbs) + 'k', posMin: '−' + Math.round(pMaxAbs) + 'k', pxMax: mx.toFixed(1), pxMin: mn.toFixed(1),
+      divX: divFlag ? (600 - bw * 5).toFixed(1) : -10, divW: divFlag ? (bw * 5).toFixed(1) : 0,
+      priceLabel: D[sel].price + ' (indexed)', chartAria: 'Leveraged funds net position in ' + sel + ' with price over 52 weeks',
+      selRead: reads[sel] || 'Read: no divergence between positioning and price at the moment.', extremes: extremes, instRetail: instRetail
+    };
+  }
+}
+</script>
+</body>
+</html>

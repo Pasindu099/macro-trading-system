@@ -1,0 +1,10 @@
+{% macro term(label, definition) -%}
+<details class="glossary-term"><summary>{{ label }}</summary><span class="glossary-definition" role="note">{{ definition }}</span></details>
+{%- endmacro %}
+{% macro takeaway(value) -%}
+<aside class="takeaway" aria-label="Panel explanation" data-explanation>
+{% for key, label in [('shows','What this shows'),('now','What it says now'),('watch','Why it matters / what to watch')] %}
+<div class="takeaway-part"><strong>{{ label }}</strong><p>{% for segment in value.parts[key] %}{% if segment.definition %}{{ term(segment.text, segment.definition) }}{% else %}{{ segment.text }}{% endif %}{% endfor %}</p></div>
+{% endfor %}
+</aside>
+{%- endmacro %}

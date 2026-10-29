@@ -28,7 +28,7 @@
       <div><span>Released</span><strong>{{ ctx.released.strftime('%a %d %b') }}</strong>{% if ctx.release.released_source == 'assumed_friday' %}<small>assumed Friday</small>{% endif %}</div>
       <div><span>Next release</span><strong>{{ ctx.next.strftime('%a %d %b') if ctx.next else '—' }}</strong><small>{% if ctx.release.next_delayed %}holiday-shifted · {% endif %}{{ ctx.release.release_time_et }} ET{% if not ctx.next %} · {{ ctx.release.next_release_status }}{% endif %}</small></div>
     </div>
-    <p class="pos-note">{{ ctx.how_to_use }}</p>
+    <p class="pos-note" data-explanation>{{ ctx.how_to_use }}</p>
   </div>
 </div>
 

@@ -6,6 +6,8 @@
   <title>{{ page_title or 'ForexCompass' }}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='css/shell.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', path='css/navigation.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/takeaways.css') }}">
+  <script src="{{ url_for('static', path='js/explanations.js') }}"></script>
   <script src="{{ url_for('static', path='vendor/echarts-5.6.0.min.js') }}" defer></script>
   {% block extra_head %}{% endblock %}
 </head>
@@ -34,6 +36,7 @@
           <a href="/data" class="{% if request.url.path == '/data' or request.url.path.startswith('/data/') %}active{% endif %}"{% if request.url.path == '/data' or request.url.path.startswith('/data/') %} aria-current="page"{% endif %}>Data</a>
         </nav>
         <div class="header-actions">
+          <button type="button" class="explanations-toggle" data-explanations-toggle aria-pressed="true">Explanations: On</button>
           <details class="nav-freshness"><summary id="freshness-summary">Checking freshness…</summary><div id="global-data-freshness" class="nav-freshness-list" role="status">Checking data freshness…</div></details>
           {% if request.state.current_user and request.state.current_user.role == 'admin' %}<a href="/users">Users</a>{% endif %}
           {% if request.state.current_user %}<form method="post" action="/logout"><button type="submit">Sign out</button></form>{% endif %}

@@ -15,6 +15,7 @@ def test_positioning_routes_registered_with_fixed_paths_first():
         "/api/positioning/extremes/{currency}", "/api/positioning/pair/{pair:path}",
         "/api/positioning/{currency}",
     ]
+    expected[7:7] = ["/api/positioning/simple", "/api/positioning/history/{instrument:path}"]
     assert paths == expected
 
 

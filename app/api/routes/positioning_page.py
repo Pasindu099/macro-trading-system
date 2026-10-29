@@ -27,6 +27,8 @@ def _params(request: Request) -> dict[str, str]:
     window = q.get("window", "1W").upper()
     if lookback not in LOOKBACK_YEARS or ccy not in CURRENCIES or window not in {"1W", "4W"}:
         raise HTTPException(status_code=400, detail="Unknown positioning filter")
+    if lookback == "1y":
+        lookback = "52w"
     return {"lookback": lookback, "ccy": ccy, "window": window}
 
 
@@ -36,7 +38,7 @@ async def positioning_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request, "positioning/page.html", {
         "page_title": "Positioning · COT | ForexCompass", "p": params, "panels": ORDER, "titles": page.TITLES,
         "currencies": ("USD", "EUR", "GBP", "JPY", "AUD", "NZD", "CAD", "CHF"),
-        "lookbacks": page.LOOKBACK_LABELS,
+        "lookbacks": {key: value for key, value in page.LOOKBACK_LABELS.items() if key != "1y"},
     })
 
 
@@ -59,7 +61,8 @@ async def positioning_panel(request: Request, panel_id: str) -> HTMLResponse:
         rows = []
     strip = templates.get_template("_freshness.html").render(rows=rows) if rows else ""
     template = templates.get_template("positioning/panel.html")
-    render = dict(panel_id=panel_id, p=params, titles=page.TITLES, lookbacks=page.LOOKBACK_LABELS,
+    render = dict(panel_id=panel_id, p=params, titles=page.TITLES,
+                  lookbacks={key: value for key, value in page.LOOKBACK_LABELS.items() if key != "1y"},
                   currency_items=[(c, c) for c in ("USD", "EUR", "GBP", "JPY", "AUD", "NZD", "CAD", "CHF")])
     try:
         ctx = await builder(**params)

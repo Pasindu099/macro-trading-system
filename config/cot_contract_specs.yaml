@@ -1,0 +1,17 @@
+# Verified 2026-10-29 against the exchange product specifications.
+cme_source: https://www.cmegroup.com/markets/fx/fx-product-guide
+ice_source: https://www.ice.com/products/194/US-Dollar-Index-USDX-Futures
+contracts:
+  EUR: {size: 125000, unit: EUR}
+  GBP: {size: 62500, unit: GBP}
+  JPY: {size: 12500000, unit: JPY}
+  AUD: {size: 100000, unit: AUD}
+  NZD: {size: 100000, unit: NZD}
+  CAD: {size: 100000, unit: CAD}
+  CHF: {size: 125000, unit: CHF}
+  USD: {size: 1000, unit: USD_per_index_point}
+legacy:
+  report_type: legacy_futures_only
+  url: https://publicreporting.cftc.gov/resource/6dca-aqww.json
+  metadata: https://publicreporting.cftc.gov/api/views/6dca-aqww.json
+  start: 2010-01-01

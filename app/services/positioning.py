@@ -24,7 +24,7 @@ PAIRS_CONFIG = Path("config/pairs.yaml")
 CURRENCIES = ["EUR", "GBP", "AUD", "NZD", "USD", "CAD", "CHF", "JPY"]
 CATEGORIES = ["dealer", "asset_manager", "leveraged_funds", "other_reportable", "nonreportable"]
 CROWDING_CATEGORIES = ["leveraged_funds", "asset_manager"]
-LOOKBACK_YEARS = {"1y": 1, "3y": 3, "5y": 5}
+LOOKBACK_YEARS = {"52w": 1, "1y": 1, "3y": 3, "5y": 5}
 CROWDED_LONG, CROWDED_SHORT = 85.0, 15.0
 # Spot pair for each currency vs USD, and whether a rising pair means the currency rises.
 USD_PAIRS = {
@@ -97,26 +97,26 @@ def crowding_label(percentile: float | None) -> str | None:
     return "neutral"
 
 
-def squeeze_status(percentile: float | None, nets: list[int], spot_move_2w: float | None) -> dict[str, Any]:
+def squeeze_status(percentile: float | None, nets: list[int], spot_move_2w: float | None,
+                   typical_move: float | None = None) -> dict[str, Any]:
     """Squeeze watch from the crowd direction, 2-week currency move and the last 3 weekly nets.
 
     high: crowded + spot against the crowd + net reduced 2 consecutive weeks;
-    medium: crowded + exactly one of those; trend_confirming: crowded and spot still with the crowd.
+    medium: crowded + exactly one ingredient; working: neither ingredient meets the threshold.
     """
     label = crowding_label(percentile)
     if label not in {"crowded_long", "crowded_short"}:
         return {"status": "none", "crowding": label, "against_crowd": None, "reducing": None}
     direction = 1 if label == "crowded_long" else -1
-    against = spot_move_2w is not None and direction * spot_move_2w < 0
+    against = (direction * spot_move_2w < 0 and abs(spot_move_2w) >= .5 * typical_move
+               if spot_move_2w is not None and typical_move is not None else None)
     reducing = len(nets) >= 3 and direction * (nets[-1] - nets[-2]) < 0 and direction * (nets[-2] - nets[-3]) < 0
     if against and reducing:
         status = "high"
     elif against or reducing:
         status = "medium"
-    elif spot_move_2w is not None and direction * spot_move_2w > 0:
-        status = "trend_confirming"
     else:
-        status = "none"
+        status = "working"
     return {"status": status, "crowding": label, "against_crowd": against, "reducing": reducing}
 
 
@@ -250,6 +250,8 @@ async def get_currency_positioning(currency: str, weeks: int = 52) -> dict[str, 
     by_cat = (await load_positions([ccy])).get(ccy, {})
     if not by_cat:
         return {"currency": ccy, "status": "unavailable", "reason": "no COT history"}
+    from app.services.positioning_values import notional
+    spot = (await load_spot()).get(ccy)
     categories = {}
     for category in CATEGORIES:
         series = by_cat.get(category, [])
@@ -260,9 +262,12 @@ async def get_currency_positioning(currency: str, weeks: int = 52) -> dict[str, 
         start = max(0, len(series) - weeks)
         categories[category] = {
             "latest": {**category_snapshot(series, 3),
+                       "net_usd_bn": notional(ccy, series[-1], spot)/1e9 if notional(ccy, series[-1], spot) is not None else None,
                        "percentiles": {name: values[-1] for name, values in pctl.items()}},
             "history": [
                 {"report_date": w.report_date.isoformat(), "net": w.net, "net_pct_oi": w.net_pct_oi,
+                 "long": w.long, "short": w.short,
+                 "net_usd_bn": notional(ccy,w,spot)/1e9 if notional(ccy,w,spot) is not None else None,
                  "open_interest": w.open_interest, **{f"pctl_{n}": pctl[n][i] for n in LOOKBACK_YEARS}}
                 for i, w in enumerate(series) if i >= start
             ],
@@ -305,12 +310,24 @@ async def get_squeeze(lookback: str = "3y") -> dict[str, Any]:
                 continue
             snap = category_snapshot(weeks, years)
             series = spot.get(ccy)
-            move = pct_move(series.on(weeks[-3].report_date), series.on(weeks[-1].report_date)) if series else None
+            price_date = (series.dates[bisect.bisect_right(series.dates, date.today())-1]
+                          if series and series.on(date.today()) is not None else None)
+            move = pct_move(series.on(price_date-timedelta(days=14)), series.on(price_date)) if price_date else None
+            start = lookback_start(price_date or weeks[-1].report_date, years)
+            returns = [pct_move(series.on(day-timedelta(days=14)), series.on(day))
+                       for day in series.dates if price_date and start <= day <= price_date] if series else []
+            returns = [v for v in returns if v is not None]
+            typical = statistics.stdev(returns) if len(returns) >= 2 else None
+            consecutive = (weeks[-1].report_date-weeks[-2].report_date).days == 7 and (weeks[-2].report_date-weeks[-3].report_date).days == 7
+            status = squeeze_status(snap["percentile"], [w.net for w in weeks[-3:]] if consecutive else [], move, typical)
+            if not consecutive:
+                status["reducing"] = None
             entry[category] = {
-                **squeeze_status(snap["percentile"], [w.net for w in weeks[-3:]], move),
+                **status, "typical_2w_move_pct": typical, "price_date": str(price_date) if price_date else None,
                 "percentile": snap["percentile"], "report_date": snap["report_date"],
-                "spot_move_2w_pct": round(move, 3) if move is not None else None,
+                "spot_move_2w_pct": move,
                 "net_last_3w": [w.net for w in weeks[-3:]],
+                "open_interest_last_3w": [w.open_interest for w in weeks[-3:]],
             }
         rows.append(entry)
     return {"lookback": lookback, "spot_basis": "currency vs USD; USD = computed ICE Dollar Index (DXY)",
@@ -342,6 +359,8 @@ def extreme_band_stats(weeks: list[Week], spot: SpotSeries | None) -> dict[str, 
             "against_crowd_after_8w": round(against_count / len(moves8) * 100, 1) if moves8 else None,
             "max_adverse_move_8w": _avg([a for a in adverse if a is not None]),
             "episodes_with_8w": len(moves8),
+            "median_move_4w_pct": statistics.median(moves4) if moves4 else None,
+            "median_move_8w_pct": statistics.median(moves8) if moves8 else None,
         }
     return bands
 
@@ -384,29 +403,30 @@ def normalize_pair(pair: str) -> tuple[str, str]:
     raise ValueError(f"Unsupported pair: {pair}")
 
 
-async def get_pair_positioning(pair: str, lookback: str = "3y") -> dict[str, Any]:
+async def get_pair_positioning(pair: str, lookback: str = "3y", weeks: int = 156) -> dict[str, Any]:
     base, quote = normalize_pair(pair)
     years = _years(lookback)
     positions = await load_positions([base, quote])
     legs = {}
     for ccy in (base, quote):
-        weeks = positions.get(ccy, {}).get("leveraged_funds", [])
-        legs[ccy] = category_snapshot(weeks, years) if weeks else None
-    if not all(legs.values()):
-        return {"pair": f"{base}/{quote}", "status": "unavailable", "reason": "missing COT history for a leg"}
-    implied = round(legs[base]["percentile"] - legs[quote]["percentile"], 2)
+        leg_weeks = positions.get(ccy, {}).get("leveraged_funds", [])
+        legs[ccy] = category_snapshot(leg_weeks, years) if leg_weeks else None
+    from app.services.positioning_values import pair_series
+    dollars = await pair_series(pair, weeks, positions=positions)
+    implied = (round(legs[base]["percentile"] - legs[quote]["percentile"], 2)
+               if all(legs.values()) and all(v["percentile"] is not None for v in legs.values()) else None)
     return {
-        "pair": f"{base}/{quote}", "category": "leveraged_funds", "lookback": lookback,
+        **dollars, "category": "leveraged_funds", "lookback": lookback,
         "implied_percentile_spread": implied,
         "basis": "base minus quote leveraged-funds percentile; no cross-currency futures exist",
-        "base": {"currency": base, **legs[base]}, "quote": {"currency": quote, **legs[quote]},
+        "base": {"currency": base, **(legs[base] or {})}, "quote": {"currency": quote, **(legs[quote] or {})},
     }
 
 
 # ── Step 14 B: summary, release info, divergence, institutions vs retail ──
 
 SCHEDULE_CONFIG = Path("config/cftc_release_schedule.yaml")
-SQUEEZE_RANK = {"high": 3, "medium": 2, "trend_confirming": 1, "none": 0}
+SQUEEZE_RANK = {"high": 3, "medium": 2, "working": 1, "none": 0}
 DIVERGENCE_HIGH, DIVERGENCE_LOW = 75.0, 25.0
 DIVERGENCE_MIN_STD = 0.5  # |4W net change| must be >= 0.5 x std of 4W changes over the lookback
 IMPLIED_BIAS, RETAIL_SIDE = 20.0, 60.0
@@ -439,8 +459,8 @@ def summary_sentence(squeeze_rows: list[dict[str, Any]]) -> dict[str, Any]:
         sentence += f" and {side}s are being cut: squeeze watch medium."
     elif status == "medium":
         sentence += f" and {ccy} is moving against them: squeeze watch medium."
-    elif status == "trend_confirming":
-        sentence += f" and {ccy} is still moving their way: trend confirming."
+    elif status == "working":
+        sentence += f" and the crowded bet is still working for them."
     else:
         sentence += "."
     return {"currency": ccy, "status": status, "percentile": lf["percentile"], "text": sentence}

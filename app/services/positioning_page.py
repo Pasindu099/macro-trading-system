@@ -14,7 +14,7 @@ from app.services import myfxbook, positioning as pos
 CATEGORY_LABELS = {"leveraged_funds": "Leveraged funds", "asset_manager": "Asset managers", "dealer": "Dealers"}
 PRICE_LABELS = {"USD": "DXY (computed)", "EUR": "EUR/USD", "GBP": "GBP/USD", "AUD": "AUD/USD", "NZD": "NZD/USD",
                 "CAD": "CAD (inverse USD/CAD)", "CHF": "CHF (inverse USD/CHF)", "JPY": "JPY (inverse USD/JPY)"}
-LOOKBACK_LABELS = {"1y": "1 year", "3y": "3 years", "5y": "5 years"}
+LOOKBACK_LABELS = {"52w": "52 weeks", "1y": "1 year", "3y": "3 years", "5y": "5 years"}
 BAND_LABELS = {">90": "Above 90th (extreme long)", "85-90": "85th–90th", "10-15": "10th–15th",
                "<10": "Below 10th (extreme short)"}
 MIN_EPISODES = 5
@@ -67,7 +67,7 @@ def crowd_read(lf: dict[str, Any] | None, squeeze: dict[str, Any] | None) -> str
             return f"Crowded {side}; {side}s cut two weeks running"
         if status == "medium":
             return f"Crowded {side}; price moving against the crowd"
-        if status == "trend_confirming":
+        if status == "working":
             return f"Crowded {side}; price still moving with the crowd"
         return f"Crowded {side}"
     if p >= 65:
@@ -135,18 +135,18 @@ async def squeeze(lookback: str, **_: Any) -> dict[str, Any]:
     cards = []
     for row in data["currencies"]:
         lf = row.get("leveraged_funds") or {}
-        if lf.get("status") not in {"high", "medium", "trend_confirming"}:
+        if lf.get("status") not in {"high", "medium", "working"}:
             continue
         side = "long" if lf["crowding"] == "crowded_long" else "short"
         move = lf.get("spot_move_2w_pct")
         nets = lf.get("net_last_3w") or []
         flow = (f"{side.title()}s cut two weeks running" if lf.get("reducing")
                 else f"Net change last week {kfmt(nets[-1] - nets[-2])}" if len(nets) >= 2 else "—")
-        status_label = {"high": "Squeeze watch: high", "medium": "Squeeze watch: medium",
-                        "trend_confirming": "Trend-confirming"}[lf["status"]]
+        status_label = {"high": "Squeeze risk: high", "medium": "Squeeze risk: medium",
+                        "working": "Crowded, but still working for them"}[lf["status"]]
         read = {"high": "Extreme positioning, price moving against it, and the crowd reducing: all three are present.",
                 "medium": "Extreme positioning with one of the two other ingredients (price against, crowd reducing).",
-                "trend_confirming": "Extreme, but price is still moving in the crowd's favour; not a squeeze set-up "
+                "working": "The other squeeze ingredients do not both meet the threshold; "
                                     "while that holds."}[lf["status"]]
         cards.append({"ccy": row["currency"], "position": f"Crowded {side}", "status": lf["status"],
                       "status_label": status_label, "pct": f"{pos.ordinal(lf['percentile'])} percentile",

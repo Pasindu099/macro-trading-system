@@ -42,14 +42,14 @@ def test_rolling_percentile_respects_lookback_window() -> None:
         (92, [100, 90, 80], -1.2, "high"),             # long crowd, spot down, net cut twice
         (92, [100, 90, 80], 0.8, "medium"),            # reducing only
         (92, [80, 90, 100], -0.5, "medium"),           # spot against only
-        (92, [80, 90, 100], 0.9, "trend_confirming"),  # still moving with the crowd
+        (92, [80, 90, 100], 0.9, "working"),
         (8, [-100, -90, -80], 1.0, "high"),            # short crowd covering while currency rallies
-        (8, [-80, -90, -100], -0.4, "trend_confirming"),
+        (8, [-80, -90, -100], -0.4, "working"),
         (50, [100, 90, 80], -1.2, "none"),             # not crowded
     ],
 )
 def test_squeeze_rule(percentile, nets, move, expected) -> None:
-    assert pos.squeeze_status(percentile, nets, move)["status"] == expected
+    assert pos.squeeze_status(percentile, nets, move, typical_move=1.0)["status"] == expected
 
 
 def test_crowding_thresholds_inclusive() -> None:

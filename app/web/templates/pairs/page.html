@@ -26,7 +26,7 @@
       {% for key in ['data_implied','priced'] %}<td class="score">{{ '%+.1f bp'|format(row[key]) if row[key] is not none else 'pending' }}</td>{% endfor %}
       <td>{{ '%+.1f bp'|format(row.spread_2y) if row.spread_2y is not none else 'pending' }}</td><td>{{ '%+.1f bp'|format(row.spread_change_20d) if row.spread_change_20d is not none else 'pending' }}</td>
       <td>{% if row.driver %}<span class="driver-chip {{ row.driver }}">{{ row.driver.replace('_',' ') }}</span>{% else %}pending{% endif %}</td>
-      <td class="score">{{ '%+.0f'|format(row.cot_implied) if row.cot_implied is not none else 'pending' }}</td>
+      <td class="score">{{ '%+.0f'|format(row.cot_implied) if row.cot_implied is not none else 'pending' }}{% if row.cot_money is defined %}<small title="{{ row.cot_notional_basis }} · {{ row.cot_notional_as_of or 'date unavailable' }}">{{ row.cot_money }}{% if row.cot_notional_basis.startswith('implied') %} · implied{% endif %}</small>{% endif %}</td>
       <td>{% if row.retail_long_pct is not none %}{{ '%.0f%% long by volume'|format(row.retail_long_pct) }}<small>Positions: {{ row.retail_long_positions if row.retail_long_positions is not none else 'pending' }} long / {{ row.retail_short_positions if row.retail_short_positions is not none else 'pending' }} short</small>{% if row.opposite_sides %}<span class="opposite-chip">opposite sides</span>{% endif %}{% else %}pending{% endif %}</td>
       <td>{% for warning in row.warnings %}<span class="warning-chip {{ warning.severity }}">{{ warning.name }}</span>{% else %}—{% endfor %}</td>
     </tr>{% endfor %}</tbody></table></div>

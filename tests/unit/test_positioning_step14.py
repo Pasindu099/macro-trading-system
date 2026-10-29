@@ -11,7 +11,7 @@ def _row(ccy, pctl, status, crowding, reducing=False):
 
 
 def test_summary_picks_squeeze_status_then_extremeness():
-    rows = [_row("EUR", 96.0, "trend_confirming", "crowded_long"),
+    rows = [_row("EUR", 96.0, "working", "crowded_long"),
             _row("JPY", 12.0, "high", "crowded_short", reducing=True),
             _row("GBP", 4.0, "medium", "crowded_short", reducing=True),
             _row("USD", 50.0, "none", "neutral")]
@@ -22,8 +22,8 @@ def test_summary_picks_squeeze_status_then_extremeness():
 
 
 def test_summary_variants_and_no_crowding():
-    trend = p.summary_sentence([_row("EUR", 91.0, "trend_confirming", "crowded_long")])
-    assert trend["text"].endswith("(91st percentile) and EUR is still moving their way: trend confirming.")
+    trend = p.summary_sentence([_row("EUR", 91.0, "working", "crowded_long")])
+    assert trend["text"].endswith("and the crowded bet is still working for them.")
     against = p.summary_sentence([_row("CAD", 13.0, "medium", "crowded_short")])
     assert against["text"].endswith("and CAD is moving against them: squeeze watch medium.")
     none = p.summary_sentence([_row("USD", 50.0, "none", "neutral")])

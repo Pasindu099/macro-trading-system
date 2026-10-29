@@ -56,6 +56,7 @@ from app.services.government_yields import (
 )
 from app.services.cb_documents_jobs import document_run_times, load_meetings_config, run_cb_documents
 from app.services.cot_positions import run_cot_weekly
+from app.services.cot_legacy import run_cot_legacy_weekly
 from app.services.fred import ingest_fred_series
 from app.services.fx_spot import ingest_eodhd_fx_spot
 from app.services.meeting_calendar import SUPPORTED_BANKS
@@ -368,6 +369,11 @@ class Scheduler:
                 misfire_grace_time=60 * 60,
             )
         logger.info("  Registered job:cot_weekly Fri 21:00 UTC, retry Mon 21:00 UTC")
+        for job_id, day, retry in (("cot_legacy_weekly", "fri", False), ("cot_legacy_weekly_retry", "mon", True)):
+            self._scheduler.add_job(run_cot_legacy_weekly,
+                trigger=CronTrigger(day_of_week=day, hour=21, minute=0, timezone="UTC"),
+                kwargs={"retry": retry}, id=job_id, name=f"CFTC Legacy positions ({day} 21:00 UTC)",
+                replace_existing=True, misfire_grace_time=60*60)
 
         self._scheduler.add_job(
             _poll_cb_feeds,

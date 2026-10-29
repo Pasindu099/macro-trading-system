@@ -68,6 +68,9 @@ async def screener() -> dict:
     retail_snapshots = {row["pair"]: row for row in await myfxbook.latest()}
     episodes = await situations.get_situation_episodes(active=True)
     spots = await _spot_history()
+    from app.services.positioning_values import pair_value, money
+    cot_positions = await positioning.load_positions()
+    cot_spots = await positioning.load_spot()
     async with get_sessionmaker()() as session:
         source_freshness = await freshness.get_data_freshness(session)
     rows = []
@@ -95,6 +98,10 @@ async def screener() -> dict:
         spread_delta = round(spread_now - spread_rows[0]["spread_bp"], 1) if len(spread_rows) >= 21 else None
         driver = await rates_drivers.get_pair_drivers(pair, "2Y")
         position = retail.get(pair, {})
+        legs = [ccy for ccy in (base,quote) if ccy != "USD"]
+        common_dates = set.intersection(*[{w.report_date for w in cot_positions.get(ccy,{}).get("leveraged_funds",[])} for ccy in legs])
+        cot_day = max(common_dates, default=None)
+        cot_usd = pair_value(base,quote,cot_day,cot_positions,cot_spots) if cot_day else None
         snap = retail_snapshots.get(base + quote, {})
         warnings = [{"name": episode["name"], "severity": episode["severity"]}
                     for episode in episodes if episode["scope_key"] in (base, quote, pair, "GLOBAL")]
@@ -110,6 +117,9 @@ async def screener() -> dict:
                      "driver": driver.get("status") if driver.get("status") != "unavailable" else None,
                      "driver_as_of": driver.get("as_of"), "cot_implied": position.get("cot_implied"),
                      "retail_long_pct": position.get("retail_long_pct"),
+                     "cot_usd_bn": cot_usd/1e9 if cot_usd is not None else None, "cot_money": money(cot_usd),
+                     "cot_notional_as_of": str(cot_day) if cot_day else None,
+                     "cot_notional_basis": f"implied from {base} and {quote} futures" if "USD" not in (base,quote) else "single futures market; pair direction",
                      "retail_long_positions": snap.get("long_positions"),
                      "retail_short_positions": snap.get("short_positions"),
                      "opposite_sides": position.get("signal") == "opposite sides", "warnings": warnings})

@@ -1,5 +1,5 @@
 .takeaway{padding:14px 16px;margin-top:18px;border-left:4px solid var(--accent);border-radius:4px;background:var(--accent-tint,var(--accent-soft));color:var(--ink,var(--text));font-size:12px;line-height:1.6}
-.takeaway-part+.takeaway-part{margin-top:9px}.takeaway-part strong{display:block}.takeaway-part p{margin:2px 0}
+.takeaway-part+.takeaway-part{margin-top:9px}.takeaway-part strong{display:block}.takeaway-sentence{margin:2px 0}
 .glossary-term{position:relative;display:inline;font:inherit}.glossary-term>summary{display:inline;cursor:help;list-style:none;text-decoration:underline dotted;text-underline-offset:3px}.glossary-term>summary::-webkit-details-marker{display:none}.glossary-term>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .glossary-definition{display:none;position:absolute;left:0;top:100%;z-index:50;width:min(250px,70vw);padding:10px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--ink,var(--text));white-space:normal;font-size:12px;box-shadow:0 3px 12px var(--line)}
 .glossary-term[open]>.glossary-definition,.glossary-term:hover>.glossary-definition,.glossary-term:focus-within>.glossary-definition{display:block}

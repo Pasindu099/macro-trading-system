@@ -27,7 +27,9 @@ def test_parts_are_plain_descriptive_and_explicit(panel, state):
         assert len(re.findall(r"[.!?](?:\s|$)", text)) <= 2
         assert "contracts" not in text and "σ" not in text
         assert "".join(segment["text"] for segment in output["parts"][key]) == text
-    assert "unavailable" in output["now"] if state != "ok" else "not available yet" in output["now"]
+    assert output["now"]
+    if state != "ok":
+        assert "unavailable" in output["now"]
     if state == "stale":
         assert "stale" in output["now"]
 

@@ -4,6 +4,7 @@
 |---|---|---|
 | A | Shared macro/CSS, deterministic registry, glossary, Explanations cookie switch | Focused 40 passed/1 skipped; full 929 passed/8 skipped/1 warning (140.17s). |
 | B | Positioning data, dollar/interest views, v2 squeeze/extremes, separate Legacy ingestion | Focused 96 passed; full 960 passed/8 skipped/1 warning (106.12s). |
+| C | Live takeaways on all seven panels, writing/missing/stale safeguards | Focused 49 passed/1 skipped; full 972 passed/8 skipped/1 warning (109.60s). |
 
 - Supplied decisions saved in `DECISIONS_STEP18_TAKEAWAYS_POSITIONING.md` and `DECISIONS_THEME_LIGHT.md`; both supplied mockups copied to `design/design-mockups/`.
 - `app/services/takeaways/`: one function for each of seven Positioning panels; three-part contract with explicit unavailable/stale text. Live readings and per-panel placement remain Part C.
@@ -20,4 +21,7 @@
 - Contract sizes verified: [CME FX product guide](https://www.cmegroup.com/markets/fx/fx-product-guide), [ICE DX](https://www.ice.com/products/194/US-Dollar-Index-USDX-Futures); config: `config/cot_contract_specs.yaml`. Legacy name/fields verified against [official CFTC metadata](https://publicreporting.cftc.gov/api/views/6dca-aqww.json).
 - Tests: `test_positioning_step18.py` (unit + integration), `test_cot_legacy.py`, affected existing Positioning/screener/scheduler tests. All 28 notional conventions and live Legacy/%OI/pair APIs checked.
 - Compatibility adapters update old squeeze labels and the 52-week lookback; redesigned Positioning layouts/toggles and live takeaway wording/placement remain C-D, not silently implemented here.
-- STOP after Part B. Parts C-D and E are deferred; no LLM, themes or production deployment changed. Existing unrelated working-tree edits preserved.
+- C: `app/services/takeaways/positioning.py` supplies data-backed summaries in $bn/%/case counts, sign-sensitive flows, four-week price context, divergence and explicit retail/episode unavailability; `_takeaway.html` renders all three parts at every panel bottom.
+- Glossary uses valid flow markup; native keyboard/touch definitions remain escaped. Source freshness suppresses current readings. Live integration covers every panel; two Myfxbook date-bound queries required explicit integer casts.
+- Local stack check: PostgreSQL/Redis healthy; app health 200 after restarting a non-responsive local app. No production changes.
+- Part D pending; Part E remains deferred. No LLM or production deployment changed; unrelated working-tree edits preserved.

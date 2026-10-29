@@ -11,6 +11,8 @@ from fastapi.templating import Jinja2Templates
 
 from app.db.session import get_sessionmaker
 from app.services import desks, freshness, positioning_page as page
+from app.services import takeaways
+from app.services.takeaways.positioning import inputs as takeaway_inputs
 from app.services.positioning import CURRENCIES, LOOKBACK_YEARS
 
 router = APIRouter(tags=["positioning"])
@@ -66,10 +68,15 @@ async def positioning_panel(request: Request, panel_id: str) -> HTMLResponse:
                   currency_items=[(c, c) for c in ("USD", "EUR", "GBP", "JPY", "AUD", "NZD", "CAD", "CHF")])
     try:
         ctx = await builder(**params)
+        take_data = await takeaway_inputs(panel_id, params) if ctx.get("state") in {"ok","partial","empty"} else {"state":ctx.get("state")}
+        if any(row.get("stale") for row in rows) and take_data.get("state") not in {"unavailable","pending"}:
+            take_data = {**take_data,"stale":True}
+        ctx["takeaway"] = takeaways.REGISTRY[panel_id](take_data)
         html = strip + template.render(ctx=ctx, **render)
     except Exception:
         logger.exception("Positioning panel %s failed", panel_id)
         ctx = {"state": "error", "message": "This panel could not load. Try again shortly."}
+        ctx["takeaway"] = takeaways.REGISTRY[panel_id](ctx)
         return HTMLResponse(strip + template.render(ctx=ctx, **render))
     desks.cache_set(cache_key, html, ttl=CACHE_TTL)
     return HTMLResponse(html)

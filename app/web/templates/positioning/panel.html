@@ -107,3 +107,4 @@
 <p class="pos-note">COT pair positioning is implied from both legs (base minus quote leveraged-funds percentile), since there are no cross-currency futures. Opposite sides: COT-implied above +20 with retail more than 60% short, or below −20 with retail more than 60% long. Pair pages are pending; links open the Pairs screener.</p>
 {% endif %}
 {% endif %}
+{% from "_takeaway.html" import takeaway %}{% if ctx.takeaway is defined %}{{ takeaway(ctx.takeaway) }}{% endif %}

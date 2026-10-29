@@ -4,7 +4,7 @@
 {% macro takeaway(value) -%}
 <aside class="takeaway" aria-label="Panel explanation" data-explanation>
 {% for key, label in [('shows','What this shows'),('now','What it says now'),('watch','Why it matters / what to watch')] %}
-<div class="takeaway-part"><strong>{{ label }}</strong><p>{% for segment in value.parts[key] %}{% if segment.definition %}{{ term(segment.text, segment.definition) }}{% else %}{{ segment.text }}{% endif %}{% endfor %}</p></div>
+<div class="takeaway-part"><strong>{{ label }}</strong><div class="takeaway-sentence">{% for segment in value.parts[key] %}{% if segment.definition %}{{ term(segment.text, segment.definition) }}{% else %}{{ segment.text }}{% endif %}{% endfor %}</div></div>
 {% endfor %}
 </aside>
 {%- endmacro %}

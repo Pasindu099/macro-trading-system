@@ -1,8 +1,9 @@
-"""Shared deterministic takeaway contract; live panel wording is added in Part C."""
+"""Shared deterministic takeaway contract and live Positioning readings."""
 import re
 from pathlib import Path
 
 import yaml
+from app.services.takeaways.positioning import NOW
 
 PANEL_TEXT = {
     "summary": ("This brings together the main readings from the weekly COT report.", "Weekly reports describe past holdings rather than the timing of a trade."),
@@ -40,10 +41,13 @@ def _takeaway(panel: str, data: dict | None = None) -> dict:
     state = data.get("state", "unavailable")
     if state == "stale" or data.get("stale"):
         now = "These inputs are stale, so a current reading is unavailable."
-    elif state not in {"ok", "available", "partial"}:
-        now = "The inputs needed for a current reading are unavailable."
+    elif state not in {"ok", "available", "partial", "not_extreme", "too_few"}:
+        now = data.get("message") or "The inputs needed for a current reading are unavailable."
     else:
-        now = "A plain-language reading for this panel is not available yet."
+        now = NOW[panel](data)
+    if panel == "extremes" and data.get("outcome_range_pct") and state == "available":
+        bounds = data["outcome_range_pct"]
+        watch = f"Past eight-week moves ranged from {bounds['min']:+.1f}% to {bounds['max']:+.1f}%; these are observations rather than a promise about the next move."
     plain = {"shows": shows, "now": now, "watch": watch}
     return {**plain, "state": state, "parts": {key: segments(value) for key, value in plain.items()}}
 

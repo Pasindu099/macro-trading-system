@@ -5,6 +5,7 @@
 | A | Shared macro/CSS, deterministic registry, glossary, Explanations cookie switch | Focused 40 passed/1 skipped; full 929 passed/8 skipped/1 warning (140.17s). |
 | B | Positioning data, dollar/interest views, v2 squeeze/extremes, separate Legacy ingestion | Focused 96 passed; full 960 passed/8 skipped/1 warning (106.12s). |
 | C | Live takeaways on all seven panels, writing/missing/stale safeguards | Focused 49 passed/1 skipped; full 972 passed/8 skipped/1 warning (109.60s). |
+| D | Responsive redesigned panels, charts, glossary and controls; wording/navigation fixes | Focused 64 passed; final full 988 passed/8 skipped/1 warning (134.41s). |
 
 - Supplied decisions saved in `DECISIONS_STEP18_TAKEAWAYS_POSITIONING.md` and `DECISIONS_THEME_LIGHT.md`; both supplied mockups copied to `design/design-mockups/`.
 - `app/services/takeaways/`: one function for each of seven Positioning panels; three-part contract with explicit unavailable/stale text. Live readings and per-panel placement remain Part C.
@@ -24,4 +25,12 @@
 - C: `app/services/takeaways/positioning.py` supplies data-backed summaries in $bn/%/case counts, sign-sensitive flows, four-week price context, divergence and explicit retail/episode unavailability; `_takeaway.html` renders all three parts at every panel bottom.
 - Glossary uses valid flow markup; native keyboard/touch definitions remain escaped. Source freshness suppresses current readings. Live integration covers every panel; two Myfxbook date-bound queries required explicit integer casts.
 - Local stack check: PostgreSQL/Redis healthy; app health 200 after restarting a non-responsive local app. No production changes.
-- Part D pending; Part E remains deferred. No LLM or production deployment changed; unrelated working-tree edits preserved.
+- D: redesigned seven panels, Simple/Bar views, all trader-group detail, lookbacks, dollar/%OI history controls, squeeze evidence and extreme episodes; shared nav/freshness retained.
+- Browser: 1440/390 px, Explanations On/Off, cookie reload, glossary keyboard access, cross fallback and Legacy chart controls passed; no page overflow or JavaScript errors. Evidence: `data/screenshots/step18-positioning/`.
+- Glossary definitions stay inside the viewport; Off retains numbers/charts, source dates and essential status messages. Existing legacy context module retained for compatibility.
+- Rendered: "Hedge funds' largest reported dollar bets are a $9.66bn bet against EUR and a $6.48bn bet against CAD."
+- Rendered: "This week hedge funds added $1.15bn to their bet on GBP and cut $0.85bn from their bet against JPY."
+- Rendered: "Over four weeks hedge funds switched to a bet against JPY, a change of $2.40bn, while the yen against the dollar fell 0.5%."
+- Navigation: `tests/unit/test_shell.py:34` expected the old literal query; new chart parameters and HTML-escaped separators broke the assertion, not the top-bar switch. Test now parses the attribute and checks its complete query.
+- Wording rules appended to decisions; all seven takeaways use bet on/against, distinguish changes/levels and name the currency quote. Tests cover additions, cuts, zero-crossings and closures; chart/retail labels updated too.
+- Part E remains deferred. No LLM or production deployment changed; unrelated working-tree edits preserved.

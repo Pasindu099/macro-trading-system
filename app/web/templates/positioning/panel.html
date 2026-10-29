@@ -33,7 +33,7 @@
 </div>
 
 {% elif panel_id == 'crowding' %}
-<p class="pos-note">Percentile of net positioning vs the last {{ ctx.lookback_label }}: 0 = most short, 100 = most long. Amber at or above 85 = crowded long, blue at or below 15 = crowded short. Dealers usually take the other side of speculators. Select a currency for sections 4–5.</p>
+<p class="pos-note">Percentile of overall bets vs the last {{ ctx.lookback_label }}: 0 = most short, 100 = most long. Amber at or above 85 = crowded long, blue at or below 15 = crowded short. Dealers usually take the other side of speculators. Select a currency for sections 4–5.</p>
 <div class="pos-scroll"><table class="pos-crowd">
   <thead><tr><th>Currency</th><th>Leveraged funds</th><th>Asset managers</th><th>Dealers</th><th class="num">Lev. funds net</th><th class="num">1W change</th><th>Read</th></tr></thead>
   <tbody>{% for r in ctx.rows %}<tr>
@@ -77,7 +77,7 @@
   <div class="axis axis-r"><span>{{ '%.1f' % g.px_max if g.px_max is not none else '' }}</span><span>{{ '%.1f' % g.px_min if g.px_min is not none else '' }}</span></div>
 </div>
 <div class="pos-dates"><span>{{ ctx.first_date.strftime('%d %b %Y') }}</span><span>{{ ctx.last_date.strftime('%d %b %Y') }}</span></div>
-<div class="pos-legend"><span><i class="lg-long"></i>Leveraged funds net long (contracts, left)</span><span><i class="lg-short"></i>Net short</span><span><i class="lg-price"></i>{{ ctx.price_label }} (right)</span><span><i class="lg-div"></i>Divergence flagged</span></div>
+<div class="pos-legend"><span><i class="lg-long"></i>Leveraged funds bets on (contracts, left)</span><span><i class="lg-short"></i>Bets against</span><span><i class="lg-price"></i>{{ ctx.price_label }} (right)</span><span><i class="lg-div"></i>Divergence flagged</span></div>
 <p class="pos-read">{{ ctx.read }}</p>
 
 {% elif panel_id == 'extremes' %}
@@ -100,11 +100,11 @@
   <tbody>{% for r in ctx.rows %}<tr>
     <td><a href="{{ r.href }}">{{ r.pair }}</a></td>
     <td class="pos-{{ r.kind }}">{{ r.cot_label }}</td>
-    <td>{{ r.retail_label }}{% if r.spark %} <svg class="spark" viewBox="0 0 80 20" role="img" aria-label="{{ r.pair }} retail % long, last 30 days"><polyline points="{{ r.spark }}"></polyline></svg>{% endif %}</td>
+    <td>{{ r.retail_label }}{% if r.spark %} <svg class="spark" viewBox="0 0 80 20" role="img" aria-label="{{ r.pair }} retail % betting on the base currency, last 30 days"><polyline points="{{ r.spark }}"></polyline></svg>{% endif %}</td>
     <td class="num"><span class="chip sig-{{ r.signal.replace(' ', '-') }}">{{ r.signal }}</span></td>
   </tr>{% endfor %}</tbody>
 </table></div>
-<p class="pos-note">COT pair positioning is implied from both legs (base minus quote leveraged-funds percentile), since there are no cross-currency futures. Opposite sides: COT-implied above +20 with retail more than 60% short, or below −20 with retail more than 60% long. Pair pages are pending; links open the Pairs screener.</p>
+<p class="pos-note">COT pair positioning is implied from both legs (base minus quote leveraged-funds percentile), since there are no cross-currency futures. Opposite sides: COT-implied above +20 with retail more than 60% betting against the base currency, or below −20 with retail more than 60% betting on the base currency. Pair pages are pending; links open the Pairs screener.</p>
 {% endif %}
 {% endif %}
 {% from "_takeaway.html" import takeaway %}{% if ctx.takeaway is defined %}{{ takeaway(ctx.takeaway) }}{% endif %}

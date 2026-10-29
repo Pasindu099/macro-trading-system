@@ -8,7 +8,7 @@ from app.services.takeaways.positioning import NOW
 PANEL_TEXT = {
     "summary": ("This brings together the main readings from the weekly COT report.", "Weekly reports describe past holdings rather than the timing of a trade."),
     "crowding": ("This compares hedge funds and asset managers with their own past bets.", "A crowded bet leaves less room for traders to add on the same side."),
-    "flows": ("This shows which bets hedge funds added to or cut over the selected period.", "Adding to a bet and closing the opposite bet can move the net position in the same direction."),
+    "flows": ("This shows which bets hedge funds added to or cut over the selected period.", "Adding to a bet on a currency and cutting a bet against it both shift the overall bet towards that currency."),
     "squeeze": ("This compares a crowded bet with price moves and changes in that bet.", "A squeeze puts pressure on traders to close positions when prices move against them."),
     "price": ("This compares the selected futures positions with the matching market price.", "Price and positioning describe different things and can move in different directions."),
     "extremes": ("This compares separate past episodes when hedge funds held a similar extreme bet.", "Past episodes show a range of outcomes rather than a promise about the next move."),

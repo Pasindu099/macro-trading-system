@@ -15,8 +15,8 @@ def crowding(data):
     bets = [(r["currency"],r.get("groups",{}).get("leveraged_funds")) for r in data.get("bars",[]) if not r.get("stale")]
     bets = sorted([(c,g) for c,g in bets if g and g.get("net_usd") is not None],key=lambda item:abs(item[1]["net_usd"]),reverse=True)
     if not bets: return MISSING
-    names = " and ".join(f"{c} ({values.money(g['net_usd'])})" for c,g in bets[:2])
-    text = f"Hedge funds hold their largest reported dollar bets in {names}."
+    names = " and ".join(f"a ${abs(g['net_usd'])/1e9:.2f}bn bet {'on' if g['net_usd'] > 0 else 'against'} {c}" for c,g in bets[:2])
+    text = f"Hedge funds' largest reported dollar bets are {names}."
     opposite = next((r for r in data.get("simple",[]) if r["status"] == "They disagree" and not r.get("stale")),None)
     return text + (f" On {opposite['currency']}, hedge funds and asset managers sit on opposite sides of their recent ranges." if opposite else "")
 
@@ -27,13 +27,14 @@ def flows(data):
     parts = []
     for r in sorted(rows,key=lambda r:abs(r["change_usd"]),reverse=True)[:2]:
         action,ccy = r["action"],r["currency"]
-        side = "long" if r["net"] > 0 else "short" if r["net"] < 0 else "flat"
-        words = (f"added to their {ccy} {side} bet" if action == "adding to the bet" else
-                 f"cut their {ccy} {side} bet" if action == "cutting the bet" else
-                 f"switched sides on {ccy}" if action == "switched sides" else
-                 f"closed their {ccy} bet" if action == "closed the bet" else
-                 f"opened a {ccy} {side} bet" if action == "opened the bet" else f"left their {ccy} bet unchanged")
-        parts.append(words+f" (${abs(r['change_usd'])/1e9:.2f}bn)")
+        side = "on" if r["net"] > 0 else "against"
+        amount = f"${abs(r['change_usd'])/1e9:.2f}bn"
+        words = (f"added {amount} to their bet {side} {ccy}" if action == "adding to the bet" else
+                 f"cut {amount} from their bet {side} {ccy}" if action == "cutting the bet" else
+                 f"switched to a bet {side} {ccy}, a change of {amount}" if action == "switched sides" else
+                 f"closed their bet {'on' if -r['change_usd'] > 0 else 'against'} {ccy}, a change of {amount}" if action == "closed the bet" else
+                 f"opened a {amount} bet {side} {ccy}" if action == "opened the bet" else f"left their bet on {ccy} unchanged")
+        parts.append(words)
     return ("This month" if data.get("window") == "4W" else "This week")+" hedge funds "+" and ".join(parts)+"."
 
 
@@ -51,10 +52,16 @@ def price(data):
     if any(r.get(k) is None for r in (a,b) for k in ("net","price")) or not a["price"]: return MISSING
     change,move = b["net"]-a["net"],100*(b["price"]/a["price"]-1)
     amount = f"{abs(change):.1f} percentage points of open interest" if data.get("units") == "pct_oi" else f"${abs(change):.2f}bn"
-    action = "increased" if change > 0 else "reduced" if change < 0 else "left unchanged"
+    side = "on" if b["net"] > 0 else "against"
+    action = f"added {amount} to their bet {side}" if a["net"]*b["net"] > 0 and abs(b["net"]) > abs(a["net"]) else f"cut {amount} from their bet {side}"
     direction = "rose" if move > 0 else "fell" if move < 0 else "was unchanged"
-    text = f"Over four weeks {data.get('group_label','hedge funds').lower()} {action} their net position in {data.get('instrument','this market')} by {amount}, while the price {direction} {abs(move):.1f}%."
-    return text + (" The price and bet changes meet the divergence rule." if data.get("divergence") else "")
+    instrument = data.get('instrument','JPY')
+    if not change: action = f"left their bet {side}"
+    text = f"Over four weeks {data.get('group_label','hedge funds').lower()} {action} {instrument}{' unchanged' if not change else ''}, while {values.price_name(instrument)} {direction} {abs(move):.1f}%."
+    if change and a['net']*b['net'] <= 0:
+        change_text = f"switched to a bet {side} {instrument}" if a['net'] and b['net'] else f"opened a bet {side} {instrument}" if b['net'] else f"closed their bet {'on' if a['net'] > 0 else 'against'} {instrument}"
+        text = f"Over four weeks {data.get('group_label','hedge funds').lower()} {change_text}, a change of {amount}, while {values.price_name(instrument)} {direction} {abs(move):.1f}%."
+    return text + (f" Changes in {values.price_name(instrument)} and the bet meet the divergence rule." if data.get("divergence") else "")
 
 
 def extremes(data):

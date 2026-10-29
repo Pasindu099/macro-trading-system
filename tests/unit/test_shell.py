@@ -31,7 +31,13 @@ def test_placeholder_sections_and_event_log_navigation(monkeypatch):
         assert '<header class="site-header">' in response.text
     positioning_page = client.get("/positioning?ccy=EUR")                    # Step 14: no longer a placeholder
     assert positioning_page.status_code == 200 and '<header class="site-header">' in positioning_page.text
-    assert 'hx-get="/positioning/panels/summary?lookback=3y&ccy=EUR&window=1W"' in positioning_page.text
+    from urllib.parse import urlsplit, parse_qs
+    panel_url = BeautifulSoup(positioning_page.text, "html.parser").select_one("#pos-summary [hx-get]")["hx-get"]
+    assert urlsplit(panel_url).path == "/positioning/panels/summary"
+    assert parse_qs(urlsplit(panel_url).query) == {
+        "lookback": ["3y"], "ccy": ["EUR"], "window": ["1W"], "instrument": ["EUR"],
+        "group": ["leveraged_funds"], "units": ["usd"], "range_key": ["3Y"], "view": ["simple"],
+    }
     terminal = client.get("/central-banks?bank=SNB&view=projections")       # Step 12: no longer a placeholder
     assert terminal.status_code == 200 and 'aria-label="Central banks"' in terminal.text
     assert 'hx-get="/central-banks/panels/proj-formats?bank=SNB"' in terminal.text

@@ -185,3 +185,8 @@ sign; adding/cutting logic; 52-week lookback. Full suite green in-container.
 
 ## DELIVER
 REPORT_STEP18.md (≤60 lines) + ≤10-line status after Part B and at the end.
+## Positioning wording amendment (2026-10-29)
+- Say "bet on / bet against"; never "long / short / net position" in displayed wording.
+- Identify figures as changes ("added $1.15bn to") or levels ("a $9.66bn bet against").
+- Always name the quoted market (for example "the yen against the dollar"); never "the price".
+- Apply to every Positioning template and chart label; internal field names stay compatible.

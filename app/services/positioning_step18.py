@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from statistics import median
 
 from app.services import positioning as pos
-from app.services.positioning_values import money, notional
+from app.services.positioning_values import money, notional, price_name
 
 
 def side(percentile):
@@ -95,8 +95,8 @@ async def squeeze_watch(lookback="3y", data=None):
         side_ = "on" if item["crowding"] == "crowded_long" else "against"
         status = item["status"]
         move, typical, nets = item.get("spot_move_2w_pct"), item.get("typical_2w_move_pct"), item.get("net_last_3w", [])
-        price_text = ("the price is moving against them" if item.get("against_crowd") else
-                      "the price move does not meet the threshold" if item.get("against_crowd") is False else "matching price evidence is unavailable")
+        price_text = (f"{price_name(ccy)} is moving against them" if item.get("against_crowd") else
+                      f"the move in {price_name(ccy)} does not meet the threshold" if item.get("against_crowd") is False else f"evidence for {price_name(ccy)} is unavailable")
         flow_text = ("they have started backing out" if item.get("reducing") else
                      "they have not started backing out" if item.get("reducing") is False else "two consecutive weekly changes are unavailable")
         headline = f"Hedge funds are heavily betting {side_} {ccy}, {price_text}, and {flow_text}."
@@ -115,9 +115,9 @@ async def squeeze_watch(lookback="3y", data=None):
         cards.append({"currency": ccy, "status": status, "label": label, "headline": headline,
             "stale": stale,
             "percentile": item["percentile"], "report_date": item["report_date"], "price_date": item.get("price_date"),
-            "price_basis": "dollar index for USD" if ccy == "USD" else f"{ccy} vs USD", "checklist": [
-                {"label": "Big one-sided bet", "checked": True, "evidence": f"Heavily {item['crowding'].split('_')[1]}, {item['percentile']:.0f} of 100"},
-                {"label": "Price moving against them", "checked": item.get("against_crowd"), "move_2w_pct": move,
+            "price_basis": price_name(ccy), "checklist": [
+                {"label": "Big one-sided bet", "checked": True, "evidence": f"Heavy bet {side_} {ccy}, {item['percentile']:.0f} of 100"},
+                {"label": f"{price_name(ccy).capitalize()} moving against them", "checked": item.get("against_crowd"), "move_2w_pct": move,
                  "evidence": price_evidence,
                  "typical_2w_move_pct": typical, "threshold_pct": typical*.5 if typical is not None else None},
                 {"label": "They are backing out", "checked": item.get("reducing"), "changes": changes,
@@ -208,9 +208,9 @@ async def extremes(currency):
         rise = f" (typical rise {result['median_rise_pct']:+.1f}%)" if result['median_rise_pct'] is not None else ""
         fall = f" (worst {result['worst_fall_pct']:+.1f}%)" if result['worst_fall_pct'] is not None else ""
         flat = f"; in {result['flat']} it was unchanged" if result['flat'] else ""
-        result["reading"] = (f"Hedge funds were this {'long' if result['percentile'] >= 85 else 'short'} {currency} {result['count']} times since 2010. "
-            f"In {result['up']} cases the currency rose over eight weeks{rise}; in {result['down']} it fell{fall}{flat}.")
-        result["context"] = f"In {result['against_crowd']} of {result['count']} past cases the price went against the crowd within eight weeks."
+        result["reading"] = (f"Hedge funds held a bet this heavily {'on' if result['percentile'] >= 85 else 'against'} {currency} {result['count']} times since 2010. "
+            f"In {result['up']} cases {price_name(currency)} rose over eight weeks{rise}; in {result['down']} it fell{fall}{flat}.")
+        result["context"] = f"In {result['against_crowd']} of {result['count']} past cases {price_name(currency)} moved against the crowd within eight weeks."
         result["comparison"] = {"median_rise_pct": result["median_rise_pct"], "worst_fall_pct": result["worst_fall_pct"],
                                 "up": result["up"], "down": result["down"], "flat": result["flat"]}
     result["report_date"] = str(weeks[-1].report_date) if weeks else None

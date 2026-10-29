@@ -169,7 +169,7 @@ async def test_small_short_vs_heavy_short_wording_and_missing_oi(monkeypatch):
     assert "rarely been this small" in result["percentile_note"]
     for w,n in zip(weeks,[10,50,100]): w.short = n
     result = await v.history("JPY",units="pct_oi")
-    assert "larger short bet" in result["percentile_note"]
+    assert "larger bet against" in result["percentile_note"]
     weeks[-1].open_interest = 0
     result = await v.history("JPY",units="pct_oi")
     assert result["history"][-1]["net"] is None and result["state"] == "unavailable"

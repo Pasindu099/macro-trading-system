@@ -12,9 +12,17 @@ GROUP_LABELS = {"leveraged_funds": "Hedge funds", "asset_manager": "Long-term in
                 "legacy_noncommercial": "Large speculators (as on most sites)"}
 RANGES = {"1Y": 52, "3Y": 156, "5Y": 260, "2010": None}
 
+def price_name(instrument):
+    names = {"USD":"dollar", "EUR":"euro", "GBP":"pound", "JPY":"yen", "AUD":"Australian dollar",
+             "NZD":"New Zealand dollar", "CAD":"Canadian dollar", "CHF":"Swiss franc"}
+    if instrument == "USD": return "the dollar index"
+    if instrument in names: return f"the {names[instrument]} against the dollar"
+    base, quote = pos.normalize_pair(instrument)
+    return f"the {names[base]} against the {names[quote]}"
+
 
 def money(value):
-    return "unavailable" if value is None else f"${abs(value)/1e9:.2f}bn {'long' if value > 0 else 'short' if value < 0 else 'flat'}"
+    return "unavailable" if value is None else "No directional bet" if value == 0 else f"a ${abs(value)/1e9:.2f}bn bet {'on' if value > 0 else 'against'}"
 
 
 def notional(currency: str, week: pos.Week, spot: pos.SpotSeries | None):
@@ -139,7 +147,7 @@ async def history(instrument: str, *, group="leveraged_funds", units="usd", rang
     net = rows[-1]["net"] if rows else None
     band = "unavailable" if net is None else "normal range" if low == high else "bottom 20%" if low is not None and net <= low else "top 20%" if high is not None and net >= high else "normal range"
     amount = f"{abs(net):.1f}% of all open contracts" if effective_units == "pct_oi" and net is not None else f"${abs(net):.2f}bn" if net is not None else "unavailable"
-    current = (f"{GROUP_LABELS[group]} are net {'long' if net > 0 else 'short' if net < 0 else 'flat'} {instrument.upper()} by {amount}. "
+    current = (f"{GROUP_LABELS[group]} hold a bet {'on' if net > 0 else 'against' if net < 0 else 'balanced on'} {instrument.upper()} of {amount}. "
                f"This sits in the {band} over the selected range.") if net is not None else "Positioning or matching report-date prices are unavailable."
     stale = bool(dates and (date.today()-dates[-1]).days > 10)
     if stale:
@@ -148,8 +156,8 @@ async def history(instrument: str, *, group="leveraged_funds", units="usd", rang
             "range": range_key, "history": rows, "state": "stale" if stale else "available" if net is not None else "unavailable", "reading": current,
             "stale": stale, "report_date": str(dates[-1]) if dates else None,
             "report_type": "legacy_futures_only" if group == "legacy_noncommercial" else "tff_futures_only",
-            "percentile_note": ("Traders rarely held a larger long bet in this range." if net is not None and net > 0 and band == "top 20%" else
-                "Traders rarely held a larger short bet in this range." if net is not None and net < 0 and band == "bottom 20%" else
+            "percentile_note": ("Traders rarely held a larger bet on this currency in this range." if net is not None and net > 0 and band == "top 20%" else
+                "Traders rarely held a larger bet against this currency in this range." if net is not None and net < 0 and band == "bottom 20%" else
                 "The bet has rarely been this small in this range." if net is not None and ((net > 0 and band == "bottom 20%") or (net < 0 and band == "top 20%")) else None),
             "explanation": "Crosses combine two futures markets, so a single open-interest percentage is unavailable; showing US dollars instead." if cross and units == "pct_oi" else None,
             "report_note": "Many sites show Legacy non-commercials; this report keeps them separate from TFF hedge funds and asset managers."}

@@ -27,6 +27,15 @@ def test_relevance_filter_drops(title, source, reason):
     assert result.status == "dropped" and result.reason == reason
 
 
+@pytest.mark.parametrize("title", ["Pope thanks crowds in Peru", "US measles deaths rise", "England cricket scandal deepens"])
+def test_general_news_is_not_fx_news(title):
+    assert tag(title, source="al_jazeera").status == "dropped"
+
+
+def test_named_official_rate_guidance_is_high_impact():
+    assert tag("Fed's Daly: we need to raise rates").impact == "High"
+
+
 @pytest.mark.parametrize("title,source", [
     ("EUR/USD rises after ECB holds rates", "investinglive"),
     ("Bitcoin slides as dollar strengthens", "investinglive"),  # not crypto-only

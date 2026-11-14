@@ -54,7 +54,8 @@ def test_usd_and_eur_desks_render_and_disabled_desks_404():
     # Every panel is a lazy HTMX partial in mockup order, with a loading state.
     order = [page.text.index(f'hx-get="/desks/USD/panels/{p.id}"') for p in routes._panels(desks.get_desk("USD"))]
     assert order == sorted(order)
-    assert page.text.count("state-loading") == len(routes._panels(desks.get_desk("USD")))
+    from bs4 import BeautifulSoup
+    assert len(BeautifulSoup(page.text, "html.parser").select('.state-loading')) == len(routes._panels(desks.get_desk("USD")))
     assert "htmx" in page.text and "desk.js" in page.text
     assert client.get("/desks/EUR").status_code == 200
     assert 'hx-get="/desks/EUR/panels/country"' in client.get("/desks/EUR").text
@@ -128,7 +129,7 @@ def test_panel_cached_for_60_seconds_and_errors_not_cached(monkeypatch):
     assert first.status_code == 200 and "state-error" in first.text and "Retry" in first.text
     second = client.get("/desks/USD/panels/scenarios")
     third = client.get("/desks/USD/panels/scenarios")
-    assert "Available after step 10" in second.text and second.text == third.text
+    assert second.text == third.text == ""
     assert calls["n"] == 2
     assert desks.PANEL_CACHE_SECONDS == 60
 

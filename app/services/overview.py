@@ -38,6 +38,36 @@ MANDATES = {"USD": "Fed dual mandate", "EUR": "ECB price stability", "GBP": "BoE
             "NZD": "RBNZ price stability", "CAD": "BoC price stability", "CHF": "SNB price stability"}
 DOMINANCE_CONFIG = Path("config/dominance.yaml")
 HIERARCHY = tuple(yaml.safe_load(DOMINANCE_CONFIG.read_text(encoding="utf-8"))["tiers"])
+INTERVENTION_ZONE = tuple(yaml.safe_load(Path("config/situations.yaml").read_text(encoding="utf-8"))["intervention_zone_jpy"])
+TIE_MARGIN = .03  # rates vs data share gap below which neither is called dominant
+TIER_PLAIN = {
+    "Geopolitical shock": "Wars, sanctions or tariffs moving currencies",
+    "Risk sentiment": "Fear vs appetite for risk (VIX); risk-off favours USD, JPY and CHF",
+    "CB policy divergence": "Differences between central banks' interest-rate paths",
+    "Economic data": "Surprises in inflation, jobs and growth releases",
+    "Positioning": "Speculators all on one side, which can unwind sharply",
+    "Technical": "Chart levels and breakouts",
+}
+DRIVER_PHRASES = {
+    "Geopolitical shock": "geopolitical headlines",
+    "Risk sentiment": "swings in risk appetite",
+    "CB policy divergence": "differences in central-bank policy",
+    "Economic data": "economic data surprises",
+    "Positioning": "speculator positioning",
+    "CB policy divergence and Economic data": "central-bank policy and economic data, roughly equally",
+}
+# Plain-English strength of a verdict score (scale -2..+2; bias cut-offs in config/verdict.yaml).
+SCORE_RANGE = 2.0
+
+
+def strength_label(score: float | None) -> str | None:
+    if score is None:
+        return None
+    size = abs(score)
+    word = "Strong" if size >= 1 else "Moderate" if size >= .5 else "Mild" if size >= .25 else None
+    if word is None:
+        return "Neutral"
+    return f"{word} {'bullish' if score > 0 else 'bearish'}"
 
 logger = logging.getLogger(__name__)
 
@@ -146,10 +176,15 @@ def _dominance_tiers(shares: dict | None, *, risk_off: bool, geo_count: int,
     policy = rates is not None and rates >= .25 and (data is None or rates >= data)
     economic = data is not None and data >= .25 and (rates is None or data > rates)
     positioning_lead = bool(stretched and squeeze_against_crowd)
+    # Rates and data shares within TIE_MARGIN of each other are a joint lead, not one "Dominant" driver.
+    tied = (not geopolitical and not risk_off and rates is not None and data is not None
+            and min(rates, data) >= .25 and abs(rates - data) < TIE_MARGIN)
     lead = next((name for qualifies, name in ((geopolitical, HIERARCHY[0]),
                (risk_off, HIERARCHY[1]), (policy, HIERARCHY[2]),
                (economic, HIERARCHY[3]), (positioning_lead, HIERARCHY[4]))
                if qualifies), "No single driver")
+    if tied:
+        lead = f"{HIERARCHY[2]} and {HIERARCHY[3]}"
     risk_state = "Dominant" if risk_off and lead == HIERARCHY[1] else (
         "Elevated" if elevated else "Calm" if vix is not None and vix < 15 else "Neutral" if vix is not None else "Pending")
     evidence = [
@@ -158,14 +193,17 @@ def _dominance_tiers(shares: dict | None, *, risk_off: bool, geo_count: int,
         f"Rates explain {rates:.0%} of G10 moves (20d)" if rates is not None else "Rates attribution pending",
         f"Data explain {data:.0%} of G10 moves (20d)" if data is not None else "Data attribution pending",
         f"Stretched in {', '.join(stretched)}" if stretched else "No confirmed positioning stretch",
-        "Level engine pending",
+        "Not tracked yet",
     ]
     rows = []
     for index, name in enumerate(HIERARCHY):
         active = (geopolitical, elevated, policy or (rates is not None and rates >= .15),
                   economic or (data is not None and data >= .15), bool(stretched), False)[index]
-        state = "Dominant" if name == lead else risk_state if index == 1 else "Active" if index == 0 and active else "Supporting" if active else "Secondary"
-        rows.append({"number": index + 1, "name": name, "state": state, "evidence": evidence[index]})
+        state = ("Joint lead" if tied and index in (2, 3) else "Dominant" if name == lead else
+                 risk_state if index == 1 else "Active" if index == 0 and active else
+                 "Supporting" if active else "Secondary")
+        rows.append({"number": index + 1, "name": name, "state": state, "evidence": evidence[index],
+                     "plain": TIER_PLAIN[name]})
     return rows, lead
 
 
@@ -209,11 +247,77 @@ async def hero() -> dict:
         vix=vix, vix_change=vix - old_vix if vix is not None and old_vix is not None else None,
         stretched=stretched, squeeze_against_crowd=squeeze_against_crowd)
     top = max(episodes, key=lambda row: {"high": 3, "medium": 2, "low": 1}.get(row["severity"], 0), default=None)
-    prefix = f"{driver}." + (f" Theme: {top['name']}." if top else "")
-    theme = f"{prefix} {ranking[0]['currency']} strongest and {ranking[-1]['currency']} weakest on the ranking."
-    return {"state": "ok", "theme": theme, "theme_prefix": prefix,
-            "strongest": ranking[0]["currency"], "weakest": ranking[-1]["currency"],
-            "driver": driver, "hierarchy": tiers}
+    phrase = DRIVER_PHRASES.get(driver)
+    lead_in = f"FX is trading mainly on {phrase}" if phrase else "No single force is driving FX right now"
+    lead_in += f", and {top['name']} is the main active theme." if top else "."
+    strongest, weakest = ranking[0]["currency"], ranking[-1]["currency"]
+    theme = f"{lead_in} {strongest} looks strongest and {weakest} weakest."
+    ranked = await currency_ranking()
+    scores = {row["currency"]: row["score"] for row in ranked["rows"] if row["score"] is not None}
+    events = await key_events(scores)
+    return {"state": "ok", "theme": theme, "lead_in": lead_in,
+            "strongest": strongest, "weakest": weakest,
+            "driver": driver, "hierarchy": tiers,
+            "ideas": trade_ideas(scores, _load_pairs())[:3],
+            "next_event": events["rows"][0] if events.get("rows") else None,
+            "changes": await what_changed(episodes)}
+
+
+def _load_pairs() -> list[dict]:
+    return yaml.safe_load(Path("config/pairs.yaml").read_text(encoding="utf-8"))["pairs"]
+
+
+def trade_ideas(scores: dict[str, float], pairs: list[dict]) -> list[dict]:
+    """Pairs ranked by verdict gap. Positive gap = base stronger = buy the pair; negative = sell it."""
+    ideas = []
+    for item in pairs:
+        base, quote = item["base"], item["quote"]
+        if base not in scores or quote not in scores:
+            continue
+        gap = round(scores[base] - scores[quote], 2)
+        if gap == 0:
+            continue
+        strong, weak = (base, quote) if gap > 0 else (quote, base)
+        ideas.append({"pair": item["pair"], "value": gap, "action": "Buy" if gap > 0 else "Sell",
+                      "strength": "Strong" if abs(gap) >= 1 else "Moderate" if abs(gap) >= .5 else "Mild",
+                      "why": f"{strong} {strength_label(scores[strong]).lower()} vs "
+                             f"{weak} {strength_label(scores[weak]).lower()}"})
+    return sorted(ideas, key=lambda row: abs(row["value"]), reverse=True)
+
+
+async def what_changed(episodes: list[dict], *, days: int = 3) -> list[str]:
+    """Changes in the last few days, read from stored episodes, policy decisions and Macro State scores."""
+    today = datetime.now(UTC).date()
+    since = today - timedelta(days=days)
+    out = []
+    for row in episodes:
+        if row["started_at"] >= since:
+            out.append(f"New situation: {row['name']} ({row['scope_key'].split(':')[0]}) since {row['started_at']:%d %b}")
+    for row in await situations.get_situation_episodes(active=False):
+        if row.get("ended_at") and since <= row["ended_at"] <= today:
+            out.append(f"Ended: {row['name']} ({row['scope_key'].split(':')[0]}) on {row['ended_at']:%d %b}")
+    for currency, regime in (await _policy_regimes()).items():
+        moved, bp = regime.get("last_move_date"), regime.get("last_move_bp")
+        if moved and bp and today - timedelta(days=7) <= moved <= today:
+            out.append(f"{BANKS[currency]} {'raised' if bp > 0 else 'cut'} rates by {abs(bp)}bp on {moved:%d %b}")
+    async with get_sessionmaker()() as session:
+        rows = (await session.execute(text("""
+            SELECT currency, date, cb_strength_score::float AS score FROM (
+              SELECT currency, date, cb_strength_score,
+                     row_number() OVER (PARTITION BY currency ORDER BY date DESC) AS n
+              FROM processed.cb_preferred_score WHERE date <= current_date AND cb_strength_score IS NOT NULL
+            ) ranked WHERE n <= 2 ORDER BY currency, date DESC
+        """))).mappings().all()
+    by_currency: dict[str, list] = {}
+    for row in rows:
+        by_currency.setdefault(row["currency"], []).append(row)
+    moves = sorted(((currency, pair[0]["score"] - pair[1]["score"], pair[0]["date"])
+                    for currency, pair in by_currency.items() if currency in CURRENCIES and len(pair) == 2
+                    and pair[0]["date"] >= since and abs(pair[0]["score"] - pair[1]["score"]) >= .05),
+                   key=lambda item: -abs(item[1]))
+    for currency, change, day in moves[:3]:
+        out.append(f"{currency} economic-data score {'up' if change > 0 else 'down'} {abs(change):.2f} ({day:%d %b} update)")
+    return out[:6]
 
 
 async def active_situations() -> dict:
@@ -221,6 +325,18 @@ async def active_situations() -> dict:
     rows = _group_situations(episodes + await situations.get_labor_watch_rows(episodes))
     return {"state": "ok" if rows else "empty", "rows": rows,
             "message": "No active situations."}
+
+
+SITUATION_PLAIN = {
+    "energy_shock": "Oil prices have jumped and are pushing headline inflation above core.",
+    "fr_fiscal_stress": "Investors demand a much higher yield on French debt than German debt.",
+    "labor_deterioration": "Unemployment is rising from its recent low, a classic early slowdown sign.",
+    "risk_off": "Markets are fearful; safe havens (USD, JPY, CHF) usually gain.",
+    "bear_steepening": "Long-dated yields are rising faster than short ones.",
+    "yields_up_currency_down": "Yields are rising while the currency falls, a sign of fiscal worry.",
+    "correlation_break": "The currency has stopped following its usual interest-rate driver.",
+    "intervention_risk_jpy": "USD/JPY is near levels where Japan has sold dollars to support the yen.",
+}
 
 
 def _situation_evidence(situation_id: str, evidence: dict) -> str:
@@ -240,13 +356,23 @@ def _situation_evidence(situation_id: str, evidence: dict) -> str:
         "intervention_risk_jpy": ("USD/JPY distance from zone", "intervention_zone_distance_pct", "%"),
     }
     if situation_id == "correlation_break":
-        return "Spot and 2Y rates drivers diverging" if current.get("rates_drivers_diverging") == 1 else "Rates driver evidence pending"
+        return "Spot and 2Y rates drivers diverging" if current.get("rates_drivers_diverging") == 1 else "Not enough recent data to confirm"
+    if situation_id == "intervention_risk_jpy" and isinstance(current.get("usd_jpy"), (int, float)):
+        low, high = INTERVENTION_ZONE
+        spot, distance = current["usd_jpy"], current.get("intervention_zone_distance_pct")
+        where = (f"inside the {low:.1f}–{high:.1f} zone" if distance == 0 else
+                 f"{abs(distance):.1f}% {'below' if spot < low else 'above'} the {low:.1f}–{high:.1f} zone"
+                 if isinstance(distance, (int, float)) else f"near the {low:.1f}–{high:.1f} zone")
+        return f"USD/JPY {spot:.2f}, {where}"
     label, key, unit = lines.get(situation_id, ("Evidence", "", ""))
     value = number(key, unit)
-    if situation_id == "energy_shock" and value:
+    if situation_id == "energy_shock":
         gap = number("headline_core_gap_pp", "pp")
-        return f"{label} {value}; headline CPI above core by {gap}" if gap else f"{label} {value}"
-    return f"{label} {value}" if value else "Evidence pending"
+        if value:
+            return f"{label} {value}; headline CPI above core by {gap}" if gap else f"{label} {value}"
+        if gap:
+            return f"Headline CPI above core by {gap}"
+    return f"{label} {value}" if value else "Not enough recent data to confirm"
 
 
 def _group_situations(episodes: list[dict]) -> list[dict]:
@@ -257,30 +383,45 @@ def _group_situations(episodes: list[dict]) -> list[dict]:
             continue
         key = episode["situation_id"]
         state = episode.get("state", "active")
-        group_key = (key, state)
-        card = grouped.setdefault(group_key, {"name": episode["name"], "severity": episode["severity"],
-            "state": state,
-            "started_at": episode["started_at"], "currencies": set(), "pairs": set(),
-            "evidence": "Evidence pending", "href": None, "_latest": date.min})
-        card["started_at"] = min(card["started_at"], episode["started_at"])
+        # One card per situation: watch-only currencies are listed on the active card, not a second card.
+        card = grouped.setdefault(key, {"name": episode["name"], "severity": episode["severity"],
+            "state": state, "id": key, "plain": SITUATION_PLAIN.get(key, ""),
+            "started_at": episode["started_at"], "currencies": set(), "pairs": set(), "watch": set(),
+            "evidence": "Not enough recent data to confirm", "href": None, "_rank": (False, date.min)})
         scope = episode["scope_key"]
         if episode["scope"] == "pair":
-            card["pairs"].add(scope)
-            card["currencies"].update(scope.split("/"))
+            scoped = set(scope.split("/"))
         elif scope == "GLOBAL":
-            card["currencies"].update(CURRENCIES)
+            scoped = set(CURRENCIES)
         else:
-            card["currencies"].add(scope.split(":")[0])
-        if episode["started_at"] >= card["_latest"]:
+            scoped = {scope.split(":")[0]}
+        if state == "watch":
+            card["watch"].update(scoped)
+            if card["state"] == "watch":
+                card["started_at"] = min(card["started_at"], episode["started_at"])
+        else:
+            if card["state"] == "watch":
+                card.update(state=state, started_at=episode["started_at"])
+            card["started_at"] = min(card["started_at"], episode["started_at"])
+            card["currencies"].update(scoped)
+            if episode["scope"] == "pair":
+                card["pairs"].add(scope)
+        rank = (state != "watch", episode["started_at"])
+        if rank >= card["_rank"]:
             card["evidence"] = episode.get("evidence_stale") or _situation_evidence(key, episode.get("evidence") or {})
-            card["_latest"] = episode["started_at"]
+            card["_rank"] = rank
     rows = []
     for card in grouped.values():
+        if card["state"] == "watch":
+            card["currencies"], card["watch"] = card["watch"], set()
+        card["watch"] = [currency for currency in CURRENCIES if currency in card["watch"] - card["currencies"]]
+        card["months"] = (now.year - card["started_at"].year) * 12 + now.month - card["started_at"].month
+        card["level"] = "watch" if card["state"] == "watch" else card["severity"] if card["severity"] in ("high", "medium") else "watch"
+        del card["_rank"]
         card["currencies"] = [currency for currency in CURRENCIES if currency in card["currencies"]]
         card["pairs"] = sorted(card["pairs"])
         card["href"] = (f"/pairs/{card['pairs'][0].replace('/', '')}" if card["pairs"] else
                         next((f"/desks/{currency}" for currency in card["currencies"] if currency in ("USD", "EUR")), None))
-        del card["_latest"]
         rows.append(card)
     return sorted(rows, key=lambda row: (-{"high": 3, "medium": 2, "low": 1}.get(row["severity"], 0), row["started_at"]))
 
@@ -293,8 +434,17 @@ async def moving_markets() -> dict:
              "tag": item["situation_ids"][0].replace("_", " ") if item["situation_ids"] else item["news_type"],
              "tag_kind": "confirmed" if item["situation_ids"] else "warning", "why": item["why"]}
             for item in await news.tagged_feed(limit=60, start=since.date())
-            if item["impact"] == "High" and since <= item["published_at"] <= now]
-    return {"state": "ok" if rows else "empty", "rows": rows[:6],
+            if item["impact"] == "High" and since <= item["published_at"] <= now][:6]
+    # A context line shared by several headlines is shown once as a theme banner, not on every row.
+    counts: dict[str, int] = {}
+    for row in rows:
+        if row["why"]:
+            counts[row["why"]] = counts.get(row["why"], 0) + 1
+    themes = [why for why, count in counts.items() if count >= 2]
+    for row in rows:
+        if row["why"] in themes:
+            row["why"] = None
+    return {"state": "ok" if rows else "empty", "rows": rows, "themes": themes,
             "message": "No high-impact items in the last 24 hours."}
 
 
@@ -368,12 +518,64 @@ def _gap_label(currency: str, view: dict | None) -> str:
     return "pending"
 
 
+BANK_NAMES = {"USD": "Fed", "EUR": "ECB", "GBP": "BoE", "JPY": "BoJ", "AUD": "RBA",
+              "NZD": "RBNZ", "CAD": "BoC", "CHF": "SNB"}
+
+
+def _gap_plain(currency: str, gap: str) -> str:
+    """Beginner reading of the gap label: which side the market sits on vs the central bank's own path."""
+    bank = BANK_NAMES[currency]
+    match = re.match(r"([+-]\d+)bp", gap)
+    if match:
+        bp = int(match.group(1))
+        if bp == 0:
+            return f"Market pricing matches the {bank}'s own path"
+        return (f"The {bank}'s own path is {abs(bp)}bp {'above' if bp > 0 else 'below'} market pricing "
+                f"({'hawkish' if bp > 0 else 'dovish'} for {currency})")
+    if gap.startswith(("hawkish", "dovish", "neutral")):
+        word = gap.split(":")[0]
+        return {"hawkish": f"{bank} data point to tighter policy than markets price",
+                "dovish": f"{bank} data point to easier policy than markets price",
+                "neutral": f"Markets and {bank} data broadly agree"}[word]
+    return "Not yet available for this currency"
+
+
+def _percentile_text(percentile: float | None) -> str | None:
+    """Speculator net position vs the last 3 years; 0 and 100 read as the 3-year extremes."""
+    if percentile is None:
+        return None
+    if percentile < .5:
+        return "3-year low"
+    if percentile > 99.5:
+        return "3-year high"
+    return f"{positioning.ordinal(percentile)} percentile"
+
+
+def _sparkline(series, days: int = 60) -> str | None:
+    """SVG polyline points (0..100 x 0..24) for the currency's value vs USD over the last `days` days."""
+    if series is None or not getattr(series, "dates", None):
+        return None
+    start = series.dates[-1] - timedelta(days=days)
+    values = [value for day, value in zip(series.dates, series.values) if day >= start]
+    if len(values) < 5:
+        return None
+    low, high = min(values), max(values)
+    span = (high - low) or 1
+    step = 100 / (len(values) - 1)
+    return " ".join(f"{i * step:.1f},{22 - (value - low) / span * 20:.1f}" for i, value in enumerate(values))
+
+
 async def currency_ranking() -> dict:
     board = await _board()
     by_currency = {row["currency"]: row for row in board["rows"]}
     crowding = {row["currency"]: row for row in (await positioning.get_crowding())["currencies"]}
     desk_views = {currency: await verdict.get_verdict(currency) for currency in verdict.SUPPORTED}
     regimes = await _policy_regimes()
+    try:
+        spot = await positioning.load_spot()
+    except Exception:                       # sparklines are decoration; the ranking must still render
+        logger.exception("Spot series for ranking sparklines unavailable")
+        spot = {}
     rows = []
     for currency in CURRENCIES:
         macro = by_currency.get(currency)
@@ -386,7 +588,13 @@ async def currency_ranking() -> dict:
         gap = _gap_label(currency, view) if currency in desk_views else "pending"
         percentile = cot.get("percentile")
         cot_label = ("crowded long" if percentile >= 85 else "crowded short" if percentile <= 15 else "neutral") if percentile is not None else "pending"
+        score = view.get("score") if view and view.get("status") == "available" else None
+        thesis = view.get("thesis") if view else None
         rows.append({"currency": currency, "macro": macro["overall_score"] if macro else None,
+                     "strength": strength_label(score), "spark": _sparkline(spot.get(currency)),
+                     "summary": thesis.split(". ")[0].rstrip(".") + "." if thesis else None,
+                     "cot_text": _percentile_text(percentile),
+                     "gap_plain": _gap_plain(currency, gap),
                      "date": macro["date"] if macro else None, "cot": percentile, "cot_label": cot_label,
                      "curve": curve.get("regime", {}).get("label") if curve.get("regime", {}).get("status") == "available" else None,
                      "verdict": view, "enabled": currency in desk_views, "gap": gap,
@@ -409,9 +617,11 @@ async def central_bank_map() -> dict:
         regime = regimes.get(currency)
         async with get_sessionmaker()() as session:
             pricing = await get_rate_probability_view(bank, session)
-        rows.append({"currency": currency, "bank": bank, "regime": regime,
+        gap = _gap_label(currency, views[currency]) if currency in views else None
+        rows.append({"currency": currency, "bank": bank, "regime": regime, "name": BANK_NAMES[currency],
+                     "gap_plain": _gap_plain(currency, gap) if gap and gap != "pending" else None,
                      "meeting": datetime.fromisoformat(meetings[0]["meeting_dt"]) if meetings else None,
-                     "guidance": await _guidance(bank, _gap_label(currency, views[currency]) if currency in views else None),
+                     "guidance": await _guidance(bank, gap),
                      "priced_move": _priced_move(pricing, currency, datetime.now(UTC).date()),
                      "ladder": ("qe", "near_zero", "cutting", "holding", "hiking"),
                      "state": "ok" if regime and regime.get("regime") != "unavailable" else "pending"})
@@ -444,7 +654,7 @@ def _priced_move(pricing: dict, currency: str, today: date) -> str:
                     if row.get("market_data_available") and row.get("delta_bps") is not None), None)
     if meeting is None:
         return "n/a"
-    move = f"{meeting['delta_bps']:+.0f}bp"
+    move = "0bp" if round(meeting["delta_bps"]) == 0 else f"{meeting['delta_bps']:+.0f}bp"
     return move if currency == "USD" else f"{move} approx."
 
 
@@ -474,6 +684,7 @@ async def pair_map(*, lens: str = "overall", path: str = "data", group: str = "a
             if _pair_in_group(pair, group):
                 rows.append({"pair": pair, "value": value, "base": base, "quote": quote})
         rows.append({"code": base, "cells": cells})
+    ideas = [row for row in trade_ideas(scores, pairs) if _pair_in_group(row["pair"], group)]
     ranked = sorted((row for row in rows if "pair" in row and row["value"] is not None),
                     key=lambda row: abs(row["value"]), reverse=True)
     top = [{**row, "label": f"{'▲' if row['value'] > 0 else '▼' if row['value'] < 0 else ''} {row['value']:+.2f}"}
@@ -484,10 +695,12 @@ async def pair_map(*, lens: str = "overall", path: str = "data", group: str = "a
               for row in ranked[:3]]
     return {"state": "ok", "codes": PAIR_ORDER, "matrix": [row for row in rows if "code" in row],
             "lens": lens, "path": path, "group": group, "top": top, "widest": widest,
-            "concentration": _pair_concentration(top, scores)}
+            "concentration": _pair_concentration(top, scores),
+            "longs": [row for row in ideas if row["action"] == "Buy"][:5],
+            "shorts": [row for row in ideas if row["action"] == "Sell"][:5]}
 
 
-async def key_events() -> dict:
+async def key_events(scores: dict[str, float] | None = None) -> dict:
     async with get_sessionmaker()() as session:
         rows = (await session.execute(text("""
             SELECT r.released_at, r.period, i.display_name, i.canonical_name,
@@ -498,12 +711,20 @@ async def key_events() -> dict:
               AND i.importance = 1 AND r.is_latest
             ORDER BY r.released_at, i.display_name LIMIT 200
         """))).mappings().all()
-    grouped = _group_key_events([dict(row) for row in rows])[:8]
+    grouped = [row for row in _group_key_events([dict(row) for row in rows])
+               if row["currency_code"] in CURRENCIES][:8]
     if not grouped:
         return {"state": "empty", "rows": [], "message": "No high-impact events in the next 14 days."}
     tracking = await _event_tracking()
+    if scores is None:
+        scores = {row["currency"]: row["score"] for row in (await currency_ranking())["rows"]
+                  if row["score"] is not None}
+    order = sorted(scores, key=lambda currency: -scores[currency])
     for row in grouped:
-        row["why"] = _event_why(row, tracking.get(row["currency_code"], "tracking pending"))
+        currency = row["currency_code"]
+        context = (f"{currency} ranks {positioning.ordinal(order.index(currency) + 1)} of {len(order)} "
+                   f"({strength_label(scores[currency]).lower()}). " if currency in scores else "")
+        row["why"] = context + _event_why(row, tracking.get(currency, "tracking pending"))
         row["impact"] = "High"
     return {"state": "ok", "rows": grouped}
 
@@ -538,16 +759,26 @@ def _group_key_events(rows: list[dict]) -> list[dict]:
     return sorted(output, key=lambda row: row["released_at"])
 
 
+EVENT_EFFECT = {
+    "Policy decision": "the rate call and guidance can reset what markets price",
+    "Employment": "stronger hiring would argue for a firmer {bank} path",
+    "CPI": "an upside inflation surprise would argue for a firmer {bank} path",
+    "GDP": "a stronger quarter would ease growth worries and support a firmer {bank} path",
+    "Retail sales": "strong consumer spending would support a firmer {bank} path",
+    "PMI": "business surveys lead activity; a beat points to firmer growth ahead",
+}
+
+
 def _event_why(row: dict, status: str) -> str:
-    mandate = MANDATES.get(row["currency_code"], "Central bank mandate")
+    currency = row["currency_code"]
+    mandate = MANDATES.get(currency, "Central bank mandate")
     family = row["family"]
-    if family == "Policy decision":
-        return f"{mandate}: {status}; guidance may change the priced path."
-    if family == "Employment":
-        return f"{mandate}: {status}; stronger hiring supports a firmer path."
-    if family in ("CPI",):
-        return f"{mandate}: {status}; an upside inflation surprise supports a firmer path."
-    return f"{mandate}: {status}; a growth beat supports a firmer path."
+    name = row["event"].lower()
+    effect = EVENT_EFFECT.get(family) or (
+        "faster wage growth would keep inflation pressure and a firmer {bank} path in play" if "wage" in name else
+        "a sentiment beat points to firmer activity ahead" if any(word in name for word in ("sentiment", "zew", "ifo", "confidence")) else
+        "a beat would support a firmer {bank} path")
+    return f"{mandate}: {status}; {effect.format(bank=BANK_NAMES.get(currency, 'central bank'))}."
 
 
 async def _event_tracking() -> dict[str, str]:

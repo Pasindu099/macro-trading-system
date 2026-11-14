@@ -53,6 +53,8 @@ def impact_for(name: str, raw_importance: int | None) -> int:
         value = int(raw_importance) if raw_importance is not None else 3
     except (TypeError, ValueError):
         value = 3
+    if re.search(r"\b(?:ytd|year.to.date|industrial production|export inspections?|bill auction)\b", name, re.I):
+        return max(2, min(3, value))
     return 1 if any(pattern.search(name) for pattern in _HIGH) else max(1, min(3, value))
 
 
@@ -85,7 +87,8 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
             key = ("configured", configured_bundle.bundle_key, country, stamp.date())
         else:
             # Coincident releases can be unrelated (CPI and real earnings, for example).
-            key = ("release", country, stamp, row["canonical_name"] or name.casefold(), row["period"])
+            key = ("release", country, stamp, re.sub(r"\s+", " ", name).strip().casefold(),
+                   comparison, row["period"])
         member = {
             "release_id": row["id"], "indicator_id": row["indicator_id"],
             "canonical_name": row["canonical_name"],
@@ -124,7 +127,9 @@ def _shape(rows: list[dict[str, Any]], currencies: set[str] | None,
         })
         group["released_at"] = min(group["released_at"], stamp)
         group["impact"] = min(group["impact"], impact)
-        group["components"].append(member)
+        if not any(c["canonical_name"] == member["canonical_name"] and c["name"] == member["name"]
+                   and c["indicator_id"] == member["indicator_id"] for c in group["components"]):
+            group["components"].append(member)
     result = list(groups.values())
     for group in result:
         group["components"].sort(key=lambda item: (not item["headline"], not item["mapped"], item["impact"],

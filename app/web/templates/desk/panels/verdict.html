@@ -6,10 +6,13 @@
     {% if ctx.state == 'ok' %}<div class="chips"><span class="chip">{{ ctx.verdict.bias | replace('_', ' ') | title }}</span><span class="chip">{{ ctx.verdict.conviction | title }} conviction</span><span class="chip">{{ ctx.verdict.horizon }}</span></div>{% endif %}
   </div>
   <div class="verdict-thesis">
-    <div class="eyebrow-sm">Bias · conviction · thesis</div>
+    <div class="eyebrow-sm">What the economic data say</div>
     {% if ctx.state == 'ok' %}
-      <p>{{ ctx.verdict.thesis }}</p>
-      <p class="muted small">Dominant driver: {{ ctx.verdict.dominant_driver }} · Main risk: {{ ctx.verdict.main_risk }}</p>
+      <p><strong>View:</strong> {{ ctx.verdict.bias|replace('_', ' ')|capitalize }} over {{ ctx.verdict.horizon }} · {{ ctx.verdict.conviction }} confidence.</p>
+      <p><strong>Why:</strong> {{ ctx.verdict.thesis }}</p>
+      <p><strong>What could change this:</strong> {{ ctx.verdict.main_risk|capitalize }}.</p>
+      {% if ctx.verdict.stale_inputs %}<p class="muted small">Out-of-date inputs are excluded; confidence is reduced.</p>{% endif %}
+      <p class="muted small">This is a macro view, not a description of recent price moves. Compare it with the price trend below.</p>
     {% else %}{{ state(ctx) }}{% endif %}
   </div>
 </section>

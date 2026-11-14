@@ -154,7 +154,7 @@ def status_for(source: str, as_of: date | datetime | None, *,
                updated_at: datetime | None = None, market: str | None = None) -> dict:
     now = now or datetime.now(UTC)
     rule = (rules or config())[source]
-    unit, limit = rule["unit"], int(rule["max_age"])
+    unit, limit = rule["unit"], float(rule["max_age"])
     reference = updated_at if source in DERIVED_JOBS else as_of
     if reference is None:
         shown = as_of.strftime("%d %b %Y") if as_of else None
@@ -182,7 +182,7 @@ def status_for(source: str, as_of: date | datetime | None, *,
         stamp = age_value if age_value.tzinfo else age_value.replace(tzinfo=UTC)
         age = max(0, (now - stamp).total_seconds() / 3600) if unit == "hours" else max(0, (now.date() - stamp.date()).days)
     stale = age > limit
-    reason = f"{age:g} {unit.replace('_', ' ')} old; limit {limit} {unit.replace('_', ' ')}" if stale else None
+    reason = f"{age:.2f}".rstrip("0").rstrip(".") + f" {unit.replace('_', ' ')} old; limit {limit:g} {unit.replace('_', ' ')}" if stale else None
     return {"source": source, "label": rule["label"], "as_of": as_of_value,
             "as_of_label": shown, "stale": stale, "age": age, "unit": unit,
             "max_age": limit, "reason": reason,

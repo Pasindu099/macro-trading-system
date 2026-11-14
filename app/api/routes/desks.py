@@ -65,18 +65,14 @@ async def desk_panel(request: Request, currency: str, panel_id: str) -> HTMLResp
     cached = desks.cache_get(key)
     if cached is not None:
         return HTMLResponse(cached)
-    try:
-        async with get_sessionmaker()() as session:
-            statuses = await freshness.get_data_freshness(session)
-    except Exception:
-        logger.exception("Desk freshness lookup failed")
-        statuses = {source: freshness.status_for(source, None) for source in freshness.QUERIES}
-    strip = templates.get_template("_freshness.html").render(
-        rows=freshness.panel_rows(statuses, freshness.DESK_PANEL_SOURCES[panel_id]))
+    strip = ""
     render = dict(request=request, desk=desk, panel=panel, label=_label(panel, desk),
                   url=f"/desks/{desk['currency']}/panels/{panel_id}")
     try:
         ctx = await panel.builder(desk, params)
+        if ctx.get("state") == "pending":
+            desks.cache_set(key, "")
+            return HTMLResponse("")
         html = strip + templates.get_template(f"desk/panels/{panel_id}.html").render(ctx=ctx, **render)
     except Exception:
         # One failing source must never break the page: log it and show a short message.

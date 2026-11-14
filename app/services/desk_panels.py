@@ -677,7 +677,7 @@ async def panel_positioning(desk: dict, params: dict) -> dict[str, Any]:
         color = HOT if crowd == "crowded_long" else COOL if crowd == "crowded_short" else TEXT
         crowd_label = {"crowded_long": " · Crowded long", "crowded_short": " · Crowded short"}.get(crowd, "")
         sq = (s or {}).get(category, {}).get("status")
-        rows.append({"label": label, "value": f"{pct:.0f}th{crowd_label}", "color": color,
+        rows.append({"label": label, "value": f"{positioning_service.ordinal(pct)}{crowd_label}", "color": color,
                      "bar": _pbar(pct, "#f2a33a" if crowd == "crowded_long" else "#5aa9ff" if crowd == "crowded_short" else "#7c8698"),
                      "squeeze": sq, "net": item.get("net"), "report_date": item.get("report_date")})
     return {"state": "ok", "rows": rows}
@@ -698,7 +698,10 @@ async def panel_catalysts(desk: dict, params: dict) -> dict[str, Any]:
     countries = [m["country"] for m in desk.get("members", [])] or [desk["country"]]
     events = [event for country in countries for event in await upcoming_events(country)]
     now = datetime.now(UTC)
-    upcoming = sorted((e for e in events if e.released_at and e.released_at > now),
+    upcoming = sorted((e for e in events if e.released_at and e.released_at > now
+                       and e.importance == 1
+                       and not any(word in e.display_name.lower() for word in
+                                   ("export inspection", "bill auction", "corn", "soybean", "wheat"))),
                       key=lambda e: e.released_at)[:10]
     if not upcoming:
         return empty(f"No upcoming {desk['currency']} events in the calendar.")

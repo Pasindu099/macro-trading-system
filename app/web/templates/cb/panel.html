@@ -1,8 +1,8 @@
 {% macro num(v, d=2, sign=False) %}{% if v is not defined or v is none %}—{% else %}{{ ('%+.' ~ d ~ 'f') % v if sign else ('%.' ~ d ~ 'f') % v }}{% endif %}{% endmacro %}
 {% macro lean_chip(lean) %}{% if lean %}<span class="lean lean-{{ lean }}">{{ lean }}</span>{% else %}<span class="lean">—</span>{% endif %}{% endmacro %}
-{% macro tone_label(data) %}<span class="cb-method {{ 'pending' if data.tone_status == 'pending' else '' }}">{{ data.label }}</span>{% endmacro %}
+{% macro tone_label(data) %}<span class="cb-method {{ 'pending' if data.tone_status == 'pending' else '' }}">{{ data.label if data.tone_status != 'pending' else 'Official remarks' }}</span>{% endmacro %}
 {% if panel_id != 'summary' %}<h2>{{ titles[panel_id] }}</h2>{% endif %}
-{% if ctx.state != 'ok' %}<p class="panel-state state-{{ ctx.state }}">{{ ctx.message or ('Pending.' if ctx.state == 'pending' else 'Unavailable.') }}</p>{% endif %}
+{% if ctx.state != 'ok' %}<p class="panel-state state-{{ ctx.state }}">{{ ctx.message or 'Unavailable.' }}</p>{% endif %}
 {% if ctx.state == 'ok' %}
 {% if panel_id == 'summary' %}{% set s = ctx.summary %}
   <div class="cb-summary">
@@ -10,7 +10,7 @@
       <span class="kicker">{{ ctx.currency }} · {{ ctx.mandate }}</span>
       <h1>{{ ctx.name }}</h1>
       <div class="cb-chips">
-        <span class="chip">Regime: {{ s.regime.replace('_', ' ') }}</span>
+        <span class="chip" title="The broader policy cycle can differ from the latest decision below.">Policy cycle: {{ s.regime.replace('_', ' ') }}</span>
         <span class="chip">Guidance: {{ ctx.guidance }}</span>
         {% set b = s.blackout %}
         <span class="chip {{ 'chip-warn' if b.status == 'in_blackout' else '' }}">{% if b.status == 'in_blackout' %}In blackout to {{ b.end.strftime('%d %b') }}{% elif b.status == 'open' %}Blackout from {{ b.start.strftime('%d %b') }}{% else %}Blackout: {{ b.reason }}{% endif %}{% if b.status != 'unknown' and not b.verified %} (unverified){% endif %}</span>
@@ -26,7 +26,7 @@
       {% set t = s.two_year_minus_policy %}
       <div><span>2Y − policy</span><strong>{% if t.spread_bp is defined %}{{ '%+d' % t.spread_bp }} bp{% else %}—{% endif %}</strong><small>{{ t.country ~ ' 2Y ' ~ t.as_of.strftime('%d %b') if t.as_of is defined else '' }}</small></div>
       {% set g = s.gap %}
-      <div><span>Gap vs priced</span><strong>{% if g.kind == 'bp' and g.gaps %}{{ num(g.gaps[0].gap_bp, 0, True) }} bp{% elif g.kind == 'qualitative' and g.direction is defined %}{{ g.direction }}{% else %}pending{% endif %}</strong><small>{{ g.gaps[0].horizon if g.kind == 'bp' and g.gaps else (g.reason or '') }}</small></div>
+      <div><span>Gap vs priced</span><strong>{% if g.kind == 'bp' and g.gaps %}{{ num(g.gaps[0].gap_bp, 0, True) }} bp{% elif g.kind == 'qualitative' and g.direction is defined %}{{ g.direction }}{% else %}Unavailable{% endif %}</strong><small>{{ g.gaps[0].horizon if g.kind == 'bp' and g.gaps else (g.reason or '') }}</small></div>
     </div>
   </div>
 
@@ -34,7 +34,7 @@
   {% if ctx.votes is defined and ctx.votes.latest %}{% set v = ctx.votes.latest %}
   <p class="cb-sub">Published policy vote · {{ v.date.strftime('%d %b %Y') }} · <a href="{{ v.source_url }}">source</a></p>
   <strong>{{ v['for'] }}–{{ v.against }}</strong>
-  {% if v.against %}<span> · dissents {% if v.dissent_bp %}{{ v.dissent_bp|join(', ') }} bp{% else %}direction pending{% endif %}</span>{% endif %}
+  {% if v.against %}<span> · dissents {% if v.dissent_bp %}{{ v.dissent_bp|join(', ') }} bp{% else %}direction unavailable{% endif %}</span>{% endif %}
   {% if ctx.votes.previous %}<p class="cb-note">Previous {{ ctx.votes.previous['for'] }}–{{ ctx.votes.previous.against }} ({{ ctx.votes.previous.date.strftime('%d %b %Y') }})</p>{% endif %}
   <p class="cb-note">A vote split measures today's disagreement, not the next decision.</p>
   {% endif %}
@@ -49,7 +49,7 @@
     {% endfor %}
   </div>
   <div class="cb-axis"><span>12 weeks ago</span><span>This week</span></div>
-  {% if d.tone_status == 'pending' %}<p class="cb-note">Tone: pending AI layer — bars show how many officials spoke each week. Word-list precision gate: {{ d.tone_gate.status }} (needs ≥ {{ (d.tone_gate.min_precision*100)|int }}%).</p>
+  {% if d.tone_status == 'pending' %}<p class="cb-note">Bars count officials speaking each week.</p>
   {% else %}<div class="cb-legend"><span><i class="hawk"></i>Hawkish</span><span><i class="neutral"></i>Neutral</span><span><i class="dove"></i>Dovish</span></div>{% endif %}
 
 {% elif panel_id == 'statement' %}{% set d = ctx.data %}
@@ -79,19 +79,18 @@
     {% endfor %}
     </tbody></table></div>
   <div class="cb-legend">{% for theme in ctx.focus %}<span><i class="f-{{ theme|replace(' ', '-') }}"></i>{{ theme }}</span>{% endfor %}</div>
-  {% if not d.tone_method %}<p class="cb-note">Tone: pending AI layer (word-list precision gate {{ d.tone_gate.status }}). Focus mix and counts are shown.</p>{% endif %}
 
 {% elif panel_id == 'profile' %}{% set p = ctx.speaker %}
   <p class="cb-sub"><strong>{{ p.name }}</strong> · {{ p.role }} · {{ 'voter' if p.voter else ('rotating vote' if p.voter is none else 'non-voter') }} · {{ p.speeches_6m }} speeches, {{ p.comments_6m }} comments in 6 months · {{ tone_label(ctx.data) }}</p>
   <div class="cb-profile">
     <div>
-      <span class="kicker">Tone over 6 months</span>
+      {% if ctx.data.tone_method %}<span class="kicker">Tone over 6 months</span>{% endif %}
       {% if ctx.data.tone_method %}
       <div class="cb-dots" role="img" aria-label="Scored sentences over 6 months"><span class="zero"></span>
         {% for d in ctx.dots %}<i class="{{ 'hawk' if d.score > 0 else 'dove' }}" style="left:{{ d.x }}%;top:{{ d.y }}%" title="{{ d.date }} {{ '%+.2f' % d.score }}"></i>{% endfor %}
       </div>
       <p class="cb-note">Tone {{ num(p.tone_30d, 2, True) }} (30d) vs baseline {{ num(p.baseline_6m, 2, True) }}; lean {{ p.lean or '—' }}.</p>
-      {% else %}<p class="panel-state state-pending">Tone: pending AI layer.</p>{% endif %}
+      {% endif %}
     </div>
     <div>
       <span class="kicker">Latest extracted points</span>
@@ -108,7 +107,6 @@
   {% for r in ctx.rows %}<div class="cb-point"><time>{{ r.published_at.strftime('%d %b %H:%M') }}</time><span>{% if r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener noreferrer">{{ r.title }}</a>{% else %}{{ r.title }}{% endif %}</span><span class="chip">{{ r.speakers|join(', ') or 'bank' }}</span></div>{% endfor %}
 
 {% elif panel_id == 'library' %}
-  <div class="cb-pending-box"><strong>Search and “Ask” — Phase 3, pending</strong><p>Speech search with a local embedding model and the AI assistant arrive in Phase 3.</p></div>
   {% if ctx.manual %}<p class="cb-note">{{ ctx.manual }}</p>{% endif %}
   <span class="kicker">Recent speeches</span>
   {% for s in ctx.speeches %}<div class="cb-point"><time>{{ s.speech_date.strftime('%d %b') }}</time><span>{{ s.title }}<small>{{ s.who or 'unattributed' }} · {{ s.source }}</small></span>{% if s.link %}<a href="{{ s.link }}" target="_blank" rel="noopener noreferrer">{{ s.points }} points →</a>{% else %}<span>{{ s.points }} points</span>{% endif %}</div>

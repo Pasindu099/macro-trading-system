@@ -5,6 +5,7 @@ States: ok | empty | unavailable | pending | error (error is set by the route on
 
 from __future__ import annotations
 
+import html
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
@@ -135,6 +136,8 @@ async def upcoming(bank: str, **_: Any) -> dict[str, Any]:
     for event in data["speeches"].get("events", [])[:8]:
         rows.append({"date": event["date"], "what": f"{event['speaker'] or 'Official'}: {event.get('event') or event['kind']}",
                      "tag": "speech"})
+    for row in rows:
+        row["what"] = html.unescape(html.unescape(row["what"]))
     rows.sort(key=lambda r: r["date"])
     return {"state": "ok" if rows else "empty", "rows": rows[:16], "speeches": data["speeches"],
             "message": "No upcoming items."}

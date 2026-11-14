@@ -11,7 +11,7 @@
   <script src="{{ url_for('static', path='vendor/echarts-5.6.0.min.js') }}" defer></script>
   {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body hx-request='{"timeout":15000}'>
   {% if request.url.path not in ['/login', '/setup'] %}
   <div class="app-shell">
     <header class="site-header">
@@ -20,20 +20,22 @@
       <div class="nav-panel" id="nav-panel">
         <nav class="site-nav" aria-label="Main navigation">
           <a href="/" class="{% if request.url.path == '/' %}active{% endif %}"{% if request.url.path == '/' %} aria-current="page"{% endif %}>Overview</a>
-          <details class="nav-group"><summary class="{% if request.url.path.startswith('/desks') %}active{% endif %}">Desks</summary><div class="nav-dropdown">
+          <details class="nav-group"><summary class="{% if request.url.path.startswith('/desks') or request.url.path.startswith('/central-banks') %}active{% endif %}">Currencies</summary><div class="nav-dropdown">
             <a href="/desks/USD"{% if request.url.path == '/desks/USD' %} class="active" aria-current="page"{% endif %}>USD</a>
             <a href="/desks/EUR"{% if request.url.path == '/desks/EUR' %} class="active" aria-current="page"{% endif %}>EUR</a>
-            {% for code in ['GBP', 'JPY', 'AUD', 'NZD', 'CAD', 'CHF'] %}<span class="nav-disabled" aria-disabled="true">{{ code }} <small>pending</small></span>{% endfor %}
+            {% for code in ['GBP', 'JPY', 'CAD', 'CHF'] %}<a href="/desks/{{ code }}"{% if request.url.path == '/desks/' ~ code %} class="active" aria-current="page"{% endif %}>{{ code }}</a>{% endfor %}
+          <a href="/central-banks" class="{% if request.url.path == '/central-banks' %}active{% endif %}"{% if request.url.path == '/central-banks' %} aria-current="page"{% endif %}>Central Banks</a>
           </div></details>
           <a href="/pairs" class="{% if request.url.path == '/pairs' %}active{% endif %}"{% if request.url.path == '/pairs' %} aria-current="page"{% endif %}>Pairs</a>
-          <a href="/central-banks" class="{% if request.url.path == '/central-banks' %}active{% endif %}"{% if request.url.path == '/central-banks' %} aria-current="page"{% endif %}>Central Banks</a>
-          <a href="/news" class="{% if request.url.path == '/news' %}active{% endif %}"{% if request.url.path == '/news' %} aria-current="page"{% endif %}>News</a>
           <details class="nav-group"><summary class="{% if request.url.path.startswith('/calendar') or request.url.path == '/event-log' %}active{% endif %}">Calendar</summary><div class="nav-dropdown">
             <a href="/calendar"{% if request.url.path == '/calendar' %} class="active" aria-current="page"{% endif %}>Calendar</a>
             <a href="/calendar/event-log"{% if request.url.path.startswith('/calendar/event-log') %} class="active" aria-current="page"{% endif %}>Event Log</a>
           </div></details>
+          <a href="/news" class="{% if request.url.path == '/news' %}active{% endif %}"{% if request.url.path == '/news' %} aria-current="page"{% endif %}>News</a>
+          <details class="nav-group"><summary class="{% if request.url.path == '/positioning' or request.url.path.startswith('/data') %}active{% endif %}">More</summary><div class="nav-dropdown">
           <a href="/positioning" class="{% if request.url.path == '/positioning' %}active{% endif %}"{% if request.url.path == '/positioning' %} aria-current="page"{% endif %}>Positioning</a>
-          <a href="/data" class="{% if request.url.path == '/data' or request.url.path.startswith('/data/') %}active{% endif %}"{% if request.url.path == '/data' or request.url.path.startswith('/data/') %} aria-current="page"{% endif %}>Data</a>
+          <a href="/data" class="{% if request.url.path == '/data' or request.url.path.startswith('/data/') %}active{% endif %}"{% if request.url.path == '/data' or request.url.path.startswith('/data/') %} aria-current="page"{% endif %}>Sources</a>
+          </div></details>
         </nav>
         <div class="header-actions">
           <button type="button" class="explanations-toggle" data-explanations-toggle aria-pressed="true">Explanations: On</button>
@@ -44,6 +46,7 @@
       </div>
     </header>
     <div class="main-column">
+      <p id="page-freshness-warning" class="page-freshness-warning" role="status" hidden></p>
   {% endif %}
   {% block body %}{% endblock %}
   {% if request.url.path not in ['/login', '/setup'] %}
@@ -51,6 +54,17 @@
   </div>
   {% endif %}
   <script>
+    document.addEventListener('htmx:afterSwap', event => {
+      const target = event.detail.target;
+      if (!target.innerHTML.trim() && target.parentElement?.matches('.cb-panel')) target.parentElement.remove();
+    });
+    ['htmx:timeout', 'htmx:sendError', 'htmx:responseError'].forEach(name => document.addEventListener(name, event => {
+      const target = event.detail.target || event.detail.elt;
+      if (!target) return;
+      const state = target.querySelector('.state-loading, .panel-state');
+      if (state) { state.textContent = 'This section is unavailable. Reload the page to try again.'; state.setAttribute('role', 'alert'); }
+      target.setAttribute('aria-busy', 'false');
+    }));
     const menuToggle = document.querySelector('.mobile-menu-toggle');
     const navPanel = document.getElementById('nav-panel');
     if (menuToggle && navPanel) menuToggle.addEventListener('click', () => {
@@ -79,9 +93,17 @@
       const summary = document.getElementById('freshness-summary');
       summary.textContent = count ? `${count} stale` : 'All sources fresh';
       summary.classList.toggle('has-stale', count > 0);
+      const warning = document.getElementById('page-freshness-warning');
+      warning.hidden = count === 0;
+      const names = [...freshnessTarget.querySelectorAll('.data-freshness-item')]
+        .filter(item => item.querySelector('.data-stale')).map(item => item.querySelector('b').textContent);
+      warning.textContent = 'Some inputs are out of date. Treat affected readings with caution. ' + names.join(' · ');
     }).catch(() => {
       document.getElementById('freshness-summary').textContent = 'Freshness unavailable';
       freshnessTarget.textContent = 'Data freshness unavailable';
+      const warning = document.getElementById('page-freshness-warning');
+      warning.hidden = false;
+      warning.textContent = 'Data freshness could not be checked. Treat current readings with caution.';
     });
   </script>
 </body>

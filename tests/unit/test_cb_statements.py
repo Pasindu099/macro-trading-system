@@ -40,6 +40,15 @@ def test_sentence_split_protects_abbreviations_and_joins_pdf_wraps():
                                      "Wages rose 3 percent."]
 
 
+def test_official_initials_do_not_split_sentences():
+    body = "Voting for the action were Lisa D. Cook and Beth M. Hammack. The Committee maintained the target range."
+    assert split_sentences(body) == [
+        "Voting for the action were Lisa D. Cook and Beth M. Hammack.",
+        "The Committee maintained the target range.",
+    ]
+    assert split_sentences(body.replace("D. Cook", "D.\nCook")) == split_sentences(body)
+
+
 def test_topics():
     assert topic("The unemployment rate edged down to 4.1 percent.") == "labor"
     assert topic("The Committee will continue reducing its holdings of Treasury securities.") == "balance sheet"

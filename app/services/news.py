@@ -195,7 +195,7 @@ async def daily_counts(day: Any) -> dict[str, dict[str, int]]:
 
 async def tagged_feed(*, show_no_fx_link: bool = False, limit: int = 100,
                       query: str = "", currency: str = "", news_type: str = "",
-                      impact: str = "", active_only: bool = False,
+                      impact: str = "market", active_only: bool = False,
                       start: date | None = None, end: date | None = None) -> list[dict[str, Any]]:
     """Latest deduplicated headlines; unlinked geopolitics is opt-in."""
     from app.services.news_collector import visible_source_ids
@@ -212,7 +212,7 @@ async def tagged_feed(*, show_no_fx_link: bool = False, limit: int = 100,
               AND (:query = '' OR n.title ILIKE :search ESCAPE '\' OR coalesce(n.summary, '') ILIKE :search ESCAPE '\')
               AND (:currency = '' OR :currency = ANY(n.currencies))
               AND (:news_type = '' OR n.news_type = :news_type)
-              AND (:impact = '' OR n.impact = :impact)
+              AND (:impact = '' OR (:impact = 'market' AND n.impact IN ('High', 'Medium')) OR n.impact = :impact)
               AND (CAST(:start AS date) IS NULL OR n.published_at >= CAST(:start AS date))
               AND (CAST(:end AS date) IS NULL OR n.published_at < CAST(:end AS date) + INTERVAL '1 day')
               AND (NOT :active_only OR EXISTS (
@@ -225,6 +225,11 @@ async def tagged_feed(*, show_no_fx_link: bool = False, limit: int = 100,
                 "active_only": active_only, "start": start, "end": end,
                 "visible_sources": list(visible_source_ids())})).mappings().all()
     items = [dict(row) for row in rows]
+    from app.services.news_tagging import classify
+    # Apply relevance to already-tagged history as well as newly collected articles.
+    items = [item for item in items if classify(
+        title=item["title"], summary=None, source=item["source"], source_category=None,
+        published_at=item["published_at"], episodes=[]).status != "dropped"]
     from app.services.news_context import why_line
     from app.services.calendar_detail import _event_tracking
     from app.services.situations import get_situation_episodes

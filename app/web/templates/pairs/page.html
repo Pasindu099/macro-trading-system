@@ -1,37 +1,44 @@
 {% extends "base.html" %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', path='css/pairs.css') }}">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', path='css/pairs.css') }}"><script src="{{ url_for('static', path='vendor/htmx-1.9.12.min.js') }}" defer></script>{% endblock %}
 {% block body %}
 <main class="page pairs-page">
   <p class="eyebrow">ForexCompass / Pairs</p><h1>Pair screener</h1>
-  <p class="intro">G10 crosses in market convention. Numeric policy paths appear when both central banks have comparable models.</p>
+  <p class="intro">Compare this week’s price move with the economic view. A positive score favours the first currency; it does not mean the pair has risen. Watch for price moves that disagree with the score.</p>
+  {% set scored = rows|rejectattr('overall_score', 'none')|sort(attribute='overall_score', reverse=true) %}
+  {% if scored %}<section aria-label="Pair summary">
+    <p><strong>View:</strong> {{ scored[0].pair }} has the strongest economic score in this view ({{ '%+.2f'|format(scored[0].overall_score) }}).</p>
+    <p><strong>Why:</strong> Scores compare the economic support for the two currencies.</p>
+    <p><strong>Risk:</strong> Price moves and trader positioning can disagree. Check the warnings before drawing a conclusion.</p>
+  </section>{% endif %}
   <section class="pairs-tiles" aria-label="Pair highlights">
-    <a href="{{ tiles.gap.href if tiles.gap else '/pairs' }}"><small>Largest |policy gap|</small><strong>{{ tiles.gap.pair if tiles.gap else 'pending' }}</strong><span>{{ '%+.0f bp'|format(tiles.gap.policy_gap) if tiles.gap else 'Both bank models pending' }}</span></a>
-    <a href="{{ tiles.driver.href if tiles.driver else '/pairs' }}"><small>Diverging driver</small><strong>{{ tiles.driver.pair if tiles.driver else 'pending' }}</strong><span>{{ tiles.driver.driver_as_of if tiles.driver else 'No diverging pair in current data' }}</span></a>
-    <a href="{{ tiles.cot.href if tiles.cot else '/pairs' }}"><small>Most lopsided COT</small><strong>{{ tiles.cot.pair if tiles.cot else 'pending' }}</strong><span>{{ '%+.0f percentile points'|format(tiles.cot.cot_implied) if tiles.cot else 'COT data pending' }}</span></a>
+{% if tiles.gap %}    <a href="{{ tiles.gap.href if tiles.gap else '/pairs' }}"><small>Largest |policy gap|</small><strong>{{ tiles.gap.pair if tiles.gap else 'Unavailable' }}</strong><span>{{ '%+.0f bp'|format(tiles.gap.policy_gap) if tiles.gap else 'Both bank models pending' }}</span></a>{% endif %}
+{% if tiles.driver %}    <a href="{{ tiles.driver.href if tiles.driver else '/pairs' }}"><small>Diverging driver</small><strong>{{ tiles.driver.pair if tiles.driver else 'Unavailable' }}</strong><span>{{ tiles.driver.driver_as_of if tiles.driver else 'No diverging pair in current data' }}</span></a>{% endif %}
+{% if tiles.cot %}    <a href="{{ tiles.cot.href if tiles.cot else '/pairs' }}"><small>Most lopsided COT</small><strong>{{ tiles.cot.pair if tiles.cot else 'Unavailable' }}</strong><span>{{ '%+.0f percentile points'|format(tiles.cot.cot_implied) if tiles.cot else 'COT data pending' }}</span></a>{% endif %}
   </section>
+  <label><input type="checkbox" id="pairs-advanced"> Advanced details</label>
   <div class="pairs-view" role="group" aria-label="View"><button type="button" class="selected" data-view="table">Table</button><button type="button" data-view="matrix">Matrix</button></div>
   <section id="pairs-table-view">
     <form class="pairs-filters" method="get" action="/pairs"><label>Group <select name="group">{% for value, label in [('all','All 28'),('usd','USD majors'),('jpy','JPY crosses'),('neighbours','Close neighbours'),('commodity','Commodity crosses')] %}<option value="{{ value }}"{% if group == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><label>Search <input name="q" value="{{ search }}" placeholder="EURUSD" maxlength="40"></label><button type="submit">Apply</button></form>
     {% if state == 'error' %}<p role="alert">Screener data unavailable. Try again shortly.</p>{% elif not rows %}<p>No pairs match this view.</p>{% endif %}
-    <div class="pairs-table-frame"><table><thead><tr>
+    <div class="pairs-table-frame"><table class="simple-pairs"><thead><tr>
       {% for key, label, source in [('pair','Pair',''),('last','Last','fx_spot'),('week_change','1W','fx_spot'),('month_change','1M','fx_spot'),('overall_score','Overall score','verdicts'),('policy_gap','Model–Market gap (experimental)',''),('cb_bias','CB bias',''),('data_implied','Data-implied',''),('priced','Priced',''),('spread_2y','2Y spread','government_yields'),('spread_change_20d','Δ20d','government_yields'),('driver','Driver','government_yields'),('cot_implied','Positioning (COT)','cot'),('retail_long_pct','Retail · % by volume','myfxbook_retail'),('warnings','Warnings','situations')] %}
       <th scope="col"{% if source and freshness.get(source) %} title="{{ freshness[source].reason or freshness[source].as_of_label }}"{% endif %}><a href="/pairs?group={{ group }}&q={{ search|urlencode }}&sort={{ key }}&direction={{ 'asc' if sort == key and descending else 'desc' }}">{{ label }}{% if sort == key %} {{ '▼' if descending else '▲' }}{% endif %}</a></th>
       {% endfor %}
     </tr></thead><tbody>{% for row in rows %}<tr>
       <th scope="row"><a href="{{ row.href }}">{{ row.pair }}</a></th>
-      <td>{{ ('%.' ~ (2 if row.pip_size == 0.01 else 4) ~ 'f')|format(row.last) if row.last is not none else 'pending' }}</td>
-      {% for key in ['week_change','month_change'] %}{% set value = row[key] %}<td class="{{ 'price-up' if value is not none and value > 0 else 'price-down' if value is not none and value < 0 else '' }}">{{ ('▲' if value > 0 else '▼' if value < 0 else '') ~ ' %+.2f%%'|format(value) if value is not none else 'pending' }}</td>{% endfor %}
-      <td class="score">{{ '%+.2f'|format(row.overall_score) if row.overall_score is not none else 'pending' }}{% if row.partial %} <small>partial</small>{% endif %}</td>
-      <td class="score">{{ '%+.1f bp'|format(row.policy_gap) if row.policy_gap is not none else 'pending' }}</td><td>{{ row.cb_bias or 'pending' }}</td>
-      {% for key in ['data_implied','priced'] %}<td class="score">{{ '%+.1f bp'|format(row[key]) if row[key] is not none else 'pending' }}</td>{% endfor %}
-      <td>{{ '%+.1f bp'|format(row.spread_2y) if row.spread_2y is not none else 'pending' }}</td><td>{{ '%+.1f bp'|format(row.spread_change_20d) if row.spread_change_20d is not none else 'pending' }}</td>
-      <td>{% if row.driver %}<span class="driver-chip {{ row.driver }}">{{ row.driver.replace('_',' ') }}</span>{% else %}pending{% endif %}</td>
-      <td class="score">{{ '%+.0f'|format(row.cot_implied) if row.cot_implied is not none else 'pending' }}{% if row.cot_money is defined %}<small title="{{ row.cot_notional_basis }} · {{ row.cot_notional_as_of or 'date unavailable' }}">{{ row.cot_money }}{% if row.cot_notional_basis.startswith('implied') %} · implied{% endif %}</small>{% endif %}</td>
-      <td>{% if row.retail_long_pct is not none %}{{ '%.0f%% long by volume'|format(row.retail_long_pct) }}<small>Positions: {{ row.retail_long_positions if row.retail_long_positions is not none else 'pending' }} long / {{ row.retail_short_positions if row.retail_short_positions is not none else 'pending' }} short</small>{% if row.opposite_sides %}<span class="opposite-chip">opposite sides</span>{% endif %}{% else %}pending{% endif %}</td>
-      <td>{% for warning in row.warnings %}<span class="warning-chip {{ warning.severity }}">{{ warning.name }}</span>{% else %}—{% endfor %}</td>
+      <td>{{ ('%.' ~ (2 if row.pip_size == 0.01 else 4) ~ 'f')|format(row.last) if row.last is not none else 'Unavailable' }}</td>
+      {% for key in ['week_change','month_change'] %}{% set value = row[key] %}<td class="{{ 'price-up' if value is not none and value > 0 else 'price-down' if value is not none and value < 0 else '' }}">{{ ('▲' if value > 0 else '▼' if value < 0 else '') ~ ' %+.2f%%'|format(value) if value is not none else 'Unavailable' }}</td>{% endfor %}
+      <td class="score">{{ '%+.2f'|format(row.overall_score) if row.overall_score is not none else 'Unavailable' }}{% if row.partial %} <small>partial</small>{% endif %}</td>
+      <td class="score">{{ '%+.1f bp'|format(row.policy_gap) if row.policy_gap is not none else 'Unavailable' }}</td><td>{{ row.cb_bias or 'Unavailable' }}</td>
+      {% for key in ['data_implied','priced'] %}<td class="score">{{ '%+.1f bp'|format(row[key]) if row[key] is not none else 'Unavailable' }}</td>{% endfor %}
+      <td>{{ '%+.1f bp'|format(row.spread_2y) if row.spread_2y is not none else 'Unavailable' }}</td><td>{{ '%+.1f bp'|format(row.spread_change_20d) if row.spread_change_20d is not none else 'Unavailable' }}</td>
+      <td>{% if row.driver %}<span class="driver-chip {{ row.driver }}">{{ row.driver.replace('_',' ') }}</span>{% else %}Unavailable{% endif %}</td>
+      <td class="score">{{ '%+.0f'|format(row.cot_implied) if row.cot_implied is not none else 'Unavailable' }}{% if row.cot_money is defined %}<small title="{{ row.cot_notional_basis }} · {{ row.cot_notional_as_of or 'date unavailable' }}">{{ row.cot_money }}{% if row.cot_notional_basis.startswith('implied') %} · implied{% endif %}</small>{% endif %}</td>
+      <td>{% if row.retail_long_pct is not none %}{{ '%.0f%% long by volume'|format(row.retail_long_pct) }}<small>Positions: {{ row.retail_long_positions if row.retail_long_positions is not none else 'Unavailable' }} long / {{ row.retail_short_positions if row.retail_short_positions is not none else 'Unavailable' }} short</small>{% if row.opposite_sides %}<span class="opposite-chip">opposite sides</span>{% endif %}{% else %}Unavailable{% endif %}</td>
+      <td>{% if row.opposite_sides %}<span class="opposite-chip">Big traders and retail on opposite sides</span>{% endif %}{% for warning in row.warnings %}<span class="warning-chip {{ warning.severity }}">{{ warning.name }}</span>{% else %}—{% endfor %}</td>
     </tr>{% endfor %}</tbody></table></div>
   </section>
   <section id="pairs-matrix-view" hidden><p>Overview pair map and policy lenses</p><div id="pairs-matrix-content" hx-get="/overview/panels/pairs" hx-trigger="revealed" hx-swap="innerHTML"></div></section>
 </main>
-<script>document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => { const matrix = button.dataset.view === 'matrix'; document.getElementById('pairs-table-view').hidden = matrix; document.getElementById('pairs-matrix-view').hidden = !matrix; document.querySelectorAll('[data-view]').forEach(item => item.classList.toggle('selected', item === button)); if (matrix && !document.getElementById('pairs-matrix-content').innerHTML) htmx.trigger(document.getElementById('pairs-matrix-content'), 'revealed'); }));</script>
+<script>document.getElementById('pairs-advanced').addEventListener('change', event => document.querySelector('.simple-pairs').classList.toggle('advanced', event.target.checked));document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => { const matrix = button.dataset.view === 'matrix'; document.getElementById('pairs-table-view').hidden = matrix; document.getElementById('pairs-matrix-view').hidden = !matrix; document.querySelectorAll('[data-view]').forEach(item => item.classList.toggle('selected', item === button)); if (matrix && !document.getElementById('pairs-matrix-content').innerHTML) htmx.trigger(document.getElementById('pairs-matrix-content'), 'revealed'); }));</script>
 {% endblock %}

@@ -5,6 +5,7 @@
 {% endblock %}
 {% block body %}
 <main class="overview">
+  <p>See what the economy supports, why it matters, and where the risks are. Scores describe economic conditions; recent price moves can disagree.</p>
   {% for id, title in [('hero','Global picture'), ('situations','Active situations'), ('news',"What’s moving markets"), ('ranking','Currency ranking')] %}
   <section class="overview-panel overview-{{ id }}" aria-label="{{ title }}"><div hx-get="/overview/panels/{{ id }}" hx-trigger="revealed once" hx-swap="innerHTML"><h2>{{ title }}</h2><p class="panel-state">Loading…</p></div></section>
   {% endfor %}

@@ -11,6 +11,15 @@ from app.services import positioning as pos, positioning_step18 as p, positionin
 DAY = date(2026,10,20)
 
 
+@pytest.fixture(autouse=True)
+def stable_report_age(monkeypatch):
+    class Clock(date):
+        @classmethod
+        def today(cls): return DAY
+    monkeypatch.setattr(p, "date", Clock)
+    monkeypatch.setattr(pos, "date", Clock)
+
+
 def fixture():
     rates = {"EUR": 1.2, "GBP": 1.4, "JPY": 1/150, "USD": 100}
     spots = {ccy: pos.SpotSeries([(DAY,price)]) for ccy,price in rates.items()}

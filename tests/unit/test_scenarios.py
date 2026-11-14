@@ -22,6 +22,7 @@ def test_three_meeting_probabilities_sum_to_100_and_directions_follow_bias():
     assert sum(row["probability_pct"] for row in rows) == 100
     assert [row["direction"] for row in rows] == ["down", "flat", "down"]
     assert "CPI, Payrolls" in rows[0]["trigger"] and "running_cold" in rows[0]["trigger"]
+    assert len({row["trigger"] for row in rows}) == 3
 
 
 def test_high_severity_tail_is_not_priced_and_uses_evidence():

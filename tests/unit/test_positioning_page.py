@@ -7,6 +7,7 @@ from fastapi.templating import Jinja2Templates
 from app.services import positioning as pos, positioning_page as page
 
 TEMPLATES = Jinja2Templates(directory=str(Path("app/web/templates")))
+TEMPLATES.env.filters["ordinal"] = pos.ordinal
 P = {"lookback": "3y", "ccy": "JPY", "window": "1W"}
 
 

@@ -32,6 +32,18 @@ def test_overrides_and_bundle_fallback():
     assert events[0]["components"][0]["revised_from"] == 0
 
 
+def test_duplicate_provider_rows_share_one_calendar_event():
+    events = _shape([row(canonical_name="china_retail_sales", display_name="Retail Sales YoY"),
+                     row(id=3, indicator_id=4, canonical_name="retail_sales_yoy", display_name="Retail Sales YoY")],
+                    None, 3, False)
+    assert len(events) == 1
+
+
+def test_secondary_releases_are_not_high_impact():
+    assert impact_for("Japan Industrial Production YoY", 1) == 2
+    assert impact_for("China Retail Sales YTD", 1) == 2
+
+
 def test_lower_unemployment_is_a_beat_and_higher_is_a_miss():
     lower = _shape([row(display_name="Unemployment Rate", actual=3.8, estimate=4.0,
                         surprise_normalized=1.2, is_higher_better_for_currency=False)], None, 3, False)

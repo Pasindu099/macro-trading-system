@@ -45,8 +45,8 @@ def test_placeholder_sections_and_event_log_navigation(monkeypatch):
     assert 'hx-get="/overview/panels/hero"' in overview
     assert '<header class="site-header">' in overview
     assert 'class="mobile-menu-toggle"' in overview
-    assert overview.index('>Overview</a>') < overview.index('>Desks</summary>') < overview.index('>Pairs</a>')
-    assert overview.index('>Central Banks</a>') < overview.index('>News</a>') < overview.index('>Calendar</summary>')
+    assert overview.index('>Overview</a>') < overview.index('>Currencies</summary>') < overview.index('>Pairs</a>')
+    assert overview.index('>Calendar</summary>') < overview.index('>News</a>') < overview.index('>More</summary>')
     assert 'href="/calendar/event-log"' in overview
     moved = client.get("/event-log", follow_redirects=False)
     assert moved.status_code == 307 and moved.headers["location"] == "/calendar/event-log"
@@ -117,11 +117,11 @@ def test_login_template_uses_new_tokens():
 
 
 @pytest.mark.parametrize("path,active", [
-    ("/", "Overview"), ("/desks", "Desks"), ("/desks/USD", "Desks"),
-    ("/desks/EUR", "Desks"), ("/pairs", "Pairs"),
-    ("/central-banks", "Central Banks"), ("/news", "News"),
+    ("/", "Overview"), ("/desks", "Currencies"), ("/desks/USD", "Currencies"),
+    ("/desks/EUR", "Currencies"), ("/pairs", "Pairs"),
+    ("/central-banks", "Currencies"), ("/news", "News"),
     ("/calendar", "Calendar"), ("/calendar/event-log", "Calendar"),
-    ("/positioning", "Positioning"), ("/data", "Data"),
+    ("/positioning", "More"), ("/data", "More"),
 ])
 def test_top_navigation_on_dashboard_pages(monkeypatch, path, active):
     monkeypatch.setattr(auth, "get_settings", lambda: SimpleNamespace(auth_enabled=False))
@@ -141,8 +141,7 @@ def test_top_navigation_on_dashboard_pages(monkeypatch, path, active):
     nav = header.select_one("nav.site-nav")
     items = nav.select(":scope > a, :scope > details > summary")
     assert [item.get_text(strip=True) for item in items] == [
-        "Overview", "Desks", "Pairs", "Central Banks", "News", "Calendar",
-        "Positioning", "Data"]
+        "Overview", "Currencies", "Pairs", "Calendar", "News", "More"]
     assert [item.get_text(strip=True) for item in items if "active" in item.get("class", [])] == [active]
     assert header.select_one(".mobile-menu-toggle[aria-expanded='false']")
     assert header.select_one(".nav-freshness > summary")
@@ -152,9 +151,8 @@ def test_nav_subitems_and_mobile_breakpoint(monkeypatch):
     monkeypatch.setattr(auth, "get_settings", lambda: SimpleNamespace(auth_enabled=False))
     soup = BeautifulSoup(TestClient(app).get("/").text, "html.parser")
     desks = soup.select_one(".nav-group .nav-dropdown")
-    assert [a.get_text(strip=True) for a in desks.select("a")] == ["USD", "EUR"]
-    assert [row.get_text(" ", strip=True) for row in desks.select(".nav-disabled")] == [
-        f"{code} pending" for code in ("GBP", "JPY", "AUD", "NZD", "CAD", "CHF")]
+    assert [a.get_text(strip=True) for a in desks.select("a")] == ["USD", "EUR", "GBP", "JPY", "CAD", "CHF", "Central Banks"]
+    assert not desks.select(".nav-disabled")
     calendar = soup.select(".nav-group .nav-dropdown")[1]
     assert [a.get_text(strip=True) for a in calendar.select("a")] == ["Calendar", "Event Log"]
     css = Path("app/web/static/css/navigation.css").read_text(encoding="utf-8")

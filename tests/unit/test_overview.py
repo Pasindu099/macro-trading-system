@@ -336,9 +336,11 @@ def test_key_events_group_components_and_use_fourteen_days(monkeypatch):
         return {"USD": "inflation running hot vs projections"}
     monkeypatch.setattr(overview, "get_sessionmaker", lambda: lambda: Session())
     monkeypatch.setattr(overview, "_event_tracking", tracking)
-    result = __import__("asyncio").run(overview.key_events())
+    result = __import__("asyncio").run(overview.key_events({"USD": -.6, "EUR": .2}))
     assert len(result["rows"]) == 1
     assert result["rows"][0]["event"] == "CPI (Sep)"
     assert result["rows"][0]["components"] == 2
     assert "Fed dual mandate" in result["rows"][0]["why"]
     assert result["rows"][0]["impact"] == "High"
+    assert result["rows"][0]["why"].startswith("USD ranks 2nd of 2 (moderate bearish). ")
+    assert "upside inflation surprise" in result["rows"][0]["why"]

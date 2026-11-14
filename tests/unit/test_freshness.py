@@ -31,6 +31,13 @@ def test_source_threshold_boundaries(source, fresh, stale):
     assert "limit" in result["reason"]
 
 
+def test_fractional_hour_limit_is_preserved():
+    rules = {"news": {"unit": "hours", "max_age": 0.25, "label": "News"}}
+    assert not freshness.status_for("news", NOW - timedelta(minutes=10), now=NOW, rules=rules)["stale"]
+    row = freshness.status_for("news", NOW - timedelta(minutes=16), now=NOW, rules=rules)
+    assert row["stale"] and "limit 0.25 hours" in row["reason"]
+
+
 def test_badge_shows_as_of_and_visible_stale_reason():
     environment = Environment(loader=FileSystemLoader(Path("app/web/templates")), autoescape=True)
     row = freshness.status_for("news", NOW - timedelta(hours=7), now=NOW)

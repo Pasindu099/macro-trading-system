@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
@@ -17,7 +17,7 @@ def test_presets_and_custom_range():
     assert calendar.resolve_range("custom", today, "2020-01-01", "2020-02-01") == (date(2020, 1, 1), date(2020, 2, 1))
 
 
-def test_default_today_in_selected_timezone_and_filters(monkeypatch):
+def test_default_next_seven_days_in_selected_timezone_and_filters(monkeypatch):
     monkeypatch.setattr(auth, "get_settings", lambda: SimpleNamespace(auth_enabled=False))
     client = TestClient(app)
     client.cookies.set("calendar_tz_mode", "local")
@@ -26,7 +26,8 @@ def test_default_today_in_selected_timezone_and_filters(monkeypatch):
     assert response.status_code == 200
     today = datetime.now(ZoneInfo("Pacific/Auckland")).date().isoformat()
     assert f'name="start" value="{today}"' in response.text
-    assert f'name="end" value="{today}"' in response.text
+    end = (date.fromisoformat(today) + timedelta(days=6)).isoformat()
+    assert f'name="end" value="{end}"' in response.text
     assert "Pacific/Auckland" in response.text
     custom = client.get("/calendar?preset=custom&start=2020-01-01&end=2020-01-03&impact=all&currency=USD&surprise=1")
     assert 'name="start" value="2020-01-01"' in custom.text

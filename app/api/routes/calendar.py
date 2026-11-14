@@ -19,11 +19,11 @@ router = APIRouter(tags=["calendar"])
 templates = Jinja2Templates(directory=str(Path("app/web/templates")))
 CURRENCIES = ("USD", "EUR", "GBP", "JPY", "AUD", "NZD", "CAD", "CHF", "CNY")
 PRESETS = ("yesterday", "today", "tomorrow", "this_week", "last_week",
-           "next_week", "last_30_days", "custom")
+           "next_week", "next_7_days", "last_30_days", "custom")
 
 
 def _zone(request: Request) -> tuple[str, ZoneInfo]:
-    mode = request.cookies.get("calendar_tz_mode", "utc")
+    mode = request.cookies.get("calendar_tz_mode", "local")
     if mode != "local":
         return "UTC", ZoneInfo("UTC")
     name = unquote(request.cookies.get("calendar_tz_name", "UTC"))
@@ -47,6 +47,8 @@ def resolve_range(preset: str, today: date, start: str | None = None,
         offset = {"this_week": 0, "last_week": -7, "next_week": 7}[preset]
         first = today - timedelta(days=today.weekday()) + timedelta(days=offset)
         last = first + timedelta(days=6)
+    elif preset == "next_7_days":
+        first, last = today, today + timedelta(days=6)
     elif preset == "last_30_days":
         first, last = today - timedelta(days=29), today
     else:
@@ -57,9 +59,9 @@ def resolve_range(preset: str, today: date, start: str | None = None,
 
 
 def _filters(request: Request) -> dict:
-    preset = request.query_params.get("preset", "today")
+    preset = request.query_params.get("preset", "next_7_days")
     if preset not in PRESETS:
-        preset = "today"
+        preset = "next_7_days"
     zone_name, zone = _zone(request)
     today = datetime.now(zone).date()
     first, last = resolve_range(preset, today, request.query_params.get("start"),

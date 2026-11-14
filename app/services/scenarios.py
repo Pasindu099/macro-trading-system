@@ -60,11 +60,14 @@ def build_scenarios(currency: str, verdict: dict[str, Any], market: dict[str, An
     bias_direction = cfg["directions"][verdict["bias"]]
     rows = []
     for index, key in enumerate(("base", "hawkish", "dovish")):
+        outcome = {"base": "The bank holds its policy rate.",
+                   "hawkish": "The bank raises its policy rate.",
+                   "dovish": "The bank cuts its policy rate."}[key]
         rows.append({"id": key, "label": cfg["labels"][key],
                      "probability_pct": probabilities[index] if live else None,
                      "pricing_status": "priced" if live else "unavailable",
                      "direction": _direction(bias_direction + cfg["outcome_shift"][key], cfg),
-                     "trigger": trigger, "horizon": verdict["horizon"]})
+                     "trigger": outcome + " " + trigger, "horizon": verdict["horizon"]})
     for situation in verdict["active_situations"]:
         if situation["severity"] != "high":
             continue

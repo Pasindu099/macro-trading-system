@@ -5,7 +5,8 @@
     {% if not ctx.market_probabilities_available %}<p class="muted small">Meeting probabilities unavailable: {{ ctx.market_probability_reason }}</p>{% endif %}
     <div class="cards">{% for row in ctx.scenarios %}
       <article class="card"><h3>{{ row.label }}</h3>
-        <p>{{ row.direction }} · {% if row.probability_pct is not none %}{{ row.probability_pct }}%{% else %}{{ row.pricing_status }}{% endif %}</p>
+        <p>Macro response: {{ row.direction }}.</p>
+        <p>{% if row.probability_pct is not none %}Meeting outcome priced at {{ row.probability_pct }}%{% else %}{{ row.pricing_status }}{% endif %}</p>
         <p class="muted small">{{ row.trigger }}</p>
       </article>
     {% endfor %}</div>

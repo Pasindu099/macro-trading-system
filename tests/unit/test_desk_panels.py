@@ -269,7 +269,7 @@ def test_step8_panels_render_projections_regime_and_gap(monkeypatch):
     assert "Running cold" in direction and "On track" in direction and "Available after step" not in direction
     fedview = client.get("/desks/USD/panels/fedview").text
     assert "Reaction function: tolerance" in fedview and "Risk diffusion +0.78" in fedview
-    assert "speaker pipeline" not in fedview and "Tone: pending AI layer" in fedview
+    assert "speaker pipeline" not in fedview and "Tone: pending AI layer" not in fedview
     assert "decided to raise the target range" in fedview and "Speaker focus mix" in fedview and "inflation 50%" in fedview
     fedpath = client.get("/desks/USD/panels/fedpath").text
     assert 'class="rung active"' in fedpath and "1 of 3 met · 1 unavailable" in fedpath

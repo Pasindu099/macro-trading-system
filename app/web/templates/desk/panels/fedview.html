@@ -5,7 +5,7 @@
   {% set pj = ctx.projections %}{% set vote = ctx.votes.latest if ctx.votes else none %}{% set model = ctx.model %}
   <div class="split"><div class="tile"><h3>Official projections</h3>
     {% if pj.status == 'available' %}{% set round = pj.rounds[0] %}<p>{{ pj.publication }} · {{ round.release_date }} · {{ round.coverage }}</p>
-    {% for variable, horizons in round.variables.items() %}{% for horizon, stats in horizons.items() %}<p>{{ variable|replace('_',' ') }} {{ horizon }}: {% if stats.median is defined %}{{ stats.median }}%{% elif stats.range_low is defined and stats.range_high is defined %}{{ stats.range_low }}–{{ stats.range_high }}% · ranges only{% else %}pending{% endif %}</p>{% endfor %}{% endfor %}
+    {% for variable, horizons in round.variables.items() %}{% for horizon, stats in horizons.items() %}<p>{{ variable|replace('_',' ') }} {{ horizon }}: {% if stats.median is defined %}{{ stats.median }}%{% elif stats.range_low is defined and stats.range_high is defined %}{{ stats.range_low }}–{{ stats.range_high }}% · ranges only{% else %}Unavailable{% endif %}</p>{% endfor %}{% endfor %}
     {% else %}<p>{{ pj.reason or pj.status }}</p>{% endif %}</div>
     <div class="tile"><h3>Committee votes</h3>{% if vote %}<p>{{ vote.date }} · {{ vote['for'] }} for, {{ vote.against }} against</p>{% if vote.dissent_bp %}<p>Dissent: {{ vote.dissent_bp|join(', ') }} bp</p>{% endif %}
     {% else %}<p>Unavailable: no published member vote record.</p>{% endif %}</div></div>
@@ -82,11 +82,11 @@
   </div>
   <div class="stack divider-top">
     {% set bal = ctx.balance %}{% set fm = ctx.focus %}
-    <div class="row-between"><h3 class="eyebrow-h">Committee balance · 12 weeks</h3><span class="muted small">{{ bal.label if bal else '' }}</span></div>
+    <div class="row-between"><h3 class="eyebrow-h">Committee balance · 12 weeks</h3><span class="muted small">{{ bal.label if bal and bal.tone_status == 'available' else '' }}</span></div>
     {% if bal and bal.tone_status == 'available' %}
       <div class="cb-mini">{% for w in bal.weeks %}<span title="{{ w.week.strftime('%d %b') }} · {{ w.active }} active">{% if w.shares %}<i class="h" style="flex: {{ w.shares.hawkish }}"></i><i class="n" style="flex: {{ w.shares.neutral }}"></i><i class="d" style="flex: {{ w.shares.dovish }}"></i>{% endif %}</span>{% endfor %}</div>
     {% elif bal %}
-      <p class="note">Tone: pending AI layer. Officials speaking per week (last 12): {% for w in bal.weeks %}{{ w.active }}{{ ' · ' if not loop.last }}{% endfor %}.</p>
+      <p class="note">Officials speaking per week (last 12): {% for w in bal.weeks %}{{ w.active }}{{ ' · ' if not loop.last }}{% endfor %}.</p>
     {% endif %}
     <div class="row-between"><span class="eyebrow-sm">Speaker focus mix · last {{ fm.days }} days · v1</span><span class="muted small">{{ fm.points }} points · {{ fm.speakers }} officials</span></div>
     {% if fm.shares %}

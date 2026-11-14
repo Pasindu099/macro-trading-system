@@ -9,7 +9,7 @@ import yaml
 from sqlalchemy import text
 
 from app.db.session import get_sessionmaker
-from app.services import cb_tracking, ecb_regime, ecb_tracking, fed_regime, positioning
+from app.services import cb_tracking, ecb_regime, ecb_tracking, fed_regime, positioning, freshness
 from app.services.curve_metrics import get_curve
 from app.services.macro_state import get_macro_state_board
 
@@ -158,6 +158,7 @@ async def get_verdict(currency: str) -> dict[str, Any]:
     cfg = load_config()
     async with get_sessionmaker()() as session:
         board = await get_macro_state_board(session)
+        statuses = await freshness.get_data_freshness(session)
     macro_row = next((row for row in board["rows"] if row["currency"] == currency), None)
     macro = _component(_clip(float(macro_row["overall_score"]), cfg["normalization"]["macro_z_clip"])
                        if macro_row and macro_row["overall_score"] is not None else None,
@@ -217,4 +218,14 @@ async def get_verdict(currency: str) -> dict[str, Any]:
                       else 0.0 if percentile is not None else None)
     components["positioning"] = _component(position_value, raw={"percentile": percentile},
                                            reason=None if percentile is not None else "No COT percentile")
-    return score_verdict(currency, components, active, cfg)
+    stale_inputs = []
+    for name, sources in {"macro": ("macro_state",), "curve": ("government_yields",),
+                          "situations": ("situations",), "positioning": ("cot",)}.items():
+        if any(statuses[source]["stale"] for source in sources):
+            components[name] = _component(None, reason="Source is out of date")
+            stale_inputs.append(name)
+    result = score_verdict(currency, components, active, cfg)
+    result["stale_inputs"] = stale_inputs
+    if stale_inputs and result.get("status") == "available":
+        result["conviction"] = "low"
+    return result

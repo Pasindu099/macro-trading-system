@@ -14,8 +14,12 @@
   const cookie = name => document.cookie.split('; ').find(part => part.startsWith(name + '='))?.split('=')[1];
   if (!cookie('calendar_tz_name')) {
     document.cookie = 'calendar_tz_name=' + encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone) + '; path=/; SameSite=Lax';
+    if (!cookie('calendar_tz_mode') || cookie('calendar_tz_mode') === 'local') {
+      window.location.reload();
+      return;
+    }
   }
-  const mode = cookie('calendar_tz_mode') || 'utc';
+  const mode = cookie('calendar_tz_mode') || 'local';
   document.querySelectorAll('[data-zone]').forEach(button => {
     button.setAttribute('aria-pressed', String(button.dataset.zone === mode));
     button.addEventListener('click', () => {

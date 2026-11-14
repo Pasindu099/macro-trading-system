@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 
 import yaml
@@ -47,6 +48,7 @@ async def _spot_history() -> dict[str, list[tuple]]:
             SELECT DISTINCT ON (pair, observation_date) pair, observation_date, close_value::float AS close
             FROM fx_spot_observations
             WHERE quality_status = 'valid' AND NOT is_outlier AND observation_date <= current_date
+              AND observation_date >= current_date - interval '45 days'
             ORDER BY pair, observation_date DESC, ingested_at DESC, id DESC
         """))).mappings().all()
     result: dict[str, list[tuple]] = {}
@@ -60,9 +62,9 @@ async def screener() -> dict:
     ranking = await overview.currency_ranking()
     currency = {row["currency"]: row for row in ranking["rows"]}
     from app.services import policy_model
-    models = {ccy: await policy_model.latest(bank) for ccy, bank in
-              {"EUR": "ECB", "GBP": "BOE", "AUD": "RBA", "NZD": "RBNZ", "USD": "FED",
-               "CAD": "BOC", "CHF": "SNB", "JPY": "BOJ"}.items()}
+    banks = {"EUR": "ECB", "GBP": "BOE", "AUD": "RBA", "NZD": "RBNZ", "USD": "FED",
+             "CAD": "BOC", "CHF": "SNB", "JPY": "BOJ"}
+    models = dict(zip(banks, await asyncio.gather(*(policy_model.latest(bank) for bank in banks.values()))))
     retail = {row["pair"]: row for row in (await positioning.get_institutions_vs_retail())["pairs"]}
     from app.services import myfxbook
     retail_snapshots = {row["pair"]: row for row in await myfxbook.latest()}

@@ -17,7 +17,7 @@
       <label>Search<input type="search" name="q" value="{{ filters.q }}" placeholder="Speaker, pair, keyword"></label>
       <label>Currency<select name="currency"><option value="">All currencies</option>{% for c in ['USD','EUR','GBP','JPY','AUD','NZD','CAD','CHF','CNY'] %}<option value="{{ c }}"{% if filters.currency == c %} selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
       <label>Type<select name="type"><option value="">All types</option>{% for t in ['Data','CB speaker','Politics & fiscal','Geopolitics','Flows & market','Commodities','Analysis'] %}<option value="{{ t }}"{% if filters.type == t %} selected{% endif %}>{{ t }}</option>{% endfor %}</select></label>
-      <label>Impact<select name="impact"><option value="">All impacts</option>{% for i in ['High','Medium','Low'] %}<option value="{{ i }}"{% if filters.impact == i %} selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
+      <label>Impact<select name="impact"><option value="market"{% if filters.impact == 'market' %} selected{% endif %}>Market-moving</option><option value=""{% if filters.impact == '' %} selected{% endif %}>All impacts</option>{% for i in ['High','Medium','Low'] %}<option value="{{ i }}"{% if filters.impact == i %} selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
       <label>From (UTC)<input type="date" name="start" value="{{ filters.start.isoformat() if filters.start else '' }}"></label>
       <label>To (UTC)<input type="date" name="end" value="{{ filters.end.isoformat() if filters.end else '' }}"></label>
       <label class="news-check"><input type="checkbox" name="active" value="1"{% if filters.active %} checked{% endif %}> Only items tied to an active situation</label>

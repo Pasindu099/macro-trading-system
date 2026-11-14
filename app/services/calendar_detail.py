@@ -90,7 +90,8 @@ def why_it_matters(currency: str, components: list[dict[str, Any]], tracking: di
     if currency in CALENDAR_ONLY_WHY:
         return CALENDAR_ONLY_WHY[currency]
     items = [{"canonical_name": c.get("canonical_name") or "", "display_name": c["name"]} for c in components]
-    return _event_why({"currency_code": currency, "family": event_family(items)},
+    return _event_why({"currency_code": currency, "family": event_family(items),
+                       "event": components[0]["name"] if components else ""},
                       tracking.get(currency, "tracking pending"))
 
 

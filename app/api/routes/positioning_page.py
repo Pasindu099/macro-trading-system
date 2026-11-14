@@ -75,8 +75,8 @@ async def positioning_panel(request: Request, panel_id: str) -> HTMLResponse:
         rows = freshness.panel_rows(statuses, page.SOURCES[panel_id])
     except Exception:
         logger.exception("Positioning freshness lookup failed")
-        rows = []
-    strip = templates.get_template("_freshness.html").render(rows=rows) if rows else ""
+        rows = [{"stale": True}]
+    strip = ""
     template = templates.get_template("positioning/panel_v2.html")
     def link(anchor="",**changes):
         return "/positioning?"+urlencode({**params,**changes})+("#pos-"+anchor if anchor else "")
@@ -90,6 +90,7 @@ async def positioning_panel(request: Request, panel_id: str) -> HTMLResponse:
         if any(row.get("stale") for row in rows) and take_data.get("state") not in {"unavailable","pending"}:
             take_data = {**take_data,"stale":True}
         ctx["takeaway"] = takeaways.REGISTRY[panel_id](take_data)
+        ctx["hide_stale_note"] = bool(take_data.get("stale") or take_data.get("state") == "stale")
         html = strip + template.render(ctx=ctx, **render)
     except Exception:
         logger.exception("Positioning panel %s failed", panel_id)

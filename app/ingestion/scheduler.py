@@ -568,6 +568,7 @@ class Scheduler:
                 last = (await session.execute(text("""
                     SELECT max(started_at) FROM ingestion_runs
                     WHERE run_type IN ('scheduled_asia', 'scheduled_london', 'scheduled_ny')
+                      AND status = 'success'
                 """))).scalar_one()
                 last_macro = (await session.execute(text("""
                     SELECT max(started_at) FROM ingestion_runs

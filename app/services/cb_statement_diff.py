@@ -41,7 +41,9 @@ def _paragraphs(body: str) -> list[str]:
     for line in (ln.strip() for ln in body.replace("­", "").splitlines()):
         if not line:
             continue
-        if out and not re.search(r"[.!?:;]$", out[-1]) and re.match(r"[a-z(,]", line):
+        if out and re.search(r"\b[A-Z][a-z]+\s+[A-Z]\.$", out[-1]) and re.match(r"[A-Z]", line):
+            out[-1] = f"{out[-1]} {line}"
+        elif out and not re.search(r"[.!?:;]$", out[-1]) and re.match(r"[a-z(,]", line):
             out[-1] = f"{out[-1]} {line}"
         elif out and re.search(r"[,–-]$", out[-1]):
             out[-1] = f"{out[-1]} {line}"
@@ -61,13 +63,14 @@ def _split_flat(paragraph: str) -> list[str]:
     flat = re.sub(r"\s+", " ", paragraph).strip()
     for i, token in enumerate(_PROTECT):
         flat = flat.replace(token, token.replace(".", f"\u0000{i}\u0000"))
+    flat = re.sub(r"\b([A-Z])\.(?=\s+[A-Z])", lambda m: m[1] + "\u0001", flat)
     parts = re.split(r"(?<=[.!?;])\s+(?=[A-Z0-9\"“(‘'])", flat)
     out = []
     for part in parts:
         for i, token in enumerate(_PROTECT):
             part = part.replace(token.replace(".", f"\u0000{i}\u0000"), token)
         if len(part.split()) >= MIN_WORDS:
-            out.append(part.strip())
+            out.append(part.replace("\u0001", ".").strip())
     return out
 
 

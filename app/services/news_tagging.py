@@ -237,6 +237,12 @@ def classify(*, title: str, summary: str | None, source: str, source_category: s
     commodity = source == "kitco" or r.hit("commodity", title) or r.hit("commodity_acr", title)
     geopolitical = r.hit("geopolitics", title)
     tier1_shock = r.hit("tier1_shock", title)
+    market_context = (cb or speakers or data_tier or is_print or commodity or geopolitical
+                      or r.hit("politics", title) or r.hit("equity_index", title)
+                      or r.hit("positioning", title) or r.hit("analysis", title)
+                      or re.search(r"\b(?:USD|EUR|GBP|JPY|CHF|CAD|AUD|NZD|dollar|euro|yen|sterling|"
+                                   r"bond|yield|forex|currency|currencies|stocks|equities|"
+                                   r"inflation|economy|economic|rates|tariffs?|trade)\b", title, re.I))
     linked = []
     for episode in _active_episodes(episodes, published_at):
         if not r.hit(f"situation:{episode['situation_id']}", title):
@@ -251,7 +257,7 @@ def classify(*, title: str, summary: str | None, source: str, source_category: s
         return Classification("dropped", "crypto_only")
     if r.hit("equity_single", title) and not r.hit("equity_index", title) and not strong:
         return Classification("dropped", "single_stock")
-    if not strong and not weak and not geopolitical:
+    if not market_context or (not strong and not weak and not geopolitical):
         return Classification("dropped", "unrelated")
 
     cb_decision = bool(r.hit("cb_decision", title) and (cb or source in {"federal_reserve", "ecb"}))
@@ -283,7 +289,7 @@ def classify(*, title: str, summary: str | None, source: str, source_category: s
     high_situation = any(e.get("severity") == "high" for e in linked)
     if news_type == "Analysis":
         impact = "Low"
-    elif cb_decision or voter_on_policy or (news_type == "Data" and data_tier == "high" and currencies) or high_situation or tier1_shock:
+    elif cb_decision or voter_on_policy or (speakers and re.search(r"\b(?:raise|hike|cut|lower)\s+(?:interest\s+)?rates\b", title, re.I)) or (news_type == "Data" and data_tier == "high" and currencies) or high_situation or tier1_shock:
         impact = "High"
     elif speakers or news_type in {"Data", "Commodities"} or commodity:
         impact = "Medium"

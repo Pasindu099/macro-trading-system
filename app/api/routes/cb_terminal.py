@@ -50,19 +50,13 @@ async def central_banks_panel(request: Request, panel_id: str) -> HTMLResponse:
     cached = desks.cache_get(cache_key)
     if cached is not None:
         return HTMLResponse(cached)
-    try:
-        async with get_sessionmaker()() as session:
-            statuses = await freshness.get_data_freshness(session)
-            manual = await freshness.manual_import_rows(session, bank)
-        rows = freshness.panel_rows(statuses, freshness.CB_PANEL_SOURCES.get(panel_id, ()))
-        rows += [row for row in manual if row["source"].endswith(freshness.CB_PANEL_MANUAL.get(panel_id, "-"))]
-    except Exception:
-        logger.exception("Central Bank freshness lookup failed")
-        rows = []
-    strip = templates.get_template("_freshness.html").render(rows=rows) if rows else ""
+    strip = ""
     template = templates.get_template("cb/panel.html")
     try:
         ctx = await builder(bank, speaker=speaker)
+        if ctx.get("state") == "pending" or (panel_id == "balance" and
+                (ctx.get("data") or {}).get("tone_status") == "pending"):
+            return HTMLResponse("")
         html = strip + template.render(panel_id=panel_id, bank=bank, ctx=ctx, titles=cb_terminal.TITLES)
     except Exception:
         logger.exception("Central Bank panel %s (%s) failed", panel_id, bank)

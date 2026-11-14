@@ -10,10 +10,12 @@ from fastapi.templating import Jinja2Templates
 
 from app.db.session import get_sessionmaker
 from app.services.macro_state import get_macro_state_board
+from app.services.positioning import ordinal as positioning_ordinal
 from app.services import desks, freshness, overview, news, pairs_service
 
 router = APIRouter(tags=["shell"])
 templates = Jinja2Templates(directory=str(Path("app/web/templates")))
+templates.env.filters["ordinal"] = positioning_ordinal
 logger = logging.getLogger(__name__)
 
 SECTIONS = {
@@ -58,14 +60,7 @@ async def overview_panel(request: Request, panel_id: str) -> HTMLResponse:
     cached = desks.cache_get(cache_key)
     if cached is not None:
         return HTMLResponse(cached)
-    try:
-        async with get_sessionmaker()() as session:
-            statuses = await freshness.get_data_freshness(session)
-    except Exception:
-        logger.exception("Overview freshness lookup failed")
-        statuses = {source: freshness.status_for(source, None) for source in freshness.QUERIES}
-    strip = templates.get_template("_freshness.html").render(
-        rows=freshness.panel_rows(statuses, freshness.OVERVIEW_PANEL_SOURCES[panel_id]))
+    strip = ""
     try:
         ctx = await builder(**pair_options)
     except Exception:
@@ -150,12 +145,12 @@ async def news_page(request: Request) -> HTMLResponse:
     query = params.get("q", "").strip()[:100]
     currency = params.get("currency", "").upper()
     news_type = params.get("type", "")
-    impact = params.get("impact", "")
+    impact = params.get("impact", "market")
     active_only = params.get("active") == "1"
     if currency not in {"", "USD", "EUR", "GBP", "JPY", "AUD", "NZD", "CAD", "CHF", "CNY"}:
         raise HTTPException(400, "Unknown currency")
     if news_type not in {"", "Data", "CB speaker", "Politics & fiscal", "Geopolitics",
-                         "Flows & market", "Commodities", "Analysis"} or impact not in {"", "High", "Medium", "Low"}:
+                         "Flows & market", "Commodities", "Analysis"} or impact not in {"", "market", "High", "Medium", "Low"}:
         raise HTTPException(400, "Unknown news filter")
     try:
         start = date.fromisoformat(params["start"]) if params.get("start") else None
@@ -168,7 +163,7 @@ async def news_page(request: Request) -> HTMLResponse:
     state = "ok"
     try:
         options = {"show_no_fx_link": show_no_fx_link}
-        if any((query, currency, news_type, impact, active_only, start, end)):
+        if any((query, currency, news_type, impact != "market", active_only, start, end)):
             options.update(query=query, currency=currency, news_type=news_type, impact=impact,
                            active_only=active_only, start=start, end=end)
         items = await news.tagged_feed(**options)

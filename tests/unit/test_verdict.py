@@ -1,5 +1,7 @@
 """Step 10 Part B: weighted verdict and conviction rules."""
 
+import pytest
+from app.services import verdict
 from app.services.verdict import _component, score_verdict
 
 
@@ -10,6 +12,29 @@ def components():
         "positioning": _component(0.0, raw={"percentile": 50}),
         "situations": _component(0.0),
     }
+
+
+@pytest.mark.asyncio
+async def test_stale_macro_and_cot_are_excluded_and_confidence_reduced(monkeypatch):
+    class Session:
+        async def __aenter__(self): return self
+        async def __aexit__(self, *_): pass
+    def stub(value):
+        async def result(*args, **kwargs): return value
+        return result
+    monkeypatch.setattr(verdict, "get_sessionmaker", lambda: Session)
+    monkeypatch.setattr(verdict, "get_macro_state_board", stub({"rows": [{"currency": "USD", "overall_score": 2}]}))
+    monkeypatch.setattr(verdict.freshness, "get_data_freshness", stub({
+        source: {"stale": source in {"macro_state", "cot"}} for source in verdict.freshness.QUERIES}))
+    monkeypatch.setattr(verdict, "get_curve", stub({"regime": {"status": "unavailable"}}))
+    monkeypatch.setattr(verdict.cb_tracking, "get_tracking", stub({"variables": {"core_pce_inflation": {"status": "running_hot"}}}))
+    monkeypatch.setattr(verdict.fed_regime, "get_gap", stub({"gaps": [{"gap_bp": 25}]}))
+    monkeypatch.setattr(verdict.positioning, "get_crowding", stub({"currencies": [{"currency": "USD", "leveraged_funds": {"percentile": 99}}]}))
+    monkeypatch.setattr(verdict, "_active_situations", stub([]))
+    result = await verdict.get_verdict("USD")
+    assert result["why"]["macro"]["contribution"] is None
+    assert result["why"]["positioning"]["contribution"] is None
+    assert result["conviction"] == "low"
 
 
 def test_weighted_score_bias_thesis_and_why():

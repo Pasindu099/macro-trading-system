@@ -25,11 +25,12 @@ def test_pairs_page_and_pending_route(monkeypatch):
     client = TestClient(app)
     response = client.get("/pairs")
     assert response.status_code == 200
-    for label in ("EUR/USD", "1.1234", "partial", "pending", "diverging", "opposite sides",
+    for label in ("EUR/USD", "1.1234", "partial", "Advanced details", "diverging", "opposite sides",
                   "Correlation break", "/pairs/EURUSD", "Matrix"):
         assert label in response.text
     pending = client.get("/pairs/EURUSD")
     assert pending.status_code == 200
-    assert "Pair page pending" in pending.text and "/desks/USD" in pending.text
+    assert "Explore the economic drivers" in pending.text and "/desks/USD" in pending.text
+    assert "pending" not in response.text.lower()
     assert client.get("/pairs/INVALID").status_code == 404
     desks.cache_clear()

@@ -27,16 +27,16 @@ def test_speaker_table_hides_tone_when_gate_closed_and_shows_focus_mix():
     data = {"speakers": [speaker], "tone_method": None, "tone_status": "pending", "label": "Tone: pending AI layer",
             "tone_gate": {"status": "awaiting labels"}}
     html = render("speakers", {"state": "ok", "data": data, "focus": cb_terminal.FOCUS})
-    assert "Tone: pending AI layer" in html and "Tone 30d" not in html and 'class="f-inflation"' in html
+    assert "Tone: pending AI layer" not in html and "Tone 30d" not in html and 'class="f-inflation"' in html
     shown = {**data, "tone_method": "lexicon_v2", "tone_status": "available", "label": "word-list tone, v2"}
     html = render("speakers", {"state": "ok", "data": {**shown, "speakers": [
         {**speaker, "lean": "hawkish", "tone_30d": 0.8, "shift": 0.45, "shifting": True}]}, "focus": cb_terminal.FOCUS})
     assert "word-list tone, v2" in html and "lean-hawkish" in html and "+0.80" in html and "shifting" in html
 
 
-def test_library_marks_phase_3_pending():
+def test_library_hides_unfinished_search():
     html = render("library", {"state": "ok", "speeches": [], "manual": None})
-    assert "Phase 3, pending" in html and "No speeches stored" in html
+    assert "Phase 3, pending" not in html and "No speeches stored" in html
 
 
 def test_formats_cover_all_banks_and_flag_manual_imports():
